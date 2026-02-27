@@ -1,30 +1,29 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../app/generated/prisma/client"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "postgresql"
 }
 
 enum Plan {
   FREE
   PRO
-  ENTERPRISE
+  TEAM
 }
 
 model User {
-  id                String   @id @default(cuid())
-  clerkId           String   @unique
-  email             String   @unique
-  name              String?
-  plan              Plan     @default(FREE)
-  analysisCount     Int      @default(0)
-  rewriteCount      Int      @default(0)
-  billingCycleStart DateTime @default(now())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id           String   @id @default(cuid())
+  clerkId      String   @unique
+  email        String   @unique
+  name         String?
+  plan         Plan     @default(FREE)
+  wordsUsed    Int      @default(0)
+  rewriteCount Int      @default(0)
+  quotaResetAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   documents    Document[]
   subscription Subscription?
