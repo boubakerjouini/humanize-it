@@ -142,10 +142,16 @@ export async function POST(req: Request) {
     case "invoice.payment_succeeded": {
       const invoice = event.data.object;
 
-      if (!invoice.subscription) break;
+      const rawSubId =
+        invoice.parent?.subscription_details?.subscription;
+
+      if (!rawSubId) break;
+
+      const subscriptionId =
+        typeof rawSubId === "string" ? rawSubId : rawSubId.id;
 
       const sub = await db.subscription.findUnique({
-        where: { stripeSubscriptionId: invoice.subscription as string },
+        where: { stripeSubscriptionId: subscriptionId },
       });
 
       if (!sub) break;
