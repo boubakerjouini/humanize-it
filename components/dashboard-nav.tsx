@@ -196,9 +196,9 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
       {/* ── Main area ────────────────────────────────────── */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-        {/* Top bar */}
-        <header style={{
-          height: "56px", display: "flex", alignItems: "center",
+        {/* Top bar — mobile only (hidden on md+) */}
+        <header className="flex md:hidden" style={{
+          height: "56px", alignItems: "center",
           justifyContent: "space-between",
           borderBottom: "1px solid rgba(255,255,255,0.05)",
           background: "#060608",
@@ -214,7 +214,6 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
               style={{
                 background: "transparent", border: "none", cursor: "pointer",
                 color: "rgba(255,255,255,0.6)", padding: "6px", borderRadius: "6px",
-                display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "background 0.15s",
               }}
               aria-label="Open menu"
@@ -223,7 +222,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Mobile logo */}
-            <div className="md:hidden" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div className="md:hidden" style={{ alignItems: "center", gap: "6px" }}>
               <span style={{ fontSize: "16px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
               <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
             </div>

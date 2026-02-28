@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 
@@ -105,6 +106,7 @@ const V = {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const router = useRouter();
   const [text, setText] = useState("");
   const [mounted, setMounted] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -427,21 +429,34 @@ export default function LandingPage() {
                     </span>
                   )}
                 </span>
-                <Link href="/sign-up" style={{
-                  background: V.brand,
-                  color: "#fafafa",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  padding: "6px 16px",
-                  borderRadius: "6px",
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  transition: "background 0.15s",
-                }}>
-                  Analyze Free →
-                </Link>
+                <SignedOut>
+                  <Link href="/sign-up" style={{
+                    background: V.brand, color: "#fafafa",
+                    fontSize: "12px", fontWeight: 700,
+                    padding: "6px 16px", borderRadius: "6px",
+                    textDecoration: "none", display: "inline-flex",
+                    alignItems: "center", gap: "4px", transition: "background 0.15s",
+                  }}>
+                    Analyze Free →
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <button
+                    onClick={() => {
+                      if (text.trim()) sessionStorage.setItem("prefill-text", text);
+                      router.push("/dashboard/editor");
+                    }}
+                    style={{
+                      background: V.brand, color: "#fafafa",
+                      fontSize: "12px", fontWeight: 700,
+                      padding: "6px 16px", borderRadius: "6px",
+                      border: "none", cursor: "pointer",
+                      display: "inline-flex", alignItems: "center", gap: "4px",
+                      transition: "background 0.15s",
+                    }}>
+                    Open in Dashboard →
+                  </button>
+                </SignedIn>
               </div>
             </div>
           </div>
