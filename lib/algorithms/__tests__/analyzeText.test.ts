@@ -331,6 +331,40 @@ describe("Statistical patterns (20–24)", () => {
   });
 });
 
+// ---- New Pattern Tests ----
+
+describe("New patterns", () => {
+  it("detects em dash overuse", () => {
+    const text = "The solution — which was remarkable — provided value — and more — in ways unprecedented.";
+    const result = analyzeText(text);
+    expect(result.patterns.some(p => p.id === "em-dash-overuse")).toBe(true);
+  });
+
+  it("detects passive voice excess", () => {
+    const text = "The document was written by the team. The results were analyzed. The findings were presented. The conclusions were drawn. The report was submitted.";
+    const result = analyzeText(text);
+    expect(result.patterns.some(p => p.id === "passive-voice")).toBe(true);
+  });
+
+  it("scores ChatGPT-typical text above 70", () => {
+    const text = `In today's rapidly evolving landscape — it is important to note that artificial intelligence has become a pivotal and transformative force. Furthermore, this nuanced and comprehensive approach underscores the multifaceted nature of modern technology. Moreover, leveraging these robust and scalable solutions can seamlessly streamline workflows and holistically foster innovation. The groundbreaking advancements in this space are truly unprecedented. As we look to the future, the possibilities are endless.`;
+    const result = analyzeText(text);
+    expect(result.score).toBeGreaterThan(70);
+  });
+
+  it("scores casual human text below 30", () => {
+    const text = `I've been thinking about this a lot lately. Honestly? I don't know what to do. My friend called me yesterday (we hadn't talked in months) and we just... talked. About nothing really. She said something that stuck with me: "sometimes the best thing you can do is nothing." Maybe she's right. I'm still not sure.`;
+    const result = analyzeText(text);
+    expect(result.score).toBeLessThan(30);
+  });
+
+  it("penalizes — em dashes heavily", () => {
+    const shortText = "This solution — which is innovative — provides value — beyond expectations.";
+    const result = analyzeText(shortText);
+    expect(result.patterns.some(p => p.id === "em-dash-overuse")).toBe(true);
+  });
+});
+
 // ---- Edge Cases ----
 
 describe("Edge cases", () => {

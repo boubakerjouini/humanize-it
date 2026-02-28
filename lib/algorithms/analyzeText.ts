@@ -340,6 +340,8 @@ function detectFormulaicConclusion(text: string, textLower: string): PatternHit 
     "taking everything into account",
     "in light of the above",
     "overall, it is clear",
+    // Also include all GENERIC_CONCLUSIONS phrases
+    ...GENERIC_CONCLUSIONS.map(p => p.toLowerCase()),
   ];
 
   const found = conclusionPhrases.filter((phrase) =>
@@ -698,6 +700,115 @@ function detectLowPerplexity(sentences: string[]): PatternHit | null {
   };
 }
 
+// ---- New Pattern Detectors (25–29) ----
+
+/**
+ * Pattern 25: Em Dash Overuse
+ * ChatGPT uses em dashes (—) heavily. >2 in <500 words or >4 in longer text → flag.
+ */
+function detectEmDash(text: string, wordCount: number): PatternHit | null {
+  const matches = (text.match(/—/g) || []).length;
+  if (matches === 0) return null;
+  // Use density: flag if > 4 em dashes per 100 words (AI uses them extremely densely)
+  const density = (matches * 100) / Math.max(wordCount, 1);
+  if (density <= 4) return null;
+  const config = getConfigById("em-dash-overuse");
+  return {
+    id: config.id,
+    label: config.label,
+    hits: matches,
+    examples: [`Found ${matches} em dashes (—) — ${density.toFixed(1)} per 100 words`],
+    severity: config.severity,
+    weight: config.weight,
+    category: config.category,
+  };
+}
+
+/**
+ * Pattern 26: Colon Abuse
+ * AI uses colons heavily to introduce lists/explanations. ratio colons/sentences > 0.3 → flag.
+ */
+function detectColonAbuse(text: string, sentences: string[]): PatternHit | null {
+  if (sentences.length === 0) return null;
+  const colonCount = (text.match(/:/g) || []).length;
+  const ratio = colonCount / sentences.length;
+  if (ratio <= 0.3) return null;
+  const config = getConfigById("colon-abuse");
+  return {
+    id: config.id,
+    label: config.label,
+    hits: colonCount,
+    examples: [`${colonCount} colons across ${sentences.length} sentences (ratio: ${ratio.toFixed(2)})`],
+    severity: config.severity,
+    weight: config.weight,
+    category: config.category,
+  };
+}
+
+/**
+ * Pattern 27: Passive Voice Excess
+ * AI overuses passive voice. >3 per 100 words → flag.
+ */
+function detectPassiveVoice(text: string, wordCount: number): PatternHit | null {
+  if (wordCount === 0) return null;
+  const passiveRegex = /\b(is|are|was|were|has been|have been|will be|being)\s+\w+ed\b/gi;
+  const matches = text.match(passiveRegex) || [];
+  const rate = (matches.length / wordCount) * 100;
+  if (rate <= 3) return null;
+  const config = getConfigById("passive-voice");
+  return {
+    id: config.id,
+    label: config.label,
+    hits: matches.length,
+    examples: matches.slice(0, 4).map(m => `"${m}"`),
+    severity: config.severity,
+    weight: config.weight,
+    category: config.category,
+  };
+}
+
+/**
+ * Pattern 28: Oxford Comma Serial Listing
+ * AI lists in "A, B, and C" format. Detect Oxford comma + 3-item lists.
+ */
+function detectSerialListing(text: string): PatternHit | null {
+  // Matches: word/phrase, word/phrase, and word
+  const serialRegex = /\b[\w][\w\s]{1,30},\s+[\w][\w\s]{1,30},\s+and\s+[\w]/gi;
+  const matches = text.match(serialRegex) || [];
+  if (matches.length === 0) return null;
+  const config = getConfigById("serial-listing");
+  return {
+    id: config.id,
+    label: config.label,
+    hits: matches.length,
+    examples: matches.slice(0, 3).map(m => `"${m.slice(0, 60)}"`),
+    severity: config.severity,
+    weight: config.weight,
+    category: config.category,
+  };
+}
+
+/**
+ * Pattern 29: Rhetorical Questions
+ * AI opens/closes paragraphs with rhetorical questions starting with interrogative words.
+ */
+function detectRhetoricalQuestions(text: string): PatternHit | null {
+  // Split text into sentences that end with ?
+  const questionRegex = /\b(What|Why|How|Is|Are|Can|Should|Do|Does)[^.!?]*\?/gi;
+  const matches = text.match(questionRegex) || [];
+  if (matches.length === 0) return null;
+  const config = getConfigById("rhetorical-questions");
+  return {
+    id: config.id,
+    label: config.label,
+    hits: matches.length,
+    examples: matches.slice(0, 3).map(m => `"${m.slice(0, 80)}"`),
+    severity: config.severity,
+    weight: config.weight,
+    category: config.category,
+  };
+}
+
 // ---- Scoring ----
 
 function computePatternScore(patterns: PatternHit[]): number {
@@ -846,6 +957,22 @@ export function analyzeText(text: string): AnalysisResult {
 
   const formulaicConclusion = detectFormulaicConclusion(text, textLower);
   if (formulaicConclusion) structuralHits.push(formulaicConclusion);
+
+  // New structural patterns (25-29)
+  const emDash = detectEmDash(text, wordCount);
+  if (emDash) structuralHits.push(emDash);
+
+  const colonAbuse = detectColonAbuse(text, sentences);
+  if (colonAbuse) structuralHits.push(colonAbuse);
+
+  const passiveVoice = detectPassiveVoice(text, wordCount);
+  if (passiveVoice) structuralHits.push(passiveVoice);
+
+  const serialListing = detectSerialListing(text);
+  if (serialListing) structuralHits.push(serialListing);
+
+  const rhetoricalQuestions = detectRhetoricalQuestions(text);
+  if (rhetoricalQuestions) structuralHits.push(rhetoricalQuestions);
 
   // Add structural patterns to main patterns list
   patterns.push(...structuralHits);
