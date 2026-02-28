@@ -18,8 +18,19 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "HumanizeIt — Detect & Humanize AI Text",
-  description:
-    "Score your text against 24 AI detection patterns and rewrite it to sound human.",
+  description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human. Free to start.",
+  openGraph: {
+    title: "HumanizeIt — Detect & Humanize AI Text",
+    description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human.",
+    url: "https://humanize-it.vercel.app",
+    siteName: "HumanizeIt",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HumanizeIt — Detect & Humanize AI Text",
+    description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human.",
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +45,7 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
           {children}
-          <Toaster richColors position="bottom-right" />
+          <Toaster richColors position="bottom-center" />
         </body>
       </html>
     </ClerkProvider>

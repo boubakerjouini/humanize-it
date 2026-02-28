@@ -124,6 +124,7 @@ export default function SettingsPage() {
 
   const isFree = !usage || usage.plan === "FREE";
   const isPro  = usage?.plan === "PRO";
+  const isTeam = usage?.plan === "TEAM";
 
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
@@ -323,29 +324,22 @@ export default function SettingsPage() {
                 {user?.primaryEmailAddress?.emailAddress ?? "—"}
               </p>
             </div>
-            <button
-              onClick={() => window.open("https://accounts.clerk.com", "_blank")}
-              style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.45)", fontSize: "12px", fontWeight: 500,
-                padding: "7px 12px", borderRadius: "5px", cursor: "pointer",
-              }}
-            >
-              <ExternalLink size={12} />
-              Edit profile
-            </button>
+            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+              To update your profile, click your avatar in the sidebar.
+            </span>
           </div>
         </Section>
 
         {/* Plan features reference */}
-        {isPro && (
+        {(isPro || isTeam) && (
           <div style={{
             padding: "14px 16px", borderRadius: "6px",
             background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)",
           }}>
             <p style={{ fontSize: "12px", color: "#8b5cf6", fontWeight: 600 }}>
-              ✦ Pro plan active — you have access to all features
+              {isTeam
+                ? "✦ Team plan active — you have access to all features + team collaboration"
+                : "✦ Pro plan active — you have access to all features"}
             </p>
           </div>
         )}

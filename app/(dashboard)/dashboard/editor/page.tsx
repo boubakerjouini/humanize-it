@@ -114,7 +114,7 @@ export default function EditorPage() {
   const [humanizing, setHumanizing] = useState(false);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [humanizedText, setHumanizedText] = useState<string | null>(null);
-  const [humanizedScore] = useState<number | null>(null);
+  const [humanizedScore, setHumanizedScore] = useState<number | null>(null);
   const [tone, setTone] = useState<ToneOption>("standard");
   const [documentId, setDocumentId] = useState<string | null>(null);
 
@@ -163,6 +163,18 @@ export default function EditorPage() {
       const data = await res.json() as { humanizedText?: string; error?: { message: string } };
       if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
       setHumanizedText(data.humanizedText ?? null);
+      // Re-analyze humanized text to get new score
+      if (data.humanizedText) {
+        try {
+          const reRes = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: data.humanizedText }),
+          });
+          const reData = await reRes.json() as AnalyzeResponse & { error?: { message: string } };
+          if (reRes.ok) setHumanizedScore(reData.score);
+        } catch { /* non-blocking */ }
+      }
       toast.success("Text humanized!");
     } catch {
       toast.error("Network error.");
@@ -175,6 +187,7 @@ export default function EditorPage() {
     setText("");
     setResult(null);
     setHumanizedText(null);
+    setHumanizedScore(null);
     setDocumentId(null);
   };
 
@@ -478,9 +491,9 @@ export default function EditorPage() {
               }}
             >
               {humanizing ? (
-                <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> Claude is rewriting your text…</>
+                <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> AI is rewriting your text…</>
               ) : (
-                "Humanize with Claude →"
+                "Humanize with AI →"
               )}
             </button>
 

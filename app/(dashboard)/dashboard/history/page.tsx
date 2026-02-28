@@ -67,15 +67,6 @@ export default function HistoryPage() {
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<string>("FREE");
-
-  const fetchUsage = useCallback(async () => {
-    try {
-      const res = await fetch("/api/usage");
-      const data = await res.json() as UsageResponse;
-      if (res.ok) setPlan(data.plan);
-    } catch { /* ignore */ }
-  }, []);
-
   const fetchDocuments = useCallback(async (page: number) => {
     setLoading(true);
     try {
@@ -90,9 +81,17 @@ export default function HistoryPage() {
   }, []);
 
   useEffect(() => {
-    void fetchUsage();
-    void fetchDocuments(1);
-  }, [fetchUsage, fetchDocuments]);
+    fetch("/api/usage")
+      .then(r => r.json())
+      .then((d: UsageResponse) => {
+        const p = d.plan ?? "FREE";
+        setPlan(p);
+
+        if (p !== "FREE") void fetchDocuments(1);
+        else setLoading(false);
+      })
+      .catch(() => { setLoading(false); });
+  }, [fetchDocuments]);
 
   const isFree = plan === "FREE";
 

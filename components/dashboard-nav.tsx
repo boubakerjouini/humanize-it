@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
@@ -12,11 +13,27 @@ const navItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
+const PLAN_COLORS: Record<string, { bg: string; color: string }> = {
+  FREE: { bg: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" },
+  PRO:  { bg: "rgba(139,92,246,0.12)", color: "#8b5cf6" },
+  TEAM: { bg: "rgba(245,158,11,0.12)", color: "#f59e0b" },
+};
+
 export function DashboardNav({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
+  const [plan, setPlan] = useState<string>("FREE");
+
+  useEffect(() => {
+    fetch("/api/usage")
+      .then(r => r.json())
+      .then((d: { plan?: string }) => { if (d.plan) setPlan(d.plan); })
+      .catch(() => undefined);
+  }, []);
 
   if (!isLoaded) return null;
+
+  const planStyle = PLAN_COLORS[plan] ?? PLAN_COLORS.FREE;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#09090b" }}>
@@ -30,14 +47,15 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
       }} className="hidden md:flex">
 
         {/* Logo */}
-        <div style={{
+        <Link href="/" style={{
           height: "56px", display: "flex", alignItems: "center",
           padding: "0 20px", gap: "8px",
           borderBottom: "1px solid rgba(255,255,255,0.05)",
+          textDecoration: "none",
         }}>
           <span style={{ fontSize: "18px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
           <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
-        </div>
+        </Link>
 
         {/* Nav items */}
         <nav style={{ flex: 1, padding: "12px 10px", display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -87,10 +105,10 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
             <div style={{
               fontSize: "10px", padding: "1px 6px", borderRadius: "4px", marginTop: "3px",
               display: "inline-block",
-              background: "rgba(139,92,246,0.12)", color: "#8b5cf6",
+              background: planStyle.bg, color: planStyle.color,
               fontWeight: 600, letterSpacing: "0.5px",
             }}>
-              FREE
+              {plan}
             </div>
           </div>
         </div>
@@ -139,11 +157,8 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Right — user button on mobile */}
+          {/* Right — user button on mobile only (desktop has it in sidebar) */}
           <div className="md:hidden">
-            <UserButton afterSignOutUrl="/" />
-          </div>
-          <div className="hidden md:block">
             <UserButton afterSignOutUrl="/" />
           </div>
         </header>
