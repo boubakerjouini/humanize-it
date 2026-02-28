@@ -11,8 +11,8 @@ interface ScoreRingProps {
 
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
-  if (s >= 50) return "#f97316";
-  if (s >= 25) return "#fbbf24";
+  if (s >= 50) return "#8b5cf6";
+  if (s >= 25) return "#a78bfa";
   return "#22c55e";
 }
 

@@ -45,8 +45,8 @@ const PATTERN_EXPLANATIONS: Record<string, string> = {
 function severityStyles(severity: string): { borderColor: string; iconColor: string; badgeBg: string; badgeColor: string } {
   switch (severity) {
     case "critical": return { borderColor: "#ef4444", iconColor: "#ef4444", badgeBg: "rgba(239,68,68,0.12)", badgeColor: "#f87171" };
-    case "high":     return { borderColor: "#f97316", iconColor: "#f97316", badgeBg: "rgba(249,115,22,0.12)", badgeColor: "#fb923c" };
-    case "medium":   return { borderColor: "#fbbf24", iconColor: "#fbbf24", badgeBg: "rgba(251,191,36,0.12)", badgeColor: "#fcd34d" };
+    case "high":     return { borderColor: "#8b5cf6", iconColor: "#8b5cf6", badgeBg: "rgba(139,92,246,0.12)", badgeColor: "#a78bfa" };
+    case "medium":   return { borderColor: "#a78bfa", iconColor: "#a78bfa", badgeBg: "rgba(167,139,250,0.12)", badgeColor: "#fcd34d" };
     default:         return { borderColor: "#22c55e", iconColor: "#22c55e", badgeBg: "rgba(34,197,94,0.12)", badgeColor: "#4ade80" };
   }
 }

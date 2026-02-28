@@ -33,7 +33,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
           padding: "0 20px", gap: "8px",
           borderBottom: "1px solid rgba(255,255,255,0.05)",
         }}>
-          <span style={{ fontSize: "18px", fontWeight: 800, color: "#f97316" }}>H.</span>
+          <span style={{ fontSize: "18px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
           <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
         </div>
 
@@ -51,9 +51,9 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
                   fontSize: "13px", fontWeight: 500,
                   textDecoration: "none",
                   transition: "background 0.15s, color 0.15s",
-                  background: active ? "rgba(249,115,22,0.1)" : "transparent",
-                  color: active ? "#f97316" : "rgba(255,255,255,0.45)",
-                  borderLeft: active ? "2px solid #f97316" : "2px solid transparent",
+                  background: active ? "rgba(139,92,246,0.1)" : "transparent",
+                  color: active ? "#8b5cf6" : "rgba(255,255,255,0.45)",
+                  borderLeft: active ? "2px solid #8b5cf6" : "2px solid transparent",
                   marginLeft: "2px",
                 }}
                 className={cn(
@@ -63,7 +63,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
               >
                 <Icon
                   size={15}
-                  style={{ color: active ? "#f97316" : undefined, flexShrink: 0 }}
+                  style={{ color: active ? "#8b5cf6" : undefined, flexShrink: 0 }}
                 />
                 {label}
               </Link>
@@ -85,7 +85,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
             <div style={{
               fontSize: "10px", padding: "1px 6px", borderRadius: "4px", marginTop: "3px",
               display: "inline-block",
-              background: "rgba(249,115,22,0.12)", color: "#f97316",
+              background: "rgba(139,92,246,0.12)", color: "#8b5cf6",
               fontWeight: 600, letterSpacing: "0.5px",
             }}>
               FREE
@@ -107,7 +107,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
         }}>
           {/* Mobile logo */}
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }} className="md:hidden">
-            <span style={{ fontSize: "16px", fontWeight: 800, color: "#f97316" }}>H.</span>
+            <span style={{ fontSize: "16px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
             <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
           </div>
 
@@ -126,8 +126,8 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
                     display: "flex", alignItems: "center", gap: "5px",
                     padding: "5px 10px", borderRadius: "5px",
                     fontSize: "12px", fontWeight: 500, textDecoration: "none",
-                    background: active ? "rgba(249,115,22,0.1)" : "transparent",
-                    color: active ? "#f97316" : "rgba(255,255,255,0.45)",
+                    background: active ? "rgba(139,92,246,0.1)" : "transparent",
+                    color: active ? "#8b5cf6" : "rgba(255,255,255,0.45)",
                   }}
                 >
                   <Icon size={12} />
@@ -166,7 +166,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
                   flex: 1, display: "flex", flexDirection: "column",
                   alignItems: "center", gap: "4px", padding: "10px",
                   textDecoration: "none", fontSize: "10px",
-                  color: active ? "#f97316" : "rgba(255,255,255,0.35)",
+                  color: active ? "#8b5cf6" : "rgba(255,255,255,0.35)",
                 }}
               >
                 <Icon size={16} />

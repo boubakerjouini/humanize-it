@@ -36,7 +36,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function UsageBar({ label, used, limit, warning }: { label: string; used: number; limit: number; warning?: boolean }) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-  const barColor = warning && pct > 80 ? "#ef4444" : "#f97316";
+  const barColor = warning && pct > 80 ? "#ef4444" : "#8b5cf6";
 
   return (
     <div style={{ marginBottom: "16px" }}>
@@ -56,7 +56,7 @@ function UsageBar({ label, used, limit, warning }: { label: string; used: number
         }} />
       </div>
       {warning && pct > 80 && (
-        <p style={{ fontSize: "11px", color: "#f97316", marginTop: "5px" }}>⚠ {pct}% used — consider upgrading</p>
+        <p style={{ fontSize: "11px", color: "#8b5cf6", marginTop: "5px" }}>⚠ {pct}% used — consider upgrading</p>
       )}
     </div>
   );
@@ -124,9 +124,9 @@ export default function SettingsPage() {
             <span style={{
               fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "100px",
               letterSpacing: "0.5px",
-              background: isFree ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, rgba(249,115,22,0.2), rgba(251,191,36,0.2))",
-              color: isFree ? "rgba(255,255,255,0.5)" : "#f97316",
-              border: isFree ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(249,115,22,0.3)",
+              background: isFree ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(167,139,250,0.2))",
+              color: isFree ? "rgba(255,255,255,0.5)" : "#8b5cf6",
+              border: isFree ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(139,92,246,0.3)",
             }}>
               {usage?.plan ?? "FREE"}
             </span>
@@ -162,17 +162,17 @@ export default function SettingsPage() {
         {isFree && (
           <div style={{
             background: "#130f0a",
-            border: "1px solid rgba(249,115,22,0.25)",
+            border: "1px solid rgba(139,92,246,0.25)",
             borderRadius: "8px", padding: "24px",
-            boxShadow: "0 0 40px rgba(249,115,22,0.04)",
+            boxShadow: "0 0 40px rgba(139,92,246,0.04)",
           }}>
             <div style={{ display: "flex", gap: "14px" }}>
               <div style={{
                 width: "40px", height: "40px", borderRadius: "50%",
-                background: "rgba(249,115,22,0.15)", display: "flex",
+                background: "rgba(139,92,246,0.15)", display: "flex",
                 alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
-                <Zap size={18} style={{ color: "#f97316" }} />
+                <Zap size={18} style={{ color: "#8b5cf6" }} />
               </div>
               <div>
                 <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa", marginBottom: "8px" }}>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "7px" }}>
                   {["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day document history", "No watermark"].map(f => (
                     <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>
-                      <span style={{ color: "#f97316", fontWeight: 700 }}>✓</span>
+                      <span style={{ color: "#8b5cf6", fontWeight: 700 }}>✓</span>
                       {f}
                     </li>
                   ))}
@@ -273,9 +273,9 @@ export default function SettingsPage() {
         {isPro && (
           <div style={{
             padding: "14px 16px", borderRadius: "6px",
-            background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)",
+            background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)",
           }}>
-            <p style={{ fontSize: "12px", color: "#f97316", fontWeight: 600 }}>
+            <p style={{ fontSize: "12px", color: "#8b5cf6", fontWeight: 600 }}>
               ✦ Pro plan active — you have access to all features
             </p>
           </div>

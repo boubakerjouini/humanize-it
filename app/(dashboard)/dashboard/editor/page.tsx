@@ -30,8 +30,8 @@ const TONE_OPTIONS: { value: ToneOption; label: string }[] = [
 
 function scoreColor(score: number): string {
   if (score >= 80) return "#ef4444";
-  if (score >= 61) return "#f97316";
-  if (score >= 31) return "#fbbf24";
+  if (score >= 61) return "#8b5cf6";
+  if (score >= 31) return "#a78bfa";
   return "#22c55e";
 }
 
@@ -43,8 +43,8 @@ function buildHeatmap(text: string, patterns: PatternHit[]): React.ReactNode {
   for (const p of patterns) {
     let bg: string;
     if (p.id === "ai-vocab-t1") bg = "rgba(239,68,68,0.22)";
-    else if (p.id === "ai-vocab-t2") bg = "rgba(251,191,36,0.22)";
-    else if (p.category === "phrase" || p.id.startsWith("formulaic")) bg = "rgba(249,115,22,0.22)";
+    else if (p.id === "ai-vocab-t2") bg = "rgba(167,139,250,0.22)";
+    else if (p.category === "phrase" || p.id.startsWith("formulaic")) bg = "rgba(139,92,246,0.22)";
     else continue;
 
     for (const ex of p.examples) {
@@ -96,7 +96,7 @@ function StatPill({ label, value, warn }: { label: string; value: string | numbe
       borderRadius: "6px", padding: "12px 14px", flex: 1,
     }}>
       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginBottom: "6px", letterSpacing: "0.3px" }}>{label}</div>
-      <div style={{ fontSize: "18px", fontWeight: 700, color: warn ? "#f97316" : "#22c55e", fontFamily: "var(--font-geist-mono), monospace" }}>
+      <div style={{ fontSize: "18px", fontWeight: 700, color: warn ? "#8b5cf6" : "#22c55e", fontFamily: "var(--font-geist-mono), monospace" }}>
         {value}
       </div>
       <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", marginTop: "3px" }}>
@@ -222,7 +222,7 @@ export default function EditorPage() {
               display: "flex", alignItems: "center", gap: "8px",
             }}>
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", opacity: 0.5 }} />
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", opacity: 0.5 }} />
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#7c3aed", opacity: 0.5 }} />
               <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", opacity: 0.5 }} />
               <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", marginLeft: "8px" }}>input.txt</span>
             </div>
@@ -269,7 +269,7 @@ export default function EditorPage() {
                   onClick={handleAnalyze}
                   disabled={analyzing || !text.trim()}
                   style={{
-                    background: analyzing || !text.trim() ? "rgba(249,115,22,0.3)" : "#f97316",
+                    background: analyzing || !text.trim() ? "rgba(139,92,246,0.3)" : "#8b5cf6",
                     color: "#09090b", fontSize: "12px", fontWeight: 700,
                     padding: "6px 16px", borderRadius: "5px",
                     cursor: analyzing || !text.trim() ? "not-allowed" : "pointer",
@@ -365,7 +365,7 @@ export default function EditorPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{
                   fontSize: "11px", padding: "2px 8px", borderRadius: "4px",
-                  background: "rgba(249,115,22,0.12)", color: "#f97316", fontWeight: 600,
+                  background: "rgba(139,92,246,0.12)", color: "#8b5cf6", fontWeight: 600,
                 }}>
                   {result.patterns.length} found
                 </span>
@@ -404,11 +404,11 @@ export default function EditorPage() {
                 Tier 1 vocabulary
               </span>
               <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: "5px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(249,115,22,0.5)", display: "inline-block" }} />
+                <span style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(139,92,246,0.5)", display: "inline-block" }} />
                 Pattern phrases
               </span>
               <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: "5px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(251,191,36,0.5)", display: "inline-block" }} />
+                <span style={{ width: "10px", height: "10px", borderRadius: "2px", background: "rgba(167,139,250,0.5)", display: "inline-block" }} />
                 Tier 2 vocabulary
               </span>
             </div>
@@ -451,9 +451,9 @@ export default function EditorPage() {
                     style={{
                       padding: "7px 14px", borderRadius: "5px", fontSize: "12px", fontWeight: 500,
                       cursor: "pointer", border: "1px solid",
-                      borderColor: tone === value ? "#f97316" : "rgba(255,255,255,0.08)",
-                      background: tone === value ? "rgba(249,115,22,0.12)" : "transparent",
-                      color: tone === value ? "#f97316" : "rgba(255,255,255,0.4)",
+                      borderColor: tone === value ? "#8b5cf6" : "rgba(255,255,255,0.08)",
+                      background: tone === value ? "rgba(139,92,246,0.12)" : "transparent",
+                      color: tone === value ? "#8b5cf6" : "rgba(255,255,255,0.4)",
                       transition: "all 0.15s",
                     }}
                   >
@@ -469,7 +469,7 @@ export default function EditorPage() {
               disabled={humanizing || !documentId}
               style={{
                 width: "100%", padding: "12px",
-                background: humanizing || !documentId ? "rgba(249,115,22,0.25)" : "#f97316",
+                background: humanizing || !documentId ? "rgba(139,92,246,0.25)" : "#8b5cf6",
                 color: humanizing || !documentId ? "rgba(255,255,255,0.4)" : "#09090b",
                 border: "none", borderRadius: "6px", fontSize: "14px", fontWeight: 700,
                 cursor: humanizing || !documentId ? "not-allowed" : "pointer",

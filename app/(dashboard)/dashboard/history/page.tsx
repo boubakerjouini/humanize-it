@@ -31,15 +31,15 @@ interface UsageResponse {
 
 function scoreColor(s: number): string {
   if (s >= 80) return "#ef4444";
-  if (s >= 61) return "#f97316";
-  if (s >= 31) return "#fbbf24";
+  if (s >= 61) return "#8b5cf6";
+  if (s >= 31) return "#a78bfa";
   return "#22c55e";
 }
 
 function scoreBg(s: number): string {
   if (s >= 80) return "rgba(239,68,68,0.12)";
-  if (s >= 61) return "rgba(249,115,22,0.12)";
-  if (s >= 31) return "rgba(251,191,36,0.12)";
+  if (s >= 61) return "rgba(139,92,246,0.12)";
+  if (s >= 31) return "rgba(167,139,250,0.12)";
   return "rgba(34,197,94,0.12)";
 }
 
@@ -109,7 +109,7 @@ export default function HistoryPage() {
         </div>
         <Link href="/dashboard/editor" style={{
           display: "flex", alignItems: "center", gap: "6px",
-          background: "#f97316", color: "#09090b", fontWeight: 600,
+          background: "#8b5cf6", color: "#09090b", fontWeight: 600,
           padding: "8px 14px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
         }}>
           <Plus size={13} />
@@ -120,8 +120,8 @@ export default function HistoryPage() {
       {/* Free plan gate */}
       {isFree && (
         <div style={{
-          background: "rgba(249,115,22,0.06)",
-          border: "1px solid rgba(249,115,22,0.2)",
+          background: "rgba(139,92,246,0.06)",
+          border: "1px solid rgba(139,92,246,0.2)",
           borderRadius: "8px", padding: "20px 24px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: "16px", marginBottom: "20px",
@@ -135,7 +135,7 @@ export default function HistoryPage() {
             </p>
           </div>
           <Link href="/dashboard/settings" style={{
-            background: "#f97316", color: "#09090b", fontWeight: 700,
+            background: "#8b5cf6", color: "#09090b", fontWeight: 700,
             padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
             flexShrink: 0,
           }}>
@@ -167,7 +167,7 @@ export default function HistoryPage() {
             Head to the editor and analyze your first text.
           </p>
           <Link href="/dashboard/editor" style={{
-            background: "#f97316", color: "#09090b", fontWeight: 700,
+            background: "#8b5cf6", color: "#09090b", fontWeight: 700,
             padding: "8px 20px", borderRadius: "6px", textDecoration: "none", fontSize: "13px",
           }}>
             Open Editor →
@@ -275,8 +275,8 @@ export default function HistoryPage() {
 
       <style>{`
         .history-row:hover {
-          border-left: 3px solid #f97316 !important;
-          border-color: rgba(249,115,22,0.25) !important;
+          border-left: 3px solid #8b5cf6 !important;
+          border-color: rgba(139,92,246,0.25) !important;
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.5; }
