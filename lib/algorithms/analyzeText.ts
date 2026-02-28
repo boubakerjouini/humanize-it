@@ -712,14 +712,18 @@ function computePatternScore(patterns: PatternHit[]): number {
 function computeStatisticalScore(stats: TextStats): number {
   let score = 0;
 
-  // Low burstiness → high AI probability
+  // Low burstiness → high AI probability (stricter thresholds)
   const burstyScore =
-    stats.burstiness < 0.2 ? 100 : stats.burstiness < 0.4 ? 50 : 0;
+    stats.burstiness < 0.15 ? 100 :
+    stats.burstiness < 0.25 ? 70 :
+    stats.burstiness < 0.4 ? 30 : 0;
   score += burstyScore * 0.3;
 
-  // Low TTR → high AI probability
+  // Low TTR → high AI probability (stricter thresholds)
   const ttrScore =
-    stats.typeTokenRatio < 0.4 ? 100 : stats.typeTokenRatio < 0.55 ? 50 : 0;
+    stats.typeTokenRatio < 0.35 ? 100 :
+    stats.typeTokenRatio < 0.45 ? 70 :
+    stats.typeTokenRatio < 0.55 ? 40 : 0;
   score += ttrScore * 0.25;
 
   // Avg sentence length in AI range (18-25)

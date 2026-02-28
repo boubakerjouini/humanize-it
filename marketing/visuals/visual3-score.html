@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1080px; overflow: hidden; font-family: 'Inter', sans-serif; background: #0f0f23; }
+.card {
+  width: 1080px; height: 1080px;
+  background: linear-gradient(160deg, #0f0f23 0%, #13101f 50%, #0d1117 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 48px 56px;
+}
+.bg-glow-red {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(239,68,68,0.13) 0%, transparent 70%);
+  top: 250px; left: -100px;
+  pointer-events: none;
+}
+.bg-glow-green {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(52,211,153,0.13) 0%, transparent 70%);
+  top: 250px; right: -100px;
+  pointer-events: none;
+}
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 54px 54px;
+}
+.header {
+  position: relative; z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: white;
+}
+.logo-text { font-size: 18px; font-weight: 700; color: #fff; }
+.logo-text span { color: #a78bfa; }
+.title-block { text-align: center; }
+.title-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 3px;
+  color: #8b5cf6; text-transform: uppercase; margin-bottom: 6px;
+}
+.title {
+  font-size: 44px; font-weight: 800;
+  color: #fff; letter-spacing: -2px;
+}
+.spacer { width: 130px; }
+
+.comparison {
+  display: flex;
+  gap: 18px;
+  position: relative; z-index: 10;
+  margin-bottom: 20px;
+}
+.panel {
+  flex: 1;
+  border-radius: 16px;
+  padding: 26px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.panel.before {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.3);
+}
+.panel.after {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.3);
+}
+.panel-tag {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 16px;
+}
+.panel.before .panel-tag {
+  background: rgba(239,68,68,0.2);
+  color: #fca5a5;
+}
+.panel.after .panel-tag {
+  background: rgba(52,211,153,0.15);
+  color: #6ee7b7;
+}
+.score-num {
+  font-size: 64px; font-weight: 900;
+  letter-spacing: -4px;
+  line-height: 1;
+}
+.panel.before .score-num { color: #ef4444; }
+.panel.after .score-num { color: #34d399; }
+.score-label {
+  font-size: 13px; font-weight: 600;
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+.panel.before .score-label { color: rgba(239,68,68,0.8); }
+.panel.after .score-label { color: rgba(52,211,153,0.8); }
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.panel.before .progress-bar { background: rgba(239,68,68,0.15); }
+.panel.after .progress-bar { background: rgba(52,211,153,0.1); }
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  left: 0; top: 0;
+}
+.panel.before .progress-fill {
+  width: 78%;
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+.panel.after .progress-fill {
+  width: 12%;
+  background: linear-gradient(90deg, #059669, #34d399);
+}
+.patterns-list { }
+.pattern-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12.5px; line-height: 1.4;
+}
+.panel.before .pattern-item { color: rgba(252,165,165,0.75); }
+.panel.after .pattern-item { color: rgba(110,231,183,0.75); }
+.pattern-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.panel.before .pattern-dot { background: #ef4444; }
+.panel.after .pattern-dot { background: #34d399; }
+
+.text-demo {
+  position: relative; z-index: 10;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  font-size: 14.5px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.8;
+}
+.text-demo .demo-label {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 12px;
+  display: block;
+}
+.hl-red {
+  background: rgba(239,68,68,0.25);
+  color: #fca5a5;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+
+.cta-bar {
+  position: relative; z-index: 10;
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(79,70,229,0.15));
+  border: 1px solid rgba(124,58,237,0.35);
+  border-radius: 16px;
+  padding: 22px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cta-left {}
+.cta-title {
+  font-size: 20px; font-weight: 700;
+  color: #fff; letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.cta-sub {
+  font-size: 13px; font-weight: 400;
+  color: rgba(255,255,255,0.4);
+}
+.cta-right {
+  display: flex; align-items: center; gap: 14px;
+}
+.cta-url {
+  font-size: 14px; font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.3px;
+}
+.cta-btn {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: white;
+  font-size: 14px; font-weight: 700;
+  padding: 12px 26px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg-glow-red"></div>
+  <div class="bg-glow-green"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">H</div>
+      <span class="logo-text">Humanize<span>It</span></span>
+    </div>
+    <div class="title-block">
+      <div class="title-label">Product demo</div>
+      <div class="title">Before vs After</div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="comparison">
+    <div class="panel before">
+      <div class="panel-tag">❌ Before</div>
+      <div class="score-num">78</div>
+      <div class="score-label">/100 — Likely AI Generated</div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="patterns-list">
+        <div class="pattern-item"><div class="pattern-dot"></div>AI vocabulary detected (Tier 1)</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>Low burstiness score (0.12)</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>Uniform sentence structure</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>Filler phrases: "It is worth noting"</div>
+      </div>
+    </div>
+    <div class="panel after">
+      <div class="panel-tag">✅ After</div>
+      <div class="score-num">12</div>
+      <div class="score-label">/100 — Looks Human ✅</div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="patterns-list">
+        <div class="pattern-item"><div class="pattern-dot"></div>Natural vocabulary variety</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>High burstiness (0.74)</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>Mixed sentence lengths</div>
+        <div class="pattern-item"><div class="pattern-dot"></div>Zero AI filler patterns</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-demo">
+    <span class="demo-label">Sample text — AI patterns highlighted</span>
+    <span class="hl-red">It is worth noting</span> that <span class="hl-red">leveraging</span> AI tools can
+    <span class="hl-red">significantly enhance</span> your workflow. 
+    <span class="hl-red">In today's rapidly evolving landscape</span>, writers who 
+    <span class="hl-red">utilize cutting-edge</span> technology <span class="hl-red">gain a competitive advantage</span>. 
+    <span class="hl-red">Furthermore</span>, this approach <span class="hl-red">facilitates</span> 
+    <span class="hl-red">seamless integration</span> of AI into your content strategy.
+  </div>
+
+  <div class="cta-bar">
+    <div class="cta-left">
+      <div class="cta-title">Humanize your AI text in 30 seconds.</div>
+      <div class="cta-sub">Score, detect, and rewrite — $9/month or free to try.</div>
+    </div>
+    <div class="cta-right">
+      <div class="cta-url">HumanizeIt.app</div>
+      <div class="cta-btn">Try Free →</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

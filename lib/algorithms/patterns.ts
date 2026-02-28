@@ -26,6 +26,31 @@ export const AI_VOCABULARY_TIER_1 = [
   "paramount",
   "fostering",
   "navigating",
+  // New additions
+  "groundbreaking",
+  "spearhead",
+  "reimagine",
+  "disruptive",
+  "cutting-edge",
+  "best-in-class",
+  "game-changing",
+  "state-of-the-art",
+  "world-class",
+  "revolutionary",
+  "unprecedented",
+  "transformative",
+  "visionary",
+  "pioneering",
+  "innovative",
+  "synergistic",
+  "scalable",
+  "agile",
+  "robust",
+  "seamlessly",
+  "holistically",
+  "strategically",
+  "fundamentally",
+  "inherently",
 ] as const;
 
 /** Words overused by AI but also used by humans (high signal) */
@@ -50,6 +75,26 @@ export const AI_VOCABULARY_TIER_2 = [
   "indispensable",
   "meticulous",
   "seamless",
+  // New additions
+  "utilize",
+  "functionality",
+  "implementation",
+  "optimization",
+  "actionable",
+  "impactful",
+  "outcomes",
+  "deliverables",
+  "stakeholders",
+  "ecosystem",
+  "bandwidth",
+  "deep dive",
+  "circle back",
+  "move the needle",
+  "low-hanging fruit",
+  "pain points",
+  "value proposition",
+  "north star",
+  "boil the ocean",
 ] as const;
 
 /** Words slightly over-represented in AI text (medium signal) */
@@ -108,6 +153,23 @@ export const FILLER_PHRASES = [
   "plays a crucial role",
   "it should be noted that",
   "the importance of this cannot be overstated",
+  // New additions
+  "as previously mentioned",
+  "as mentioned above",
+  "as noted earlier",
+  "last but not least",
+  "first and foremost",
+  "without further ado",
+  "in other words",
+  "to put it simply",
+  "simply put",
+  "in essence",
+  "at its core",
+  "when all is said and done",
+  "the bottom line is",
+  "the fact of the matter is",
+  "truth be told",
+  "it's worth pointing out",
 ] as const;
 
 /** Generic conclusion phrases favored by AI */
@@ -122,6 +184,15 @@ export const GENERIC_CONCLUSIONS = [
   "all things considered",
   "taking everything into account",
   "in light of the above",
+  // New additions
+  "the future is bright",
+  "exciting times lie ahead",
+  "only time will tell",
+  "the possibilities are endless",
+  "there's never been a better time",
+  "we are at an inflection point",
+  "the landscape is evolving",
+  "as we look to the future",
 ] as const;
 
 /** Hedging phrases that AI uses to soften claims */
@@ -204,12 +275,19 @@ export const PATTERNS_CONFIG: PatternConfig[] = [
   { id: "median-sentence-len", label: "Median Sentence Length", severity: "medium", weight: 3, category: "statistical" },
   { id: "predictable-reading", label: "Predictable Reading Level", severity: "medium", weight: 3, category: "statistical" },
   { id: "low-perplexity", label: "Low Perplexity Indicators", severity: "high", weight: 5, category: "statistical" },
+
+  // New structural patterns (25-29)
+  { id: "em-dash-overuse", label: "Em Dash Overuse (—)", severity: "high", weight: 6, category: "structural" },
+  { id: "colon-abuse", label: "Colon Abuse", severity: "medium", weight: 3, category: "structural" },
+  { id: "passive-voice", label: "Passive Voice Excess", severity: "medium", weight: 4, category: "structural" },
+  { id: "serial-listing", label: "Oxford Comma Serial Listing", severity: "low", weight: 2, category: "structural" },
+  { id: "rhetorical-questions", label: "Rhetorical Questions", severity: "medium", weight: 3, category: "structural" },
 ] as const;
 
 // ---- Score Weights ----
 
 export const SCORE_WEIGHTS = {
-  pattern: 0.6,
-  statistical: 0.25,
+  pattern: 0.65,
+  statistical: 0.20,
   structural: 0.15,
 } as const;

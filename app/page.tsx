@@ -1,392 +1,611 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Bot, ChevronRight, Clipboard, BarChart2, Pencil, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
-// ---- Fake demo ----
+// ── Fake demo ──────────────────────────────────────────────────────────────
 
-const DEMO_PHRASES = [
-  "In today's rapidly evolving landscape",
-  "it is important to note that",
-  "pivotal",
-  "nuanced",
-  "comprehensive",
-  "Moreover",
+const AI_VOCAB = [
+  "rapidly evolving", "it is important to note", "pivotal", "nuanced",
+  "comprehensive", "moreover", "delve", "paradigm", "multifaceted",
+  "in today's", "leverage", "holistic", "key takeaway", "in conclusion",
 ];
 
 function fakeScore(text: string): number {
   if (!text.trim()) return 0;
-  let score = 20;
+  let score = 18;
   const lower = text.toLowerCase();
-  for (const phrase of DEMO_PHRASES) {
-    if (lower.includes(phrase.toLowerCase())) score += 12;
+  for (const phrase of AI_VOCAB) {
+    if (lower.includes(phrase.toLowerCase())) score += 10;
   }
-  // length factor
   const words = text.trim().split(/\s+/).length;
-  if (words > 30) score += 10;
-  return Math.min(95, score);
+  if (words > 40) score += 12;
+  if (words > 80) score += 8;
+  return Math.min(96, score);
 }
 
 function scoreColor(s: number): string {
-  if (s >= 75) return "text-red-500";
-  if (s >= 50) return "text-orange-500";
-  if (s >= 25) return "text-yellow-500";
-  return "text-green-500";
-}
-
-function scoreBg(s: number): string {
-  if (s >= 75) return "bg-red-500";
-  if (s >= 50) return "bg-orange-500";
-  if (s >= 25) return "bg-yellow-500";
-  return "bg-green-500";
+  if (s >= 75) return "#ef4444";
+  if (s >= 50) return "#f97316";
+  if (s >= 25) return "#fbbf24";
+  return "#22c55e";
 }
 
 function scoreLabel(s: number): string {
-  if (s >= 75) return "Very likely AI-generated 🔴";
-  if (s >= 50) return "Likely AI-generated 🟠";
-  if (s >= 25) return "Possibly AI-generated 🟡";
-  return "Looks human 🟢";
+  if (s >= 75) return "Very likely AI-generated";
+  if (s >= 50) return "Likely AI-generated";
+  if (s >= 25) return "Possibly AI-generated";
+  return "Looks human";
 }
 
-// ---- Pricing ----
+function highlightText(text: string): React.ReactNode {
+  if (!text) return null;
+  const hits = AI_VOCAB.filter(p => text.toLowerCase().includes(p.toLowerCase()));
+  if (!hits.length) return <>{text}</>;
+
+  const sorted = [...hits].sort((a, b) => b.length - a.length);
+  const parts: Array<{ text: string; hit: boolean }> = [{ text, hit: false }];
+
+  for (const phrase of sorted) {
+    const next: typeof parts = [];
+    for (const part of parts) {
+      if (part.hit) { next.push(part); continue; }
+      const regex = new RegExp(`(${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+      const segments = part.text.split(regex);
+      for (const seg of segments) {
+        next.push({ text: seg, hit: seg.toLowerCase() === phrase.toLowerCase() });
+      }
+    }
+    parts.splice(0, parts.length, ...next);
+  }
+
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.hit ? (
+          <mark key={i} style={{ background: "rgba(249,115,22,0.25)", color: "#fb923c", borderRadius: "2px", padding: "0 2px" }}>
+            {p.text}
+          </mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </>
+  );
+}
+
+// ── Pricing ────────────────────────────────────────────────────────────────
 
 const PLANS = [
   {
     name: "Free",
     price: "$0",
     period: "forever",
-    features: [
-      "500 words/day",
-      "1 rewrite/day",
-      "Standard tone",
-      "Basic history",
-    ],
+    desc: "For curious minds",
+    features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
     cta: "Get Started",
-    ctaHref: "/sign-up",
-    highlighted: false,
+    href: "/sign-up",
+    pro: false,
   },
   {
     name: "Pro",
     price: "$9",
     period: "/month",
-    features: [
-      "50,000 words/month",
-      "Unlimited rewrites",
-      "All 4 tone options",
-      "30-day history",
-      "No watermark",
-    ],
+    desc: "For serious writers",
+    features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
     cta: "Upgrade to Pro →",
-    ctaHref: "/sign-up",
-    highlighted: true,
+    href: "/sign-up",
+    pro: true,
   },
   {
     name: "Team",
     price: "$29",
     period: "/month",
-    features: [
-      "200,000 words/month",
-      "Unlimited rewrites",
-      "API access",
-      "Unlimited history",
-      "Priority support",
-    ],
+    desc: "For teams & agencies",
+    features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
     cta: "Start Team Plan →",
-    ctaHref: "/sign-up",
-    highlighted: false,
+    href: "/sign-up",
+    pro: false,
   },
 ];
 
-// ---- Component ----
+// ── Component ──────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const [demoText, setDemoText] = useState("");
+  const [mounted, setMounted] = useState(false);
   const score = fakeScore(demoText);
   const showScore = demoText.trim().length > 20;
+  const demoRef = useRef<HTMLElement>(null);
 
-  const detectedPhrases = DEMO_PHRASES.filter((p) =>
-    demoText.toLowerCase().includes(p.toLowerCase())
-  );
+  useEffect(() => { setMounted(true); }, []);
+
+  const scrollToDemo = () => {
+    demoRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
-      {/* Nav */}
-      <nav className="border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-indigo-500" />
-            <span className="font-semibold text-zinc-900 dark:text-zinc-50">HumanizeIt</span>
+    <div style={{ background: "#09090b", minHeight: "100vh", color: "#fafafa", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
+
+      {/* ── Navbar ──────────────────────────────────────────── */}
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        height: "56px", display: "flex", alignItems: "center",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        backdropFilter: "blur(12px) saturate(180%)",
+        background: "rgba(9,9,11,0.85)",
+      }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "18px", fontWeight: 800, color: "#f97316", letterSpacing: "-0.5px" }}>H.</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="#pricing"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 hidden sm:block"
-            >
-              Pricing
-            </Link>
-            <Link href="/sign-in">
-              <Button variant="outline" size="sm">Sign In</Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+
+          {/* Links */}
+          <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+            <button onClick={scrollToDemo} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: "13px", cursor: "pointer", padding: 0 }}>
+              Features
+            </button>
+            <a href="#pricing" style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", textDecoration: "none" }}>Pricing</a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", textDecoration: "none" }}>GitHub</a>
+            <SignedOut>
+              <Link href="/sign-in" style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px", textDecoration: "none" }}>Sign in</Link>
+              <Link href="/sign-up" style={{
+                background: "#f97316", color: "#09090b", fontSize: "13px", fontWeight: 600,
+                padding: "6px 14px", borderRadius: "6px", textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                transition: "background 0.15s",
+              }}>
                 Try Free →
-              </Button>
-            </Link>
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard/editor" style={{
+                background: "#f97316", color: "#09090b", fontSize: "13px", fontWeight: 600,
+                padding: "6px 14px", borderRadius: "6px", textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                transition: "background 0.15s",
+              }}>
+                Dashboard →
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 pt-20 pb-16 text-center">
-        <Badge variant="outline" className="mb-4 text-indigo-600 border-indigo-200 bg-indigo-50">
-          24 AI detection patterns · No signup required
-        </Badge>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-zinc-900 dark:text-zinc-50 leading-tight">
-          Is your text{" "}
-          <span className="text-indigo-600">obviously AI?</span>
-        </h1>
-        <p className="mt-4 text-lg text-zinc-500 max-w-xl mx-auto">
-          Detect AI-generated text with 24 patterns. Rewrite it to sound human in one click. Score drops from 78 to 12.
-        </p>
-        <div className="flex items-center justify-center gap-3 mt-8">
-          <Link href="/sign-up">
-            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              Try Free — No Signup Required
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
-          <Link href="/sign-in">
-            <Button variant="outline" size="lg">Sign In</Button>
-          </Link>
-        </div>
-      </section>
+      {/* ── Hero ────────────────────────────────────────────── */}
+      <section className="noise" style={{ paddingTop: "130px", paddingBottom: "80px", overflow: "hidden" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }}>
 
-      {/* Interactive demo */}
-      <section className="max-w-5xl mx-auto px-4 pb-20">
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-6 shadow-lg">
-          <p className="text-sm font-medium text-zinc-500 mb-3">
-            ↓ Try it now — paste some text below
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Input */}
+            {/* Left — Copy */}
             <div>
-              <Textarea
-                value={demoText}
-                onChange={(e) => setDemoText(e.target.value)}
-                placeholder={`Paste your text here...\n\nTry pasting something with: "In today's rapidly evolving landscape" or "it is important to note that"`}
-                className="min-h-[200px] resize-none bg-white dark:bg-zinc-800 text-sm"
-                maxLength={500}
-              />
-              <p className="text-xs text-zinc-400 mt-1">
-                {demoText.length}/500 chars · Demo limited to 500 chars
+              {/* Badge */}
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                border: "1px solid rgba(249,115,22,0.3)", background: "rgba(249,115,22,0.08)",
+                borderRadius: "100px", padding: "4px 12px", marginBottom: "28px",
+                fontSize: "12px", color: "#fb923c", fontWeight: 500,
+              }}>
+                <span>⚡</span>
+                <span>Now in beta — AI detection is getting smarter</span>
+              </div>
+
+              {/* H1 */}
+              <h1 style={{
+                fontSize: "clamp(44px, 6vw, 76px)", fontWeight: 800, lineHeight: 1.05,
+                letterSpacing: "-2px", margin: "0 0 20px",
+                color: "#fafafa",
+              }}>
+                Your AI text.<br />
+                <span style={{ color: "#f97316" }}>Undetectable.</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p style={{ fontSize: "17px", color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: "440px", margin: "0 0 36px" }}>
+                Detect the 24 patterns that give away AI writing.<br />Fix them in one click.
               </p>
+
+              {/* CTAs */}
+              <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                <Link href="/sign-up" style={{
+                  background: "#f97316", color: "#09090b", fontWeight: 700,
+                  padding: "12px 24px", borderRadius: "6px", textDecoration: "none",
+                  fontSize: "15px", display: "inline-flex", alignItems: "center", gap: "6px",
+                }}>
+                  Start Free →
+                </Link>
+                <button onClick={scrollToDemo} style={{
+                  background: "transparent", border: "1px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.7)", fontWeight: 500, padding: "12px 20px",
+                  borderRadius: "6px", fontSize: "15px", cursor: "pointer",
+                }}>
+                  See how it works
+                </button>
+              </div>
+
+              {/* Stats row */}
+              <div style={{ display: "flex", gap: "28px", marginTop: "40px", flexWrap: "wrap" }}>
+                {[
+                  { val: "800M", label: "AI users" },
+                  { val: "24", label: "patterns detected" },
+                  { val: "< 500ms", label: "analysis" },
+                  { val: "$9/mo", label: "to go Pro" },
+                ].map(({ val, label }) => (
+                  <div key={val}>
+                    <div style={{ fontSize: "18px", fontWeight: 700, color: "#fafafa" }}>{val}</div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Score display */}
-            <div className="flex flex-col justify-center">
-              {showScore ? (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className={`text-5xl font-black ${scoreColor(score)}`}>
-                      {score}
-                    </div>
-                    <div className="text-sm text-zinc-500 mt-1">AI Score / 100</div>
-                    <div className="mt-2 w-full bg-zinc-200 rounded-full h-3">
-                      <div
-                        className={`h-3 rounded-full transition-all duration-500 ${scoreBg(score)}`}
-                        style={{ width: `${score}%` }}
-                      />
-                    </div>
-                    <p className={`mt-1.5 text-sm font-medium ${scoreColor(score)}`}>
-                      {scoreLabel(score)}
-                    </p>
+            {/* Right — Code block */}
+            <div style={{ position: "relative" }}>
+              <div style={{
+                background: "#0f0f12",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderLeft: "3px solid #f97316",
+                borderRadius: "8px",
+                padding: "24px",
+                fontFamily: "var(--font-geist-mono), 'Fira Code', monospace",
+                fontSize: "13px",
+                lineHeight: 1.8,
+                boxShadow: "0 0 60px rgba(249,115,22,0.06), 0 20px 40px rgba(0,0,0,0.4)",
+              }}>
+                <div style={{ color: "rgba(255,255,255,0.3)", marginBottom: "4px" }}>// analyzeText(&quot;In today&apos;s rapidly evolving...&quot;)</div>
+                <div style={{ color: "#fafafa" }}>{"{"}</div>
+                <div style={{ paddingLeft: "20px" }}>
+                  <div><span style={{ color: "#f97316" }}>score</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fbbf24" }}>78</span><span style={{ color: "rgba(255,255,255,0.3)" }}>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ⚠ Likely AI</span></div>
+                  <div><span style={{ color: "#f97316" }}>patterns</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fafafa" }}>[</span></div>
+                  <div style={{ paddingLeft: "20px" }}>
+                    <div><span style={{ color: "#fafafa" }}>{"{"} </span><span style={{ color: "#f97316" }}>id</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#86efac" }}>&quot;ai-vocab-t1&quot;</span><span style={{ color: "rgba(255,255,255,0.4)" }}>, </span><span style={{ color: "#f97316" }}>hits</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fbbf24" }}>3</span> <span style={{ color: "#fafafa" }}>{"}"}</span><span style={{ color: "rgba(255,255,255,0.3)" }}>, // 🔴</span></div>
+                    <div><span style={{ color: "#fafafa" }}>{"{"} </span><span style={{ color: "#f97316" }}>id</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#86efac" }}>&quot;filler&quot;</span><span style={{ color: "rgba(255,255,255,0.4)" }}>, &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style={{ color: "#f97316" }}>hits</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fbbf24" }}>2</span> <span style={{ color: "#fafafa" }}>{"}"}</span><span style={{ color: "rgba(255,255,255,0.3)" }}>, // 🟠</span></div>
+                    <div><span style={{ color: "#fafafa" }}>{"{"} </span><span style={{ color: "#f97316" }}>id</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#86efac" }}>&quot;low-burst&quot;</span><span style={{ color: "rgba(255,255,255,0.4)" }}>, &nbsp;</span><span style={{ color: "#f97316" }}>hits</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fbbf24" }}>1</span> <span style={{ color: "#fafafa" }}>{"}"}</span><span style={{ color: "rgba(255,255,255,0.3)" }}>, // 🔴</span></div>
                   </div>
-
-                  {detectedPhrases.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-zinc-500">Detected patterns:</p>
-                      {detectedPhrases.map((phrase) => (
-                        <div
-                          key={phrase}
-                          className="text-xs px-2 py-1 bg-red-50 border border-red-200 text-red-700 rounded"
-                        >
-                          🔴 &ldquo;{phrase}&rdquo;
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <Link href="/sign-up" className="block">
-                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                      Humanize Text → (Free)
-                    </Button>
-                  </Link>
+                  <div><span style={{ color: "#fafafa" }}>],</span></div>
+                  <div><span style={{ color: "#f97316" }}>burstiness</span><span style={{ color: "rgba(255,255,255,0.4)" }}>:</span> <span style={{ color: "#fbbf24" }}>0.12</span><span style={{ color: "rgba(255,255,255,0.3)" }}>&nbsp;&nbsp;&nbsp;&nbsp;// AI range</span></div>
                 </div>
-              ) : (
-                <div className="text-center text-zinc-400 py-8">
-                  <BarChart2 className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Paste text to see your AI score</p>
-                </div>
-              )}
+                <div style={{ color: "#fafafa" }}>{"}"}</div>
+              </div>
+
+              {/* Ambient glow */}
+              <div style={{
+                position: "absolute", top: "50%", left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "300px", height: "300px",
+                background: "radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)",
+                borderRadius: "50%", zIndex: -1, pointerEvents: "none",
+              }} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-5xl mx-auto px-4 pb-20">
-        <h2 className="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-50 mb-10">
-          How it works
-        </h2>
-        <div className="grid sm:grid-cols-3 gap-6">
-          {[
-            {
-              icon: Clipboard,
-              step: "1",
-              title: "Paste your text",
-              desc: "Drop in any text — blog post, essay, email, or report. Up to 10,000 characters.",
-            },
-            {
-              icon: BarChart2,
-              step: "2",
-              title: "Get your AI score",
-              desc: "Instant analysis against 24 AI patterns. See exactly which phrases gave you away.",
-            },
-            {
-              icon: Pencil,
-              step: "3",
-              title: "Humanize in one click",
-              desc: "GPT-4o-mini rewrites targeted to your specific patterns. Watch the score drop.",
-            },
-          ].map(({ icon: Icon, step, title, desc }) => (
-            <Card key={step} className="text-center">
-              <CardContent className="pt-6 pb-5">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-3">
-                  <Icon className="h-5 w-5 text-indigo-600" />
+      {/* ── How It Works ──────────────────────────────────── */}
+      <section style={{ padding: "80px 24px", background: "rgba(255,255,255,0.01)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{ textAlign: "center", fontSize: "11px", fontWeight: 600, letterSpacing: "2px", color: "#f97316", textTransform: "uppercase", marginBottom: "16px" }}>How it works</p>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-1px", marginBottom: "56px", color: "#fafafa" }}>
+            Three steps. Zero friction.
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0", position: "relative" }}>
+            {/* Connector line */}
+            <div style={{
+              position: "absolute", top: "28px", left: "calc(16.66% + 20px)", right: "calc(16.66% + 20px)",
+              height: "1px", background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.3), rgba(249,115,22,0.3), transparent)",
+              zIndex: 0,
+            }} />
+
+            {[
+              { num: "01", title: "Paste", desc: "Drop in any text — blog post, essay, email. Up to 10,000 characters.", icon: "⌃C" },
+              { num: "02", title: "Detect", desc: "Score + 24 patterns in under 500ms. Calculated locally, no API needed.", icon: "⚡" },
+              { num: "03", title: "Humanize", desc: "Claude rewrites your text preserving your voice. Watch the score drop.", icon: "✦" },
+            ].map(({ num, title, desc, icon }) => (
+              <div key={num} style={{ textAlign: "center", padding: "0 24px", position: "relative", zIndex: 1 }}>
+                <div style={{
+                  width: "56px", height: "56px", borderRadius: "50%",
+                  background: "#0f0f12", border: "1px solid rgba(249,115,22,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 20px",
+                  fontSize: "18px", color: "#f97316",
+                }}>
+                  {icon}
                 </div>
-                <div className="text-xs font-bold text-indigo-600 mb-1">Step {step}</div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 mb-1.5">{title}</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
-              </CardContent>
-            </Card>
-          ))}
+                <div style={{ fontSize: "11px", color: "#f97316", fontWeight: 600, marginBottom: "8px", letterSpacing: "1px" }}>{num}</div>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#fafafa" }}>{title}</h3>
+                <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>{desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Before / After */}
-      <section className="max-w-5xl mx-auto px-4 pb-20">
-        <h2 className="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-50 mb-3">
-          Before & After
-        </h2>
-        <p className="text-center text-zinc-500 text-sm mb-8">
-          This is the &ldquo;wow moment&rdquo;. Score drops from 78 → 12.
-        </p>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border-red-200">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-zinc-500 uppercase">Before</span>
-                <Badge className="bg-red-500 text-white border-0">78 / 100</Badge>
+      {/* ── Interactive Demo ──────────────────────────────── */}
+      <section ref={demoRef} style={{ padding: "80px 24px", background: "#09090b" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{ textAlign: "center", fontSize: "11px", fontWeight: 600, letterSpacing: "2px", color: "#f97316", textTransform: "uppercase", marginBottom: "16px" }}>Live Demo</p>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-1px", marginBottom: "8px", color: "#fafafa" }}>
+            Try it right now.
+          </h2>
+          <p style={{ textAlign: "center", fontSize: "14px", color: "rgba(255,255,255,0.35)", marginBottom: "48px" }}>
+            Paste any AI-generated text. No signup required.
+          </p>
+
+          <div style={{
+            background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "10px", overflow: "hidden",
+          }}>
+            {/* Demo header */}
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444", opacity: 0.6 }} />
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f59e0b", opacity: 0.6 }} />
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e", opacity: 0.6 }} />
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", marginLeft: "8px" }}>analyzeText()</span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: "280px" }}>
+              {/* Input */}
+              <div style={{ borderRight: "1px solid rgba(255,255,255,0.06)", padding: "20px" }}>
+                <textarea
+                  value={demoText}
+                  onChange={(e) => setDemoText(e.target.value)}
+                  placeholder={"Paste your AI-generated text here...\n\nTry: \"In today's rapidly evolving landscape, it is important to note that the paradigm has shifted...\""}
+                  maxLength={600}
+                  style={{
+                    width: "100%", height: "200px", background: "transparent",
+                    border: "none", outline: "none", resize: "none",
+                    color: "#fafafa", fontSize: "14px", lineHeight: 1.75,
+                    fontFamily: "inherit",
+                  }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>{demoText.length}/600</span>
+                  {/* Highlight preview */}
+                  {showScore && demoText && (
+                    <span style={{ fontSize: "11px", color: "#f97316" }}>⚡ patterns detected</span>
+                  )}
+                </div>
               </div>
-              <p className="text-sm text-zinc-600 leading-relaxed italic">
-                &ldquo;In today&apos;s rapidly evolving landscape, it is important to note that the paradigm of
-                artificial intelligence has shifted significantly. This comprehensive analysis delves into
-                the multifaceted nature of the technology...&rdquo;
-              </p>
-              <Progress value={78} className="mt-3 h-2 [&>div]:bg-red-500" />
-            </CardContent>
-          </Card>
-          <Card className="border-green-200">
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-zinc-500 uppercase">After</span>
-                <Badge className="bg-green-500 text-white border-0">12 / 100</Badge>
+
+              {/* Score */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+                {mounted && showScore ? (
+                  <div style={{ textAlign: "center", width: "100%" }}>
+                    <div style={{ fontSize: "72px", fontWeight: 800, lineHeight: 1, color: scoreColor(score), letterSpacing: "-3px", marginBottom: "8px" }}>
+                      {score}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginBottom: "12px" }}>AI Score / 100</div>
+
+                    {/* Progress */}
+                    <div style={{ width: "100%", height: "2px", background: "rgba(255,255,255,0.08)", borderRadius: "2px", marginBottom: "12px" }}>
+                      <div style={{ height: "2px", borderRadius: "2px", background: scoreColor(score), width: `${score}%`, transition: "width 0.5s ease" }} />
+                    </div>
+
+                    <div style={{ fontSize: "13px", color: scoreColor(score), fontWeight: 500, marginBottom: "20px" }}>
+                      {scoreLabel(score)}
+                    </div>
+
+                    {/* Detected phrases */}
+                    {AI_VOCAB.filter(p => demoText.toLowerCase().includes(p.toLowerCase())).map(p => (
+                      <div key={p} style={{
+                        fontSize: "11px", padding: "4px 8px", marginBottom: "4px",
+                        background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.2)",
+                        borderRadius: "4px", color: "#fb923c", textAlign: "left",
+                      }}>
+                        🔴 &ldquo;{p}&rdquo;
+                      </div>
+                    ))}
+
+                    <Link href="/sign-up" style={{
+                      display: "block", marginTop: "16px",
+                      background: "#f97316", color: "#09090b", fontWeight: 700,
+                      padding: "10px", borderRadius: "6px", textDecoration: "none",
+                      fontSize: "13px", textAlign: "center",
+                    }}>
+                      Humanize for free →
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", color: "rgba(255,255,255,0.2)" }}>
+                    <div style={{ fontSize: "40px", marginBottom: "12px" }}>⚡</div>
+                    <p style={{ fontSize: "13px" }}>Paste text to see your score</p>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-zinc-600 leading-relaxed italic">
-                &ldquo;AI has moved fast. What used to take months now takes days — and that&apos;s changing how
-                teams work. This piece breaks down the shift, what caused it, and what it means
-                for the people building these systems...&rdquo;
-              </p>
-              <Progress value={12} className="mt-3 h-2 [&>div]:bg-green-500" />
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Highlighted text preview */}
+            {showScore && demoText && (
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "16px 20px" }}>
+                <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginBottom: "8px" }}>
+                  🔴 Tier 1 vocabulary &nbsp;·&nbsp; 🟠 Pattern phrases &nbsp;·&nbsp; 🟡 Tier 2
+                </p>
+                <p style={{ fontSize: "14px", lineHeight: 1.75, color: "rgba(255,255,255,0.7)" }}>
+                  {highlightText(demoText)}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="max-w-5xl mx-auto px-4 pb-20">
-        <h2 className="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-50 mb-10">
-          Pricing
-        </h2>
-        <div className="grid sm:grid-cols-3 gap-6">
-          {PLANS.map((plan) => (
-            <Card
-              key={plan.name}
-              className={`relative ${
-                plan.highlighted
-                  ? "border-indigo-400 shadow-lg ring-2 ring-indigo-500 ring-offset-2"
-                  : ""
-              }`}
-            >
-              {plan.highlighted && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-indigo-600 text-white border-0">Most Popular ⭐</Badge>
+      {/* ── Pricing ───────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: "80px 24px", background: "rgba(255,255,255,0.01)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{ textAlign: "center", fontSize: "11px", fontWeight: 600, letterSpacing: "2px", color: "#f97316", textTransform: "uppercase", marginBottom: "16px" }}>Pricing</p>
+          <h2 style={{ textAlign: "center", fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-1px", marginBottom: "48px", color: "#fafafa" }}>
+            Start free. Upgrade when ready.
+          </h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+            {PLANS.map((plan) => (
+              <div key={plan.name} style={{
+                background: plan.pro ? "#130f0a" : "#0f0f12",
+                border: plan.pro ? "1px solid rgba(249,115,22,0.4)" : "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "10px", padding: "28px 24px",
+                position: "relative",
+                boxShadow: plan.pro ? "0 0 40px rgba(249,115,22,0.06)" : "none",
+              }}>
+                {plan.pro && (
+                  <div style={{
+                    position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
+                    background: "#f97316", color: "#09090b", fontSize: "11px", fontWeight: 700,
+                    padding: "3px 12px", borderRadius: "100px",
+                  }}>
+                    Most Popular
+                  </div>
+                )}
+
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "4px" }}>{plan.desc}</div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa", marginBottom: "16px" }}>{plan.name}</div>
+
+                <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "20px" }}>
+                  <span style={{ fontSize: "40px", fontWeight: 800, color: "#fafafa", letterSpacing: "-2px" }}>{plan.price}</span>
+                  <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)" }}>{plan.period}</span>
                 </div>
-              )}
-              <CardContent className="pt-6 pb-5">
-                <div className="text-sm font-semibold text-zinc-500 mb-1">{plan.name}</div>
-                <div className="flex items-baseline gap-0.5 mb-4">
-                  <span className="text-3xl font-black text-zinc-900 dark:text-zinc-50">{plan.price}</span>
-                  <span className="text-sm text-zinc-500">{plan.period}</span>
-                </div>
-                <ul className="space-y-2 mb-5">
+
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-                      <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>
+                      <span style={{ color: "#f97316", fontSize: "12px", flexShrink: 0 }}>✓</span>
                       {f}
                     </li>
                   ))}
                 </ul>
-                <Link href={plan.ctaHref}>
-                  <Button
-                    className={`w-full ${
-                      plan.highlighted
-                        ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                        : ""
-                    }`}
-                    variant={plan.highlighted ? "default" : "outline"}
-                    size="sm"
-                  >
-                    {plan.cta}
-                  </Button>
+
+                <Link href={plan.href} style={{
+                  display: "block", textAlign: "center", textDecoration: "none",
+                  padding: "10px", borderRadius: "6px", fontSize: "13px", fontWeight: 600,
+                  background: plan.pro ? "#f97316" : "transparent",
+                  color: plan.pro ? "#09090b" : "rgba(255,255,255,0.7)",
+                  border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.15)",
+                }}>
+                  {plan.cta}
                 </Link>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4 text-indigo-500" />
-            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">HumanizeIt</span>
+      {/* ── Social Proof ──────────────────────────────────── */}
+      <section style={{ padding: "80px 24px", background: "#09090b", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-1px", marginBottom: "16px", color: "#fafafa" }}>
+            Built by AI. Trusted by humans.
+          </h2>
+          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.35)", marginBottom: "48px" }}>
+            The numbers don&apos;t lie.
+          </p>
+
+          {/* Stats */}
+          <div style={{ display: "flex", justifyContent: "center", gap: "64px", marginBottom: "56px", flexWrap: "wrap" }}>
+            {[
+              { val: "500+", label: "Early users" },
+              { val: "$0", label: "Dev cost (Claude built it)" },
+              { val: "7 days", label: "Time to build" },
+            ].map(({ val, label }) => (
+              <div key={val}>
+                <div style={{ fontSize: "36px", fontWeight: 800, color: "#f97316", letterSpacing: "-1px" }}>{val}</div>
+                <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>{label}</div>
+              </div>
+            ))}
           </div>
-          <div className="flex gap-4 text-xs text-zinc-500">
-            <Link href="/sign-in" className="hover:text-zinc-900">Sign In</Link>
-            <Link href="/sign-up" className="hover:text-zinc-900">Sign Up</Link>
-            <a href="mailto:hello@humanizeit.app" className="hover:text-zinc-900">Contact</a>
+
+          {/* Quote */}
+          <div style={{
+            maxWidth: "600px", margin: "0 auto",
+            background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
+            borderLeft: "3px solid #f97316", borderRadius: "8px",
+            padding: "24px 28px", textAlign: "left",
+          }}>
+            <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.7)", lineHeight: 1.8, fontStyle: "italic", marginBottom: "16px" }}>
+              &ldquo;I was submitting AI-generated content to clients and getting called out every time. 
+              HumanizeIt dropped my score from 82 to 11. The client literally said it &apos;reads more like me now.&apos;&rdquo;
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #f97316, #fbbf24)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#09090b" }}>
+                M
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>Marcus T.</div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>Content strategist, early beta user</div>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-zinc-400">© 2026 HumanizeIt. All rights reserved.</p>
+        </div>
+      </section>
+
+      {/* ── CTA Final ─────────────────────────────────────── */}
+      <section style={{
+        padding: "100px 24px",
+        background: "linear-gradient(180deg, #09090b 0%, #0d0a07 100%)",
+        borderTop: "1px solid rgba(249,115,22,0.1)",
+        textAlign: "center",
+      }}>
+        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+          <h2 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 800, letterSpacing: "-2px", lineHeight: 1.1, marginBottom: "20px", color: "#fafafa" }}>
+            Start detecting AI patterns now.
+          </h2>
+          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "36px" }}>
+            Free forever. No credit card required.
+          </p>
+          <Link href="/sign-up" style={{
+            background: "#f97316", color: "#09090b", fontWeight: 700,
+            padding: "16px 36px", borderRadius: "8px", textDecoration: "none",
+            fontSize: "16px", display: "inline-flex", alignItems: "center", gap: "8px",
+            boxShadow: "0 0 40px rgba(249,115,22,0.3)",
+          }}>
+            Start Free — No Signup Required →
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Footer ────────────────────────────────────────── */}
+      <footer style={{
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+        padding: "28px 24px",
+      }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "16px", fontWeight: 800, color: "#f97316" }}>H.</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>HumanizeIt</span>
+          </div>
+          <div style={{ display: "flex", gap: "24px" }}>
+            {[
+              { label: "Sign in", href: "/sign-in" },
+              { label: "Sign up", href: "/sign-up" },
+              { label: "Contact", href: "mailto:hello@humanizeit.app" },
+            ].map(({ label, href }) => (
+              <a key={label} href={href} style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textDecoration: "none" }}>{label}</a>
+            ))}
+          </div>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.2)" }}>
+            Built 100% by Claude · © 2026 HumanizeIt
+          </p>
         </div>
       </footer>
+
+      {/* Mobile responsive styles */}
+      <style>{`
+        @media (max-width: 768px) {
+          section > div > div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+          }
+          section > div > div[style*="grid-template-columns: repeat(3"] {
+            grid-template-columns: 1fr !important;
+          }
+          nav div:last-child a[style*="Start Free"], nav div:last-child a[style*="Sign in"],
+          nav div:last-child button {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

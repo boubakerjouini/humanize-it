@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { FileText, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Document {
   id: string;
@@ -32,35 +29,42 @@ interface UsageResponse {
   error?: { message: string };
 }
 
-function scoreBadgeColor(score: number): string {
-  if (score >= 80) return "bg-red-100 text-red-700 border-red-200";
-  if (score >= 61) return "bg-orange-100 text-orange-700 border-orange-200";
-  if (score >= 31) return "bg-yellow-100 text-yellow-700 border-yellow-200";
-  return "bg-green-100 text-green-700 border-green-200";
+function scoreColor(s: number): string {
+  if (s >= 80) return "#ef4444";
+  if (s >= 61) return "#f97316";
+  if (s >= 31) return "#fbbf24";
+  return "#22c55e";
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 80) return "🔴 Very AI";
-  if (score >= 61) return "🟠 Likely AI";
-  if (score >= 31) return "🟡 Possibly AI";
-  return "🟢 Human";
+function scoreBg(s: number): string {
+  if (s >= 80) return "rgba(239,68,68,0.12)";
+  if (s >= 61) return "rgba(249,115,22,0.12)";
+  if (s >= 31) return "rgba(251,191,36,0.12)";
+  return "rgba(34,197,94,0.12)";
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function scoreLabel(s: number): string {
+  if (s >= 80) return "Very AI";
+  if (s >= 61) return "Likely AI";
+  if (s >= 31) return "Possibly AI";
+  return "Human";
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+  if (days > 30) return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
+  return "just now";
 }
 
 export default function HistoryPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    totalPages: 1,
-    total: 0,
-  });
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<string>("FREE");
 
@@ -69,9 +73,7 @@ export default function HistoryPage() {
       const res = await fetch("/api/usage");
       const data = await res.json() as UsageResponse;
       if (res.ok) setPlan(data.plan);
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }, []);
 
   const fetchDocuments = useCallback(async (page: number) => {
@@ -81,17 +83,10 @@ export default function HistoryPage() {
       const data = await res.json() as DocumentsResponse;
       if (res.ok) {
         setDocuments(data.documents);
-        setPagination({
-          page: data.pagination.page,
-          totalPages: data.pagination.totalPages,
-          total: data.pagination.total,
-        });
+        setPagination({ page: data.pagination.page, totalPages: data.pagination.totalPages, total: data.pagination.total });
       }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -102,103 +97,142 @@ export default function HistoryPage() {
   const isFree = plan === "FREE";
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ maxWidth: "800px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Document History</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
-            {isFree
-              ? "History available on Pro"
-              : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fafafa", letterSpacing: "-0.5px" }}>History</h1>
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>
+            {isFree ? "Upgrade to Pro to unlock history" : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
           </p>
         </div>
-        <Link href="/dashboard/editor">
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            <Plus className="h-4 w-4 mr-1.5" />
-            New Doc
-          </Button>
+        <Link href="/dashboard/editor" style={{
+          display: "flex", alignItems: "center", gap: "6px",
+          background: "#f97316", color: "#09090b", fontWeight: 600,
+          padding: "8px 14px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
+        }}>
+          <Plus size={13} />
+          New Doc
         </Link>
       </div>
 
-      {/* Free plan notice */}
+      {/* Free plan gate */}
       {isFree && (
-        <Card className="border-indigo-200 bg-indigo-50 dark:bg-indigo-900/20">
-          <CardContent className="py-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">
-                History available on Pro — $9/month
-              </p>
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
-                Access 30 days of history, unlimited rewrites, and more.
-              </p>
-            </div>
-            <Link href="/dashboard/settings">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white flex-shrink-0">
-                Upgrade →
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div style={{
+          background: "rgba(249,115,22,0.06)",
+          border: "1px solid rgba(249,115,22,0.2)",
+          borderRadius: "8px", padding: "20px 24px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: "16px", marginBottom: "20px",
+        }}>
+          <div>
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa", marginBottom: "4px" }}>
+              History available on Pro — $9/month
+            </p>
+            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
+              Access 30 days of history, unlimited rewrites, all tone modes.
+            </p>
+          </div>
+          <Link href="/dashboard/settings" style={{
+            background: "#f97316", color: "#09090b", fontWeight: 700,
+            padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
+            flexShrink: 0,
+          }}>
+            Upgrade →
+          </Link>
+        </div>
       )}
 
       {/* Document list */}
       {loading ? (
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-20 rounded-lg bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+            <div key={i} style={{
+              height: "72px", borderRadius: "8px",
+              background: "rgba(255,255,255,0.04)",
+              animation: "pulse 2s infinite",
+            }} />
           ))}
         </div>
       ) : documents.length === 0 ? (
-        <Card className="flex items-center justify-center border-dashed">
-          <CardContent className="text-center py-16">
-            <FileText className="h-8 w-8 text-zinc-300 mx-auto mb-3" />
-            <p className="text-zinc-500 text-sm font-medium">No documents yet</p>
-            <p className="text-zinc-400 text-xs mt-1">
-              Head to the Editor and analyze your first text.
-            </p>
-            <Link href="/dashboard/editor">
-              <Button size="sm" className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                Open Editor
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div style={{
+          background: "#0f0f12", border: "1px dashed rgba(255,255,255,0.08)",
+          borderRadius: "8px", padding: "64px 24px",
+          display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+        }}>
+          <FileText size={32} style={{ color: "rgba(255,255,255,0.1)", marginBottom: "16px" }} />
+          <p style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: "6px" }}>No documents yet</p>
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.2)", marginBottom: "20px" }}>
+            Head to the editor and analyze your first text.
+          </p>
+          <Link href="/dashboard/editor" style={{
+            background: "#f97316", color: "#09090b", fontWeight: 700,
+            padding: "8px 20px", borderRadius: "6px", textDecoration: "none", fontSize: "13px",
+          }}>
+            Open Editor →
+          </Link>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {documents.map((doc, idx) => (
             <Link
               key={doc.id}
               href={`/dashboard/editor?doc=${doc.id}`}
-              className="block"
+              style={{ textDecoration: "none", display: "block" }}
             >
-              <Card className="hover:shadow-sm transition-shadow cursor-pointer">
-                <CardContent className="py-4 flex items-start gap-4">
-                  <span className="text-xs text-zinc-400 w-6 flex-shrink-0 mt-0.5 text-right">
-                    {(pagination.page - 1) * 10 + idx + 1}
+              <div style={{
+                background: idx % 2 === 0 ? "#0f0f12" : "rgba(255,255,255,0.015)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "8px", padding: "14px 16px",
+                display: "flex", alignItems: "center", gap: "14px",
+                cursor: "pointer",
+                transition: "border-color 0.15s, border-left-color 0.15s",
+              }}
+                className="history-row"
+              >
+                {/* Index */}
+                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", width: "20px", textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-mono), monospace" }}>
+                  {(pagination.page - 1) * 10 + idx + 1}
+                </span>
+
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5,
+                    overflow: "hidden", display: "-webkit-box",
+                    WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                  }}>
+                    {doc.originalText}
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
+                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace" }}>
+                      {doc.wordCount} words
+                    </span>
+                    {doc.rewrittenText && (
+                      <span style={{ fontSize: "11px", color: "#22c55e", fontWeight: 600 }}>✓ Humanized</span>
+                    )}
+                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>
+                      {timeAgo(doc.createdAt)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Score badge */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: "13px", fontWeight: 800, color: scoreColor(doc.overallScore),
+                    background: scoreBg(doc.overallScore),
+                    padding: "3px 8px", borderRadius: "5px",
+                    fontFamily: "var(--font-geist-mono), monospace",
+                  }}>
+                    {Math.round(doc.overallScore)}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-2 leading-snug">
-                      {doc.originalText}
-                    </p>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className="text-xs text-zinc-400">{doc.wordCount} words</span>
-                      {doc.rewrittenText && (
-                        <span className="text-xs text-green-600 font-medium">✓ Humanized</span>
-                      )}
-                      <span className="text-xs text-zinc-400">{formatDate(doc.createdAt)}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${scoreBadgeColor(doc.overallScore)}`}
-                    >
-                      {Math.round(doc.overallScore)}
-                    </Badge>
-                    <span className="text-xs text-zinc-400">{scoreLabel(doc.overallScore)}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>
+                    {scoreLabel(doc.overallScore)}
+                  </span>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
@@ -206,30 +240,49 @@ export default function HistoryPage() {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchDocuments(pagination.page - 1)}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "24px" }}>
+          <button
+            onClick={() => void fetchDocuments(pagination.page - 1)}
             disabled={pagination.page <= 1 || loading}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500,
+              padding: "7px 14px", borderRadius: "5px", cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
+              opacity: pagination.page <= 1 ? 0.4 : 1,
+            }}
           >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Prev
-          </Button>
-          <span className="text-sm text-zinc-500">
-            Page {pagination.page} of {pagination.totalPages}
+            <ChevronLeft size={13} /> Prev
+          </button>
+          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-geist-mono), monospace" }}>
+            {pagination.page} / {pagination.totalPages}
           </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fetchDocuments(pagination.page + 1)}
+          <button
+            onClick={() => void fetchDocuments(pagination.page + 1)}
             disabled={pagination.page >= pagination.totalPages || loading}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500,
+              padding: "7px 14px", borderRadius: "5px", cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
+              opacity: pagination.page >= pagination.totalPages ? 0.4 : 1,
+            }}
           >
-            Next
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
+            Next <ChevronRight size={13} />
+          </button>
         </div>
       )}
+
+      <style>{`
+        .history-row:hover {
+          border-left: 3px solid #f97316 !important;
+          border-color: rgba(249,115,22,0.25) !important;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -2,107 +2,174 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
-import { FileText, History, Settings, Bot } from "lucide-react";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { FileText, History, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard/editor", label: "Editor", icon: FileText },
-  { href: "/dashboard/history", label: "History", icon: History },
+  { href: "/dashboard/editor",   label: "Editor",   icon: FileText },
+  { href: "/dashboard/history",  label: "History",  icon: History },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardNav({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useUser();
 
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      {/* Sidebar */}
-      <aside className="hidden md:flex w-56 flex-col border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+    <div style={{ display: "flex", minHeight: "100vh", background: "#09090b" }}>
+
+      {/* ── Sidebar ─────────────────────────────────────── */}
+      <aside style={{
+        width: "220px", flexShrink: 0,
+        display: "flex", flexDirection: "column",
+        background: "#060608",
+        borderRight: "1px solid rgba(255,255,255,0.05)",
+      }} className="hidden md:flex">
+
         {/* Logo */}
-        <div className="flex h-14 items-center gap-2 px-4 border-b border-zinc-200 dark:border-zinc-800">
-          <Bot className="h-5 w-5 text-indigo-500" />
-          <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">
-            HumanizeIt
-          </span>
+        <div style={{
+          height: "56px", display: "flex", alignItems: "center",
+          padding: "0 20px", gap: "8px",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}>
+          <span style={{ fontSize: "18px", fontWeight: 800, color: "#f97316" }}>H.</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
         </div>
 
-        {/* Nav */}
-        <nav className="flex flex-col gap-1 p-2 flex-1">
+        {/* Nav items */}
+        <nav style={{ flex: 1, padding: "12px 10px", display: "flex", flexDirection: "column", gap: "2px" }}>
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
+                style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  padding: "8px 12px", borderRadius: "6px",
+                  fontSize: "13px", fontWeight: 500,
+                  textDecoration: "none",
+                  transition: "background 0.15s, color 0.15s",
+                  background: active ? "rgba(249,115,22,0.1)" : "transparent",
+                  color: active ? "#f97316" : "rgba(255,255,255,0.45)",
+                  borderLeft: active ? "2px solid #f97316" : "2px solid transparent",
+                  marginLeft: "2px",
+                }}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  "group",
+                  !active && "hover:bg-white/5 hover:text-white/70"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon
+                  size={15}
+                  style={{ color: active ? "#f97316" : undefined, flexShrink: 0 }}
+                />
                 {label}
               </Link>
             );
           })}
         </nav>
+
+        {/* Bottom — user info */}
+        <div style={{
+          padding: "14px 16px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          display: "flex", alignItems: "center", gap: "10px",
+        }}>
+          <UserButton afterSignOutUrl="/" />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: "12px", fontWeight: 500, color: "#fafafa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {user?.firstName ?? user?.primaryEmailAddress?.emailAddress?.split("@")[0] ?? "User"}
+            </div>
+            <div style={{
+              fontSize: "10px", padding: "1px 6px", borderRadius: "4px", marginTop: "3px",
+              display: "inline-block",
+              background: "rgba(249,115,22,0.12)", color: "#f97316",
+              fontWeight: 600, letterSpacing: "0.5px",
+            }}>
+              FREE
+            </div>
+          </div>
+        </div>
       </aside>
 
-      {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0">
+      {/* ── Main area ────────────────────────────────────── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+
         {/* Top bar */}
-        <header className="flex h-14 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4">
+        <header style={{
+          height: "56px", display: "flex", alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: "#060608",
+          padding: "0 20px",
+        }}>
           {/* Mobile logo */}
-          <div className="flex items-center gap-2 md:hidden">
-            <Bot className="h-5 w-5 text-indigo-500" />
-            <span className="font-semibold text-sm">HumanizeIt</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }} className="md:hidden">
+            <span style={{ fontSize: "16px", fontWeight: 800, color: "#f97316" }}>H.</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
           </div>
 
-          {/* Mobile nav */}
-          <nav className="hidden sm:flex md:hidden items-center gap-1">
+          {/* Desktop — empty left */}
+          <div className="hidden md:block" />
+
+          {/* Mobile nav tabs */}
+          <nav className="hidden sm:flex md:hidden" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             {navItems.map(({ href, label, icon: Icon }) => {
               const active = pathname.startsWith(href);
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={cn(
-                    "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
-                    active
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-zinc-600 hover:bg-zinc-100"
-                  )}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "5px",
+                    padding: "5px 10px", borderRadius: "5px",
+                    fontSize: "12px", fontWeight: 500, textDecoration: "none",
+                    background: active ? "rgba(249,115,22,0.1)" : "transparent",
+                    color: active ? "#f97316" : "rgba(255,255,255,0.45)",
+                  }}
                 >
-                  <Icon className="h-3 w-3" />
+                  <Icon size={12} />
                   {label}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="md:hidden" />
-          <UserButton afterSignOutUrl="/" />
+          {/* Right — user button on mobile */}
+          <div className="md:hidden">
+            <UserButton afterSignOutUrl="/" />
+          </div>
+          <div className="hidden md:block">
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+        <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+          {children}
+        </main>
 
         {/* Mobile bottom nav */}
-        <nav className="flex sm:hidden border-t border-zinc-200 bg-white dark:bg-zinc-900">
+        <nav className="flex sm:hidden" style={{
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          background: "#060608", display: "flex",
+        }}>
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={cn(
-                  "flex flex-1 flex-col items-center gap-1 py-2 text-xs",
-                  active ? "text-indigo-600" : "text-zinc-500"
-                )}
+                style={{
+                  flex: 1, display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: "4px", padding: "10px",
+                  textDecoration: "none", fontSize: "10px",
+                  color: active ? "#f97316" : "rgba(255,255,255,0.35)",
+                }}
               >
-                <Icon className="h-4 w-4" />
+                <Icon size={16} />
                 {label}
               </Link>
             );

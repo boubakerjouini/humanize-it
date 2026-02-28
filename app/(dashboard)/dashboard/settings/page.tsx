@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { ExternalLink, Zap, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { ExternalLink, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 interface UsageData {
@@ -19,11 +15,51 @@ interface UsageData {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: "8px", overflow: "hidden",
+    }}>
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <h2 style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>{title}</h2>
+      </div>
+      <div style={{ padding: "20px" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function UsageBar({ label, used, limit, warning }: { label: string; used: number; limit: number; warning?: boolean }) {
+  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+  const barColor = warning && pct > 80 ? "#ef4444" : "#f97316";
+
+  return (
+    <div style={{ marginBottom: "16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>{label}</span>
+        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-geist-mono), monospace" }}>
+          {used.toLocaleString()} / {limit === -1 ? "∞" : limit.toLocaleString()}
+        </span>
+      </div>
+      <div style={{ height: "3px", background: "rgba(255,255,255,0.06)", borderRadius: "3px" }}>
+        <div style={{
+          height: "3px", borderRadius: "3px",
+          width: `${pct}%`,
+          background: barColor,
+          boxShadow: `0 0 6px ${barColor}60`,
+          transition: "width 0.5s ease",
+        }} />
+      </div>
+      {warning && pct > 80 && (
+        <p style={{ fontSize: "11px", color: "#f97316", marginTop: "5px" }}>⚠ {pct}% used — consider upgrading</p>
+      )}
+    </div>
+  );
 }
 
 export default function SettingsPage() {
@@ -34,7 +70,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetch("/api/usage")
-      .then((r) => r.json())
+      .then(r => r.json())
       .then((d: UsageData) => setUsage(d))
       .catch(() => undefined);
   }, []);
@@ -48,16 +84,10 @@ export default function SettingsPage() {
         body: JSON.stringify({ plan: planId }),
       });
       const data = await res.json() as { url?: string; error?: { message: string } };
-      if (!res.ok || !data.url) {
-        toast.error(data.error?.message ?? "Failed to open checkout.");
-        return;
-      }
+      if (!res.ok || !data.url) { toast.error(data.error?.message ?? "Failed to open checkout."); return; }
       window.location.href = data.url;
-    } catch {
-      toast.error("Network error.");
-    } finally {
-      setLoadingCheckout(false);
-    }
+    } catch { toast.error("Network error."); }
+    finally { setLoadingCheckout(false); }
   };
 
   const handleBillingPortal = async () => {
@@ -65,180 +95,199 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/api/billing/portal", { method: "POST" });
       const data = await res.json() as { url?: string; error?: { message: string } };
-      if (!res.ok || !data.url) {
-        toast.error(data.error?.message ?? "Failed to open billing portal.");
-        return;
-      }
+      if (!res.ok || !data.url) { toast.error(data.error?.message ?? "Failed to open billing portal."); return; }
       window.location.href = data.url;
-    } catch {
-      toast.error("Network error.");
-    } finally {
-      setLoadingPortal(false);
-    }
+    } catch { toast.error("Network error."); }
+    finally { setLoadingPortal(false); }
   };
 
   const isFree = !usage || usage.plan === "FREE";
-  const wordsPercent = usage
-    ? Math.min(100, Math.round((usage.wordsUsed / usage.wordsLimit) * 100))
-    : 0;
+  const isPro  = usage?.plan === "PRO";
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Settings</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">Manage your plan and account.</p>
+    <div style={{ maxWidth: "600px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: "24px" }}>
+        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fafafa", letterSpacing: "-0.5px" }}>Settings</h1>
+        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>
+          Manage your plan, usage, and account.
+        </p>
       </div>
 
-      {/* Current plan + usage */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Current Plan</CardTitle>
-            <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                isFree
-                  ? "bg-zinc-100 text-zinc-600"
-                  : "bg-indigo-100 text-indigo-700"
-              }`}
-            >
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+        {/* Plan & Usage */}
+        <Section title="Current Plan">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.6)" }}>Your plan</span>
+            <span style={{
+              fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "100px",
+              letterSpacing: "0.5px",
+              background: isFree ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, rgba(249,115,22,0.2), rgba(251,191,36,0.2))",
+              color: isFree ? "rgba(255,255,255,0.5)" : "#f97316",
+              border: isFree ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(249,115,22,0.3)",
+            }}>
               {usage?.plan ?? "FREE"}
             </span>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+
           {usage ? (
             <>
-              {/* Words */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">Words used</span>
-                  <span className="text-sm font-mono">
-                    {usage.wordsUsed.toLocaleString()} / {usage.wordsLimit.toLocaleString()}
-                  </span>
-                </div>
-                <Progress
-                  value={wordsPercent}
-                  className={`h-2 ${wordsPercent > 80 ? "[&>div]:bg-orange-500" : "[&>div]:bg-indigo-500"}`}
-                />
-                {wordsPercent > 80 && (
-                  <p className="text-xs text-orange-500 mt-1">
-                    ⚠ You&apos;ve used {wordsPercent}% of your limit.
-                  </p>
-                )}
-              </div>
-
-              {/* Rewrites */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-600 dark:text-zinc-400">Rewrites used</span>
-                <span className="font-mono">
+              <UsageBar
+                label="Words used this period"
+                used={usage.wordsUsed}
+                limit={usage.wordsLimit}
+                warning
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Rewrites used</span>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-geist-mono), monospace" }}>
                   {usage.rewriteCount} / {usage.rewriteLimit === -1 ? "∞" : usage.rewriteLimit}
                 </span>
               </div>
-
-              {/* Reset date */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-600 dark:text-zinc-400">Quota resets</span>
-                <span className="text-zinc-700 dark:text-zinc-300">
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Quota resets</span>
+                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
                   {formatDate(usage.quotaResetAt)}
                 </span>
               </div>
             </>
           ) : (
-            <div className="h-16 bg-zinc-100 animate-pulse rounded" />
+            <div style={{ height: "80px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", animation: "pulse 2s infinite" }} />
           )}
-        </CardContent>
-      </Card>
+        </Section>
 
-      {/* Upgrade card (FREE only) */}
-      {isFree && (
-        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
-          <CardContent className="py-5">
-            <div className="flex items-start gap-3">
-              <Star className="h-5 w-5 text-indigo-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-indigo-900 dark:text-indigo-200">
-                  Upgrade to Pro — $9/month
+        {/* Upgrade card — FREE only */}
+        {isFree && (
+          <div style={{
+            background: "#130f0a",
+            border: "1px solid rgba(249,115,22,0.25)",
+            borderRadius: "8px", padding: "24px",
+            boxShadow: "0 0 40px rgba(249,115,22,0.04)",
+          }}>
+            <div style={{ display: "flex", gap: "14px" }}>
+              <div style={{
+                width: "40px", height: "40px", borderRadius: "50%",
+                background: "rgba(249,115,22,0.15)", display: "flex",
+                alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <Zap size={18} style={{ color: "#f97316" }} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa", marginBottom: "8px" }}>
+                  Upgrade to Pro — $9 / month
                 </h3>
-                <ul className="text-xs text-indigo-700 dark:text-indigo-300 mt-1.5 space-y-0.5">
-                  <li>✓ 50,000 words/month</li>
-                  <li>✓ Unlimited rewrites</li>
-                  <li>✓ All 4 tone options</li>
-                  <li>✓ 30-day document history</li>
-                  <li>✓ No watermark</li>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "7px" }}>
+                  {["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day document history", "No watermark"].map(f => (
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>
+                      <span style={{ color: "#f97316", fontWeight: 700 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                size="sm"
-                onClick={() => handleUpgrade("PRO")}
+
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={() => void handleUpgrade("PRO")}
                 disabled={loadingCheckout}
+                className="shimmer"
+                style={{
+                  flex: 1, padding: "11px",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "13px", fontWeight: 700, color: "#09090b",
+                  cursor: loadingCheckout ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                }}
               >
-                <Zap className="h-3.5 w-3.5 mr-1.5" />
+                <Zap size={14} />
                 Upgrade to Pro →
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpgrade("TEAM")}
+              </button>
+              <button
+                onClick={() => void handleUpgrade("TEAM")}
                 disabled={loadingCheckout}
+                style={{
+                  padding: "11px 16px",
+                  background: "transparent", border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: "6px", fontSize: "12px", fontWeight: 500, color: "rgba(255,255,255,0.5)",
+                  cursor: loadingCheckout ? "not-allowed" : "pointer",
+                }}
               >
                 Team $29/mo
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Manage billing (paid users) */}
-      {!isFree && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Billing</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBillingPortal}
+        {/* Billing — paid users */}
+        {!isFree && (
+          <Section title="Billing">
+            <button
+              onClick={() => void handleBillingPortal()}
               disabled={loadingPortal}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                background: "transparent", border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.55)", fontSize: "12px", fontWeight: 500,
+                padding: "8px 14px", borderRadius: "5px", cursor: loadingPortal ? "not-allowed" : "pointer",
+              }}
             >
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+              <ExternalLink size={13} />
               Manage Billing →
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+            </button>
+          </Section>
+        )}
 
-      <Separator />
+        {/* Divider */}
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
 
-      {/* Profile */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Profile */}
+        <Section title="Profile">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              <p style={{ fontSize: "14px", fontWeight: 500, color: "#fafafa", marginBottom: "3px" }}>
                 {user?.fullName ?? "—"}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>
                 {user?.primaryEmailAddress?.emailAddress ?? "—"}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => window.open("https://accounts.clerk.com", "_blank")}
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.45)", fontSize: "12px", fontWeight: 500,
+                padding: "7px 12px", borderRadius: "5px", cursor: "pointer",
+              }}
             >
-              <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-              Edit via Clerk
-            </Button>
+              <ExternalLink size={12} />
+              Edit profile
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </Section>
+
+        {/* Plan features reference */}
+        {isPro && (
+          <div style={{
+            padding: "14px 16px", borderRadius: "6px",
+            background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)",
+          }}>
+            <p style={{ fontSize: "12px", color: "#f97316", fontWeight: 600 }}>
+              ✦ Pro plan active — you have access to all features
+            </p>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
+        }
+      `}</style>
     </div>
   );
 }
