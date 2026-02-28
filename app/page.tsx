@@ -3,33 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-
-// ── AI Detection Engine (client-side, no API) ──────────────────────────────
-
-const AI_WORDS = [
-  "delve", "tapestry", "moreover", "furthermore", "comprehensive",
-  "multifaceted", "pivotal", "nuanced", "robust", "seamlessly", "leverage",
-  "paradigm", "innovative", "transformative", "holistic", "streamline",
-  "it is important to note", "in today's", "in conclusion", "to sum up",
-  "—", "groundbreaking", "unprecedented", "rapidly evolving",
-  "key takeaway", "in today's rapidly", "it is worth noting",
-];
-
-function liveScore(text: string): { score: number; highlights: string[] } {
-  const lower = text.toLowerCase();
-  const found: string[] = [];
-  let score = 15;
-  for (const w of AI_WORDS) {
-    if (lower.includes(w)) {
-      found.push(w);
-      score += w.length > 6 ? 8 : 5;
-    }
-  }
-  const words = text.split(/\s+/).filter(Boolean).length;
-  if (words > 50) score += 10;
-  if (words > 100) score += 10;
-  return { score: Math.min(97, score), highlights: found };
-}
+import { analyzeText } from "@/lib/algorithms/analyzeText";
 
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
@@ -137,8 +111,13 @@ export default function LandingPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const { score, highlights } = liveScore(text);
-  const showScore = text.trim().length > 15;
+  const result = text.trim().length > 10 ? analyzeText(text) : null;
+  const score = result?.score ?? 0;
+  const highlights = result?.patterns
+    .filter(p => p.category === "vocabulary")
+    .flatMap(p => p.examples) ?? [];
+  const patternCount = result?.patterns.length ?? 0;
+  const showScore = text.trim().length > 10 && result !== null;
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -442,9 +421,9 @@ export default function LandingPage() {
               }}>
                 <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
                   {wordCount} word{wordCount !== 1 ? "s" : ""}
-                  {highlights.length > 0 && (
+                  {patternCount > 0 && (
                     <span style={{ marginLeft: "10px", color: V.brand }}>
-                      · {highlights.length} AI pattern{highlights.length !== 1 ? "s" : ""} found
+                      · {patternCount} AI pattern{patternCount !== 1 ? "s" : ""} found
                     </span>
                   )}
                 </span>
