@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, Copy } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { PatternCard } from "@/components/ui/pattern-card";
-import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
+import { AuthModal } from "@/components/ui/auth-modal";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import type { AnalysisResult, PatternHit, ConfidenceBand } from "@/lib/algorithms/analyzeText";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -15,6 +18,7 @@ interface AnalyzeResponse {
   stats: AnalysisResult["stats"];
   wordCount: number;
   documentId: string;
+  confidenceBand: ConfidenceBand;
 }
 
 type ToneOption = "standard" | "formal" | "casual" | "academic";
@@ -26,6 +30,24 @@ const TONE_OPTIONS: { value: ToneOption; label: string }[] = [
   { value: "academic",  label: "Academic"  },
 ];
 
+// ── Confidence Band config ────────────────────────────────────────────────
+
+const BAND_CONFIG: Record<string, { label: string; subtitle: string; color: string; bg: string; border: string }> = {
+  "likely-human":        { label: "\u2713 Looks Human",      subtitle: "Should pass most detectors",    color: "#22c55e", bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.2)"   },
+  "possibly-ai":         { label: "\u26A0 Borderline",       subtitle: "Some detectors may flag this",  color: "#eab308", bg: "rgba(234,179,8,0.1)",   border: "rgba(234,179,8,0.2)"   },
+  "likely-ai":           { label: "\u26A1 Likely AI",        subtitle: "Will be caught by detectors",   color: "#f97316", bg: "rgba(249,115,22,0.1)",  border: "rgba(249,115,22,0.2)"  },
+  "almost-certainly-ai": { label: "\uD83D\uDEA8 Flagged as AI",  subtitle: "Will be caught by detectors",   color: "#ef4444", bg: "rgba(239,68,68,0.1)",   border: "rgba(239,68,68,0.2)"   },
+};
+
+// ── KPI Explanations ──────────────────────────────────────────────────────
+
+const KPI_EXPLANATIONS: Record<string, string> = {
+  "Burstiness":      "Sentence length variation. Humans write in bursts \u2014 short then long. AI writes uniformly. Below 0.20 = AI-like rhythm.",
+  "Vocab Diversity":  "Ratio of unique words to total words. AI repeats patterns. Below 0.40 = repetitive vocabulary.",
+  "Avg Sentence":     "Average words per sentence. AI clusters between 18-25. Humans vary widely.",
+  "Flesch":           "Readability score. AI text tends to cluster in the 40-60 'safe' range. Humans go higher or lower.",
+};
+
 // ── Score helpers ──────────────────────────────────────────────────────────
 
 function scoreColor(score: number): string {
@@ -33,6 +55,13 @@ function scoreColor(score: number): string {
   if (score >= 61) return "#8b5cf6";
   if (score >= 31) return "#a78bfa";
   return "#22c55e";
+}
+
+function getConfidenceBand(score: number): ConfidenceBand {
+  if (score < 30) return "likely-human";
+  if (score <= 60) return "possibly-ai";
+  if (score <= 80) return "likely-ai";
+  return "almost-certainly-ai";
 }
 
 // ── Heatmap ────────────────────────────────────────────────────────────────
@@ -87,21 +116,119 @@ function buildHeatmap(text: string, patterns: PatternHit[]): React.ReactNode {
   );
 }
 
-// ── Stat pill ──────────────────────────────────────────────────────────────
+// ── Stat pill with tooltip ────────────────────────────────────────────────
 
 function StatPill({ label, value, warn }: { label: string; value: string | number; warn: boolean }) {
+  const [showTip, setShowTip] = useState(false);
+  const explanation = KPI_EXPLANATIONS[label];
+
   return (
     <div style={{
       background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
-      borderRadius: "6px", padding: "12px 14px", flex: 1,
+      borderRadius: "6px", padding: "12px 14px", flex: 1, position: "relative",
     }}>
-      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginBottom: "6px", letterSpacing: "0.3px" }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "rgba(255,255,255,0.35)", marginBottom: "6px", letterSpacing: "0.3px" }}>
+        {label}
+        {explanation && (
+          <span
+            onMouseEnter={() => setShowTip(true)}
+            onMouseLeave={() => setShowTip(false)}
+            onTouchStart={() => setShowTip(true)}
+            onTouchEnd={() => setShowTip(false)}
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: "14px", height: "14px", borderRadius: "50%",
+              background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)",
+              fontSize: "9px", fontWeight: 700, cursor: "help", flexShrink: 0,
+            }}
+          >
+            ?
+          </span>
+        )}
+      </div>
       <div style={{ fontSize: "18px", fontWeight: 700, color: warn ? "#8b5cf6" : "#22c55e", fontFamily: "var(--font-geist-mono), monospace" }}>
         {value}
       </div>
       <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", marginTop: "3px" }}>
-        {warn ? "⚠ AI range" : "✓ Normal"}
+        {warn ? "\u26A0 AI range" : "\u2713 Normal"}
       </div>
+      {/* Tooltip */}
+      {showTip && explanation && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0,
+          marginTop: "4px", zIndex: 50,
+          background: "#1a1a1f", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "6px", padding: "10px 12px",
+          fontSize: "11px", color: "rgba(255,255,255,0.6)", lineHeight: 1.5,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+        }}>
+          {explanation}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Activation CTA ────────────────────────────────────────────────────────
+
+function ActivationCTA({ score, onClick }: { score: number; onClick: () => void }) {
+  let config: { bg: string; border: string; icon: string; title: string; subtitle: string; buttonLabel: string; buttonBg: string };
+
+  if (score >= 60) {
+    config = {
+      bg: "radial-gradient(circle at top left, rgba(239,68,68,0.08), transparent)",
+      border: "1px solid rgba(239,68,68,0.25)",
+      icon: "\uD83D\uDEA8",
+      title: "HIGH DETECTION RISK",
+      subtitle: `Your text scored ${Math.round(score)}% AI \u2014 it will be flagged by GPTZero, Turnitin, and Originality.ai.`,
+      buttonLabel: "\u2728 Humanize with AI \u2014 Fix it now \u2192",
+      buttonBg: "linear-gradient(135deg, #ef4444, #8b5cf6)",
+    };
+  } else if (score >= 30) {
+    config = {
+      bg: "rgba(234,179,8,0.05)",
+      border: "1px solid rgba(234,179,8,0.2)",
+      icon: "\u26A0\uFE0F",
+      title: "BORDERLINE RISK",
+      subtitle: "Some detectors may flag this text. Humanize to score below 30%.",
+      buttonLabel: "\u2728 Reduce AI Risk \u2014 Humanize",
+      buttonBg: "linear-gradient(135deg, #eab308, #8b5cf6)",
+    };
+  } else {
+    config = {
+      bg: "rgba(34,197,94,0.05)",
+      border: "1px solid rgba(34,197,94,0.15)",
+      icon: "\u2705",
+      title: "LOOKS HUMAN",
+      subtitle: "Your text should pass most detectors. Want to be 100% sure?",
+      buttonLabel: "\u2728 Polish it further \u2014 Humanize anyway",
+      buttonBg: "#8b5cf6",
+    };
+  }
+
+  return (
+    <div style={{
+      background: config.bg, border: config.border,
+      borderRadius: "10px", padding: "20px", marginTop: "16px",
+    }}>
+      <div style={{ fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: score >= 60 ? "#ef4444" : score >= 30 ? "#eab308" : "#22c55e", marginBottom: "6px" }}>
+        {config.icon}  {config.title}
+      </div>
+      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 14px", lineHeight: 1.5 }}>
+        {config.subtitle}
+      </p>
+      <button
+        onClick={onClick}
+        style={{
+          width: "100%", padding: "12px",
+          background: config.buttonBg,
+          color: "#fafafa", border: "none", borderRadius: "8px",
+          fontSize: "14px", fontWeight: 700, cursor: "pointer",
+          transition: "opacity 0.15s",
+        }}
+      >
+        {config.buttonLabel}
+      </button>
     </div>
   );
 }
@@ -117,8 +244,32 @@ export default function EditorPage() {
   const [humanizedScore, setHumanizedScore] = useState<number | null>(null);
   const [tone, setTone] = useState<ToneOption>("standard");
   const [documentId, setDocumentId] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [userPlan, setUserPlan] = useState("FREE");
 
+  const { isSignedIn } = useAuth();
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+
+  // Feature 6: Pre-fill from sessionStorage
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("prefill-text");
+    if (prefill) {
+      setText(prefill);
+      sessionStorage.removeItem("prefill-text");
+    }
+  }, []);
+
+  // Fetch usage to determine plan/limits
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch("/api/usage")
+      .then(r => r.json())
+      .then((data: { plan?: string; wordsUsed?: number; wordsLimit?: number }) => {
+        if (data.plan) setUserPlan(data.plan);
+      })
+      .catch(() => {});
+  }, [isSignedIn]);
 
   const handleAnalyze = useCallback(async () => {
     if (!text.trim() || text.length < 11) {
@@ -183,6 +334,26 @@ export default function EditorPage() {
     }
   }, [documentId, result, tone]);
 
+  const handleCTAClick = useCallback(async () => {
+    if (!isSignedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+    // Check if free user hit quota
+    if (userPlan === "FREE") {
+      try {
+        const res = await fetch("/api/usage");
+        const data = await res.json() as { wordsUsed?: number; wordsLimit?: number };
+        if (data.wordsUsed !== undefined && data.wordsLimit !== undefined && data.wordsUsed >= data.wordsLimit) {
+          setShowUpgradeModal(true);
+          return;
+        }
+      } catch { /* proceed anyway */ }
+    }
+    // Scroll to humanize section
+    document.getElementById("humanize-section")?.scrollIntoView({ behavior: "smooth" });
+  }, [isSignedIn, userPlan]);
+
   const handleClear = () => {
     setText("");
     setResult(null);
@@ -196,6 +367,21 @@ export default function EditorPage() {
     void navigator.clipboard.writeText(humanizedText);
     toast.success("Copied to clipboard!");
   };
+
+  // Compute confidence band from result
+  const band = result ? BAND_CONFIG[result.confidenceBand ?? getConfidenceBand(result.score)] : null;
+
+  // Pattern summary: top 2 high-severity issues
+  const patternSummary = result ? (() => {
+    const sorted = [...result.patterns].sort((a, b) => {
+      const order = { critical: 0, high: 1, medium: 2, low: 3 };
+      return order[a.severity] - order[b.severity];
+    });
+    const highSev = sorted.filter(p => p.severity === "critical" || p.severity === "high");
+    const topIssues = (highSev.length > 0 ? highSev : sorted).slice(0, 2);
+    const names = topIssues.map(p => p.label).join(" \u00B7 ");
+    return `${result.patterns.length} AI patterns detected \u00B7 ${highSev.length} high severity \u00B7 ${names}`;
+  })() : null;
 
   return (
     <div style={{ maxWidth: "1200px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
@@ -264,7 +450,7 @@ export default function EditorPage() {
               flexWrap: "wrap", gap: "8px",
             }}>
               <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace", minWidth: 0, flex: "1 1 auto" }}>
-                {wordCount.toLocaleString()} words · {text.length.toLocaleString()} / 10,000
+                {wordCount.toLocaleString()} words &middot; {text.length.toLocaleString()} / 10,000
               </span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -292,9 +478,9 @@ export default function EditorPage() {
                   }}
                 >
                   {analyzing ? (
-                    <><Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> Analyzing…</>
+                    <><Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> Analyzing&hellip;</>
                   ) : (
-                    "Analyze →"
+                    "Analyze \u2192"
                   )}
                 </button>
               </div>
@@ -326,7 +512,22 @@ export default function EditorPage() {
                 </div>
               </div>
 
-              {/* Stats row */}
+              {/* Feature 1a: Confidence Band Badge */}
+              {band && (
+                <div style={{
+                  background: band.bg, border: `1px solid ${band.border}`,
+                  borderRadius: "8px", padding: "12px 16px",
+                }}>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: band.color }}>
+                    {band.label}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+                    {band.subtitle}
+                  </div>
+                </div>
+              )}
+
+              {/* Stats row (Feature 1b: with tooltip) */}
               <div className="stat-pills-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 <StatPill
                   label="Burstiness"
@@ -350,6 +551,15 @@ export default function EditorPage() {
                 />
               </div>
 
+              {/* Feature 1c: Pattern summary sentence */}
+              {patternSummary && (
+                <div style={{
+                  fontSize: "12px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5,
+                  padding: "0 2px",
+                }}>
+                  {patternSummary}
+                </div>
+              )}
             </>
           ) : (
             <div style={{
@@ -358,7 +568,7 @@ export default function EditorPage() {
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               flex: 1,
             }}>
-              <div style={{ fontSize: "36px", marginBottom: "12px", opacity: 0.2 }}>⚡</div>
+              <div style={{ fontSize: "36px", marginBottom: "12px", opacity: 0.2 }}>\u26A1</div>
               <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.25)", textAlign: "center" }}>
                 Your score will appear<br />here after analysis.
               </p>
@@ -366,6 +576,11 @@ export default function EditorPage() {
           )}
         </div>
       </div>
+
+      {/* ── Feature 2: Activation CTA ── */}
+      {result && (
+        <ActivationCTA score={result.score} onClick={handleCTAClick} />
+      )}
 
       {/* ── Pattern cards ── */}
       {result && result.patterns.length > 0 && (
@@ -438,7 +653,7 @@ export default function EditorPage() {
 
       {/* ── Humanize ── */}
       {result && (
-        <div style={{ marginTop: "16px" }}>
+        <div id="humanize-section" style={{ marginTop: "16px" }}>
           <div style={{
             background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "8px", padding: "20px",
@@ -492,9 +707,9 @@ export default function EditorPage() {
               }}
             >
               {humanizing ? (
-                <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> AI is rewriting your text…</>
+                <><Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> AI is rewriting your text&hellip;</>
               ) : (
-                "Humanize with AI →"
+                "Humanize with AI \u2192"
               )}
             </button>
 
@@ -579,7 +794,7 @@ export default function EditorPage() {
                       padding: "7px 14px", borderRadius: "5px", cursor: "pointer",
                     }}
                   >
-                    Re-analyze →
+                    Re-analyze &rarr;
                   </button>
                 </div>
               </div>
@@ -587,6 +802,10 @@ export default function EditorPage() {
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} currentPlan={userPlan} />
 
       {/* Responsive grid */}
       <style>{`
