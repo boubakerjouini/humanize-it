@@ -1,5 +1,5 @@
 // ===========================================================
-// POST /api/humanize — Rewrite text with GPT-4o-mini
+// POST /api/humanize — Rewrite text with Claude (Anthropic)
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
       where: { id: document.id },
       data: {
         rewrittenText: humanizedText,
-        rewriteModel: "gpt-4o-mini",
+        rewriteModel: "claude-sonnet-4-5",
       },
     });
 

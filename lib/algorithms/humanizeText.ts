@@ -2,7 +2,7 @@
 // HumanizeIt — Text Humanization Engine
 // ===========================================================
 
-import { openai } from "@/lib/openai";
+import { anthropic } from "@/lib/anthropic";
 import type { AnalysisResult } from "./analyzeText";
 import { AI_VOCABULARY_TIER_1, SYCOPHANTIC_PHRASES } from "./patterns";
 
@@ -22,7 +22,11 @@ const TONE_INSTRUCTIONS: Record<ToneOption, string> = {
 /**
  * Build a targeted humanization prompt based on the patterns found.
  */
-function buildPrompt(
+function buildSystemPrompt(): string {
+  return "You are a human writing coach. Your job is to rewrite text so it sounds genuinely human — not AI-generated. Output ONLY the rewritten text, no commentary, no preamble.";
+}
+
+function buildUserPrompt(
   text: string,
   tone: ToneOption,
   analysisResult: AnalysisResult
@@ -41,7 +45,7 @@ function buildPrompt(
   const wordCount = analysisResult.wordCount;
   const targetRange = `${Math.round(wordCount * 0.9)}–${Math.round(wordCount * 1.1)}`;
 
-  return `You are a human writing coach. Your job is to rewrite the following text so it sounds genuinely human — not AI-generated.
+  return `Rewrite the following text so it sounds genuinely human — not AI-generated.
 
 ## Detected AI patterns to fix:
 ${detectedPatternDescriptions}
@@ -64,37 +68,36 @@ ${TONE_INSTRUCTIONS[tone]}
 ## Original text:
 ${text}
 
-## Rewritten text (output ONLY the rewritten text, no commentary, no preamble):`;
+## Rewritten text:`;
 }
 
 /**
- * Rewrite text to sound more human using GPT-4o-mini.
+ * Rewrite text to sound more human using Claude.
  */
 export async function humanizeText(
   text: string,
   tone: ToneOption,
   analysisResult: AnalysisResult
 ): Promise<{ humanizedText: string; tokensUsed: number }> {
-  const prompt = buildPrompt(text, tone, analysisResult);
-
   // Max tokens = 2× input word count, minimum 256
   const maxTokens = Math.max(256, analysisResult.wordCount * 2);
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.7,
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-5",
     max_tokens: maxTokens,
+    temperature: 0.7,
+    system: buildSystemPrompt(),
     messages: [
       {
         role: "user",
-        content: prompt,
+        content: buildUserPrompt(text, tone, analysisResult),
       },
     ],
   });
 
   const humanizedText =
-    response.choices[0]?.message?.content?.trim() ?? text;
-  const tokensUsed = response.usage?.total_tokens ?? 0;
+    response.content[0].type === "text" ? response.content[0].text.trim() : text;
+  const tokensUsed = response.usage.input_tokens + response.usage.output_tokens;
 
   return { humanizedText, tokensUsed };
 }
