@@ -51,6 +51,18 @@ export const AI_VOCABULARY_TIER_1 = [
   "strategically",
   "fundamentally",
   "inherently",
+  // Copula avoidance words
+  "serves",
+  "boasts",
+  "stands",
+  "nestled",
+  "breathtaking",
+  "stunning",
+  "renowned",
+  "picturesque",
+  "showcasing",
+  "highlighting",
+  "demonstrating",
 ] as const;
 
 /** Words overused by AI but also used by humans (high signal) */
@@ -170,6 +182,23 @@ export const FILLER_PHRASES = [
   "the fact of the matter is",
   "truth be told",
   "it's worth pointing out",
+  "serves as a testament",
+  "stands as a",
+  "boasts a",
+  "not just",
+  "it's not just",
+  "not only",
+  "despite challenges",
+  "continues to thrive",
+  "continues to grow",
+  "experts say",
+  "experts believe",
+  "studies show",
+  "research indicates",
+  "research suggests",
+  "industry experts",
+  "according to experts",
+  "many experts",
 ] as const;
 
 /** Generic conclusion phrases favored by AI */
@@ -205,6 +234,23 @@ export const HEDGING_PHRASES = [
   "it depends on various factors",
   "there are several perspectives",
   "it remains to be seen",
+] as const;
+
+/** Promotional adjectives typical of AI travel/marketing copy */
+export const PROMOTIONAL_ADJECTIVES = [
+  "nestled", "breathtaking", "stunning", "renowned", "picturesque",
+  "quaint", "charming", "vibrant", "bustling", "idyllic",
+  "magnificent", "spectacular", "awe-inspiring", "world-class",
+  "unparalleled", "extraordinary", "exceptional",
+] as const;
+
+/** Vague attribution phrases with no source */
+export const VAGUE_ATTRIBUTION_PHRASES = [
+  "experts say", "experts believe", "experts suggest", "experts agree",
+  "studies show", "studies suggest", "research indicates", "research shows",
+  "research suggests", "industry experts", "according to experts",
+  "many experts", "some experts", "analysts say", "observers note",
+  "reports indicate", "data shows", "it is widely believed",
 ] as const;
 
 /** Transition words overused by AI */
@@ -282,12 +328,22 @@ export const PATTERNS_CONFIG: PatternConfig[] = [
   { id: "passive-voice", label: "Passive Voice Excess", severity: "medium", weight: 4, category: "structural" },
   { id: "serial-listing", label: "Oxford Comma Serial Listing", severity: "low", weight: 2, category: "structural" },
   { id: "rhetorical-questions", label: "Rhetorical Questions", severity: "medium", weight: 3, category: "structural" },
+
+  // New V2 patterns (30-37)
+  { id: "vague-attribution", label: "Vague Attributions", severity: "high", weight: 5, category: "phrase" },
+  { id: "copula-avoidance", label: "Copula Avoidance (serves as / boasts)", severity: "medium", weight: 4, category: "structural" },
+  { id: "negative-parallelism", label: "Negative Parallelism (not just X, it's Y)", severity: "medium", weight: 3, category: "structural" },
+  { id: "promotional-ing", label: "Promotional -ing Chain", severity: "medium", weight: 3, category: "structural" },
+  { id: "vague-challenge", label: "Vague Challenges Formula", severity: "high", weight: 4, category: "phrase" },
+  { id: "promotional-adjectives", label: "Promotional Adjectives", severity: "high", weight: 5, category: "vocabulary" },
+  { id: "trigram-repetition", label: "Trigram Repetition", severity: "high", weight: 6, category: "statistical" },
+  { id: "low-sentence-cov", label: "Uniform Sentence Length (low CoV)", severity: "high", weight: 5, category: "statistical" },
 ] as const;
 
 // ---- Score Weights ----
 
 export const SCORE_WEIGHTS = {
-  pattern: 0.65,
-  statistical: 0.20,
-  structural: 0.15,
+  pattern: 0.50,
+  statistical: 0.30,
+  structural: 0.20,
 } as const;

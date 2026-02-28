@@ -16,6 +16,8 @@ import {
   GENERIC_CONCLUSIONS,
   HEDGING_PHRASES,
   TRANSITION_WORDS,
+  PROMOTIONAL_ADJECTIVES,
+  VAGUE_ATTRIBUTION_PHRASES,
 } from "./patterns";
 
 import {
@@ -44,8 +46,11 @@ export interface TextStats {
   fleschReadingEase: number;
 }
 
+export type ConfidenceBand = "likely-human" | "possibly-ai" | "likely-ai" | "almost-certainly-ai";
+
 export interface AnalysisResult {
   score: number;
+  confidenceBand: ConfidenceBand;
   patterns: PatternHit[];
   stats: TextStats;
   wordCount: number;
@@ -809,6 +814,164 @@ function detectRhetoricalQuestions(text: string): PatternHit | null {
   };
 }
 
+// ---- New Pattern Detectors V2 (30–37) ----
+
+/**
+ * Pattern 30: Vague Attributions
+ * "Experts say", "Studies show" without naming actual source.
+ */
+function detectVagueAttributions(textLower: string): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "vague-attribution")!;
+  const found: string[] = [];
+  for (const phrase of VAGUE_ATTRIBUTION_PHRASES) {
+    if (textLower.includes(phrase.toLowerCase())) found.push(phrase);
+  }
+  if (found.length === 0) return null;
+  return { id: config.id, label: config.label, hits: found.length, examples: found.slice(0, 4), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 31: Copula Avoidance
+ * "serves as", "boasts", "stands as" instead of "is" / "has".
+ */
+function detectCopulaAvoidance(text: string): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "copula-avoidance")!;
+  const patterns = [/\bserves as\b/gi, /\bstands as\b/gi, /\bboasts\b/gi, /\bacts as\b/gi, /\bfunctions as\b/gi];
+  const found: string[] = [];
+  let hits = 0;
+  for (const pat of patterns) {
+    const matches = text.match(pat) ?? [];
+    if (matches.length) { hits += matches.length; found.push(`"${pat.source.replace(/\\b/g,'')}" ×${matches.length}`); }
+  }
+  if (hits === 0) return null;
+  return { id: config.id, label: config.label, hits, examples: found.slice(0, 4), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 32: Negative Parallelism
+ * "It's not just X, it's Y" / "Not only X, but also Y" — rhetorical AI structure.
+ */
+function detectNegativeParallelism(text: string): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "negative-parallelism")!;
+  const patterns = [/it'?s not just\b/gi, /not (just|only|merely)\b[^.!?]+(it'?s|but also|but)\b/gi, /not only\b[^.!?]+but also\b/gi];
+  let hits = 0;
+  const examples: string[] = [];
+  for (const pat of patterns) {
+    const matches = text.match(pat) ?? [];
+    hits += matches.length;
+    matches.slice(0,2).forEach(m => examples.push(`"${m.slice(0,60)}"`));
+  }
+  if (hits === 0) return null;
+  return { id: config.id, label: config.label, hits, examples: examples.slice(0,3), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 33: Promotional -ing Chain
+ * AI links ideas with "showcasing", "highlighting", "demonstrating", "reflecting" as empty connectors.
+ */
+function detectPromotionalIngChain(text: string, wordCount: number): PatternHit | null {
+  if (wordCount < 50) return null;
+  const config = PATTERNS_CONFIG.find(p => p.id === "promotional-ing")!;
+  const ingWords = ["showcasing", "highlighting", "demonstrating", "reflecting", "underscoring", "emphasizing", "illustrating", "reinforcing"];
+  const textLower = text.toLowerCase();
+  const found: string[] = [];
+  let hits = 0;
+  for (const word of ingWords) {
+    const regex = new RegExp(`\\b${word}\\b`, "gi");
+    const matches = textLower.match(regex) ?? [];
+    if (matches.length) { hits += matches.length; found.push(`"${word}" ×${matches.length}`); }
+  }
+  const density = (hits / wordCount) * 100;
+  if (density <= 1) return null;
+  return { id: config.id, label: config.label, hits, examples: found.slice(0,4), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 34: Vague Challenges Formula
+ * "Despite [challenges/X], [Y] continues to [thrive/grow/evolve]"
+ */
+function detectVagueChallenge(text: string): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "vague-challenge")!;
+  const patterns = [
+    /despite\s+(challenges|obstacles|setbacks|difficulties|uncertainty)[^.!?]+(continues? to|remains?|still|persists?)/gi,
+    /continues? to (thrive|grow|evolve|excel|succeed|flourish)/gi,
+    /in spite of [^.!?]+(continues?|remains?|still)/gi,
+  ];
+  let hits = 0;
+  const examples: string[] = [];
+  for (const pat of patterns) {
+    const matches = text.match(pat) ?? [];
+    hits += matches.length;
+    matches.slice(0,2).forEach(m => examples.push(`"${m.slice(0,70)}"`));
+  }
+  if (hits === 0) return null;
+  return { id: config.id, label: config.label, hits, examples: examples.slice(0,3), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 35: Promotional Adjectives
+ * AI travel/marketing adjectives used in non-marketing contexts.
+ */
+function detectPromotionalAdjectives(words: string[]): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "promotional-adjectives")!;
+  const lowerPromo = PROMOTIONAL_ADJECTIVES.map(w => w.toLowerCase());
+  const found: string[] = [];
+  for (const word of words) {
+    if (lowerPromo.includes(word) && !found.includes(word)) found.push(word);
+  }
+  if (found.length === 0) return null;
+  return { id: config.id, label: config.label, hits: found.length, examples: found.slice(0,5), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 36: Trigram Repetition
+ * AI reuses 3-word sequences. Ratio repeated trigrams > 0.08 → flag.
+ */
+function detectTrigramRepetition(words: string[]): PatternHit | null {
+  if (words.length < 20) return null;
+  const config = PATTERNS_CONFIG.find(p => p.id === "trigram-repetition")!;
+  const trigrams: Record<string, number> = {};
+  for (let i = 0; i < words.length - 2; i++) {
+    const key = `${words[i]} ${words[i+1]} ${words[i+2]}`;
+    trigrams[key] = (trigrams[key] ?? 0) + 1;
+  }
+  const total = Object.keys(trigrams).length;
+  const repeated = Object.entries(trigrams).filter(([,v]) => v > 1);
+  const ratio = repeated.length / Math.max(total, 1);
+  if (ratio <= 0.08) return null;
+  const examples = repeated.sort(([,a],[,b]) => b - a).slice(0,4).map(([k,v]) => `"${k}" ×${v}`);
+  return { id: config.id, label: config.label, hits: repeated.length, examples, severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 37: Uniform Sentence Length (Low CoV)
+ * Humans write in bursts — varying short and long sentences.
+ * CoV of sentence word counts < 0.30 → AI-typical metronomic rhythm.
+ */
+function detectLowSentenceCoV(sentences: string[]): PatternHit | null {
+  if (sentences.length < 6) return null;
+  const config = PATTERNS_CONFIG.find(p => p.id === "low-sentence-cov")!;
+  const lengths = sentences.map(s => s.split(/\s+/).filter(Boolean).length);
+  const mean = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  if (mean === 0) return null;
+  const variance = lengths.reduce((sum,v) => sum + (v - mean)**2, 0) / lengths.length;
+  const cov = Math.sqrt(variance) / mean;
+  if (cov >= 0.30) return null;
+  return {
+    id: config.id, label: config.label, hits: 1,
+    examples: [`Sentence length CoV: ${cov.toFixed(2)} (AI-typical < 0.30, human typical > 0.50)`],
+    severity: config.severity, weight: config.weight, category: config.category,
+  };
+}
+
+/** Compute confidence band from score */
+function getConfidenceBand(score: number): ConfidenceBand {
+  if (score < 30) return "likely-human";
+  if (score < 60) return "possibly-ai";
+  if (score < 80) return "likely-ai";
+  return "almost-certainly-ai";
+}
+
 // ---- Scoring ----
 
 function computePatternScore(patterns: PatternHit[]): number {
@@ -977,6 +1140,31 @@ export function analyzeText(text: string): AnalysisResult {
   // Add structural patterns to main patterns list
   patterns.push(...structuralHits);
 
+  // Step 3b: New V2 pattern detectors
+  const vagueAttr = detectVagueAttributions(textLower);
+  if (vagueAttr) patterns.push(vagueAttr);
+
+  const copulaAvoid = detectCopulaAvoidance(text);
+  if (copulaAvoid) patterns.push(copulaAvoid);
+
+  const negPara = detectNegativeParallelism(text);
+  if (negPara) patterns.push(negPara);
+
+  const promoIng = detectPromotionalIngChain(text, wordCount);
+  if (promoIng) patterns.push(promoIng);
+
+  const vagueChallenge = detectVagueChallenge(text);
+  if (vagueChallenge) patterns.push(vagueChallenge);
+
+  const promoAdj = detectPromotionalAdjectives(words);
+  if (promoAdj) patterns.push(promoAdj);
+
+  const trigramRep = detectTrigramRepetition(words);
+  if (trigramRep) patterns.push(trigramRep);
+
+  const lowCoV = detectLowSentenceCoV(sentences);
+  if (lowCoV) patterns.push(lowCoV);
+
   // Step 4: Detect semantic patterns (15–19)
   const overExp = detectOverExplanation(text);
   if (overExp) patterns.push(overExp);
@@ -1032,6 +1220,7 @@ export function analyzeText(text: string): AnalysisResult {
 
   return {
     score: Math.round(score * 10) / 10,
+    confidenceBand: getConfidenceBand(Math.round(score * 10) / 10),
     patterns,
     stats,
     wordCount,

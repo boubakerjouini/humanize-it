@@ -101,6 +101,7 @@ export async function POST(req: Request) {
     // 9. Return response
     return NextResponse.json({
       score: analysisResult.score,
+      confidenceBand: analysisResult.confidenceBand,
       patterns: analysisResult.patterns,
       stats: analysisResult.stats,
       wordCount: analysisResult.wordCount,
