@@ -11,7 +11,7 @@ export default function SignUpPage() {
         <span style={{ fontSize: "24px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
         <span style={{ fontSize: "16px", fontWeight: 600, color: "#fafafa", marginLeft: "6px" }}>HumanizeIt</span>
       </div>
-      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" afterSignUpUrl="/dashboard/editor" redirectUrl="/dashboard/editor" />
       <Link href="/" style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", textDecoration: "none", marginTop: "20px" }}>
         ← Back to home
       </Link>
