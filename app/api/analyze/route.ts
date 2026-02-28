@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
+import { checkAndResetQuota } from "@/lib/quota";
 
 export async function POST(req: Request) {
   try {
@@ -59,13 +60,16 @@ export async function POST(req: Request) {
       },
     });
 
+    // 4b. Reset quota if period has expired (daily for FREE, monthly for PRO/TEAM)
+    const freshUser = await checkAndResetQuota(user);
+
     // 5. Check word quota
-    const plan = PLANS[user.plan];
+    const plan = PLANS[freshUser.plan as keyof typeof PLANS] ?? PLANS["FREE"];
     const wordCount = text.split(/\s+/).filter(Boolean).length;
 
     if (
       plan.wordsLimit !== -1 &&
-      user.wordsUsed + wordCount > plan.wordsLimit
+      freshUser.wordsUsed + wordCount > plan.wordsLimit
     ) {
       return NextResponse.json(
         {

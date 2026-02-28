@@ -8,6 +8,7 @@ import { humanizeText, type ToneOption } from "@/lib/algorithms/humanizeText";
 import type { AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
+import { checkAndResetQuota } from "@/lib/quota";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
 
@@ -59,12 +60,15 @@ export async function POST(req: Request) {
       },
     });
 
+    // 3b. Reset quota if period has expired
+    const freshUser = await checkAndResetQuota(user);
+
     // 4. Load document and verify ownership
     const document = await db.document.findUnique({
       where: { id: documentId },
     });
 
-    if (!document || document.userId !== user.id) {
+    if (!document || document.userId !== freshUser.id) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "Document not found." } },
         { status: 404 }
@@ -72,11 +76,11 @@ export async function POST(req: Request) {
     }
 
     // 5. Check rewrite quota for FREE plan
-    const plan = PLANS[user.plan];
+    const plan = PLANS[freshUser.plan as keyof typeof PLANS] ?? PLANS["FREE"];
     if (
-      user.plan === "FREE" &&
+      freshUser.plan === "FREE" &&
       plan.rewriteLimit !== -1 &&
-      user.rewriteCount >= plan.rewriteLimit
+      freshUser.rewriteCount >= plan.rewriteLimit
     ) {
       return NextResponse.json(
         {
@@ -108,9 +112,9 @@ export async function POST(req: Request) {
     });
 
     // 8. Increment rewriteCount for FREE users
-    if (user.plan === "FREE") {
+    if (freshUser.plan === "FREE") {
       await db.user.update({
-        where: { id: user.id },
+        where: { id: freshUser.id },
         data: { rewriteCount: { increment: 1 } },
       });
     }
