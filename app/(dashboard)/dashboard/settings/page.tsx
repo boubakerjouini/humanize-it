@@ -188,7 +188,7 @@ export default function SettingsPage() {
             borderRadius: "8px", padding: "24px",
             boxShadow: "0 0 40px rgba(139,92,246,0.04)",
           }}>
-            <div style={{ display: "flex", gap: "14px" }}>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
               <div style={{
                 width: "40px", height: "40px", borderRadius: "50%",
                 background: "rgba(139,92,246,0.15)", display: "flex",
@@ -235,6 +235,7 @@ export default function SettingsPage() {
                   background: "transparent", border: "1px solid rgba(255,255,255,0.12)",
                   borderRadius: "6px", fontSize: "12px", fontWeight: 500, color: "rgba(255,255,255,0.5)",
                   cursor: loadingCheckout ? "not-allowed" : "pointer",
+                  flexShrink: 0,
                 }}
               >
                 Team $29/mo
@@ -316,7 +317,7 @@ export default function SettingsPage() {
 
         {/* Profile */}
         <Section title="Profile">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
             <div>
               <p style={{ fontSize: "14px", fontWeight: 500, color: "#fafafa", marginBottom: "3px" }}>
                 {user?.fullName ?? "—"}

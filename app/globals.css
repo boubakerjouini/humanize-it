@@ -284,3 +284,36 @@
   .hero-h1 { font-size: 36px !important; letter-spacing: -1px !important; }
   .pricing-grid { padding: 0 !important; }
 }
+
+/* ── Dashboard specific fixes ── */
+@media (max-width: 768px) {
+  /* Editor: ensure content doesn't overflow */
+  .editor-grid > * {
+    min-width: 0;
+  }
+
+  /* Ensure text truncates properly in flex containers */
+  .flex-truncate {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Score panel on mobile: horizontal layout */
+  .score-ring-container {
+    padding: 16px !important;
+  }
+
+  /* History rows: prevent overflow */
+  .history-row {
+    overflow: hidden;
+  }
+}
+
+/* Ensure no horizontal overflow on any page */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+}

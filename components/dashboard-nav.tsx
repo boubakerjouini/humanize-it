@@ -134,29 +134,6 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
           {/* Desktop — empty left */}
           <div className="hidden md:block" />
 
-          {/* Mobile nav tabs */}
-          <nav className="hidden sm:flex md:hidden" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            {navItems.map(({ href, label, icon: Icon }) => {
-              const active = pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "5px",
-                    padding: "5px 10px", borderRadius: "5px",
-                    fontSize: "12px", fontWeight: 500, textDecoration: "none",
-                    background: active ? "rgba(139,92,246,0.1)" : "transparent",
-                    color: active ? "#8b5cf6" : "rgba(255,255,255,0.45)",
-                  }}
-                >
-                  <Icon size={12} />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-
           {/* Right — user button on mobile only (desktop has it in sidebar) */}
           <div className="md:hidden">
             <UserButton afterSignOutUrl="/" />
@@ -169,7 +146,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="flex sm:hidden" style={{
+        <nav className="flex md:hidden" style={{
           borderTop: "1px solid rgba(255,255,255,0.05)",
           background: "#060608", display: "flex",
         }}>

@@ -99,7 +99,7 @@ export default function HistoryPage() {
     <div style={{ maxWidth: "800px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fafafa", letterSpacing: "-0.5px" }}>History</h1>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>
@@ -201,6 +201,7 @@ export default function HistoryPage() {
                     fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5,
                     overflow: "hidden", display: "-webkit-box",
                     WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                    minWidth: 0, maxWidth: "100%",
                   }}>
                     {doc.originalText}
                   </p>

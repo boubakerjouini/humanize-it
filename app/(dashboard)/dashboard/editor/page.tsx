@@ -261,8 +261,9 @@ export default function EditorPage() {
               padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
               display: "flex", alignItems: "center", justifyContent: "space-between",
               background: "rgba(255,255,255,0.01)",
+              flexWrap: "wrap", gap: "8px",
             }}>
-              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace" }}>
+              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace", minWidth: 0, flex: "1 1 auto" }}>
                 {wordCount.toLocaleString()} words · {text.length.toLocaleString()} / 10,000
               </span>
               <div style={{ display: "flex", gap: "8px" }}>
@@ -373,7 +374,7 @@ export default function EditorPage() {
             background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "8px", padding: "20px",
           }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
               <h2 style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>Patterns Detected</h2>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{
@@ -462,7 +463,7 @@ export default function EditorPage() {
                     key={value}
                     onClick={() => setTone(value)}
                     style={{
-                      padding: "7px 14px", borderRadius: "5px", fontSize: "12px", fontWeight: 500,
+                      padding: "7px 10px", borderRadius: "5px", fontSize: "12px", fontWeight: 500,
                       cursor: "pointer", border: "1px solid",
                       borderColor: tone === value ? "#8b5cf6" : "rgba(255,255,255,0.08)",
                       background: tone === value ? "rgba(139,92,246,0.12)" : "transparent",
@@ -557,7 +558,7 @@ export default function EditorPage() {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+                <div style={{ display: "flex", gap: "8px", marginTop: "14px", flexWrap: "wrap" }}>
                   <button
                     onClick={handleCopy}
                     style={{
