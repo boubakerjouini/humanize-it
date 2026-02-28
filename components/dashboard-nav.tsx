@@ -14,7 +14,9 @@ const navItems = [
 
 export function DashboardNav({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
+
+  if (!isLoaded) return null;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#09090b" }}>

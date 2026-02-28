@@ -47,14 +47,17 @@ export async function POST(req: Request) {
         ? (tone as ToneOption)
         : "standard";
 
-    // 3. Load user
-    const user = await db.user.findUnique({ where: { clerkId } });
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: "USER_NOT_FOUND", message: "User record not found." } },
-        { status: 401 }
-      );
-    }
+    // 3. Load user (auto-upsert in case webhook didn't fire)
+    const user = await db.user.upsert({
+      where: { clerkId },
+      update: {},
+      create: {
+        clerkId,
+        email: `${clerkId}@placeholder.humanize-it.app`,
+        plan: "FREE",
+        wordsUsed: 0,
+      },
+    });
 
     // 4. Load document and verify ownership
     const document = await db.document.findUnique({

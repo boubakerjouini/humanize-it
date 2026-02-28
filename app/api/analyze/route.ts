@@ -47,14 +47,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Load user from DB
-    const user = await db.user.findUnique({ where: { clerkId } });
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: "USER_NOT_FOUND", message: "User record not found." } },
-        { status: 401 }
-      );
-    }
+    // 4. Load user from DB (auto-upsert in case webhook didn't fire)
+    const user = await db.user.upsert({
+      where: { clerkId },
+      update: {},
+      create: {
+        clerkId,
+        email: `${clerkId}@placeholder.humanize-it.app`,
+        plan: "FREE",
+        wordsUsed: 0,
+      },
+    });
 
     // 5. Check word quota
     const plan = PLANS[user.plan];

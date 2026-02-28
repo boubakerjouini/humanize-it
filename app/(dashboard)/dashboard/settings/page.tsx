@@ -67,6 +67,8 @@ export default function SettingsPage() {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [loadingPortal, setLoadingPortal] = useState(false);
+  const [redeemCode, setRedeemCode] = useState("");
+  const [loadingRedeem, setLoadingRedeem] = useState(false);
 
   useEffect(() => {
     fetch("/api/usage")
@@ -99,6 +101,25 @@ export default function SettingsPage() {
       window.location.href = data.url;
     } catch { toast.error("Network error."); }
     finally { setLoadingPortal(false); }
+  };
+
+  const handleRedeem = async () => {
+    if (!redeemCode.trim()) { toast.error("Enter a code first."); return; }
+    setLoadingRedeem(true);
+    try {
+      const res = await fetch("/api/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: redeemCode.trim() }),
+      });
+      const data = await res.json() as { success?: boolean; plan?: string; error?: { message: string } };
+      if (!res.ok || !data.success) { toast.error(data.error?.message ?? "Invalid code."); return; }
+      toast.success(`🎉 Code redeemed! You're now on the ${data.plan} plan.`);
+      setRedeemCode("");
+      // Refresh usage data
+      fetch("/api/usage").then(r => r.json()).then((d: UsageData) => setUsage(d)).catch(() => undefined);
+    } catch { toast.error("Network error."); }
+    finally { setLoadingRedeem(false); }
   };
 
   const isFree = !usage || usage.plan === "FREE";
@@ -239,6 +260,54 @@ export default function SettingsPage() {
             </button>
           </Section>
         )}
+
+        {/* Redeem Discount Code */}
+        <div style={{
+          background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "8px", overflow: "hidden",
+        }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <h2 style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>Have a discount code?</h2>
+          </div>
+          <div style={{ padding: "20px" }}>
+            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginBottom: "14px" }}>
+              Redeem a code to unlock a Pro or Team plan instantly.
+            </p>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                placeholder="HUMAN-PRO-XXXXX"
+                value={redeemCode}
+                onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { if (e.key === "Enter") void handleRedeem(); }}
+                style={{
+                  flex: 1, padding: "9px 12px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "6px", color: "#fafafa",
+                  fontSize: "13px", fontFamily: "var(--font-geist-mono), monospace",
+                  outline: "none",
+                  letterSpacing: "0.5px",
+                }}
+              />
+              <button
+                onClick={() => void handleRedeem()}
+                disabled={loadingRedeem || !redeemCode.trim()}
+                style={{
+                  padding: "9px 18px",
+                  background: loadingRedeem || !redeemCode.trim() ? "rgba(139,92,246,0.3)" : "#8b5cf6",
+                  border: "none", borderRadius: "6px",
+                  fontSize: "13px", fontWeight: 700, color: "#fff",
+                  cursor: loadingRedeem || !redeemCode.trim() ? "not-allowed" : "pointer",
+                  transition: "background 0.15s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {loadingRedeem ? "..." : "Redeem"}
+              </button>
+            </div>
+          </div>
+        </div>
 
         {/* Divider */}
         <div style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />

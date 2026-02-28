@@ -27,6 +27,7 @@ model User {
 
   documents    Document[]
   subscription Subscription?
+  redemptions  Redemption[]
 }
 
 model Document {
@@ -57,4 +58,26 @@ model Subscription {
   updatedAt              DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DiscountCode {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  plan        String       // "PRO" | "TEAM"
+  maxUses     Int          @default(1)
+  usedCount   Int          @default(0)
+  expiresAt   DateTime?
+  createdAt   DateTime     @default(now())
+  redemptions Redemption[]
+}
+
+model Redemption {
+  id             String       @id @default(cuid())
+  userId         String
+  discountCodeId String
+  redeemedAt     DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
+
+  @@unique([userId, discountCodeId])
 }

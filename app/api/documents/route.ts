@@ -16,13 +16,16 @@ export async function GET(req: Request) {
       );
     }
 
-    const user = await db.user.findUnique({ where: { clerkId } });
-    if (!user) {
-      return NextResponse.json(
-        { error: { code: "USER_NOT_FOUND", message: "User not found." } },
-        { status: 401 }
-      );
-    }
+    const user = await db.user.upsert({
+      where: { clerkId },
+      update: {},
+      create: {
+        clerkId,
+        email: `${clerkId}@placeholder.humanize-it.app`,
+        plan: "FREE",
+        wordsUsed: 0,
+      },
+    });
 
     const url = new URL(req.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
