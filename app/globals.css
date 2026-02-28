@@ -247,3 +247,40 @@
 .animate-fade-up-delay-3 {
   animation: fade-up 0.5s 0.3s ease both;
 }
+
+/* ── Responsive Utilities ── */
+@media (max-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .editor-inner-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .editor-score-side {
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    gap: 16px !important;
+  }
+  .navbar-links { display: none !important; }
+  .steps-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .pricing-grid { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .social-grid { grid-template-columns: 1fr !important; }
+  .before-after-grid { grid-template-columns: 1fr !important; }
+  .stat-pills-grid { grid-template-columns: 1fr 1fr !important; }
+  .tone-row { flex-wrap: wrap !important; }
+  .upgrade-btns { flex-wrap: wrap !important; }
+  .redeem-row { flex-wrap: wrap !important; }
+  .main-content { padding: 16px 12px !important; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr !important; }
+  .hero-h1 { font-size: 36px !important; letter-spacing: -1px !important; }
+  .pricing-grid { padding: 0 !important; }
+}

@@ -326,7 +326,7 @@ export default function EditorPage() {
               </div>
 
               {/* Stats row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+              <div className="stat-pills-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                 <StatPill
                   label="Burstiness"
                   value={result.stats.burstiness}
@@ -456,7 +456,7 @@ export default function EditorPage() {
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginBottom: "10px", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>
                 Tone
               </div>
-              <div style={{ display: "flex", gap: "6px" }}>
+              <div className="tone-row" style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {TONE_OPTIONS.map(({ value, label }) => (
                   <button
                     key={value}
@@ -500,7 +500,7 @@ export default function EditorPage() {
             {/* Before / After */}
             {humanizedText && (
               <div style={{ marginTop: "20px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="before-after-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   {/* Before */}
                   <div>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>

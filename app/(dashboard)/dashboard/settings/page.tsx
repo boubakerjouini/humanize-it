@@ -211,7 +211,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="upgrade-btns" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               <button
                 onClick={() => void handleUpgrade("PRO")}
                 disabled={loadingCheckout}
@@ -274,7 +274,7 @@ export default function SettingsPage() {
             <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginBottom: "14px" }}>
               Redeem a code to unlock a Pro or Team plan instantly.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="redeem-row" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               <input
                 type="text"
                 placeholder="HUMAN-PRO-XXXXX"
@@ -282,13 +282,14 @@ export default function SettingsPage() {
                 onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === "Enter") void handleRedeem(); }}
                 style={{
-                  flex: 1, padding: "9px 12px",
+                  flex: "1 1 200px", padding: "9px 12px",
                   background: "rgba(255,255,255,0.05)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: "6px", color: "#fafafa",
                   fontSize: "13px", fontFamily: "var(--font-geist-mono), monospace",
                   outline: "none",
                   letterSpacing: "0.5px",
+                  minWidth: "0",
                 }}
               />
               <button

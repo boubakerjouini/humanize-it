@@ -164,7 +164,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+        <main className="main-content" style={{ flex: 1, overflow: "auto", padding: "24px" }}>
           {children}
         </main>
 

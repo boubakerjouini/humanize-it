@@ -175,7 +175,7 @@ export default function LandingPage() {
           </Link>
 
           {/* Center links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+          <div className="navbar-links" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <a href="#how-it-works" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>How it works</a>
             <a href="#pricing" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Pricing</a>
           </div>
@@ -223,7 +223,7 @@ export default function LandingPage() {
         overflow: "hidden",
       }}>
         <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "40px 24px", width: "100%" }}>
-          <div style={{
+          <div className="hero-grid" style={{
             display: "grid",
             gridTemplateColumns: "2fr 3fr",
             gap: "48px",
@@ -245,7 +245,7 @@ export default function LandingPage() {
               </div>
 
               {/* H1 */}
-              <h1 style={{
+              <h1 className="hero-h1" style={{
                 fontSize: "clamp(38px, 5vw, 60px)",
                 fontWeight: 800,
                 lineHeight: 1.08,
@@ -294,6 +294,15 @@ export default function LandingPage() {
               }}>
                 How it works ↓
               </a>
+              <a href="/sign-up" className="md:hidden" style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                background: "#8b5cf6", color: "#fafafa",
+                fontSize: "14px", fontWeight: 700,
+                padding: "10px 22px", borderRadius: "8px",
+                textDecoration: "none", marginTop: "16px",
+              }}>
+                Start Free →
+              </a>
             </div>
 
             {/* ── Right: Live Editor (60%) ── */}
@@ -322,7 +331,7 @@ export default function LandingPage() {
               </div>
 
               {/* Editor body */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", minHeight: "260px" }}>
+              <div className="editor-inner-grid" style={{ display: "grid", gridTemplateColumns: "1fr auto", minHeight: "260px" }}>
                 {/* Textarea */}
                 <div style={{ padding: "16px", borderRight: "1px solid rgba(255,255,255,0.05)" }}>
                   <textarea
@@ -364,7 +373,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Score panel */}
-                <div style={{
+                <div className="editor-score-side" style={{
                   width: "130px",
                   display: "flex",
                   flexDirection: "column",
@@ -497,7 +506,7 @@ export default function LandingPage() {
             Three steps. Zero friction.
           </h2>
 
-          <div style={{
+          <div className="steps-grid" style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
             gap: "0",
@@ -560,7 +569,7 @@ export default function LandingPage() {
             Start free. Upgrade when ready.
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+          <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
             {PLANS.map((plan) => (
               <div key={plan.name} style={{
                 background: plan.pro ? "rgba(139,92,246,0.05)" : "#0f0f12",
@@ -636,7 +645,7 @@ export default function LandingPage() {
             The numbers don&apos;t lie.
           </p>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "64px", flexWrap: "wrap", marginBottom: "52px" }}>
+          <div className="stats-grid" style={{ display: "flex", justifyContent: "center", gap: "64px", flexWrap: "wrap", marginBottom: "52px" }}>
             {[
               { val: "800M+", label: "AI users worldwide" },
               { val: "24", label: "patterns detected" },
