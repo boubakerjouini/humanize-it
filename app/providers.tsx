@@ -16,7 +16,7 @@ function PostHogInit() {
     posthog.init(key, {
       // Proxy through our domain — avoids adblockers
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "/ingest",
-      ui_host: "https://us.posthog.com",
+      ui_host: "https://eu.posthog.com",
       capture_pageview: false, // We handle this manually
       capture_pageleave: true,
       persistence: "localStorage",

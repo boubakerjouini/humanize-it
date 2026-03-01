@@ -6,12 +6,12 @@ const nextConfig: NextConfig = {
       // Proxy PostHog static assets (JS bundle)
       {
         source: "/ingest/static/:path*",
-        destination: "https://us-assets.i.posthog.com/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
       },
-      // Proxy PostHog API calls (events, decide, etc.)
+      // Proxy PostHog API calls — EU Cloud
       {
         source: "/ingest/:path*",
-        destination: "https://us.i.posthog.com/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
       },
     ];
   },
