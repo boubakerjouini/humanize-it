@@ -9,6 +9,7 @@ import type { AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
+import { trackServer } from "@/lib/posthog";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
 
@@ -119,7 +120,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // 9. Return
+    // 9. Track event
+    trackServer(clerkId, "text_humanized", {
+      tone: toneValue,
+      tokens_used: tokensUsed,
+      word_count: document.wordCount,
+      plan: freshUser.plan,
+    });
+
+    // 10. Return
     return NextResponse.json({
       humanizedText,
       tokensUsed,

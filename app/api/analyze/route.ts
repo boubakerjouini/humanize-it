@@ -8,6 +8,7 @@ import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
+import { trackServer } from "@/lib/posthog";
 
 export async function POST(req: Request) {
   try {
@@ -102,7 +103,16 @@ export async function POST(req: Request) {
       data: { wordsUsed: { increment: wordCount } },
     });
 
-    // 9. Return response
+    // 9. Track event
+    trackServer(clerkId, "text_analyzed", {
+      score: analysisResult.score,
+      confidence_band: analysisResult.confidenceBand,
+      pattern_count: analysisResult.patterns.length,
+      word_count: analysisResult.wordCount,
+      plan: freshUser.plan,
+    });
+
+    // 10. Return response
     return NextResponse.json({
       score: analysisResult.score,
       confidenceBand: analysisResult.confidenceBand,

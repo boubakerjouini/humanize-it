@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { Suspense } from "react";
+import { Providers } from "./providers";
+import { PostHogPageview } from "@/components/posthog-pageview";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "HumanizeIt — Detect & Humanize AI Text",
     description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human.",
-    url: "https://humanize-it.vercel.app",
+    url: "https://humanizeit.app",
     siteName: "HumanizeIt",
     type: "website",
   },
@@ -41,10 +44,13 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="dark">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <Providers>
+            <Suspense fallback={null}>
+              <PostHogPageview />
+            </Suspense>
+            {children}
+          </Providers>
           <Toaster richColors position="bottom-center" />
         </body>
       </html>
