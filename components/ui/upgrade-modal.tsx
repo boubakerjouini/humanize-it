@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePostHog } from "posthog-js/react";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -15,14 +16,16 @@ const PLANS = [
 ];
 
 export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps) {
+  const posthog = usePostHog();
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
 
-  // Lock body scroll
+  // Lock body scroll + track open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan });
       return () => { document.body.style.overflow = ""; };
     }
   }, [isOpen]);
@@ -50,8 +53,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
       const data = await res.json() as { success?: boolean; plan?: string; error?: { message: string } };
       if (res.ok && data.success) {
         setCodeStatus({ type: "success", message: `Upgraded to ${data.plan}!` });
+        posthog?.capture("discount_code_success", { plan: data.plan });
       } else {
         setCodeStatus({ type: "error", message: data.error?.message ?? "Invalid code." });
+        posthog?.capture("discount_code_failed", { code: code.trim() });
       }
     } catch {
       setCodeStatus({ type: "error", message: "Network error." });
@@ -145,6 +150,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                 ) : plan.id !== "FREE" ? (
                   <a
                     href={`/api/checkout?plan=${plan.id.toLowerCase()}`}
+                    onClick={() => posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan })}
                     style={{
                       display: "block", padding: "8px", borderRadius: "6px",
                       fontSize: "12px", fontWeight: 600, textDecoration: "none",

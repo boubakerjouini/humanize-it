@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { usePostHog } from "posthog-js/react";
 import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -74,6 +75,7 @@ function getScoreConfig(score: number) {
 
 export default function EditorPage() {
   const { isSignedIn } = useAuth();
+  const posthog = usePostHog();
   const [step, setStep] = useState<Step>("input");
   const [text, setText] = useState("");
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
@@ -112,6 +114,7 @@ export default function EditorPage() {
 
   const handleAnalyze = useCallback(async () => {
     if (!canAnalyze) return;
+    posthog?.capture("analyze_clicked", { word_count: wordCount, char_count: text.length });
     setAnalyzing(true);
     setResult(null);
     setHumanizedText(null);
@@ -125,10 +128,11 @@ export default function EditorPage() {
         body: JSON.stringify({ text }),
       });
       const data = await res.json() as AnalyzeResponse & { error?: { message: string } };
-      if (res.status === 402) { setShowUpgradeModal(true); return; }
+      if (res.status === 402) { posthog?.capture("upgrade_modal_opened", { trigger: "analyze_quota" }); setShowUpgradeModal(true); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Analysis failed."); return; }
       setResult(data);
       setStep("results");
+      posthog?.capture("analysis_completed", { score: data.score, confidence_band: data.confidenceBand, pattern_count: data.patterns.length, word_count: data.wordCount });
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
@@ -138,7 +142,8 @@ export default function EditorPage() {
 
   const handleHumanize = useCallback(async () => {
     if (!result) return;
-    if (!isSignedIn) { setShowAuthModal(true); return; }
+    if (!isSignedIn) { posthog?.capture("auth_modal_opened", { trigger: "humanize_cta" }); setShowAuthModal(true); return; }
+    posthog?.capture("humanize_clicked", { tone, score: result.score, pattern_count: result.patterns.length });
     setHumanizing(true);
     setStep("humanizing");
 
@@ -149,7 +154,7 @@ export default function EditorPage() {
         body: JSON.stringify({ documentId: result.documentId, tone }),
       });
       const data = await res.json() as { humanizedText?: string; error?: { message: string } };
-      if (res.status === 402) { setShowUpgradeModal(true); setStep("results"); return; }
+      if (res.status === 402) { posthog?.capture("upgrade_modal_opened", { trigger: "humanize_quota" }); setShowUpgradeModal(true); setStep("results"); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); setStep("results"); return; }
 
       setHumanizedText(data.humanizedText ?? null);
@@ -169,6 +174,7 @@ export default function EditorPage() {
       }
       setStep("done");
       toast.success("Humanized successfully!");
+      posthog?.capture("humanize_completed", { tone, original_score: result.score });
     } catch {
       toast.error("Network error. Please try again.");
       setStep("results");
@@ -183,9 +189,11 @@ export default function EditorPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success("Copied to clipboard!");
-  }, [humanizedText]);
+    posthog?.capture("text_copied", { humanized_score: humanizedScore, original_score: result?.score });
+  }, [humanizedText, humanizedScore, result, posthog]);
 
   const handleReset = () => {
+    posthog?.capture("new_analysis_started", { previous_score: result?.score });
     setStep("input");
     setResult(null);
     setHumanizedText(null);
@@ -490,7 +498,7 @@ export default function EditorPage() {
                   </div>
                   {result.patterns.length > 3 && (
                     <button
-                      onClick={() => setShowAllPatterns(v => !v)}
+                      onClick={() => { const next = !showAllPatterns; setShowAllPatterns(next); if (next) posthog?.capture("patterns_expanded", { pattern_count: result?.patterns.length }); }}
                       style={{
                         width: "100%", padding: "10px",
                         background: "rgba(255,255,255,0.02)",

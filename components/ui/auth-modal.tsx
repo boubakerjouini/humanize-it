@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,10 +11,12 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/editor" }: AuthModalProps) {
+  const posthog = usePostHog();
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      posthog?.capture("auth_modal_viewed");
       return () => { document.body.style.overflow = ""; };
     }
   }, [isOpen]);
@@ -96,6 +99,7 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
           >
             Sign up with email
           </Link>
+
         </div>
 
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
