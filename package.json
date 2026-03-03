@@ -13,6 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
     "@clerk/nextjs": "^6.38.3",
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@stripe/stripe-js": "^8.8.0",

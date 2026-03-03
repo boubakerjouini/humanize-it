@@ -1,13 +1,17 @@
 // ===========================================================
-// POST /api/billing/portal — Stripe Customer Portal
+// POST /api/billing/portal — Lemon Squeezy customer portal
+// Returns the manage-subscription URL from the stored subscription
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getSubscription } from "@lemonsqueezy/lemonsqueezy.js";
+import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
 import { db } from "@/lib/db";
 
 export async function POST() {
+  configureLemonSqueezy();
+
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
@@ -22,7 +26,7 @@ export async function POST() {
       include: { subscription: true },
     });
 
-    if (!user || !user.subscription?.stripeCustomerId) {
+    if (!user?.subscription?.lsSubscriptionId) {
       return NextResponse.json(
         {
           error: {
@@ -34,14 +38,28 @@ export async function POST() {
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    // Retrieve the subscription to get the live customer portal URL
+    const { data, error } = await getSubscription(
+      user.subscription.lsSubscriptionId
+    );
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: user.subscription.stripeCustomerId,
-      return_url: `${baseUrl}/dashboard/settings`,
-    });
+    if (error || !data) {
+      console.error("[billing/portal] LS error:", error);
+      return NextResponse.json(
+        { error: { code: "LS_ERROR", message: "Failed to retrieve subscription." } },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({ url: session.url });
+    const portalUrl = data.data.attributes.urls?.customer_portal;
+    if (!portalUrl) {
+      return NextResponse.json(
+        { error: { code: "NO_PORTAL_URL", message: "Portal URL unavailable." } },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ url: portalUrl });
   } catch (err) {
     console.error("[billing/portal] error:", err);
     return NextResponse.json(

@@ -5,7 +5,7 @@ export interface PlanConfig {
   name: string;
   /** Monthly price in USD */
   price: number;
-  /** Annual price in USD (one-time charge, billed yearly) */
+  /** Annual price in USD (billed yearly) */
   priceAnnual?: number;
   wordsLimit: number;
   wordsLimitPeriod: "day" | "month";
@@ -19,10 +19,10 @@ export interface PlanConfig {
   watermark: boolean;
   /** Requests per minute */
   rateLimit: number;
-  /** Stripe monthly price ID */
-  stripePriceId: string | null;
-  /** Stripe annual price ID — set STRIPE_PRO_ANNUAL_PRICE_ID / STRIPE_TEAM_ANNUAL_PRICE_ID */
-  stripePriceIdAnnual?: string | null;
+  /** Lemon Squeezy variant ID (monthly) — set LEMONSQUEEZY_PRO_VARIANT_ID / LEMONSQUEEZY_TEAM_VARIANT_ID */
+  lsVariantId: string | null;
+  /** Lemon Squeezy variant ID (annual) — set LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID / LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID */
+  lsVariantIdAnnual?: string | null;
 }
 
 export const PLANS: Record<PlanId, PlanConfig> = {
@@ -40,13 +40,13 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiAccess: false,
     watermark: true,
     rateLimit: 5,
-    stripePriceId: null,
+    lsVariantId: null,
   },
   PRO: {
     id: "PRO",
     name: "Pro",
     price: 9,
-    priceAnnual: 79, // ~$6.58/mo billed annually
+    priceAnnual: 79,
     wordsLimit: 50_000,
     wordsLimitPeriod: "month",
     rewriteLimit: -1, // unlimited
@@ -57,14 +57,14 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiAccess: false,
     watermark: false,
     rateLimit: 20,
-    stripePriceId: process.env.STRIPE_PRO_PRICE_ID ?? null,
-    stripePriceIdAnnual: process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null,
+    lsVariantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID ?? null,
+    lsVariantIdAnnual: process.env.LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID ?? null,
   },
   TEAM: {
     id: "TEAM",
     name: "Team",
     price: 29,
-    priceAnnual: 249, // ~$20.75/mo billed annually
+    priceAnnual: 249,
     wordsLimit: 200_000,
     wordsLimitPeriod: "month",
     rewriteLimit: -1, // unlimited
@@ -75,21 +75,20 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiAccess: true,
     watermark: false,
     rateLimit: 60,
-    stripePriceId: process.env.STRIPE_TEAM_PRICE_ID ?? null,
-    stripePriceIdAnnual: process.env.STRIPE_TEAM_ANNUAL_PRICE_ID ?? null,
+    lsVariantId: process.env.LEMONSQUEEZY_TEAM_VARIANT_ID ?? null,
+    lsVariantIdAnnual: process.env.LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID ?? null,
   },
 } as const;
 
 /**
- * Find a plan by its Stripe price ID (monthly or annual).
- * Returns null if the price ID does not match any configured plan.
+ * Find a plan by its Lemon Squeezy variant ID (monthly or annual).
  */
-export function getPlanByStripePriceId(priceId: string): PlanConfig | null {
+export function getPlanByVariantId(variantId: string): PlanConfig | null {
   return (
     Object.values(PLANS).find(
       (plan) =>
-        plan.stripePriceId === priceId ||
-        plan.stripePriceIdAnnual === priceId
+        plan.lsVariantId === variantId ||
+        plan.lsVariantIdAnnual === variantId
     ) ?? null
   );
 }

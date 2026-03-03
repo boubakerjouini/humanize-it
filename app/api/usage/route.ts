@@ -40,7 +40,7 @@ export async function GET() {
       quotaResetAt: user.quotaResetAt,
       // Expose subscription status so the UI can show payment failure banners
       subscriptionStatus: user.subscription?.status ?? null,
-      stripeCurrentPeriodEnd: user.subscription?.stripeCurrentPeriodEnd ?? null,
+      stripeCurrentPeriodEnd: user.subscription?.lsCurrentPeriodEnd ?? null,
     });
   } catch (err) {
     console.error("[usage] error:", err);
