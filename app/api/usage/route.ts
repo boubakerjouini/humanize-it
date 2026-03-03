@@ -26,6 +26,7 @@ export async function GET() {
         plan: "FREE",
         wordsUsed: 0,
       },
+      include: { subscription: true },
     });
 
     const plan = PLANS[user.plan];
@@ -37,6 +38,9 @@ export async function GET() {
       rewriteCount: user.rewriteCount,
       rewriteLimit: plan.rewriteLimit,
       quotaResetAt: user.quotaResetAt,
+      // Expose subscription status so the UI can show payment failure banners
+      subscriptionStatus: user.subscription?.status ?? null,
+      stripeCurrentPeriodEnd: user.subscription?.stripeCurrentPeriodEnd ?? null,
     });
   } catch (err) {
     console.error("[usage] error:", err);

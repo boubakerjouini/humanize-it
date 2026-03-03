@@ -29,45 +29,69 @@ export async function POST(req: Request) {
       );
     }
 
-    let body: { plan?: unknown } = {};
+    // Parse request body — default to PRO monthly if missing
+    let body: { plan?: unknown; annual?: unknown } = {};
     try {
       body = await req.json();
     } catch {
-      // default to PRO if no body
+      // No body provided — fall through to defaults
     }
 
     const planId = body.plan === "TEAM" ? "TEAM" : "PRO";
+    const isAnnual = body.annual === true;
     const planConfig = PLANS[planId];
 
-    if (!planConfig.stripePriceId) {
+    // Pick the correct Stripe price ID (annual vs monthly)
+    const priceId =
+      isAnnual && planConfig.stripePriceIdAnnual
+        ? planConfig.stripePriceIdAnnual
+        : planConfig.stripePriceId;
+
+    if (!priceId) {
       return NextResponse.json(
-        { error: { code: "PLAN_NOT_CONFIGURED", message: "Stripe price ID not configured." } },
+        {
+          error: {
+            code: "PLAN_NOT_CONFIGURED",
+            message: `Stripe price ID not configured for plan "${planId}"${isAnnual ? " (annual)" : ""}.`,
+          },
+        },
         { status: 500 }
       );
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: planConfig.stripePriceId,
-          quantity: 1,
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "subscription",
+        payment_method_types: ["card"],
+        line_items: [{ price: priceId, quantity: 1 }],
+
+        // Reuse existing customer if available; otherwise pre-fill email
+        customer_email: user.subscription?.stripeCustomerId
+          ? undefined
+          : user.email,
+        customer: user.subscription?.stripeCustomerId ?? undefined,
+
+        // Allow promo/discount codes to be entered in checkout
+        allow_promotion_codes: true,
+
+        // Carry plan info for webhook processing
+        metadata: { clerkId, planId, annual: isAnnual ? "true" : "false" },
+
+        // Subscription-level metadata for Stripe dashboard filtering
+        subscription_data: {
+          metadata: { clerkId, planId, annual: isAnnual ? "true" : "false" },
         },
-      ],
-      customer_email: user.subscription?.stripeCustomerId
-        ? undefined
-        : user.email,
-      customer: user.subscription?.stripeCustomerId ?? undefined,
-      metadata: {
-        clerkId,
-        planId,
+
+        success_url: `${baseUrl}/dashboard/editor?upgraded=true`,
+        cancel_url: `${baseUrl}/dashboard/settings?cancelled=true`,
       },
-      success_url: `${baseUrl}/dashboard/editor?upgraded=true`,
-      cancel_url: `${baseUrl}/dashboard/settings?cancelled=true`,
-    });
+      {
+        // Idempotency key prevents duplicate sessions on double-click / retry
+        idempotencyKey: `checkout-${clerkId}-${planId}-${isAnnual ? "annual" : "monthly"}-${Math.floor(Date.now() / 60_000)}`,
+      }
+    );
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

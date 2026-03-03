@@ -12,6 +12,8 @@ interface UsageData {
   rewriteCount: number;
   rewriteLimit: number;
   quotaResetAt: string;
+  subscriptionStatus: string | null;
+  stripeCurrentPeriodEnd: string | null;
 }
 
 function formatDate(iso: string): string {
@@ -122,9 +124,10 @@ export default function SettingsPage() {
     finally { setLoadingRedeem(false); }
   };
 
-  const isFree = !usage || usage.plan === "FREE";
-  const isPro  = usage?.plan === "PRO";
-  const isTeam = usage?.plan === "TEAM";
+  const isFree    = !usage || usage.plan === "FREE";
+  const isPro     = usage?.plan === "PRO";
+  const isTeam    = usage?.plan === "TEAM";
+  const isPastDue = usage?.subscriptionStatus === "past_due";
 
   return (
     <div style={{ maxWidth: "600px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
@@ -138,6 +141,37 @@ export default function SettingsPage() {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+        {/* Payment failed banner — shows when Stripe marks subscription past_due */}
+        {isPastDue && (
+          <div style={{
+            padding: "14px 16px", borderRadius: "8px",
+            background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+          }}>
+            <div>
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "#ef4444", marginBottom: "3px" }}>
+                ⚠ Payment failed
+              </p>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+                Your last payment couldn&apos;t be processed. Update your payment method to keep your plan.
+              </p>
+            </div>
+            <button
+              onClick={() => void handleBillingPortal()}
+              disabled={loadingPortal}
+              style={{
+                padding: "8px 14px", flexShrink: 0,
+                background: "#ef4444", border: "none", borderRadius: "6px",
+                fontSize: "12px", fontWeight: 700, color: "#fff",
+                cursor: loadingPortal ? "not-allowed" : "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Fix now →
+            </button>
+          </div>
+        )}
 
         {/* Plan & Usage */}
         <Section title="Current Plan">
@@ -168,12 +202,21 @@ export default function SettingsPage() {
                   {usage.rewriteCount} / {usage.rewriteLimit === -1 ? "∞" : usage.rewriteLimit}
                 </span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Quota resets</span>
                 <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
                   {formatDate(usage.quotaResetAt)}
                 </span>
               </div>
+              {usage.stripeCurrentPeriodEnd && (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Renews on</span>
+                  <span style={{ fontSize: "12px", color: isPastDue ? "#ef4444" : "rgba(255,255,255,0.6)" }}>
+                    {formatDate(usage.stripeCurrentPeriodEnd)}
+                    {isPastDue && " ⚠"}
+                  </span>
+                </div>
+              )}
             </>
           ) : (
             <div style={{ height: "80px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", animation: "pulse 2s infinite" }} />
