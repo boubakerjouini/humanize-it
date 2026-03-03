@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 30_000,
   retries: 1,
   use: {
-    baseURL: "https://humanize-it.vercel.app",
+    baseURL: "https://humanizeit.app",
     headless: true,
     screenshot: "only-on-failure",
     video: "off",
