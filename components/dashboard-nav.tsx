@@ -3,11 +3,12 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { PenLine, History, Settings } from "lucide-react";
+import { PenLine, History, Clock, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard/editor", label: "Editor", icon: PenLine },
   { href: "/dashboard/history", label: "History", icon: History },
+  { href: "/dashboard/events", label: "Activity", icon: Clock },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

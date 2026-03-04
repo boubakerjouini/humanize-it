@@ -28,6 +28,7 @@ model User {
   documents    Document[]
   subscription Subscription?
   redemptions  Redemption[]
+  events       UserEvent[]
 }
 
 model Document {
@@ -81,4 +82,18 @@ model Redemption {
   discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
 
   @@unique([userId, discountCodeId])
+}
+
+model UserEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
 }
