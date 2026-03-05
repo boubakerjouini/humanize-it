@@ -2,10 +2,11 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { PenLine, History, Settings, Zap, Crown, Sparkles } from "lucide-react";
+import { PenLine, History, Settings, Zap, Crown, Sparkles, LayoutDashboard } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard, desc: "Overview", exact: true },
   { href: "/dashboard/editor", label: "Editor", icon: PenLine, desc: "Analyze & humanize" },
   { href: "/dashboard/history", label: "History", icon: History, desc: "Past documents" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, desc: "Account & usage" },
@@ -40,35 +41,49 @@ function PlanBadge({ plan }: { plan: string }) {
   );
 
   return (
-    <Link href="/dashboard/settings" style={{ textDecoration: "none" }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: "5px",
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "6px", padding: "4px 10px",
-        cursor: "pointer", transition: "all 0.15s",
-      }}>
-        <Zap size={10} color="#6b6b80" />
-        <span style={{ fontSize: "10px", fontWeight: 600, color: "#6b6b80", letterSpacing: "0.5px" }}>FREE</span>
-      </div>
-    </Link>
+    <div style={{
+      display: "flex", alignItems: "center", gap: "5px",
+      background: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "6px", padding: "4px 10px",
+    }}>
+      <Zap size={10} color="#6b6b80" />
+      <span style={{ fontSize: "10px", fontWeight: 600, color: "#6b6b80", letterSpacing: "0.5px" }}>FREE</span>
+    </div>
   );
 }
 
 export function DashboardNav({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useUser();
-  const [plan, setPlan] = useState<string>("FREE");
-  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/user-plan")
       .then(r => r.json())
-      .then(d => { setPlan(d.plan ?? "FREE"); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(d => setPlan(d.plan ?? "FREE"))
+      .catch(() => setPlan("FREE"));
   }, []);
 
-  const isActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href;
+    return pathname.startsWith(href);
+  };
+
+  const handleUpgrade = async () => {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "PRO" }),
+      });
+      const data = await res.json() as { url?: string };
+      if (data.url) window.location.href = data.url;
+    } catch { /* ignore */ }
+    finally { setCheckoutLoading(false); }
+  };
 
   return (
     <div style={{ display: "flex", height: "100dvh", overflow: "hidden", background: "#09090b" }}>
@@ -76,11 +91,11 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex" style={{
         width: "240px", flexShrink: 0, flexDirection: "column",
-        background: "#060608",
+        background: "linear-gradient(180deg, #060608 0%, #07070a 100%)",
         borderRight: "1px solid rgba(255,255,255,0.04)",
         position: "relative",
       }}>
-        {/* Subtle glow top */}
+        {/* Top glow line */}
         <div style={{
           position: "absolute", top: 0, left: 0, right: 0, height: "1px",
           background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent)",
@@ -110,8 +125,8 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
           <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.8px", padding: "0 10px 8px", textTransform: "uppercase", fontWeight: 600 }}>
             Workspace
           </div>
-          {NAV_ITEMS.map(({ href, label, icon: Icon, desc }) => {
-            const active = isActive(href);
+          {NAV_ITEMS.map(({ href, label, icon: Icon, desc, exact }) => {
+            const active = isActive(href, exact);
             return (
               <Link key={href} href={href} style={{
                 display: "flex", alignItems: "center", gap: "12px",
@@ -142,23 +157,30 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
 
         {/* Bottom user section */}
         <div style={{ padding: "12px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-          {!loading && (plan === "FREE") && (
-            <Link href="/dashboard/settings" style={{ textDecoration: "none", display: "block", marginBottom: "10px" }}>
-              <div style={{
+          {/* Upgrade CTA — only when plan is loaded and FREE */}
+          {plan === "FREE" && (
+            <button
+              onClick={() => void handleUpgrade()}
+              disabled={checkoutLoading}
+              style={{
+                width: "100%",
                 background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(124,58,237,0.08))",
                 border: "1px solid rgba(139,92,246,0.2)",
                 borderRadius: "10px", padding: "10px 12px",
-                cursor: "pointer",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                  <Zap size={11} color="#8b5cf6" />
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#8b5cf6" }}>Upgrade to Pro</span>
-                </div>
-                <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>
-                  50k words/month + unlimited rewrites
-                </div>
+                cursor: checkoutLoading ? "not-allowed" : "pointer",
+                marginBottom: "10px", textAlign: "left",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                <Zap size={11} color="#8b5cf6" />
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#8b5cf6" }}>
+                  {checkoutLoading ? "Loading..." : "Upgrade to Pro"}
+                </span>
               </div>
-            </Link>
+              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>
+                50k words/month + unlimited rewrites
+              </div>
+            </button>
           )}
 
           <div style={{
@@ -181,10 +203,10 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
                 {user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "User"}
               </div>
               <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", marginTop: "1px" }}>
-                {!loading ? plan : "..."}
+                {plan === null ? "..." : plan}
               </div>
             </div>
-            <PlanBadge plan={plan} />
+            {plan !== null && <PlanBadge plan={plan} />}
           </div>
         </div>
       </aside>
@@ -205,8 +227,8 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
         borderTop: "1px solid rgba(255,255,255,0.06)",
         alignItems: "center", justifyContent: "space-around",
       }}>
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = isActive(href);
+        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+          const active = isActive(href, exact);
           return (
             <Link key={href} href={href} style={{
               display: "flex", flexDirection: "column", alignItems: "center",

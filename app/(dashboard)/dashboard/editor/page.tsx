@@ -7,7 +7,7 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Loader2, Copy, RotateCcw, ChevronDown, ChevronUp, Zap, CheckCircle2, Sparkles, FileText, ArrowRight } from "lucide-react";
+import { Loader2, Copy, RotateCcw, ChevronDown, ChevronUp, Zap, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic";
@@ -345,46 +345,19 @@ export default function EditorPage() {
                 </span>
               </div>
 
-              {!text && step === "input" ? (
-                /* Empty state */
-                <div style={{ padding: "40px 24px", textAlign: "center" }}>
-                  <FileText size={32} color="rgba(255,255,255,0.08)" style={{ margin: "0 auto 16px" }} />
-                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.3)", marginBottom: "8px" }}>
-                    Paste your AI-generated text here
-                  </p>
-                  <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.15)", lineHeight: 1.6 }}>
-                    Try something that starts with &quot;In today&apos;s rapidly evolving landscape&quot;
-                    or uses words like &quot;furthermore&quot;, &quot;pivotal&quot;, &quot;paradigm&quot;
-                  </p>
-                  <textarea
-                    ref={textareaRef}
-                    value={text}
-                    onChange={e => setText(e.target.value)}
-                    placeholder=""
-                    style={{
-                      width: "100%", minHeight: "180px", padding: "16px",
-                      background: "transparent", border: "none", outline: "none",
-                      resize: "vertical", color: "#fafafa", fontSize: "14px",
-                      lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
-                      display: "block", marginTop: "16px",
-                    }}
-                  />
-                </div>
-              ) : (
-                <textarea
-                  ref={textareaRef}
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                  placeholder="Paste your AI-generated text here..."
-                  style={{
-                    width: "100%", minHeight: "260px", padding: "16px",
-                    background: "transparent", border: "none", outline: "none",
-                    resize: "vertical", color: "#fafafa", fontSize: "14px",
-                    lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
-                    display: "block",
-                  }}
-                />
-              )}
+              <textarea
+                ref={textareaRef}
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder={"Paste or type your AI-generated text here...\n\nExample: \"In today's rapidly evolving landscape, it is crucial to leverage synergistic paradigms to foster innovative growth strategies...\""}
+                style={{
+                  width: "100%", minHeight: "260px", padding: "16px",
+                  background: "transparent", border: "none", outline: "none",
+                  resize: "vertical", color: "#fafafa", fontSize: "14px",
+                  lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
+                  display: "block",
+                }}
+              />
 
               {/* Bottom toolbar */}
               <div style={{

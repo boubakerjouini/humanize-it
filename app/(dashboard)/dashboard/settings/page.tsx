@@ -130,7 +130,7 @@ export default function SettingsPage() {
   const isPastDue = usage?.subscriptionStatus === "past_due";
 
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
+    <div style={{ maxWidth: "600px", margin: "0 auto", padding: "32px 24px", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
 
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>

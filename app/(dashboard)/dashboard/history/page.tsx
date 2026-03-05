@@ -96,7 +96,7 @@ export default function HistoryPage() {
   const isFree = plan === "FREE";
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "32px 24px", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
