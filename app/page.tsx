@@ -1156,7 +1156,11 @@ export default function LandingPage() {
             ))}
           </div>
           <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.18)" }}>
-            &copy; 2026 HumanizeIt &middot; Privacy &middot; Terms
+            &copy; 2026 HumanizeIt &middot;{" "}
+            <a href="/privacy" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy</a> &middot;{" "}
+            <a href="/terms" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms</a> &middot;{" "}
+            <a href="/cookies" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Cookies</a> &middot;{" "}
+            <a href="/refunds" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Refunds</a>
           </p>
         </div>
       </footer>
