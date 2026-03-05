@@ -45,6 +45,18 @@ const FORBIDDEN_SYNONYMS: Record<string, string> = {
   "of course": "",
   "as previously mentioned": "",
   "as mentioned earlier": "",
+  "delve into": "look at",
+  "delves into": "looks at",
+  "delved into": "looked at",
+  "delving into": "looking at",
+  "it is worth noting that": "",
+  "it's worth noting that": "",
+  "it is important to note that": "",
+  "plays a crucial role": "matters a lot",
+  "plays a key role": "matters",
+  "when it comes to": "for",
+  "in terms of": "for",
+  "the fact that": "",
 };
 
 // ---- Tone instructions (toned down — humanization takes priority) ----
@@ -62,53 +74,63 @@ const TONE_INSTRUCTIONS: Record<ToneOption, string> = {
 // ---- Layer 1: Radical system prompt ----
 
 function buildSystemPrompt(): string {
-  return `You are a human rewriter. Your job: make AI-generated text completely undetectable by AI detectors.
+  return `You are a human rewriter. Your ONLY job: make AI-generated text completely undetectable by GPTZero, Turnitin, Originality.ai, and Copyleaks.
 
-AI detectors catch these fingerprints — DESTROY ALL OF THEM:
-1. Uniform sentence rhythm — AI writes sentences of similar length. Humans don't.
-2. Smooth transitions — "Furthermore", "Moreover", "Additionally" = instant AI flag.
-3. Predictable vocabulary — Low-surprise word choices.
-4. Perfect grammar — No contractions, no fragments, no informal touches.
-5. Balanced hedging — "While X, Y" structures repeated.
-6. Generic specificity — No real numbers, no real names, no personal stakes.
+THESE ARE THE EXACT SIGNALS DETECTORS USE — ELIMINATE ALL OF THEM:
 
-YOUR MANDATORY OUTPUT RULES:
-A) SENTENCE RHYTHM: You MUST include:
-   - At least 3 sentences of 1–6 words (punchy fragments)
-   - At least 1 sentence of 40+ words
-   - No 3 consecutive sentences within 4 words of each other in length
+1. EM DASH (—): The single biggest ChatGPT fingerprint. NEVER use —. Replace with a comma, period, or rewrite the sentence entirely. This is non-negotiable.
+2. Uniform sentence length — AI writes 18-22 word sentences repeatedly. Break this pattern.
+3. Smooth formal transitions — "Furthermore", "Moreover", "Additionally", "In addition" = instant flag.
+4. Hedging pairs — "While X, Y" / "Although X, Y" used repeatedly.
+5. Perfect grammar — No contractions = AI. Use "don't", "it's", "you're".
+6. Abstract vagueness — "many experts", "significant impact", "various approaches". Replace with specifics.
+7. Formulaic structure — Intro paragraph → 3 body paragraphs → conclusion. Break this.
+8. Consistent paragraph length — All paragraphs 3-4 sentences. Vary it: some 1 sentence, some 6.
 
-B) VOCABULARY: Never use these words (they are AI fingerprints):
+MANDATORY RULES:
+
+A) PUNCTUATION — CRITICAL:
+   - ZERO em dashes (—). Replace every single one.
+   - Use commas, periods, colons, or parentheses instead.
+   - Occasional sentence fragments are fine. Humans write them.
+
+B) SENTENCE RHYTHM:
+   - Mix short (3-8 words) and long (30+ words) sentences throughout.
+   - Never have 3 consecutive sentences within 5 words of each other in length.
+   - Break long sentences into 2 short ones randomly.
+
+C) BANNED WORDS — never appear in output:
    furthermore, moreover, additionally, comprehensive, multifaceted, pivotal, nuanced,
    intricate, underscores, underpins, embark, unravel, endeavor, testament, cornerstone,
    paramount, fostering, navigating, groundbreaking, spearhead, reimagine, transformative,
    visionary, pioneering, seamlessly, holistically, robust, leverage, utilize, facilitate,
    paradigm, innovative, dynamic, holistic, proactive, meticulous, vibrant, bustling,
    nestled, realm, showcase, catalyst, invaluable, quintessential, illuminate, encompasses,
-   ubiquitous, actionable, impactful, deliverables, stakeholders, ecosystem, showcasing,
-   highlighting, demonstrating, reflecting, underscoring, serves as, stands as, boasts,
+   ubiquitous, actionable, impactful, delve, delves, delving, tapestry, landscape,
    it is worth noting, it is important to, in today's rapidly, in the realm of,
-   in conclusion, to sum up, moving forward, at the end of the day
+   in conclusion, to sum up, moving forward, at the end of the day, it's worth mentioning,
+   when it comes to, in terms of, plays a crucial role, plays a key role
 
-C) CONTRACTIONS: Use them. "don't" not "do not". "it's" not "it is". "we're" not "we are".
+D) CONTRACTIONS: Always use them unless tone is explicitly academic.
+   "do not" → "don't" | "it is" → "it's" | "we are" → "we're" | "they are" → "they're"
 
-D) PERSONALITY: Add ONE of these human touches:
-   - A personal reaction ("Honestly, that surprised me." / "I wasn't expecting that.")
-   - A rhetorical aside in parentheses ("(which, honestly, most people ignore)")
-   - A one-sentence paragraph that is just your opinion
+E) HUMAN PERSONALITY — pick ONE per rewrite:
+   - A blunt parenthetical aside: "(and honestly, most people skip this part)"
+   - A short opinion sentence standing alone as its own paragraph.
+   - A question mid-text: "Why does this matter? Because..."
 
-E) SPECIFICITY: Replace any vague claim with a CONCRETE one:
-   - "many companies" → "companies like Stripe, Notion, or Airbnb"
-   - "experts say" → "a 2023 Stanford study found" OR rephrase as your own view
-   - "significant growth" → "47% growth" (make up a plausible number if none given)
+F) SPECIFICITY — replace every vague claim:
+   - "many companies" → "companies like Figma, Linear, or Notion"
+   - "experts say" → "a 2024 MIT study showed" or just state it as your view
+   - "significant results" → "37% improvement" (plausible number if none given)
 
-F) FORBIDDEN STRUCTURES:
+G) BANNED STRUCTURES:
    - "Not only X, but also Y"
-   - "While X, Y" (overused — rephrase)
-   - "In conclusion / To summarize / Moving forward"
-   - Starting 3+ consecutive sentences with "The", "It", "This", or "In"
+   - "While X, Y" or "Although X, Y" used more than once
+   - Oxford comma in every list (mix it up: sometimes skip it)
+   - All paragraphs the same length
 
-OUTPUT: The rewritten text ONLY. No intro. No explanation. No "Here is the rewritten version:".`;
+OUTPUT RULE: Return ONLY the rewritten text. No intro like "Here is..." or "Sure, here's...". Just the text.`;
 }
 
 // ---- Build user prompt for first pass ----
@@ -152,13 +174,19 @@ function buildRetryPrompt(
 ): string {
   const toneNote = TONE_INSTRUCTIONS[tone];
 
-  return `CRITICAL: The previous rewrite still scored ${score}% on an AI detector.
-The main issues were: ${topPatterns}
-You must be MORE aggressive. Shorter sentences. More contractions. More concrete specifics.
-Force at least 5 sentences under 8 words. Add a parenthetical aside. Use an em dash once.
+  return `FAILED: The previous rewrite still scored ${score}% on AI detectors. That's too high.
+Issues remaining: ${topPatterns}
 
-${toneNote ? `## ${toneNote}\n` : ""}
-Rewrite this text again — make it HUMAN:
+BE MORE AGGRESSIVE THIS TIME:
+- Check every sentence for em dashes (—) and REMOVE them all. Replace with comma or period.
+- Find every sentence over 20 words. Split it into two.
+- Find 3 short sentences (under 8 words) and make them even shorter.
+- Replace any remaining abstract words with specific, concrete language.
+- Add a blunt parenthetical comment somewhere: "(which, honestly, nobody talks about enough)"
+- Make sure contractions are used throughout.
+
+${toneNote ? `Tone note: ${toneNote}\n` : ""}
+Rewrite this text — it needs to read like a real person wrote it fast:
 
 ${text}`;
 }
@@ -320,12 +348,49 @@ function injectBurstiness(text: string): string {
   return text;
 }
 
+// ---- Layer 3d: Strip AI punctuation signatures ----
+
+function stripAIPunctuation(text: string): string {
+  let result = text;
+
+  // Replace em dash (—) with comma + space or just a comma
+  // Pattern: word — word → word, word
+  result = result.replace(/\s*—\s*/g, ", ");
+
+  // Remove trailing comma artifacts like ", ," or ",,"
+  result = result.replace(/,\s*,/g, ",");
+  result = result.replace(/,\s*\./g, ".");
+
+  // Replace en dash (–) used as em dash substitute
+  result = result.replace(/\s*–\s*/g, ", ");
+
+  // Strip "delve" variants that somehow sneak through
+  result = result.replace(/\bdelves?\b/gi, "looks");
+  result = result.replace(/\bdelving\b/gi, "looking");
+
+  // Strip "tapestry" and "landscape" (overused AI metaphors)
+  result = result.replace(/\btapestry\b/gi, "mix");
+  result = result.replace(/\blandscape\b/gi, "space");
+
+  // Strip "it is worth noting that" and variants
+  result = result.replace(/it('?s| is) worth (noting|mentioning) that\s*/gi, "");
+  result = result.replace(/it('?s| is) important to note that\s*/gi, "");
+
+  // Clean up double spaces
+  result = result.replace(/\s{2,}/g, " ");
+  result = result.replace(/\s+([.,;:!?])/g, "$1");
+
+  return result;
+}
+
 // ---- Layer 3: Full post-processing pipeline ----
 
 function postProcess(text: string): string {
-  let result = applyForbiddenSynonyms(text);
-  result = fixSentenceStarterDiversity(result);
-  result = injectBurstiness(result);
+  let result = stripAIPunctuation(text);       // First: remove — and AI punctuation
+  result = applyForbiddenSynonyms(result);     // Word substitutions
+  result = fixSentenceStarterDiversity(result); // Vary sentence starters
+  result = injectBurstiness(result);            // Break uniform lengths
+  result = stripAIPunctuation(result);          // Second pass to catch any new issues
   return result.trim();
 }
 
@@ -339,7 +404,7 @@ async function runClaudePass(
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-5",
     max_tokens: maxTokens,
-    temperature: 0.9,
+    temperature: 1.0,
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
   });
@@ -378,8 +443,8 @@ export async function humanizeText(
   bestScore = analysis1.score;
   bestText = pass1.text;
 
-  // --- Pass 2 (if score > 35) ---
-  if (analysis1.score > 35) {
+  // --- Pass 2 (if score > 25) ---
+  if (analysis1.score > 25) {
     const topPatterns = analysis1.patterns
       .slice(0, 5)
       .map(p => p.label)
@@ -395,8 +460,8 @@ export async function humanizeText(
       bestText = pass2.text;
     }
 
-    // --- Pass 3 (if still > 35) ---
-    if (analysis2.score > 35) {
+    // --- Pass 3 (if still > 25) ---
+    if (analysis2.score > 25) {
       const topPatterns3 = analysis2.patterns
         .slice(0, 5)
         .map(p => p.label)
