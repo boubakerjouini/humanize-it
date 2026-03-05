@@ -10,13 +10,15 @@ import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
 import { trackServer } from "@/lib/posthog";
+import { getClerkIdFromRequest } from "@/lib/extension-auth";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
 
 export async function POST(req: Request) {
   try {
-    // 1. Auth
-    const { userId: clerkId } = await auth();
+    // 1. Auth — support both Clerk session and extension Bearer token
+    const { userId: clerkSessionId } = await auth();
+    const clerkId = getClerkIdFromRequest(req, clerkSessionId ?? null);
     if (!clerkId) {
       return NextResponse.json(
         { error: { code: "UNAUTHORIZED", message: "Authentication required." } },

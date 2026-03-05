@@ -8,6 +8,14 @@ const isPublicRoute = createRouteMatcher([
   "/extension-auth(.*)",
   "/api/webhooks(.*)",
   "/api/extension-token(.*)",
+  // Extension uses custom HMAC JWT — auth handled inside route handler
+  "/api/analyze(.*)",
+  "/api/humanize(.*)",
+  // Legal pages
+  "/privacy",
+  "/terms",
+  "/cookies",
+  "/refunds",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
