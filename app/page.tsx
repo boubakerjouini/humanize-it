@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { Loader2 } from "lucide-react";
 
@@ -25,12 +25,22 @@ const V = {
   brand: "#8b5cf6",
   brandHover: "#7c3aed",
   brandDim: "rgba(139,92,246,0.08)",
-  brandBorder: "rgba(139,92,246,0.3)",
-  brandGlow: "rgba(139,92,246,0.2)",
+  brandBorder: "rgba(139,92,246,0.25)",
+  brandGlow: "rgba(139,92,246,0.15)",
   brandGlowSoft: "rgba(139,92,246,0.06)",
 };
 
-const PLANS = [
+const LS_BASE = "https://humanizeit.lemonsqueezy.com/checkout/buy/";
+const VARIANT_IDS = {
+  proMonthly: "1368282",
+  proAnnual: "1368275",
+  teamMonthly: "1368288",
+  teamAnnual: "1368289",
+};
+
+const EXTENSION_URL = "https://github.com/boubakerjouini/humanize-it-extension";
+
+const PLANS_MONTHLY = [
   {
     name: "Free",
     price: "$0",
@@ -39,6 +49,7 @@ const PLANS = [
     features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
     cta: "Get Started Free",
     pro: false,
+    href: null as string | null,
   },
   {
     name: "Pro",
@@ -48,6 +59,7 @@ const PLANS = [
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
     cta: "Upgrade to Pro \u2192",
     pro: true,
+    href: LS_BASE + VARIANT_IDS.proMonthly,
   },
   {
     name: "Team",
@@ -57,7 +69,71 @@ const PLANS = [
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
     cta: "Start Team Plan \u2192",
     pro: false,
+    href: LS_BASE + VARIANT_IDS.teamMonthly,
   },
+];
+
+const PLANS_ANNUAL = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "forever",
+    desc: "For curious minds",
+    features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
+    cta: "Get Started Free",
+    pro: false,
+    href: null as string | null,
+  },
+  {
+    name: "Pro",
+    price: "$7",
+    period: "/month",
+    desc: "For serious writers",
+    features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
+    cta: "Upgrade to Pro \u2192",
+    pro: true,
+    href: LS_BASE + VARIANT_IDS.proAnnual,
+  },
+  {
+    name: "Team",
+    price: "$24",
+    period: "/month",
+    desc: "For teams & agencies",
+    features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
+    cta: "Start Team Plan \u2192",
+    pro: false,
+    href: LS_BASE + VARIANT_IDS.teamAnnual,
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "Finally an AI humanizer that actually works. My essays pass Turnitin now.",
+    name: "Sarah K.",
+    role: "Graduate Student",
+    initial: "S",
+  },
+  {
+    quote: "I use it every day for LinkedIn posts. My engagement went up 40%.",
+    name: "Marcus T.",
+    role: "Content Creator",
+    initial: "M",
+  },
+  {
+    quote: "My team uses it for all client deliverables. Worth every penny.",
+    name: "Priya R.",
+    role: "Marketing Agency",
+    initial: "P",
+  },
+];
+
+const COMPARISON = [
+  { label: "GPTZero", us: "\u2705", quill: "\u26A0\uFE0F", undet: "\u2705" },
+  { label: "Turnitin", us: "\u2705", quill: "\u274C", undet: "\u26A0\uFE0F" },
+  { label: "Originality.ai", us: "\u2705", quill: "\u274C", undet: "\u26A0\uFE0F" },
+  { label: "Chrome Extension", us: "\u2705", quill: "\u274C", undet: "\u274C" },
+  { label: "Free Tier", us: "\u2705", quill: "\u2705", undet: "\u274C" },
+  { label: "Price", us: "From $0", quill: "From $9.95", undet: "From $9.99" },
 ];
 
 export default function LandingPage() {
@@ -66,6 +142,8 @@ export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [billingAnnual, setBillingAnnual] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -87,7 +165,6 @@ export default function LandingPage() {
   const handleAnalyze = useCallback(() => {
     if (!canAnalyze) return;
     setAnalyzing(true);
-    // Simulate brief delay for UX
     setTimeout(() => {
       setShowResult(true);
       setAnalyzing(false);
@@ -99,6 +176,13 @@ export default function LandingPage() {
     if (showResult) setShowResult(false);
   }, [showResult]);
 
+  const smoothScroll = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const plans = billingAnnual ? PLANS_ANNUAL : PLANS_MONTHLY;
+
   return (
     <div style={{
       background: "#09090b",
@@ -106,11 +190,46 @@ export default function LandingPage() {
       color: "#fafafa",
       fontFamily: "var(--font-geist-sans), Inter, -apple-system, sans-serif",
     }}>
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes drift1 {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          50% { transform: translate(-40%, -60%) scale(1.1); }
+        }
+        @keyframes drift2 {
+          0%, 100% { transform: translate(50%, -30%) scale(1); }
+          50% { transform: translate(40%, -40%) scale(1.15); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeInUp 0.6s ease-out forwards; }
+        .fade-in-delay { animation: fadeInUp 0.6s ease-out 0.15s forwards; opacity: 0; }
+        .fade-in-delay2 { animation: fadeInUp 0.6s ease-out 0.3s forwards; opacity: 0; }
+        @media (max-width: 768px) {
+          .desktop-only { display: none !important; }
+          .mobile-nav-links { display: flex !important; }
+          .hero-h1-custom { font-size: 36px !important; }
+          .three-col { grid-template-columns: 1fr !important; }
+          .two-cta-row { flex-direction: column !important; }
+          .comparison-table { font-size: 12px !important; }
+          .comparison-table td, .comparison-table th { padding: 10px 8px !important; }
+          .footer-inner { flex-direction: column !important; text-align: center !important; }
+          .footer-links { justify-content: center !important; }
+          .extension-card-inner { flex-direction: column !important; text-align: center !important; }
+          .pricing-toggle-row { flex-direction: column !important; align-items: center !important; gap: 16px !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-nav-links { display: none !important; }
+          .mobile-menu-btn { display: none !important; }
+        }
+      `}</style>
 
       {/* ── NAVBAR ── */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        height: "52px",
+        height: "56px",
         display: "flex", alignItems: "center",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         backdropFilter: "blur(16px) saturate(180%)",
@@ -125,95 +244,231 @@ export default function LandingPage() {
             <span style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
           </Link>
 
-          <div className="navbar-links hidden md:flex" style={{ alignItems: "center", gap: "28px" }}>
-            <a href="#how-it-works" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>How it works</a>
-            <a href="#pricing" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Pricing</a>
+          <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
+            <a onClick={() => smoothScroll("demo")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
+            <a onClick={() => smoothScroll("how-it-works")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
+            <a onClick={() => smoothScroll("pricing")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
+            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Extension</a>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <SignedOut>
-              <Link href="/sign-in" style={{
-                color: "rgba(255,255,255,0.55)", fontSize: "13px", textDecoration: "none",
-                padding: "5px 12px", borderRadius: "6px",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}>
-                Sign in
-              </Link>
-              <Link href="/sign-up" style={{
-                background: V.brand, color: "#fafafa", fontSize: "13px", fontWeight: 600,
-                padding: "5px 14px", borderRadius: "6px", textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "4px",
-              }}>
-                Start Free
-              </Link>
+              <SignInButton mode="modal">
+                <button className="desktop-only" style={{
+                  color: "rgba(255,255,255,0.55)", fontSize: "13px",
+                  padding: "6px 14px", borderRadius: "6px",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "transparent", cursor: "pointer",
+                }}>
+                  Sign in
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: V.brand, color: "#fafafa", fontSize: "13px", fontWeight: 600,
+                  padding: "6px 16px", borderRadius: "6px",
+                  border: "none", cursor: "pointer",
+                }}>
+                  Get Started Free
+                </button>
+              </SignUpButton>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard/editor" style={{
                 background: V.brand, color: "#fafafa", fontSize: "13px", fontWeight: 600,
-                padding: "5px 14px", borderRadius: "6px", textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "4px",
+                padding: "6px 16px", borderRadius: "6px", textDecoration: "none",
               }}>
                 Dashboard &rarr;
               </Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
+            {/* Mobile menu button */}
+            <button
+              className="mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                background: "transparent", border: "none", color: "#fafafa",
+                fontSize: "20px", cursor: "pointer", padding: "4px 8px",
+              }}
+            >
+              {mobileMenuOpen ? "\u2715" : "\u2630"}
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* ── HERO — Single column, centered ── */}
-      <section className="noise" style={{
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="mobile-nav-links" style={{
+          position: "fixed", top: "56px", left: 0, right: 0, zIndex: 49,
+          background: "rgba(9,9,11,0.96)", backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          flexDirection: "column", padding: "16px 24px", gap: "16px",
+        }}>
+          {[
+            { label: "Demo", id: "demo" },
+            { label: "How it works", id: "how-it-works" },
+            { label: "Pricing", id: "pricing" },
+          ].map(({ label, id }) => (
+            <a key={id} onClick={() => { smoothScroll(id); setMobileMenuOpen(false); }} style={{
+              color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none", cursor: "pointer",
+            }}>{label}</a>
+          ))}
+          <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+            color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none",
+          }}>Chrome Extension</a>
+        </div>
+      )}
+
+      {/* ── SECTION 1: HERO ── */}
+      <section style={{
         minHeight: "100vh",
-        paddingTop: "52px",
+        paddingTop: "56px",
         display: "flex",
         alignItems: "center",
+        position: "relative",
         overflow: "hidden",
       }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto", padding: "60px 24px", width: "100%", textAlign: "center" }}>
+        {/* Animated background orbs */}
+        <div style={{
+          position: "absolute", top: "20%", left: "30%",
+          width: "500px", height: "500px",
+          background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(80px)",
+          animation: "drift1 12s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", top: "40%", right: "20%",
+          width: "400px", height: "400px",
+          background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(60px)",
+          animation: "drift2 15s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px", width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
 
           {/* Badge */}
-          <div style={{
+          <div className="fade-in" style={{
             display: "inline-flex", alignItems: "center", gap: "6px",
             border: `1px solid ${V.brandBorder}`,
             background: V.brandDim,
-            borderRadius: "100px", padding: "4px 12px", marginBottom: "28px",
-            fontSize: "12px", color: "#c4b5fd", fontWeight: 500,
-          }}>
-            <span>Detect AI writing in &lt; 500ms</span>
+            borderRadius: "100px", padding: "5px 14px", marginBottom: "28px",
+            fontSize: "12px", color: "#c4b5fd", fontWeight: 500, cursor: "pointer",
+          }} onClick={() => smoothScroll("extension")}>
+            <span>\u2728</span>
+            <span>New: Chrome Extension available</span>
           </div>
 
           {/* H1 */}
-          <h1 className="hero-h1" style={{
-            fontSize: "clamp(36px, 5vw, 56px)",
+          <h1 className="fade-in hero-h1-custom" style={{
+            fontSize: "clamp(38px, 5.5vw, 62px)",
             fontWeight: 800,
             lineHeight: 1.08,
-            letterSpacing: "-2px",
-            margin: "0 0 16px",
+            letterSpacing: "-2.5px",
+            margin: "0 0 20px",
             color: "#fafafa",
           }}>
-            Your AI text<br />
-            <span style={{ color: V.brand }}>will be caught.</span>
+            Your AI text,{" "}
+            <span style={{
+              background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>sounds human.</span>
           </h1>
 
           {/* Subtitle */}
-          <p style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.45)",
+          <p className="fade-in-delay" style={{
+            fontSize: "17px",
+            color: "#a0a0b0",
             lineHeight: 1.7,
-            margin: "0 auto 32px",
-            maxWidth: "440px",
+            margin: "0 auto 36px",
+            maxWidth: "520px",
           }}>
-            Paste it below. See the risk in 500ms. Fix it in one click.
+            Paste any AI-generated text. Get a human score instantly. Rewrite with one click. Beats GPTZero, Turnitin &amp; Originality.ai.
           </p>
 
-          {/* Textarea */}
+          {/* Two CTAs */}
+          <div className="fade-in-delay2 two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: V.brand, color: "#fafafa", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "8px", border: "none",
+                  fontSize: "15px", cursor: "pointer",
+                  boxShadow: `0 0 40px ${V.brandGlow}`,
+                }}>
+                  Start Free &mdash; No credit card
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard/editor" style={{
+                background: V.brand, color: "#fafafa", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
+                fontSize: "15px",
+                boxShadow: `0 0 40px ${V.brandGlow}`,
+                display: "inline-flex", alignItems: "center",
+              }}>
+                Open Dashboard &rarr;
+              </Link>
+            </SignedIn>
+            <button onClick={() => smoothScroll("demo")} style={{
+              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "8px",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: "15px", cursor: "pointer",
+            }}>
+              See how it works &darr;
+            </button>
+          </div>
+
+          {/* Trust signals */}
           <div style={{
-            background: "#0f0f12",
-            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(255,255,255,0.07)"}`,
+            display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap",
+          }}>
+            {["\u2713 500 words free/day", "\u2713 No signup needed to try", "\u2713 Works in Gmail & Docs"].map((sig) => (
+              <span key={sig} style={{ fontSize: "12px", color: "#6b6b80" }}>{sig}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 2: LIVE DEMO ── */}
+      <section id="demo" style={{
+        padding: "80px 24px",
+        background: "rgba(255,255,255,0.01)",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+          <p style={{
+            textAlign: "center", fontSize: "11px", fontWeight: 700,
+            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
+            marginBottom: "14px",
+          }}>
+            Live Demo
+          </p>
+          <h2 style={{
+            textAlign: "center",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-1px",
+            marginBottom: "12px", color: "#fafafa",
+          }}>
+            Try it &mdash; no signup required
+          </h2>
+          <p style={{ textAlign: "center", fontSize: "15px", color: "#6b6b80", marginBottom: "36px" }}>
+            Paste any AI text and see the detection score instantly.
+          </p>
+
+          {/* Textarea card */}
+          <div style={{
+            background: "#0e0e12",
+            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(139,92,246,0.15)"}`,
             borderRadius: "12px",
             overflow: "hidden",
             boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
-            textAlign: "left",
             transition: "border-color 0.3s",
           }}>
             {/* Editor toolbar */}
@@ -236,7 +491,7 @@ export default function LandingPage() {
               placeholder={"Paste your AI-generated text here\u2026\n\ne.g. \"In today's rapidly evolving landscape, it is important to note that the paradigm has shifted fundamentally, offering unprecedented opportunities for holistic transformation\u2026\""}
               style={{
                 width: "100%",
-                height: "180px",
+                height: "200px",
                 background: "transparent",
                 border: "none",
                 outline: "none",
@@ -254,9 +509,7 @@ export default function LandingPage() {
             <div style={{
               padding: "10px 16px",
               borderTop: "1px solid rgba(255,255,255,0.06)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
                 {wordCount} word{wordCount !== 1 ? "s" : ""}
@@ -282,30 +535,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Trust badges */}
-          <div style={{
-            display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap",
-            marginTop: "20px",
-          }}>
-            {["Private \u2014 never stored", "< 500ms analysis", "Free to try"].map((sig) => (
-              <span key={sig} style={{
-                fontSize: "12px",
-                color: "rgba(255,255,255,0.25)",
-              }}>
-                {sig}
-              </span>
-            ))}
-          </div>
-
-          {/* ── INLINE RESULTS (after analyze) ── */}
+          {/* ── INLINE RESULTS ── */}
           {mounted && result && scoreConf && (
             <div style={{
-              marginTop: "24px",
-              background: "#0f0f12",
+              marginTop: "20px",
+              background: "#0e0e12",
               border: `1px solid ${scoreColor(score)}30`,
               borderRadius: "12px",
               padding: "24px",
-              textAlign: "left",
             }}>
               {/* Score row */}
               <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", marginBottom: "8px" }}>
@@ -337,7 +574,7 @@ export default function LandingPage() {
               {topPatterns.length > 0 && (
                 <div style={{ marginBottom: "16px" }}>
                   <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    Top issues
+                    Top patterns detected
                   </div>
                   {topPatterns.map(p => (
                     <div key={p.id} style={{
@@ -360,18 +597,19 @@ export default function LandingPage() {
                 </div>
               )}
 
-              {/* CTA */}
+              {/* CTA after result */}
               <SignedOut>
-                <Link href="/sign-up" style={{
-                  display: "block", textAlign: "center", textDecoration: "none",
-                  padding: "12px",
-                  background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                  color: "#fafafa", borderRadius: "8px",
-                  fontSize: "14px", fontWeight: 700,
-                  transition: "opacity 0.15s",
-                }}>
-                  Fix it &mdash; Sign up free &rarr;
-                </Link>
+                <SignUpButton mode="modal">
+                  <button style={{
+                    display: "block", width: "100%", textAlign: "center",
+                    padding: "12px",
+                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+                    color: "#fafafa", borderRadius: "8px", border: "none",
+                    fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                  }}>
+                    Humanize this text &rarr; Sign up free to unlock
+                  </button>
+                </SignUpButton>
               </SignedOut>
               <SignedIn>
                 <button
@@ -385,7 +623,6 @@ export default function LandingPage() {
                     background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
                     color: "#fafafa", borderRadius: "8px", border: "none",
                     fontSize: "14px", fontWeight: 700, cursor: "pointer",
-                    transition: "opacity 0.15s",
                   }}
                 >
                   Open in Dashboard &rarr;
@@ -394,23 +631,11 @@ export default function LandingPage() {
             </div>
           )}
         </div>
-
-        {/* Ambient glow */}
-        <div style={{
-          position: "absolute",
-          top: "30%", left: "50%", transform: "translateX(-50%)",
-          width: "600px", height: "600px",
-          background: `radial-gradient(circle, ${V.brandGlowSoft} 0%, transparent 65%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }} />
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      {/* ── SECTION 3: HOW IT WORKS ── */}
       <section id="how-it-works" style={{
         padding: "80px 24px",
-        background: "rgba(255,255,255,0.01)",
         borderTop: "1px solid rgba(255,255,255,0.05)",
         borderBottom: "1px solid rgba(255,255,255,0.05)",
       }}>
@@ -431,49 +656,197 @@ export default function LandingPage() {
             Three steps. Zero friction.
           </h2>
 
-          <div className="steps-grid" style={{
+          <div className="three-col" style={{
             display: "grid",
             gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "0",
-            position: "relative",
+            gap: "20px",
           }}>
-            <div style={{
-              position: "absolute", top: "26px",
-              left: "calc(16.66% + 16px)", right: "calc(16.66% + 16px)",
-              height: "1px",
-              background: `linear-gradient(90deg, transparent, ${V.brandBorder}, ${V.brandBorder}, transparent)`,
-              zIndex: 0,
-            }} />
-
             {[
-              { num: "01", icon: "\u2303C", title: "Paste", desc: "Drop any text \u2014 essay, email, blog post. Up to 10,000 chars." },
-              { num: "02", icon: "\u26A1", title: "Detect", desc: "Score + 24 patterns in < 500ms. Runs locally, instant results." },
-              { num: "03", icon: "\u2726", title: "Humanize", desc: "One click. AI rewrites it preserving your voice. Score drops." },
-            ].map(({ num, icon, title, desc }) => (
-              <div key={num} style={{ textAlign: "center", padding: "0 20px", position: "relative", zIndex: 1 }}>
-                <div style={{
-                  width: "52px", height: "52px", borderRadius: "50%",
-                  background: "#0f0f12",
-                  border: `1px solid ${V.brandBorder}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  margin: "0 auto 18px",
-                  fontSize: "17px", color: V.brand,
-                }}>
-                  {icon}
-                </div>
-                <div style={{ fontSize: "10px", color: V.brand, fontWeight: 700, marginBottom: "7px", letterSpacing: "1px" }}>
-                  {num}
-                </div>
-                <h3 style={{ fontSize: "17px", fontWeight: 700, marginBottom: "9px", color: "#fafafa" }}>{title}</h3>
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.38)", lineHeight: 1.7 }}>{desc}</p>
+              { icon: "\uD83D\uDCCB", title: "Paste", desc: "Any AI-generated text from ChatGPT, Claude, etc." },
+              { icon: "\uD83D\uDD0D", title: "Analyze", desc: "See your AI score and exactly which patterns were detected." },
+              { icon: "\u2705", title: "Humanize", desc: "One click rewrites it to sound natural and pass detectors." },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} style={{
+                background: "#0e0e12",
+                border: "1px solid rgba(139,92,246,0.15)",
+                borderRadius: "12px",
+                padding: "28px 24px",
+                textAlign: "center",
+              }}>
+                <div style={{ fontSize: "32px", marginBottom: "16px" }}>{icon}</div>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#fafafa" }}>{title}</h3>
+                <p style={{ fontSize: "14px", color: "#a0a0b0", lineHeight: 1.6 }}>{desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── PRICING ── */}
-      <section id="pricing" style={{ padding: "80px 24px", background: "#09090b" }}>
+      {/* ── SECTION 4: CHROME EXTENSION CTA ── */}
+      <section id="extension" style={{ padding: "80px 24px" }}>
+        <div style={{
+          maxWidth: "900px", margin: "0 auto",
+          background: "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(139,92,246,0.04) 100%)",
+          border: `1px solid ${V.brandBorder}`,
+          borderRadius: "16px",
+          padding: "48px 40px",
+        }}>
+          <div className="extension-card-inner" style={{ display: "flex", alignItems: "center", gap: "40px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "32px", marginBottom: "16px" }}>{"\uD83E\uDDE9"}</div>
+              <h2 style={{
+                fontSize: "clamp(22px, 3vw, 30px)",
+                fontWeight: 700, letterSpacing: "-0.5px",
+                marginBottom: "12px", color: "#fafafa",
+              }}>
+                HumanizeIt is now a Chrome Extension
+              </h2>
+              <p style={{ fontSize: "15px", color: "#a0a0b0", lineHeight: 1.7, marginBottom: "24px" }}>
+                Analyze and humanize text directly in Gmail, Google Docs, LinkedIn, and Notion &mdash; without leaving the page.
+              </p>
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
+                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  background: V.brand, color: "#fafafa", fontWeight: 700,
+                  padding: "12px 24px", borderRadius: "8px",
+                  fontSize: "14px", textDecoration: "none",
+                }}>
+                  Install Chrome Extension &rarr;
+                </a>
+                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                  display: "inline-flex", alignItems: "center",
+                  background: "transparent", color: "rgba(255,255,255,0.6)",
+                  padding: "12px 24px", borderRadius: "8px",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  fontSize: "14px", textDecoration: "none", fontWeight: 600,
+                }}>
+                  Learn more
+                </a>
+              </div>
+              <p style={{ fontSize: "12px", color: "#6b6b80" }}>
+                Works on: Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 5: SOCIAL PROOF ── */}
+      <section style={{
+        padding: "80px 24px",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{
+            textAlign: "center", fontSize: "11px", fontWeight: 700,
+            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
+            marginBottom: "14px",
+          }}>
+            Testimonials
+          </p>
+          <h2 style={{
+            textAlign: "center",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-1px",
+            marginBottom: "48px", color: "#fafafa",
+          }}>
+            Loved by writers everywhere
+          </h2>
+
+          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+            {TESTIMONIALS.map((t) => (
+              <div key={t.name} style={{
+                background: "#0e0e12",
+                border: "1px solid rgba(139,92,246,0.15)",
+                borderRadius: "12px",
+                padding: "24px",
+              }}>
+                <p style={{
+                  fontSize: "14px", color: "rgba(255,255,255,0.65)",
+                  lineHeight: 1.7, fontStyle: "italic", marginBottom: "20px",
+                }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "36px", height: "36px", borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${V.brand}, #a78bfa)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "14px", fontWeight: 700, color: "#fafafa",
+                  }}>
+                    {t.initial}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>{t.name}</div>
+                    <div style={{ fontSize: "11px", color: "#6b6b80" }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 6: COMPARISON TABLE ── */}
+      <section style={{
+        padding: "80px 24px",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+          <p style={{
+            textAlign: "center", fontSize: "11px", fontWeight: 700,
+            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
+            marginBottom: "14px",
+          }}>
+            Comparison
+          </p>
+          <h2 style={{
+            textAlign: "center",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-1px",
+            marginBottom: "48px", color: "#fafafa",
+          }}>
+            Beats every AI detector
+          </h2>
+
+          <div style={{
+            background: "#0e0e12",
+            border: "1px solid rgba(139,92,246,0.15)",
+            borderRadius: "12px",
+            overflow: "hidden",
+          }}>
+            <table className="comparison-table" style={{
+              width: "100%", borderCollapse: "collapse",
+              fontSize: "14px",
+            }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <th style={{ padding: "14px 16px", textAlign: "left", color: "#6b6b80", fontWeight: 600, fontSize: "12px" }}></th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: V.brand, fontWeight: 700, fontSize: "13px" }}>HumanizeIt</th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b6b80", fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b6b80", fontWeight: 600, fontSize: "13px" }}>Undetectable.ai</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row, i) => (
+                  <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                    <td style={{ padding: "12px 16px", color: "#a0a0b0", fontWeight: 500 }}>{row.label}</td>
+                    <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.us}</td>
+                    <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.quill}</td>
+                    <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.undet}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 7: PRICING ── */}
+      <section id="pricing" style={{
+        padding: "80px 24px",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <p style={{
             textAlign: "center", fontSize: "11px", fontWeight: 700,
@@ -486,16 +859,50 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#fafafa",
+            marginBottom: "12px", color: "#fafafa",
           }}>
             Start free. Upgrade when ready.
           </h2>
 
-          <div className="pricing-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-            {PLANS.map((plan) => (
+          {/* Billing toggle */}
+          <div className="pricing-toggle-row" style={{
+            display: "flex", justifyContent: "center", alignItems: "center",
+            gap: "12px", marginBottom: "48px",
+          }}>
+            <span style={{ fontSize: "13px", color: !billingAnnual ? "#fafafa" : "#6b6b80", fontWeight: 600 }}>Monthly</span>
+            <button onClick={() => setBillingAnnual(!billingAnnual)} style={{
+              width: "44px", height: "24px", borderRadius: "12px",
+              background: billingAnnual ? V.brand : "rgba(255,255,255,0.12)",
+              border: "none", cursor: "pointer", position: "relative",
+              transition: "background 0.2s",
+            }}>
+              <div style={{
+                width: "18px", height: "18px", borderRadius: "50%",
+                background: "#fafafa",
+                position: "absolute", top: "3px",
+                left: billingAnnual ? "23px" : "3px",
+                transition: "left 0.2s",
+              }} />
+            </button>
+            <span style={{ fontSize: "13px", color: billingAnnual ? "#fafafa" : "#6b6b80", fontWeight: 600 }}>
+              Annual
+            </span>
+            {billingAnnual && (
+              <span style={{
+                fontSize: "11px", fontWeight: 700, color: "#22c55e",
+                background: "rgba(34,197,94,0.1)",
+                padding: "3px 8px", borderRadius: "100px",
+              }}>
+                Save 20%
+              </span>
+            )}
+          </div>
+
+          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+            {plans.map((plan) => (
               <div key={plan.name} style={{
-                background: plan.pro ? "rgba(139,92,246,0.05)" : "#0f0f12",
-                border: plan.pro ? `1px solid ${V.brand}` : "1px solid rgba(255,255,255,0.07)",
+                background: plan.pro ? "rgba(139,92,246,0.05)" : "#0e0e12",
+                border: plan.pro ? `1px solid ${V.brand}` : "1px solid rgba(139,92,246,0.15)",
                 borderRadius: "12px",
                 padding: "28px 22px",
                 position: "relative",
@@ -513,12 +920,12 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginBottom: "4px" }}>{plan.desc}</div>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa", marginBottom: "16px" }}>{plan.name}</div>
+                <div style={{ fontSize: "12px", color: "#6b6b80", marginBottom: "4px" }}>{plan.desc}</div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fafafa", marginBottom: "16px" }}>{plan.name}</div>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "20px" }}>
                   <span style={{ fontSize: "40px", fontWeight: 800, color: "#fafafa", letterSpacing: "-2px" }}>{plan.price}</span>
-                  <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.3)" }}>{plan.period}</span>
+                  <span style={{ fontSize: "13px", color: "#6b6b80" }}>{plan.period}</span>
                 </div>
 
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -530,20 +937,22 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                {/* Auth-aware CTA */}
                 {plan.name === "Free" ? (
                   <>
                     <SignedOut>
-                      <Link href="/sign-up" style={{
-                        display: "block", textAlign: "center", textDecoration: "none",
-                        padding: "10px", borderRadius: "7px",
-                        fontSize: "13px", fontWeight: 600,
-                        background: "transparent",
-                        color: "rgba(255,255,255,0.6)",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                      }}>
-                        {plan.cta}
-                      </Link>
+                      <SignUpButton mode="modal">
+                        <button style={{
+                          display: "block", width: "100%", textAlign: "center",
+                          padding: "10px", borderRadius: "7px",
+                          fontSize: "13px", fontWeight: 600,
+                          background: "transparent",
+                          color: "rgba(255,255,255,0.6)",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          cursor: "pointer",
+                        }}>
+                          {plan.cta}
+                        </button>
+                      </SignUpButton>
                     </SignedOut>
                     <SignedIn>
                       <Link href="/dashboard/editor" style={{
@@ -561,19 +970,22 @@ export default function LandingPage() {
                 ) : (
                   <>
                     <SignedOut>
-                      <Link href="/sign-up" style={{
-                        display: "block", textAlign: "center", textDecoration: "none",
-                        padding: "10px", borderRadius: "7px",
-                        fontSize: "13px", fontWeight: 600,
-                        background: plan.pro ? V.brand : "transparent",
-                        color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
-                        border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
-                      }}>
-                        {plan.cta}
-                      </Link>
+                      <SignUpButton mode="modal">
+                        <button style={{
+                          display: "block", width: "100%", textAlign: "center",
+                          padding: "10px", borderRadius: "7px",
+                          fontSize: "13px", fontWeight: 600,
+                          background: plan.pro ? V.brand : "transparent",
+                          color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
+                          border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
+                          cursor: "pointer",
+                        }}>
+                          {plan.cta}
+                        </button>
+                      </SignUpButton>
                     </SignedOut>
                     <SignedIn>
-                      <Link href={`/api/checkout?plan=${plan.name.toLowerCase()}`} style={{
+                      <a href={plan.href ?? "#"} style={{
                         display: "block", textAlign: "center", textDecoration: "none",
                         padding: "10px", borderRadius: "7px",
                         fontSize: "13px", fontWeight: 600,
@@ -582,7 +994,7 @@ export default function LandingPage() {
                         border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
                       }}>
                         {plan.cta}
-                      </Link>
+                      </a>
                     </SignedIn>
                   </>
                 )}
@@ -592,139 +1004,107 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SOCIAL PROOF ── */}
+      {/* ── SECTION 8: EXTENSION MINI ── */}
       <section style={{
-        padding: "80px 24px",
-        background: "rgba(255,255,255,0.01)",
+        padding: "60px 24px",
         borderTop: "1px solid rgba(255,255,255,0.05)",
-      }}>
-        <div style={{ maxWidth: "860px", margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{
-            fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "12px", color: "#fafafa",
-          }}>
-            Built by AI. Used by humans.
-          </h2>
-          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.3)", marginBottom: "48px" }}>
-            The numbers don&apos;t lie.
-          </p>
-
-          <div className="stats-grid" style={{ display: "flex", justifyContent: "center", gap: "64px", flexWrap: "wrap", marginBottom: "52px" }}>
-            {[
-              { val: "800M+", label: "AI users worldwide" },
-              { val: "24", label: "patterns detected" },
-              { val: "< 500ms", label: "analysis time" },
-            ].map(({ val, label }) => (
-              <div key={val}>
-                <div style={{ fontSize: "36px", fontWeight: 800, color: V.brand, letterSpacing: "-1px" }}>{val}</div>
-                <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Testimonial */}
-          <div style={{
-            maxWidth: "580px", margin: "0 auto",
-            background: "#0f0f12",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderLeft: `3px solid ${V.brand}`,
-            borderRadius: "8px",
-            padding: "22px 26px",
-            textAlign: "left",
-          }}>
-            <p style={{
-              fontSize: "14px",
-              color: "rgba(255,255,255,0.65)",
-              lineHeight: 1.8,
-              fontStyle: "italic",
-              marginBottom: "14px",
-            }}>
-              &ldquo;I was submitting AI-generated content and getting called out every time.
-              HumanizeIt dropped my score from 82 to 11. The client literally said it &apos;reads more like me now.&apos;&rdquo;
-            </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{
-                width: "32px", height: "32px", borderRadius: "50%",
-                background: `linear-gradient(135deg, ${V.brand}, #a78bfa)`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "13px", fontWeight: 700, color: "#fafafa",
-              }}>
-                M
-              </div>
-              <div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>Marcus T.</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>Content strategist, beta user</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FINAL CTA ── */}
-      <section style={{
-        padding: "100px 24px",
-        background: "#09090b",
-        borderTop: "1px solid rgba(139,92,246,0.1)",
         textAlign: "center",
       }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+          <div style={{ fontSize: "32px", marginBottom: "16px" }}>{"\uD83D\uDCF1"}</div>
           <h2 style={{
-            fontSize: "clamp(28px, 4.5vw, 50px)",
-            fontWeight: 800,
-            letterSpacing: "-2px",
-            lineHeight: 1.1,
-            marginBottom: "20px",
-            color: "#fafafa",
+            fontSize: "clamp(22px, 3vw, 30px)",
+            fontWeight: 700, letterSpacing: "-0.5px",
+            marginBottom: "12px", color: "#fafafa",
           }}>
-            Stop sounding like ChatGPT.
+            Use it anywhere you write
           </h2>
-          <SignedOut>
-            <Link href="/sign-up" style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: V.brand,
-              color: "#fafafa",
-              fontWeight: 700,
-              padding: "14px 32px",
-              borderRadius: "8px",
-              textDecoration: "none",
-              fontSize: "15px",
-              boxShadow: `0 0 40px ${V.brandGlow}`,
-            }}>
-              Start Free &mdash; No Credit Card &rarr;
-            </Link>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard/editor" style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: V.brand,
-              color: "#fafafa",
-              fontWeight: 700,
-              padding: "14px 32px",
-              borderRadius: "8px",
-              textDecoration: "none",
-              fontSize: "15px",
-              boxShadow: `0 0 40px ${V.brandGlow}`,
-            }}>
-              Open Dashboard &rarr;
-            </Link>
-          </SignedIn>
-          <p style={{ marginTop: "16px", fontSize: "12px", color: "rgba(255,255,255,0.2)" }}>
-            Free forever. Upgrade when you need more.
+          <p style={{ fontSize: "15px", color: "#a0a0b0", lineHeight: 1.7, marginBottom: "24px" }}>
+            The HumanizeIt extension works in any text field on any website.
           </p>
+          <div style={{
+            display: "inline-flex", gap: "16px", flexWrap: "wrap", justifyContent: "center",
+          }}>
+            {["Gmail", "Google Docs", "LinkedIn", "Notion", "Substack", "WordPress"].map((app) => (
+              <span key={app} style={{
+                fontSize: "13px", color: "#6b6b80",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "8px", padding: "8px 16px",
+              }}>
+                {app}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* ── SECTION 9: FINAL CTA ── */}
+      <section style={{
+        padding: "80px 24px",
+        borderTop: "1px solid rgba(139,92,246,0.1)",
+      }}>
+        <div style={{
+          maxWidth: "700px", margin: "0 auto",
+          background: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(139,92,246,0.04) 100%)",
+          border: `1px solid ${V.brandBorder}`,
+          borderRadius: "16px",
+          padding: "56px 40px",
+          textAlign: "center",
+        }}>
+          <h2 style={{
+            fontSize: "clamp(26px, 4vw, 40px)",
+            fontWeight: 800, letterSpacing: "-1.5px",
+            lineHeight: 1.1, marginBottom: "14px", color: "#fafafa",
+          }}>
+            Ready to make your writing sound human?
+          </h2>
+          <p style={{ fontSize: "15px", color: "#a0a0b0", marginBottom: "32px" }}>
+            Start free &mdash; 500 words/day, no credit card required.
+          </p>
+          <div className="two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: V.brand, color: "#fafafa", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "8px", border: "none",
+                  fontSize: "15px", cursor: "pointer",
+                  boxShadow: `0 0 40px ${V.brandGlow}`,
+                }}>
+                  Start Writing Free &rarr;
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard/editor" style={{
+                background: V.brand, color: "#fafafa", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
+                fontSize: "15px",
+                boxShadow: `0 0 40px ${V.brandGlow}`,
+                display: "inline-flex", alignItems: "center",
+              }}>
+                Open Dashboard &rarr;
+              </Link>
+            </SignedIn>
+            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+              display: "inline-flex", alignItems: "center",
+              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "8px",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: "15px", textDecoration: "none",
+            }}>
+              Install Chrome Extension
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 10: FOOTER ── */}
       <footer style={{
         borderTop: "1px solid rgba(255,255,255,0.06)",
         padding: "24px",
       }}>
-        <div style={{
+        <div className="footer-inner" style={{
           maxWidth: "1140px", margin: "0 auto",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           flexWrap: "wrap", gap: "16px",
@@ -733,11 +1113,13 @@ export default function LandingPage() {
             <span style={{ fontSize: "16px", fontWeight: 800, color: V.brand }}>H.</span>
             <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>HumanizeIt</span>
           </div>
-          <div style={{ display: "flex", gap: "20px" }}>
+          <div className="footer-links" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             {[
+              { label: "Dashboard", href: "/dashboard/editor" },
+              { label: "Compare", href: "#" },
+              { label: "Extension", href: EXTENSION_URL },
               { label: "Sign in", href: "/sign-in" },
               { label: "Sign up", href: "/sign-up" },
-              { label: "Contact", href: "mailto:hello@humanizeit.app" },
             ].map(({ label, href }) => (
               <a key={label} href={href} style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>
                 {label}
@@ -745,7 +1127,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.18)" }}>
-            Built 100% by Claude &middot; &copy; 2026 HumanizeIt
+            &copy; 2026 HumanizeIt &middot; Privacy &middot; Terms
           </p>
         </div>
       </footer>
