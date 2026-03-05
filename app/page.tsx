@@ -204,6 +204,27 @@ export default function LandingPage() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes pulseGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+          50% { box-shadow: 0 0 40px rgba(139,92,246,0.6); }
+        }
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         .fade-in { animation: fadeInUp 0.6s ease-out forwards; }
         .fade-in-delay { animation: fadeInUp 0.6s ease-out 0.15s forwards; opacity: 0; }
         .fade-in-delay2 { animation: fadeInUp 0.6s ease-out 0.3s forwards; opacity: 0; }
@@ -234,6 +255,7 @@ export default function LandingPage() {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         backdropFilter: "blur(16px) saturate(180%)",
         background: "rgba(9,9,11,0.88)",
+        animation: "fadeIn 0.3s ease forwards",
       }}>
         <div style={{
           maxWidth: "1140px", margin: "0 auto", padding: "0 24px",
@@ -320,129 +342,12 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* ── SECTION 1: HERO ── */}
-      <section style={{
-        minHeight: "100vh",
-        paddingTop: "56px",
-        display: "flex",
-        alignItems: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Animated background orbs */}
-        <div style={{
-          position: "absolute", top: "20%", left: "30%",
-          width: "500px", height: "500px",
-          background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(80px)",
-          animation: "drift1 12s ease-in-out infinite",
-          pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", top: "40%", right: "20%",
-          width: "400px", height: "400px",
-          background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(60px)",
-          animation: "drift2 15s ease-in-out infinite",
-          pointerEvents: "none",
-        }} />
-
-        <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px", width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
-
-          {/* Badge */}
-          <div className="fade-in" style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            border: `1px solid ${V.brandBorder}`,
-            background: V.brandDim,
-            borderRadius: "100px", padding: "5px 14px", marginBottom: "28px",
-            fontSize: "12px", color: "#c4b5fd", fontWeight: 500, cursor: "pointer",
-          }} onClick={() => smoothScroll("extension")}>
-            <span>\u2728</span>
-            <span>New: Chrome Extension available</span>
-          </div>
-
-          {/* H1 */}
-          <h1 className="fade-in hero-h1-custom" style={{
-            fontSize: "clamp(38px, 5.5vw, 62px)",
-            fontWeight: 800,
-            lineHeight: 1.08,
-            letterSpacing: "-2.5px",
-            margin: "0 0 20px",
-            color: "#fafafa",
-          }}>
-            Your AI text,{" "}
-            <span style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>sounds human.</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="fade-in-delay" style={{
-            fontSize: "17px",
-            color: "#a0a0b0",
-            lineHeight: 1.7,
-            margin: "0 auto 36px",
-            maxWidth: "520px",
-          }}>
-            Paste any AI-generated text. Get a human score instantly. Rewrite with one click. Beats GPTZero, Turnitin &amp; Originality.ai.
-          </p>
-
-          {/* Two CTAs */}
-          <div className="fade-in-delay2 two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-            <SignedOut>
-              <SignUpButton mode="modal">
-                <button style={{
-                  background: V.brand, color: "#fafafa", fontWeight: 700,
-                  padding: "14px 28px", borderRadius: "8px", border: "none",
-                  fontSize: "15px", cursor: "pointer",
-                  boxShadow: `0 0 40px ${V.brandGlow}`,
-                }}>
-                  Start Free &mdash; No credit card
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#fafafa", fontWeight: 700,
-                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
-                fontSize: "15px",
-                boxShadow: `0 0 40px ${V.brandGlow}`,
-                display: "inline-flex", alignItems: "center",
-              }}>
-                Open Dashboard &rarr;
-              </Link>
-            </SignedIn>
-            <button onClick={() => smoothScroll("demo")} style={{
-              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
-              padding: "14px 28px", borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.12)",
-              fontSize: "15px", cursor: "pointer",
-            }}>
-              See how it works &darr;
-            </button>
-          </div>
-
-          {/* Trust signals */}
-          <div style={{
-            display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap",
-          }}>
-            {["\u2713 500 words free/day", "\u2713 No signup needed to try", "\u2713 Works in Gmail & Docs"].map((sig) => (
-              <span key={sig} style={{ fontSize: "12px", color: "#6b6b80" }}>{sig}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── SECTION 2: LIVE DEMO ── */}
       <section id="demo" style={{
-        padding: "80px 24px",
+        padding: "80px 24px", paddingTop: "100px",
         background: "rgba(255,255,255,0.01)",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
       }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "720px", margin: "0 auto", opacity: 0, animation: "fadeInUp 0.5s ease forwards" }}>
           <p style={{
             textAlign: "center", fontSize: "11px", fontWeight: 700,
             letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
@@ -456,7 +361,7 @@ export default function LandingPage() {
             fontWeight: 700, letterSpacing: "-1px",
             marginBottom: "12px", color: "#fafafa",
           }}>
-            Try it &mdash; no signup required
+            Try it now &mdash; no signup needed
           </h2>
           <p style={{ textAlign: "center", fontSize: "15px", color: "#6b6b80", marginBottom: "36px" }}>
             Paste any AI text and see the detection score instantly.
@@ -549,6 +454,8 @@ export default function LandingPage() {
                 <div style={{
                   fontSize: "56px", fontWeight: 900, color: scoreColor(score),
                   lineHeight: 1, fontVariantNumeric: "tabular-nums", letterSpacing: "-3px",
+                  borderRadius: "8px",
+                  ...(score >= 75 ? { animation: "pulseGlow 2s ease infinite" } : {}),
                 }}>
                   {Math.round(score)}
                 </div>
@@ -630,6 +537,124 @@ export default function LandingPage() {
               </SignedIn>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── SECTION 1: HERO ── */}
+      <section style={{
+        minHeight: "auto",
+        padding: "60px 24px",
+        display: "flex",
+        alignItems: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Animated background orbs */}
+        <div style={{
+          position: "absolute", top: "20%", left: "30%",
+          width: "500px", height: "500px",
+          background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(80px)",
+          animation: "drift1 12s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", top: "40%", right: "20%",
+          width: "400px", height: "400px",
+          background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(60px)",
+          animation: "drift2 15s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px", width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
+
+          {/* Badge */}
+          <div className="fade-in" style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            border: `1px solid ${V.brandBorder}`,
+            background: V.brandDim,
+            borderRadius: "100px", padding: "5px 14px", marginBottom: "28px",
+            fontSize: "12px", color: "#c4b5fd", fontWeight: 500, cursor: "pointer",
+          }} onClick={() => smoothScroll("extension")}>
+            <span>\u2728</span>
+            <span>New: Chrome Extension available</span>
+          </div>
+
+          {/* H1 */}
+          <h1 className="fade-in hero-h1-custom" style={{
+            fontSize: "clamp(38px, 5.5vw, 62px)",
+            fontWeight: 800,
+            lineHeight: 1.08,
+            letterSpacing: "-2.5px",
+            margin: "0 0 20px",
+            color: "#fafafa",
+          }}>
+            Your AI text,{" "}
+            <span style={{
+              background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              backgroundSize: "200% 200%",
+              animation: "gradientShift 4s ease infinite",
+            }}>sounds human.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="fade-in-delay" style={{
+            fontSize: "17px",
+            color: "#a0a0b0",
+            lineHeight: 1.7,
+            margin: "0 auto 36px",
+            maxWidth: "520px",
+          }}>
+            Paste any AI-generated text. Get a human score instantly. Rewrite with one click. Beats GPTZero, Turnitin &amp; Originality.ai.
+          </p>
+
+          {/* Two CTAs */}
+          <div className="fade-in-delay2 two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: V.brand, color: "#fafafa", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "8px", border: "none",
+                  fontSize: "15px", cursor: "pointer",
+                  boxShadow: `0 0 40px ${V.brandGlow}`,
+                }}>
+                  Start Free &mdash; No credit card
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard/editor" style={{
+                background: V.brand, color: "#fafafa", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
+                fontSize: "15px",
+                boxShadow: `0 0 40px ${V.brandGlow}`,
+                display: "inline-flex", alignItems: "center",
+              }}>
+                Open Dashboard &rarr;
+              </Link>
+            </SignedIn>
+            <button onClick={() => smoothScroll("demo")} style={{
+              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "8px",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: "15px", cursor: "pointer",
+            }}>
+              See how it works &darr;
+            </button>
+          </div>
+
+          {/* Trust signals */}
+          <div style={{
+            display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap",
+          }}>
+            {["\u2713 500 words free/day", "\u2713 No signup needed to try", "\u2713 Works in Gmail & Docs"].map((sig) => (
+              <span key={sig} style={{ fontSize: "12px", color: "#6b6b80" }}>{sig}</span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -754,12 +779,14 @@ export default function LandingPage() {
           </h2>
 
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-            {TESTIMONIALS.map((t) => (
+            {TESTIMONIALS.map((t, i) => (
               <div key={t.name} style={{
                 background: "#0e0e12",
                 border: "1px solid rgba(139,92,246,0.15)",
                 borderRadius: "12px",
                 padding: "24px",
+                opacity: 0,
+                animation: `slideInLeft 0.5s ease ${i * 0.1}s forwards`,
               }}>
                 <p style={{
                   fontSize: "14px", color: "rgba(255,255,255,0.65)",
@@ -899,7 +926,7 @@ export default function LandingPage() {
           </div>
 
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-            {plans.map((plan) => (
+            {plans.map((plan, i) => (
               <div key={plan.name} style={{
                 background: plan.pro ? "rgba(139,92,246,0.05)" : "#0e0e12",
                 border: plan.pro ? `1px solid ${V.brand}` : "1px solid rgba(139,92,246,0.15)",
@@ -907,6 +934,8 @@ export default function LandingPage() {
                 padding: "28px 22px",
                 position: "relative",
                 boxShadow: plan.pro ? `0 0 40px ${V.brandGlowSoft}, 0 0 80px rgba(139,92,246,0.04)` : "none",
+                opacity: 0,
+                animation: `fadeInUp 0.5s ease ${i * 0.1}s forwards`,
               }}>
                 {plan.pro && (
                   <div style={{
