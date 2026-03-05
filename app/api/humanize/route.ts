@@ -10,7 +10,6 @@ import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
 import { trackServer } from "@/lib/posthog";
-import { trackEvent } from "@/lib/events";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
 
@@ -84,7 +83,6 @@ export async function POST(req: Request) {
       plan.rewriteLimit !== -1 &&
       freshUser.rewriteCount >= plan.rewriteLimit
     ) {
-      try { await trackEvent(user.id, "quota.hit", { plan: freshUser.plan, rewriteCount: freshUser.rewriteCount }); } catch {}
       return NextResponse.json(
         {
           error: {
@@ -129,23 +127,6 @@ export async function POST(req: Request) {
       word_count: document.wordCount,
       plan: freshUser.plan,
     });
-
-    // 9b. Track product events
-    try {
-      await trackEvent(user.id, "document.humanized", {
-        tone: toneValue,
-        tokensUsed,
-        wordCount: document.wordCount,
-        documentId: document.id,
-      });
-      // Check if this is the user's first humanization
-      const humanizedCount = await db.document.count({
-        where: { userId: user.id, rewrittenText: { not: null } },
-      });
-      if (humanizedCount === 1) {
-        await trackEvent(user.id, "user.firstHumanization", { documentId: document.id });
-      }
-    } catch {}
 
     // 10. Return
     return NextResponse.json({

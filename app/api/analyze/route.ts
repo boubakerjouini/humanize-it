@@ -9,7 +9,6 @@ import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
 import { trackServer } from "@/lib/posthog";
-import { trackEvent } from "@/lib/events";
 
 export async function POST(req: Request) {
   try {
@@ -73,7 +72,6 @@ export async function POST(req: Request) {
       plan.wordsLimit !== -1 &&
       freshUser.wordsUsed + wordCount > plan.wordsLimit
     ) {
-      try { await trackEvent(user.id, "quota.hit", { plan: freshUser.plan, wordsUsed: freshUser.wordsUsed }); } catch {}
       return NextResponse.json(
         {
           error: {
@@ -113,20 +111,6 @@ export async function POST(req: Request) {
       word_count: analysisResult.wordCount,
       plan: freshUser.plan,
     });
-
-    // 9b. Track product events
-    try {
-      await trackEvent(user.id, "document.analyzed", {
-        score: analysisResult.score,
-        wordCount: analysisResult.wordCount,
-        documentId: document.id,
-      });
-      // Check if this is the user's first analysis
-      const docCount = await db.document.count({ where: { userId: user.id } });
-      if (docCount === 1) {
-        await trackEvent(user.id, "user.firstAnalysis", { documentId: document.id });
-      }
-    } catch {}
 
     // 10. Return response
     return NextResponse.json({
