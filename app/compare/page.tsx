@@ -57,9 +57,9 @@ const COMPETITORS = [
 
 const CONFIDENCE_LABELS: Record<string, { label: string; color: string }> = {
   "likely-human":        { label: "Likely Human",         color: "#22c55e" },
+  "uncertain":           { label: "Uncertain",            color: "#a3a3a3" },
   "possibly-ai":         { label: "Possibly AI",           color: "#eab308" },
-  "likely-ai":           { label: "Likely AI",             color: "#f97316" },
-  "almost-certainly-ai": { label: "Almost Certainly AI",  color: "#ef4444" },
+  "likely-ai":           { label: "Likely AI",             color: "#ef4444" },
 };
 
 /** Simulate what a competitor score would look like based on our real score */

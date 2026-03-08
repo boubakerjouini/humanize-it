@@ -46,7 +46,7 @@ export interface TextStats {
   fleschReadingEase: number;
 }
 
-export type ConfidenceBand = "likely-human" | "possibly-ai" | "likely-ai" | "almost-certainly-ai";
+export type ConfidenceBand = "likely-human" | "uncertain" | "possibly-ai" | "likely-ai";
 
 export interface AnalysisResult {
   score: number;
@@ -966,10 +966,64 @@ function detectLowSentenceCoV(sentences: string[]): PatternHit | null {
 
 /** Compute confidence band from score */
 function getConfidenceBand(score: number): ConfidenceBand {
-  if (score < 30) return "likely-human";
-  if (score < 60) return "possibly-ai";
-  if (score < 80) return "likely-ai";
-  return "almost-certainly-ai";
+  if (score < 25) return "likely-human";
+  if (score < 45) return "uncertain";
+  if (score < 70) return "possibly-ai";
+  return "likely-ai";
+}
+
+// ---- V3 Pattern Detectors (38–40) ----
+
+/**
+ * Pattern 38: Casual AI Opener Phrases
+ * AI tries to sound casual with stock opener phrases.
+ */
+function detectCasualAIOpener(text: string): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "casual-ai-opener")!;
+  const phrases = [
+    "so i've been thinking", "can we talk about", "okay so", "i gotta say",
+    "here's the thing", "i've been really", "not gonna lie", "let's be honest",
+    "the thing about", "update on", "i've been kind of",
+  ];
+  const textLower = text.toLowerCase();
+  const found: string[] = [];
+  for (const phrase of phrases) {
+    if (textLower.includes(phrase)) found.push(phrase);
+  }
+  if (found.length < 2) return null;
+  return { id: config.id, label: config.label, hits: found.length, examples: found.slice(0, 5), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 39: AI Meta-Commentary
+ * AI overuses "I think", "I believe", "I feel like" etc. to simulate opinion.
+ */
+function detectAIMetaCommentary(text: string, wordCount: number): PatternHit | null {
+  if (wordCount <= 100) return null;
+  const config = PATTERNS_CONFIG.find(p => p.id === "ai-metacommentary")!;
+  const matches = text.match(/\b(I think|I believe|I feel like|I wonder|I'm not sure|maybe|perhaps)\b/gi) ?? [];
+  const rate = (matches.length / wordCount) * 100;
+  if (rate <= 4) return null;
+  return { id: config.id, label: config.label, hits: matches.length, examples: matches.slice(0, 5), severity: config.severity, weight: config.weight, category: config.category };
+}
+
+/**
+ * Pattern 40: Melodramatic Descriptors (AI Creative)
+ * AI creative writing uses melodramatic/purple-prose vocabulary.
+ */
+function detectCreativeAIMelodrama(words: string[]): PatternHit | null {
+  const config = PATTERNS_CONFIG.find(p => p.id === "creative-ai-melodrama")!;
+  const melodramaticWords = new Set([
+    "cascaded", "trembling", "shimmered", "whispered", "hollowness", "luminous",
+    "ephemeral", "liminal", "aching", "yearning", "haunting", "ineffable", "ethereal", "luminescent",
+    "weightless", "unspoken", "profound", "resonated", "visceral", "tender", "threshold", "piercing",
+  ]);
+  const found: string[] = [];
+  for (const word of words) {
+    if (melodramaticWords.has(word) && !found.includes(word)) found.push(word);
+  }
+  if (found.length < 4) return null;
+  return { id: config.id, label: config.label, hits: found.length, examples: found.slice(0, 5), severity: config.severity, weight: config.weight, category: config.category };
 }
 
 // ---- Scoring ----
@@ -986,11 +1040,12 @@ function computePatternScore(patterns: PatternHit[]): number {
 function computeStatisticalScore(stats: TextStats): number {
   let score = 0;
 
-  // Low burstiness → high AI probability (stricter thresholds)
+  // Low burstiness → high AI probability (wider thresholds)
   const burstyScore =
     stats.burstiness < 0.15 ? 100 :
-    stats.burstiness < 0.25 ? 70 :
-    stats.burstiness < 0.4 ? 30 : 0;
+    stats.burstiness < 0.30 ? 80 :
+    stats.burstiness < 0.45 ? 50 :
+    stats.burstiness < 0.55 ? 20 : 0;
   score += burstyScore * 0.3;
 
   // Low TTR → high AI probability (stricter thresholds)
@@ -1000,14 +1055,14 @@ function computeStatisticalScore(stats: TextStats): number {
     stats.typeTokenRatio < 0.55 ? 40 : 0;
   score += ttrScore * 0.25;
 
-  // Avg sentence length in AI range (18-25)
+  // Avg sentence length in AI range (wider)
   const asl = stats.avgSentenceLength;
-  const aslScore = asl >= 18 && asl <= 25 ? 80 : asl >= 15 && asl <= 30 ? 40 : 0;
+  const aslScore = asl >= 15 && asl <= 30 ? 85 : asl >= 12 && asl <= 35 ? 45 : 0;
   score += aslScore * 0.25;
 
-  // Flesch Reading Ease in AI range (40-60)
+  // Flesch Reading Ease in AI range (wider)
   const fre = stats.fleschReadingEase;
-  const freScore = fre >= 40 && fre <= 60 ? 80 : fre >= 30 && fre <= 70 ? 40 : 0;
+  const freScore = fre >= 35 && fre <= 65 ? 85 : fre >= 25 && fre <= 75 ? 45 : 0;
   score += freScore * 0.2;
 
   return Math.min(100, score);
@@ -1165,6 +1220,16 @@ export function analyzeText(text: string): AnalysisResult {
   const lowCoV = detectLowSentenceCoV(sentences);
   if (lowCoV) patterns.push(lowCoV);
 
+  // Step 3c: V3 pattern detectors
+  const casualOpener = detectCasualAIOpener(text);
+  if (casualOpener) patterns.push(casualOpener);
+
+  const metaCommentary = detectAIMetaCommentary(text, wordCount);
+  if (metaCommentary) patterns.push(metaCommentary);
+
+  const melodrama = detectCreativeAIMelodrama(words);
+  if (melodrama) patterns.push(melodrama);
+
   // Step 4: Detect semantic patterns (15–19)
   const overExp = detectOverExplanation(text);
   if (overExp) patterns.push(overExp);
@@ -1210,10 +1275,15 @@ export function analyzeText(text: string): AnalysisResult {
   const statisticalScore = computeStatisticalScore(stats);
   const structuralScore = computeStructuralScore(structuralHits);
 
+  // Multi-pattern amplifier: boost pattern score when many patterns fire
+  const patternCount = patterns.length;
+  const amplifier = patternCount >= 12 ? 1.6 : patternCount >= 8 ? 1.45 : patternCount >= 5 ? 1.25 : 1.0;
+  const boostedPatternScore = Math.min(100, patternScore * amplifier);
+
   const score = clamp(
     0,
     100,
-    patternScore * SCORE_WEIGHTS.pattern +
+    boostedPatternScore * SCORE_WEIGHTS.pattern +
       statisticalScore * SCORE_WEIGHTS.statistical +
       structuralScore * SCORE_WEIGHTS.structural
   );
