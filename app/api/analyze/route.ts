@@ -88,18 +88,23 @@ export async function POST(req: Request) {
     // 6. Run analysis (pure local — no AI call)
     const analysisResult = analyzeText(text);
 
-    // 7. Save document to DB
+    // 7. Save document to DB (resilient — analysis works even if DB save fails)
     const title = text.trim().slice(0, 50).replace(/\s+/g, " ");
-    const document = await db.document.create({
-      data: {
-        userId: user.id,
-        title,
-        originalText: text,
-        analysisResult: JSON.parse(JSON.stringify(analysisResult)),
-        overallScore: analysisResult.score,
-        wordCount: analysisResult.wordCount,
-      },
-    });
+    let document: { id: string } | null = null;
+    try {
+      document = await db.document.create({
+        data: {
+          userId: user.id,
+          title,
+          originalText: text,
+          analysisResult: JSON.parse(JSON.stringify(analysisResult)),
+          overallScore: analysisResult.score,
+          wordCount: analysisResult.wordCount,
+        },
+      });
+    } catch (dbErr) {
+      console.error("[analyze] failed to save document (table may not exist):", dbErr);
+    }
 
     // 8. Increment wordsUsed
     await db.user.update({
@@ -123,7 +128,7 @@ export async function POST(req: Request) {
       patterns: analysisResult.patterns,
       stats: analysisResult.stats,
       wordCount: analysisResult.wordCount,
-      documentId: document.id,
+      documentId: document?.id ?? null,
     });
   } catch (err) {
     console.error("[analyze] error:", err);

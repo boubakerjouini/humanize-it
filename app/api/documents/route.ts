@@ -36,31 +36,45 @@ export async function GET(req: Request) {
     const limit = isFree ? Math.min(rawLimit, 5) : rawLimit;
     const skip = isFree ? 0 : (page - 1) * limit;
 
-    const [documents, total] = await Promise.all([
-      db.document.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-        select: {
-          id: true,
-          title: true,
-          originalText: true,
-          overallScore: true,
-          humanizedScore: true,
-          wordCount: true,
-          rewrittenText: true,
-          tone: true,
-          createdAt: true,
-        },
-      }),
-      db.document.count({ where: { userId: user.id } }),
-    ]);
+    let truncatedDocuments: Record<string, unknown>[] = [];
+    let total = 0;
 
-    const truncatedDocuments = documents.map((doc) => ({
-      ...doc,
-      originalText: doc.originalText.slice(0, 200),
-    }));
+    try {
+      const [documents, count] = await Promise.all([
+        db.document.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take: limit,
+          select: {
+            id: true,
+            title: true,
+            originalText: true,
+            overallScore: true,
+            humanizedScore: true,
+            wordCount: true,
+            rewrittenText: true,
+            tone: true,
+            createdAt: true,
+          },
+        }),
+        db.document.count({ where: { userId: user.id } }),
+      ]);
+
+      total = count;
+      truncatedDocuments = documents.map((doc) => ({
+        ...doc,
+        originalText: doc.originalText.slice(0, 200),
+      }));
+    } catch (dbErr) {
+      console.error("[documents] failed to query documents (table may not exist):", dbErr);
+      return NextResponse.json({
+        documents: [],
+        pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+        plan: user.plan,
+        totalAll: 0,
+      });
+    }
 
     const effectiveTotal = isFree ? Math.min(total, 5) : total;
 

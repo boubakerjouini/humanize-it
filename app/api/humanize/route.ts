@@ -120,15 +120,19 @@ export async function POST(req: Request) {
 
     // 7. Score the humanized text and update document
     const humanizedAnalysis = analyzeText(humanizedText);
-    await db.document.update({
-      where: { id: document.id },
-      data: {
-        rewrittenText: humanizedText,
-        rewriteModel: "claude-sonnet-4-5",
-        tone: toneValue,
-        humanizedScore: humanizedAnalysis.score,
-      },
-    });
+    try {
+      await db.document.update({
+        where: { id: document.id },
+        data: {
+          rewrittenText: humanizedText,
+          rewriteModel: "claude-sonnet-4-5",
+          tone: toneValue,
+          humanizedScore: humanizedAnalysis.score,
+        },
+      });
+    } catch (dbErr) {
+      console.error("[humanize] failed to update document (table may not exist):", dbErr);
+    }
 
     // 8. Increment rewriteCount for FREE users
     if (freshUser.plan === "FREE") {
