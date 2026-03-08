@@ -133,7 +133,7 @@ function Skeleton({ width = "100%", height = 16, radius = 6, style = {} }: { wid
 }
 
 // Humanizing orb animation
-function HumanizingState({ chunkProgress }: { chunkProgress?: { current: number; total: number } | null }) {
+function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { current: number; total: number } | null; passInfo?: { current: number; scores: number[] } | null }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -163,7 +163,9 @@ function HumanizingState({ chunkProgress }: { chunkProgress?: { current: number;
         <p style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.8)", textAlign: "center", marginBottom: "6px" }}>
           {chunkProgress && chunkProgress.total > 1
             ? `Humanizing chunk ${chunkProgress.current} of ${chunkProgress.total}`
-            : <>AI is rewriting your text<span className="dots"><span>.</span><span>.</span><span>.</span></span></>
+            : passInfo && passInfo.current > 1
+              ? `Pass ${passInfo.current - 1} complete (score: ${passInfo.scores[passInfo.scores.length - 1]}%) — running pass ${passInfo.current}...`
+              : <>AI is rewriting your text<span className="dots"><span>.</span><span>.</span><span>.</span></span></>
           }
         </p>
         <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
@@ -189,15 +191,26 @@ function HumanizingState({ chunkProgress }: { chunkProgress?: { current: number;
         </div>
       ) : (
         <div style={{ display: "flex", gap: "6px" }}>
-          {["Pass 1", "Pass 2", "Pass 3"].map((p, i) => (
-            <div key={p} style={{
-              fontSize: "10px", color: "rgba(255,255,255,0.3)",
-              padding: "3px 8px", borderRadius: "4px",
-              background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)",
-              animation: `passGlow 1.8s ease-in-out infinite`,
-              animationDelay: `${i * 0.6}s`,
-            }}>{p}</div>
-          ))}
+          {["Pass 1", "Pass 2", "Pass 3"].map((p, i) => {
+            const passNum = i + 1;
+            const currentPass = passInfo?.current ?? 1;
+            const isActive = passNum === currentPass;
+            const isDone = passNum < currentPass;
+            return (
+              <div key={p} style={{
+                fontSize: "10px",
+                color: isDone ? "#22c55e" : isActive ? "#a78bfa" : "rgba(255,255,255,0.3)",
+                padding: "3px 8px", borderRadius: "4px",
+                background: isDone ? "rgba(34,197,94,0.1)" : isActive ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.08)",
+                border: `1px solid ${isDone ? "rgba(34,197,94,0.25)" : isActive ? "rgba(139,92,246,0.3)" : "rgba(139,92,246,0.15)"}`,
+                fontWeight: isActive ? 700 : 400,
+                ...(isActive ? { animation: `passGlow 1.8s ease-in-out infinite` } : {}),
+              }}>
+                {isDone ? `${p} ✓` : p}
+                {isDone && passInfo?.scores[i] !== undefined ? ` ${passInfo.scores[i]}%` : ""}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -367,6 +380,11 @@ export default function EditorPage() {
   const [chunkProgress, setChunkProgress] = useState<{ current: number; total: number } | null>(null);
   const chunkAbortRef = useRef(false);
 
+  // Multi-pass state
+  const [passInfo, setPassInfo] = useState<{ current: number; scores: number[] } | null>(null);
+  const [passCount, setPassCount] = useState<number>(1);
+  const [scoreHistory, setScoreHistory] = useState<number[]>([]);
+
   // Fetch user plan
   useEffect(() => {
     fetch("/api/user-plan").then(r => r.ok ? r.json() : null).then((d: { plan?: string } | null) => {
@@ -463,6 +481,37 @@ export default function EditorPage() {
     return chunks;
   }, []);
 
+  // Run a single humanization pass (analyze input text, then humanize)
+  const runSinglePass = useCallback(async (inputText: string, documentId: string, useTone: ToneOption, passIntensity: IntensityLevel, aggressiveHint?: string): Promise<{ text: string; score: number; docId: string } | null> => {
+    // For pass 2+, we need to re-analyze the humanized text to get a new documentId
+    let docId = documentId;
+    if (inputText !== text) {
+      const analyzeRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: inputText.slice(0, 5000) }) });
+      if (!analyzeRes.ok) return null;
+      const analyzeData = await analyzeRes.json() as AnalyzeResponse;
+      docId = analyzeData.documentId;
+    }
+
+    const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: docId, tone: useTone, intensity: passIntensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined, ...(aggressiveHint ? { aggressiveHint } : {}) }) });
+    const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+    if (res.status === 402) { setShowUpgradeModal(true); return null; }
+    if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return null; }
+
+    const humanized = data.humanizedText ?? "";
+    // Score the result
+    let score = 0;
+    try {
+      const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: humanized.slice(0, 5000) }) });
+      if (reRes.ok) {
+        const reData = await reRes.json() as AnalyzeResponse;
+        score = reData.score;
+        docId = reData.documentId;
+      }
+    } catch { /* ignore */ }
+
+    return { text: humanized, score, docId };
+  }, [text, styleFingerprint, language]);
+
   const handleHumanize = useCallback(async (overrideTone?: ToneOption) => {
     if (!result) return;
     if (!isSignedIn) { setShowAuthModal(true); return; }
@@ -472,15 +521,20 @@ export default function EditorPage() {
     setHumanizedText(null);
     setHumanizedScore(null);
     setChunkProgress(null);
+    setPassInfo({ current: 1, scores: [] });
+    setPassCount(1);
+    setScoreHistory([]);
     chunkAbortRef.current = false;
 
     const needsChunking = wordCount > 1500;
+    const SCORE_THRESHOLD = 45;
+    const MAX_PASSES = 3;
 
     try {
       let finalText: string;
 
       if (needsChunking) {
-        // Chunked humanization
+        // Chunked humanization (no multi-pass for chunks — too expensive)
         const chunks = splitIntoChunks(text, 1500);
         setChunkProgress({ current: 0, total: chunks.length });
         const results: string[] = [];
@@ -489,12 +543,10 @@ export default function EditorPage() {
           if (chunkAbortRef.current) { toast.error("Humanization cancelled."); return; }
           setChunkProgress({ current: i + 1, total: chunks.length });
 
-          // Analyze chunk first
           const analyzeRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: chunks[i] }) });
           if (!analyzeRes.ok) { toast.error(`Chunk ${i + 1} analysis failed.`); return; }
           const analyzeData = await analyzeRes.json() as AnalyzeResponse;
 
-          // Humanize chunk
           const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: analyzeData.documentId, tone: useTone, intensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
           const data = await res.json() as { humanizedText?: string; error?: { message: string } };
           if (res.status === 402) { setShowUpgradeModal(true); return; }
@@ -504,12 +556,41 @@ export default function EditorPage() {
 
         finalText = results.join("\n\n");
       } else {
-        // Single-chunk flow (existing behavior)
-        const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, intensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
-        const data = await res.json() as { humanizedText?: string; error?: { message: string } };
-        if (res.status === 402) { setShowUpgradeModal(true); return; }
-        if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
-        finalText = data.humanizedText ?? "";
+        // Single-chunk flow with multi-pass
+        const pass1 = await runSinglePass(text, result.documentId, useTone, intensity);
+        if (!pass1) return;
+
+        finalText = pass1.text;
+        const scores: number[] = [pass1.score];
+        setPassInfo({ current: 1, scores });
+        setScoreHistory(scores);
+        let passes = 1;
+
+        // Auto pass 2 if score >= threshold
+        if (pass1.score >= SCORE_THRESHOLD && passes < MAX_PASSES) {
+          passes++;
+          setPassInfo({ current: 2, scores: [...scores] });
+          const pass2 = await runSinglePass(pass1.text, pass1.docId, useTone, "heavy");
+          if (!pass2) return;
+          finalText = pass2.text;
+          scores.push(pass2.score);
+          setPassInfo({ current: 2, scores: [...scores] });
+          setScoreHistory([...scores]);
+
+          // Auto pass 3 if still >= threshold — with aggressive hint
+          if (pass2.score >= SCORE_THRESHOLD && passes < MAX_PASSES) {
+            passes++;
+            setPassInfo({ current: 3, scores: [...scores] });
+            const pass3 = await runSinglePass(pass2.text, pass2.docId, useTone, "heavy", "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style.");
+            if (!pass3) return;
+            finalText = pass3.text;
+            scores.push(pass3.score);
+            setPassInfo({ current: 3, scores: [...scores] });
+            setScoreHistory([...scores]);
+          }
+        }
+
+        setPassCount(passes);
       }
 
       setHumanizedText(finalText);
@@ -525,10 +606,10 @@ export default function EditorPage() {
           }
         } catch { /* ignore */ }
       }
-      posthog?.capture("humanize_completed", { tone: useTone, original_score: result.score });
+      posthog?.capture("humanize_completed", { tone: useTone, original_score: result.score, passes: passCount });
     } catch { toast.error("Network error. Please try again."); }
-    finally { setHumanizing(false); setChunkProgress(null); }
-  }, [result, tone, isSignedIn, posthog, userPlan, styleFingerprint, language, wordCount, text, splitIntoChunks, intensity]);
+    finally { setHumanizing(false); setChunkProgress(null); setPassInfo(null); }
+  }, [result, tone, isSignedIn, posthog, userPlan, styleFingerprint, language, wordCount, text, splitIntoChunks, intensity, runSinglePass, passCount]);
 
   const handleCopy = useCallback(async () => {
     if (!humanizedText) return;
@@ -573,6 +654,9 @@ export default function EditorPage() {
     setParaHumanized({});
     setParaHumanizing({});
     setUploadedFileName(null);
+    setPassInfo(null);
+    setPassCount(1);
+    setScoreHistory([]);
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
@@ -1252,7 +1336,7 @@ export default function EditorPage() {
                   overflow: "hidden", animation: "fadeInUp 0.35s ease",
                 }}>
                   {humanizing ? (
-                    <HumanizingState chunkProgress={chunkProgress} />
+                    <HumanizingState chunkProgress={chunkProgress} passInfo={passInfo} />
                   ) : humanizedText && (
                     <>
                       <div style={{
@@ -1261,13 +1345,21 @@ export default function EditorPage() {
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e", display: "flex", alignItems: "center", gap: "5px" }}>
-                            <CheckCircle2 size={13} /> Humanized
+                            <CheckCircle2 size={13} /> Humanized{passCount > 1 ? ` in ${passCount} passes` : ""}
                           </span>
                           {humanizedScore !== null && result && (
                             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                               <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, background: "rgba(239,68,68,0.1)", color: "#ef4444", textDecoration: "line-through", opacity: 0.6 }}>
                                 {Math.round(result.score)}%
                               </span>
+                              {scoreHistory.length > 1 && scoreHistory.slice(0, -1).map((s, i) => (
+                                <span key={i} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                  <ArrowRight size={9} color="rgba(255,255,255,0.2)" />
+                                  <span style={{ fontSize: "10px", padding: "2px 5px", borderRadius: "3px", fontWeight: 600, background: "rgba(249,115,22,0.08)", color: "rgba(249,115,22,0.6)", textDecoration: "line-through", opacity: 0.5 }}>
+                                    {Math.round(s)}%
+                                  </span>
+                                </span>
+                              ))}
                               <ArrowRight size={9} color="rgba(255,255,255,0.2)" />
                               <span style={{
                                 fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,

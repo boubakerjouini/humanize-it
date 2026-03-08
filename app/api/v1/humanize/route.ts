@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       );
     }
 
-    let body: { text?: unknown; tone?: unknown; intensity?: unknown };
+    let body: { text?: unknown; tone?: unknown; intensity?: unknown; passes?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { text, tone, intensity } = body;
+    const { text, tone, intensity, passes } = body;
     if (typeof text !== "string" || text.length <= 10) {
       return NextResponse.json(
         { error: { code: "TEXT_TOO_SHORT", message: "Text must be at least 10 characters." } },
@@ -70,17 +70,46 @@ export async function POST(req: Request) {
       ? (intensity as typeof validIntensities[number])
       : "medium";
 
+    const maxPasses = typeof passes === "number" && passes >= 1 && passes <= 3 ? Math.floor(passes) : 1;
+    const SCORE_THRESHOLD = 45;
+
     const analysisResult = analyzeText(text);
-    const { humanizedText, tokensUsed } = await humanizeText(text, toneValue, analysisResult, intensityValue);
-    const humanizedAnalysis = analyzeText(humanizedText);
+    let currentText = text;
+    let currentAnalysis = analysisResult;
+    let totalTokens = 0;
+    const scoreHistory: number[] = [];
+    let passesRun = 0;
+
+    for (let p = 0; p < maxPasses; p++) {
+      const passIntensity = p === 0 ? intensityValue : "heavy";
+      const aggressiveHint = p >= 2
+        ? "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style."
+        : undefined;
+
+      const { humanizedText: passText, tokensUsed: passTokens } = await humanizeText(
+        currentText, toneValue, currentAnalysis, passIntensity, undefined, undefined, aggressiveHint
+      );
+      totalTokens += passTokens;
+      passesRun++;
+
+      const passAnalysis = analyzeText(passText);
+      scoreHistory.push(Math.round(passAnalysis.score));
+      currentText = passText;
+      currentAnalysis = passAnalysis;
+
+      // Stop early if score is good enough
+      if (passAnalysis.score < SCORE_THRESHOLD) break;
+    }
 
     return NextResponse.json({
-      humanizedText,
+      humanizedText: currentText,
       originalScore: Math.round(analysisResult.score),
-      humanizedScore: Math.round(humanizedAnalysis.score),
-      scoreDelta: Math.round(analysisResult.score - humanizedAnalysis.score),
-      confidenceBand: humanizedAnalysis.confidenceBand,
-      tokensUsed,
+      humanizedScore: Math.round(currentAnalysis.score),
+      scoreDelta: Math.round(analysisResult.score - currentAnalysis.score),
+      confidenceBand: currentAnalysis.confidenceBand,
+      tokensUsed: totalTokens,
+      passes_run: passesRun,
+      score_history: [Math.round(analysisResult.score), ...scoreHistory],
     }, { headers });
   } catch (err) {
     console.error("[v1/humanize] error:", err);

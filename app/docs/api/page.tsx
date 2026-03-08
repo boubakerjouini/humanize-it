@@ -263,6 +263,7 @@ const data = await res.json();`}</Code>
                   ["text", "string", "Yes", "The text to humanize (10–10,000 chars)"],
                   ["tone", "string", "No", "Tone of the output (default: standard)"],
                   ["intensity", "string", "No", "How aggressively to rewrite (default: medium)"],
+                  ["passes", "number", "No", "Number of humanization passes, 1–3 (default: 1). Higher passes auto-escalate intensity to reduce AI score below 45%."],
                 ]}
               />
 
@@ -293,13 +294,18 @@ const data = await res.json();`}</Code>
               <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/humanize \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
-  -d '{"text": "Your text...", "tone": "casual", "intensity": "medium"}'`}</Code>
+  -d '{"text": "Your text...", "tone": "casual", "intensity": "medium", "passes": 2}'`}</Code>
 
               <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Response</h4>
               <Code lang="json">{`{
-  "humanizedText": "So here's the thing about mitochondria — they're basically the engine room of every cell...",
-  "tokensUsed": 145,
-  "originalScore": 72
+  "humanizedText": "So here's the thing about mitochondria, they're basically the engine room of every cell...",
+  "originalScore": 78,
+  "humanizedScore": 18,
+  "scoreDelta": 60,
+  "confidenceBand": "low",
+  "tokensUsed": 312,
+  "passes_run": 2,
+  "score_history": [78, 51, 18]
 }`}</Code>
             </div>
 
