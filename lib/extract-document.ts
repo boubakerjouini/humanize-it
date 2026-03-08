@@ -36,7 +36,11 @@ async function extractFromDocx(file: File): Promise<string> {
 
 async function extractFromPdf(file: File): Promise<{ text: string; pageCount: number }> {
   const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+  // Use empty string to run pdfjs in fake-worker mode (synchronous, no CDN dependency).
+  // This is the most reliable approach in Next.js / browser environments where
+  // loading a CDN worker script can fail due to version mismatches or CORS.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "";
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -46,11 +50,20 @@ async function extractFromPdf(file: File): Promise<{ text: string; pageCount: nu
   for (let i = 1; i <= pageCount; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = content.items
-      .filter((item) => "str" in item)
-      .map((item) => (item as { str: string }).str)
-      .join(" ");
-    pages.push(pageText);
+    // Join items with space, but preserve line breaks by checking transform Y position
+    let lastY: number | null = null;
+    const lineChunks: string[] = [];
+    for (const item of content.items) {
+      if (!("str" in item)) continue;
+      const typedItem = item as { str: string; transform: number[] };
+      const y = typedItem.transform[5];
+      if (lastY !== null && Math.abs(y - lastY) > 5) {
+        lineChunks.push("\n");
+      }
+      lineChunks.push(typedItem.str);
+      lastY = y;
+    }
+    pages.push(lineChunks.join(" ").replace(/ \n /g, "\n").trim());
   }
 
   const text = pages.join("\n\n");
@@ -80,10 +93,14 @@ export async function extractTextFromFile(file: File): Promise<ExtractResult> {
         pageCount = result.pageCount;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("password")) {
+        if (msg.toLowerCase().includes("password")) {
           throw new Error("This PDF is password-protected — remove the password first.");
         }
-        throw new Error("Failed to read PDF. It may be corrupted or contain only images.");
+        if (msg.toLowerCase().includes("invalid pdf") || msg.toLowerCase().includes("missing pdf")) {
+          throw new Error("Invalid PDF file — please check the file is not corrupted.");
+        }
+        // Re-throw with real message in dev, generic in prod
+        throw new Error(`Failed to extract PDF text. ${process.env.NODE_ENV === "development" ? msg : "Try re-saving the PDF or use a DOCX file."}`);
       }
       break;
     }
