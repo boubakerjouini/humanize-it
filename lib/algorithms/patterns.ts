@@ -289,16 +289,16 @@ export interface PatternConfig {
 /** All 24 detection patterns with severity and weight */
 export const PATTERNS_CONFIG: PatternConfig[] = [
   // Vocabulary (1-3)
-  { id: "ai-vocab-t1", label: "AI Vocabulary — Tier 1", severity: "critical", weight: 8, category: "vocabulary" },
+  { id: "ai-vocab-t1", label: "AI Vocabulary — Tier 1", severity: "critical", weight: 12, category: "vocabulary" },
   { id: "ai-vocab-t2", label: "AI Vocabulary — Tier 2", severity: "high", weight: 5, category: "vocabulary" },
   { id: "ai-vocab-t3", label: "AI Vocabulary — Tier 3", severity: "medium", weight: 3, category: "vocabulary" },
 
   // Phrases (4-8)
   { id: "sycophantic", label: "Sycophantic Phrases", severity: "high", weight: 6, category: "phrase" },
-  { id: "filler", label: "Filler Phrases", severity: "medium", weight: 4, category: "phrase" },
-  { id: "generic-conclusion", label: "Generic Conclusions", severity: "high", weight: 5, category: "phrase" },
-  { id: "hedging", label: "Hedging Language", severity: "medium", weight: 3, category: "phrase" },
-  { id: "transition-overuse", label: "Transition Overuse", severity: "low", weight: 2, category: "phrase" },
+  { id: "filler", label: "Filler Phrases", severity: "medium", weight: 6, category: "phrase" },
+  { id: "generic-conclusion", label: "Generic Conclusions", severity: "high", weight: 7, category: "phrase" },
+  { id: "hedging", label: "Hedging Language", severity: "medium", weight: 7, category: "phrase" },
+  { id: "transition-overuse", label: "Transition Overuse", severity: "low", weight: 8, category: "phrase" },
 
   // Structural (9-14)
   { id: "repetitive-starters", label: "Repetitive Sentence Starters", severity: "high", weight: 5, category: "structural" },
@@ -323,7 +323,7 @@ export const PATTERNS_CONFIG: PatternConfig[] = [
   { id: "low-perplexity", label: "Low Perplexity Indicators", severity: "high", weight: 5, category: "statistical" },
 
   // New structural patterns (25-29)
-  { id: "em-dash-overuse", label: "Em Dash Overuse (—)", severity: "high", weight: 6, category: "structural" },
+  { id: "em-dash-overuse", label: "Em Dash Overuse (—)", severity: "high", weight: 8, category: "structural" },
   { id: "colon-abuse", label: "Colon Abuse", severity: "medium", weight: 3, category: "structural" },
   { id: "passive-voice", label: "Passive Voice Excess", severity: "medium", weight: 4, category: "structural" },
   { id: "serial-listing", label: "Oxford Comma Serial Listing", severity: "low", weight: 2, category: "structural" },
@@ -334,16 +334,21 @@ export const PATTERNS_CONFIG: PatternConfig[] = [
   { id: "copula-avoidance", label: "Copula Avoidance (serves as / boasts)", severity: "medium", weight: 4, category: "structural" },
   { id: "negative-parallelism", label: "Negative Parallelism (not just X, it's Y)", severity: "medium", weight: 3, category: "structural" },
   { id: "promotional-ing", label: "Promotional -ing Chain", severity: "medium", weight: 3, category: "structural" },
-  { id: "vague-challenge", label: "Vague Challenges Formula", severity: "high", weight: 4, category: "phrase" },
-  { id: "promotional-adjectives", label: "Promotional Adjectives", severity: "high", weight: 5, category: "vocabulary" },
-  { id: "trigram-repetition", label: "Trigram Repetition", severity: "high", weight: 6, category: "statistical" },
-  { id: "low-sentence-cov", label: "Uniform Sentence Length (low CoV)", severity: "high", weight: 5, category: "statistical" },
+  { id: "vague-challenge", label: "Vague Challenges Formula", severity: "high", weight: 6, category: "phrase" },
+  { id: "promotional-adjectives", label: "Promotional Adjectives", severity: "high", weight: 7, category: "vocabulary" },
+  { id: "trigram-repetition", label: "Trigram Repetition", severity: "high", weight: 8, category: "statistical" },
+  { id: "low-sentence-cov", label: "Uniform Sentence Length (low CoV)", severity: "high", weight: 9, category: "statistical" },
+
+  // V3 patterns (38-40)
+  { id: "casual-ai-opener", label: "Casual AI Opener Phrases", severity: "high", weight: 7, category: "phrase" },
+  { id: "ai-metacommentary", label: "AI Self-Commentary (I think/I believe/I feel)", severity: "medium", weight: 5, category: "phrase" },
+  { id: "creative-ai-melodrama", label: "Melodramatic Descriptors (AI Creative)", severity: "high", weight: 6, category: "vocabulary" },
 ] as const;
 
 // ---- Score Weights ----
 
 export const SCORE_WEIGHTS = {
-  pattern: 0.50,
+  pattern: 0.60,
   statistical: 0.30,
-  structural: 0.20,
+  structural: 0.10,
 } as const;
