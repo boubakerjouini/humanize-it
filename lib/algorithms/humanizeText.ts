@@ -60,6 +60,40 @@ const FORBIDDEN_SYNONYMS: Record<string, string> = {
   "the fact that": "",
 };
 
+// ---- Token protection (URLs, technical terms) ----
+
+function protectTokens(text: string): { protected: string; tokens: Map<string, string> } {
+  const tokens = new Map<string, string>();
+  let i = 0;
+  // Protect URLs
+  const urlRegex = /https?:\/\/[^\s)>\]"]+/g;
+  let protected_text = text.replace(urlRegex, (match) => {
+    const key = `__TOKEN_${i++}__`;
+    tokens.set(key, match);
+    return key;
+  });
+  // Protect word.ext patterns (technical terms, domains, filenames)
+  protected_text = protected_text.replace(/(\w+)\.(\w)/g, (match, _p1: string, p2: string) => {
+    if (/^(js|ts|css|html|md|json|svg|png|jpg|env|sh|py|rb|go|rs)$/i.test(p2)) {
+      const key = `__TOKEN_${i++}__`;
+      tokens.set(key, match);
+      return key;
+    }
+    return match;
+  });
+  return { protected: protected_text, tokens };
+}
+
+function restoreTokens(text: string, tokens: Map<string, string>): string {
+  let result = text;
+  for (const [key, value] of tokens) {
+    // Try with possible spaces Claude might inject
+    result = result.replace(new RegExp(key.replace(/_/g, "_\\s*"), "g"), value);
+    result = result.replace(key, value);
+  }
+  return result;
+}
+
 // ---- Tone instructions (toned down — humanization takes priority) ----
 
 const TONE_INSTRUCTIONS: Record<ToneOption, string> = {
@@ -145,6 +179,16 @@ G) BANNED STRUCTURES:
    - Oxford comma in every list (mix it up: sometimes skip it)
    - All paragraphs the same length
 
+H) FORMATTING PRESERVATION — CRITICAL:
+   - Preserve ALL line breaks and paragraph structure from the original text EXACTLY.
+   - If the original has blank lines between sections, keep blank lines in the same places.
+   - If the original has bullet points or numbered lists, keep the same list structure.
+   - If the original has emoji at the start of lines (👋, 💼, 🔥, etc.), keep them in place.
+   - Do NOT merge separate paragraphs into one block.
+   - Do NOT remove blank lines between sections.
+   - URLs must be copied VERBATIM — never modify, shorten, or add spaces inside URLs.
+   - Technical terms (Next.js, Node.js, TypeScript, SignalR, etc.) must be copied EXACTLY as written. Never add spaces inside them.
+
 OUTPUT RULE: Return ONLY the rewritten text. No intro like "Here is..." or "Sure, here's...". Just the text.
 
 ${INTENSITY_INSTRUCTIONS[intensity] || ""}`;
@@ -186,6 +230,7 @@ ${toneNote ? `## ${toneNote}\n` : ""}${styleSection}${languageSection}
 ## Constraints:
 - Target word count: ${targetRange} words
 - Preserve the original meaning — do not invent facts not implied by the original
+- CRITICAL: Preserve all line breaks, blank lines, bullet points, and emoji positions exactly as in the original. URLs must be copied word-for-word without modification.
 
 ## Original text:
 ${text}`;
@@ -242,8 +287,8 @@ function applyForbiddenSynonyms(text: string): string {
     result = result.replace(regex, replacement);
   }
 
-  // Clean up double spaces from empty replacements
-  result = result.replace(/\s{2,}/g, " ").replace(/\s+([.,;:!?])/g, "$1");
+  // Clean up double spaces from empty replacements (preserve newlines)
+  result = result.replace(/[^\S\n]{2,}/g, " ").replace(/[^\S\n]+([.,;:!?])/g, "$1");
 
   return result;
 }
@@ -251,128 +296,131 @@ function applyForbiddenSynonyms(text: string): string {
 // ---- Layer 3b: Sentence starter diversity ----
 
 function fixSentenceStarterDiversity(text: string): string {
-  const sentenceRegex = /[^.!?]*[.!?]+/g;
-  const sentences = text.match(sentenceRegex);
-  if (!sentences || sentences.length < 4) return text;
+  // Process line-by-line to preserve newline structure
+  const lines = text.split("\n");
+  const processedLines = lines.map(line => {
+    const sentenceRegex = /[^.!?]*[.!?]+/g;
+    const sentences = line.match(sentenceRegex);
+    if (!sentences || sentences.length < 4) return line;
 
-  // Count first words
-  const firstWords: Record<string, number> = {};
-  for (const s of sentences) {
-    const trimmed = s.trim();
-    if (!trimmed) continue;
-    const firstWord = trimmed.split(/\s+/)[0]?.replace(/[^a-zA-Z]/g, "").toLowerCase() ?? "";
-    if (firstWord) {
-      firstWords[firstWord] = (firstWords[firstWord] ?? 0) + 1;
-    }
-  }
-
-  const commonStarters = ["the", "it", "this", "in", "for", "a"];
-  const totalSentences = sentences.length;
-
-  for (const starter of commonStarters) {
-    const count = firstWords[starter] ?? 0;
-    if (count / totalSentences <= 0.5) continue;
-
-    // Find the longest sentence starting with this word and rephrase it
-    let longestIdx = -1;
-    let longestLen = 0;
-    for (let i = 0; i < sentences.length; i++) {
-      const trimmed = sentences[i].trim();
-      const fw = trimmed.split(/\s+/)[0]?.replace(/[^a-zA-Z]/g, "").toLowerCase() ?? "";
-      if (fw === starter && trimmed.length > longestLen) {
-        longestLen = trimmed.length;
-        longestIdx = i;
+    // Count first words
+    const firstWords: Record<string, number> = {};
+    for (const s of sentences) {
+      const trimmed = s.trim();
+      if (!trimmed) continue;
+      const firstWord = trimmed.split(/\s+/)[0]?.replace(/[^a-zA-Z]/g, "").toLowerCase() ?? "";
+      if (firstWord) {
+        firstWords[firstWord] = (firstWords[firstWord] ?? 0) + 1;
       }
     }
 
-    if (longestIdx >= 0) {
-      const original = sentences[longestIdx].trim();
-      // Apply simple starter rephrasing
-      if (/^The\s+\w+\s+is\s+/i.test(original)) {
-        const match = original.match(/^The\s+(\w+)\s+is\s+(.*)/i);
-        if (match) {
-          sentences[longestIdx] = sentences[longestIdx].replace(original, `${match[1]}? It's ${match[2]}`);
+    const commonStarters = ["the", "it", "this", "in", "for", "a"];
+    const totalSentences = sentences.length;
+
+    for (const starter of commonStarters) {
+      const count = firstWords[starter] ?? 0;
+      if (count / totalSentences <= 0.5) continue;
+
+      let longestIdx = -1;
+      let longestLen = 0;
+      for (let i = 0; i < sentences.length; i++) {
+        const trimmed = sentences[i].trim();
+        const fw = trimmed.split(/\s+/)[0]?.replace(/[^a-zA-Z]/g, "").toLowerCase() ?? "";
+        if (fw === starter && trimmed.length > longestLen) {
+          longestLen = trimmed.length;
+          longestIdx = i;
         }
-      } else if (/^It is important/i.test(original)) {
-        sentences[longestIdx] = sentences[longestIdx].replace(/^It is important/i, "Worth knowing:");
-      } else if (/^This means/i.test(original)) {
-        sentences[longestIdx] = sentences[longestIdx].replace(/^This means/i, "Meaning:");
-      } else if (/^In order to/i.test(original)) {
-        sentences[longestIdx] = sentences[longestIdx].replace(/^In order to/i, "To");
       }
+
+      if (longestIdx >= 0) {
+        const original = sentences[longestIdx].trim();
+        if (/^The\s+\w+\s+is\s+/i.test(original)) {
+          const match = original.match(/^The\s+(\w+)\s+is\s+(.*)/i);
+          if (match) {
+            sentences[longestIdx] = sentences[longestIdx].replace(original, `${match[1]}? It's ${match[2]}`);
+          }
+        } else if (/^It is important/i.test(original)) {
+          sentences[longestIdx] = sentences[longestIdx].replace(/^It is important/i, "Worth knowing:");
+        } else if (/^This means/i.test(original)) {
+          sentences[longestIdx] = sentences[longestIdx].replace(/^This means/i, "Meaning:");
+        } else if (/^In order to/i.test(original)) {
+          sentences[longestIdx] = sentences[longestIdx].replace(/^In order to/i, "To");
+        }
+      }
+
+      break;
     }
 
-    break; // Fix one starter per pass
-  }
-
-  return sentences.join(" ").replace(/\s{2,}/g, " ");
+    return sentences.join("").replace(/[^\S\n]{2,}/g, " ");
+  });
+  return processedLines.join("\n");
 }
 
 // ---- Layer 3c: Burstiness injection ----
 
 function injectBurstiness(text: string): string {
-  const sentenceRegex = /[^.!?]*[.!?]+/g;
-  const sentences = text.match(sentenceRegex);
-  if (!sentences || sentences.length < 4) return text;
+  // Process line-by-line to preserve newline structure
+  const lines = text.split("\n");
+  const processedLines = lines.map(line => {
+    const sentenceRegex = /[^.!?]*[.!?]+/g;
+    const sentences = line.match(sentenceRegex);
+    if (!sentences || sentences.length < 4) return line;
 
-  const lengths = sentences.map(s => s.trim().split(/\s+/).length);
+    const lengths = sentences.map(s => s.trim().split(/\s+/).length);
 
-  // Find longest run of similar-length sentences (within 3 words)
-  let bestRunStart = -1;
-  let bestRunLen = 0;
+    let bestRunStart = -1;
+    let bestRunLen = 0;
 
-  for (let i = 0; i < lengths.length; i++) {
-    let runLen = 1;
-    for (let j = i + 1; j < lengths.length; j++) {
-      const allSimilar = lengths.slice(i, j + 1).every((l, _, arr) =>
-        Math.abs(l - arr[0]) <= 3
-      );
-      if (allSimilar) runLen = j - i + 1;
-      else break;
+    for (let i = 0; i < lengths.length; i++) {
+      let runLen = 1;
+      for (let j = i + 1; j < lengths.length; j++) {
+        const allSimilar = lengths.slice(i, j + 1).every((l, _, arr) =>
+          Math.abs(l - arr[0]) <= 3
+        );
+        if (allSimilar) runLen = j - i + 1;
+        else break;
+      }
+      if (runLen > bestRunLen) {
+        bestRunLen = runLen;
+        bestRunStart = i;
+      }
     }
-    if (runLen > bestRunLen) {
-      bestRunLen = runLen;
-      bestRunStart = i;
-    }
-  }
 
-  if (bestRunLen < 3) return text;
+    if (bestRunLen < 3) return line;
 
-  // Split the middle sentence of the run at a natural comma or conjunction
-  const midIdx = bestRunStart + Math.floor(bestRunLen / 2);
-  const midSentence = sentences[midIdx].trim();
+    const midIdx = bestRunStart + Math.floor(bestRunLen / 2);
+    const midSentence = sentences[midIdx].trim();
 
-  // Try splitting at comma
-  const commaIdx = midSentence.indexOf(",", Math.floor(midSentence.length * 0.3));
-  if (commaIdx > 0 && commaIdx < midSentence.length - 10) {
-    const part1 = midSentence.slice(0, commaIdx).trim();
-    const part2 = midSentence.slice(commaIdx + 1).trim();
-    // Capitalize part2 and make part1 end with a period
-    const newPart2 = part2.charAt(0).toUpperCase() + part2.slice(1);
-    const newPart1 = part1.endsWith(".") || part1.endsWith("!") || part1.endsWith("?")
-      ? part1
-      : part1 + ".";
-    sentences[midIdx] = ` ${newPart1} ${newPart2}`;
-    return sentences.join("").replace(/\s{2,}/g, " ").trim();
-  }
-
-  // Try splitting at conjunction
-  const conjunctions = [" and ", " but ", " so ", " yet "];
-  for (const conj of conjunctions) {
-    const conjIdx = midSentence.indexOf(conj, Math.floor(midSentence.length * 0.3));
-    if (conjIdx > 0) {
-      const part1 = midSentence.slice(0, conjIdx).trim();
-      const part2 = midSentence.slice(conjIdx + conj.length).trim();
+    const commaIdx = midSentence.indexOf(",", Math.floor(midSentence.length * 0.3));
+    if (commaIdx > 0 && commaIdx < midSentence.length - 10) {
+      const part1 = midSentence.slice(0, commaIdx).trim();
+      const part2 = midSentence.slice(commaIdx + 1).trim();
       const newPart2 = part2.charAt(0).toUpperCase() + part2.slice(1);
       const newPart1 = part1.endsWith(".") || part1.endsWith("!") || part1.endsWith("?")
         ? part1
         : part1 + ".";
       sentences[midIdx] = ` ${newPart1} ${newPart2}`;
-      return sentences.join("").replace(/\s{2,}/g, " ").trim();
+      return sentences.join("").replace(/[^\S\n]{2,}/g, " ").trim();
     }
-  }
 
-  return text;
+    const conjunctions = [" and ", " but ", " so ", " yet "];
+    for (const conj of conjunctions) {
+      const conjIdx = midSentence.indexOf(conj, Math.floor(midSentence.length * 0.3));
+      if (conjIdx > 0) {
+        const part1 = midSentence.slice(0, conjIdx).trim();
+        const part2 = midSentence.slice(conjIdx + conj.length).trim();
+        const newPart2 = part2.charAt(0).toUpperCase() + part2.slice(1);
+        const newPart1 = part1.endsWith(".") || part1.endsWith("!") || part1.endsWith("?")
+          ? part1
+          : part1 + ".";
+        sentences[midIdx] = ` ${newPart1} ${newPart2}`;
+        return sentences.join("").replace(/[^\S\n]{2,}/g, " ").trim();
+      }
+    }
+
+    return line;
+  });
+  return processedLines.join("\n");
 }
 
 // ---- Layer 3d: Strip AI punctuation signatures ----
@@ -403,9 +451,9 @@ function stripAIPunctuation(text: string): string {
   result = result.replace(/it('?s| is) worth (noting|mentioning) that\s*/gi, "");
   result = result.replace(/it('?s| is) important to note that\s*/gi, "");
 
-  // Clean up double spaces
-  result = result.replace(/\s{2,}/g, " ");
-  result = result.replace(/\s+([.,;:!?])/g, "$1");
+  // Clean up double spaces (preserve newlines)
+  result = result.replace(/[^\S\n]{2,}/g, " ");
+  result = result.replace(/[^\S\n]+([.,;:!?])/g, "$1");
 
   return result;
 }
@@ -460,8 +508,11 @@ export async function humanizeText(
   const systemPrompt = buildSystemPrompt(intensity);
   let totalTokens = 0;
 
+  // Protect URLs and technical terms before processing
+  const { protected: protectedText, tokens: protectedTokenMap } = protectTokens(text);
+
   // --- Pass 1 ---
-  const userPrompt = buildUserPrompt(text, tone, analysisResult, styleFingerprint, language);
+  const userPrompt = buildUserPrompt(protectedText, tone, analysisResult, styleFingerprint, language);
   const pass1 = await runClaudePass(systemPrompt, userPrompt, maxTokens);
   totalTokens += pass1.tokens;
 
@@ -510,7 +561,10 @@ export async function humanizeText(
   }
 
   // --- Layer 3: Post-processing ---
-  const humanizedText = postProcess(bestText);
+  let humanizedText = postProcess(bestText);
+
+  // Restore protected URLs and technical terms
+  humanizedText = restoreTokens(humanizedText, protectedTokenMap);
 
   return { humanizedText, tokensUsed: totalTokens };
 }
