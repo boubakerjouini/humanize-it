@@ -155,7 +155,9 @@ ${INTENSITY_INSTRUCTIONS[intensity] || ""}`;
 function buildUserPrompt(
   text: string,
   tone: ToneOption,
-  analysisResult: AnalysisResult
+  analysisResult: AnalysisResult,
+  styleFingerprint?: Record<string, string>,
+  language?: string
 ): string {
   const detectedPatternDescriptions = analysisResult.patterns
     .slice(0, 12)
@@ -167,12 +169,20 @@ function buildUserPrompt(
 
   const toneNote = TONE_INSTRUCTIONS[tone];
 
+  const styleSection = styleFingerprint
+    ? `\n## Match this writing style:\n${JSON.stringify(styleFingerprint, null, 2)}\n`
+    : "";
+
+  const languageSection = language && language !== "English"
+    ? `\n## Language: Write the output in ${language}. Preserve the meaning while writing naturally in ${language}.\n`
+    : "";
+
   return `Rewrite this text to be completely undetectable as AI-generated.
 
 ## Detected AI patterns in this text:
 ${detectedPatternDescriptions}
 
-${toneNote ? `## ${toneNote}\n` : ""}
+${toneNote ? `## ${toneNote}\n` : ""}${styleSection}${languageSection}
 ## Constraints:
 - Target word count: ${targetRange} words
 - Preserve the original meaning — do not invent facts not implied by the original
@@ -442,14 +452,16 @@ export async function humanizeText(
   text: string,
   tone: ToneOption,
   analysisResult: AnalysisResult,
-  intensity: IntensityLevel = "medium"
+  intensity: IntensityLevel = "medium",
+  styleFingerprint?: Record<string, string>,
+  language?: string
 ): Promise<{ humanizedText: string; tokensUsed: number }> {
   const maxTokens = Math.max(512, analysisResult.wordCount * 3);
   const systemPrompt = buildSystemPrompt(intensity);
   let totalTokens = 0;
 
   // --- Pass 1 ---
-  const userPrompt = buildUserPrompt(text, tone, analysisResult);
+  const userPrompt = buildUserPrompt(text, tone, analysisResult, styleFingerprint, language);
   const pass1 = await runClaudePass(systemPrompt, userPrompt, maxTokens);
   totalTokens += pass1.tokens;
 

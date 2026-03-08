@@ -5,7 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
-import type { AnalysisResult } from "@/lib/algorithms/analyzeText";
+import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse body
-    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown };
+    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; language?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { documentId, tone, intensity } = body;
+    const { documentId, tone, intensity, styleFingerprint, language } = body;
 
     if (typeof documentId !== "string" || !documentId) {
       return NextResponse.json(
@@ -105,19 +105,28 @@ export async function POST(req: Request) {
 
     // 6. Call humanizeText()
     const analysisResult = document.analysisResult as unknown as AnalysisResult;
+    const styleData = typeof styleFingerprint === "object" && styleFingerprint !== null
+      ? (styleFingerprint as Record<string, string>)
+      : undefined;
+    const langValue = typeof language === "string" && language ? language : undefined;
     const { humanizedText, tokensUsed } = await humanizeText(
       document.originalText,
       toneValue,
       analysisResult,
-      intensityValue
+      intensityValue,
+      styleData,
+      langValue
     );
 
-    // 7. Update document with rewritten text
+    // 7. Score the humanized text and update document
+    const humanizedAnalysis = analyzeText(humanizedText);
     await db.document.update({
       where: { id: document.id },
       data: {
         rewrittenText: humanizedText,
         rewriteModel: "claude-sonnet-4-5",
+        tone: toneValue,
+        humanizedScore: humanizedAnalysis.score,
       },
     });
 

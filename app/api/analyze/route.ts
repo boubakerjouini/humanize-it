@@ -89,9 +89,11 @@ export async function POST(req: Request) {
     const analysisResult = analyzeText(text);
 
     // 7. Save document to DB
+    const title = text.trim().slice(0, 50).replace(/\s+/g, " ");
     const document = await db.document.create({
       data: {
         userId: user.id,
+        title,
         originalText: text,
         analysisResult: JSON.parse(JSON.stringify(analysisResult)),
         overallScore: analysisResult.score,

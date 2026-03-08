@@ -2,14 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { FileText, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FileText, Plus, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, RotateCcw, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 interface Document {
   id: string;
+  title: string | null;
   originalText: string;
   overallScore: number;
+  humanizedScore: number | null;
   wordCount: number;
   rewrittenText: string | null;
+  tone: string | null;
   createdAt: string;
 }
 
@@ -21,33 +26,23 @@ interface DocumentsResponse {
     total: number;
     totalPages: number;
   };
-  error?: { message: string };
-}
-
-interface UsageResponse {
   plan: string;
+  totalAll: number;
   error?: { message: string };
 }
 
 function scoreColor(s: number): string {
-  if (s >= 80) return "#ef4444";
-  if (s >= 61) return "#8b5cf6";
-  if (s >= 31) return "#a78bfa";
+  if (s >= 75) return "#ef4444";
+  if (s >= 50) return "#f97316";
+  if (s >= 30) return "#eab308";
   return "#22c55e";
 }
 
 function scoreBg(s: number): string {
-  if (s >= 80) return "rgba(239,68,68,0.12)";
-  if (s >= 61) return "rgba(139,92,246,0.12)";
-  if (s >= 31) return "rgba(167,139,250,0.12)";
+  if (s >= 75) return "rgba(239,68,68,0.12)";
+  if (s >= 50) return "rgba(249,115,22,0.12)";
+  if (s >= 30) return "rgba(234,179,8,0.10)";
   return "rgba(34,197,94,0.12)";
-}
-
-function scoreLabel(s: number): string {
-  if (s >= 80) return "Very AI";
-  if (s >= 61) return "Likely AI";
-  if (s >= 31) return "Possibly AI";
-  return "Human";
 }
 
 function timeAgo(iso: string): string {
@@ -56,17 +51,24 @@ function timeAgo(iso: string): string {
   const hours = Math.floor(mins / 60);
   const days = Math.floor(hours / 24);
   if (days > 30) return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  if (days > 0) return `${days} day${days > 1 ? "s" : ""} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  if (mins > 0) return `${mins} min${mins > 1 ? "s" : ""} ago`;
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (mins > 0) return `${mins}m ago`;
   return "just now";
 }
 
 export default function HistoryPage() {
+  const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<string>("FREE");
+  const [totalAll, setTotalAll] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<{ originalText: string; rewrittenText: string | null } | null>(null);
+  const [expandLoading, setExpandLoading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
   const fetchDocuments = useCallback(async (page: number) => {
     setLoading(true);
     try {
@@ -75,23 +77,54 @@ export default function HistoryPage() {
       if (res.ok) {
         setDocuments(data.documents);
         setPagination({ page: data.pagination.page, totalPages: data.pagination.totalPages, total: data.pagination.total });
+        setPlan(data.plan ?? "FREE");
+        setTotalAll(data.totalAll ?? data.pagination.total);
       }
     } catch { /* ignore */ }
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetch("/api/usage")
-      .then(r => r.json())
-      .then((d: UsageResponse) => {
-        const p = d.plan ?? "FREE";
-        setPlan(p);
+  useEffect(() => { void fetchDocuments(1); }, [fetchDocuments]);
 
-        if (p !== "FREE") void fetchDocuments(1);
-        else setLoading(false);
-      })
-      .catch(() => { setLoading(false); });
-  }, [fetchDocuments]);
+  const handleExpand = async (docId: string) => {
+    if (expandedId === docId) {
+      setExpandedId(null);
+      setExpandedDoc(null);
+      return;
+    }
+    setExpandedId(docId);
+    setExpandedDoc(null);
+    setExpandLoading(true);
+    try {
+      const res = await fetch(`/api/documents/${docId}`);
+      if (res.ok) {
+        const data = await res.json() as { originalText: string; rewrittenText: string | null };
+        setExpandedDoc(data);
+      }
+    } catch { /* ignore */ }
+    finally { setExpandLoading(false); }
+  };
+
+  const handleDelete = async (docId: string) => {
+    setDeleting(docId);
+    try {
+      const res = await fetch(`/api/documents/${docId}`, { method: "DELETE" });
+      if (res.ok) {
+        setDocuments(prev => prev.filter(d => d.id !== docId));
+        if (expandedId === docId) { setExpandedId(null); setExpandedDoc(null); }
+        toast.success("Document deleted.");
+      } else {
+        toast.error("Failed to delete.");
+      }
+    } catch { toast.error("Network error."); }
+    finally { setDeleting(null); }
+  };
+
+  const handleReHumanize = (doc: Document) => {
+    // Prefill the editor with the original text
+    sessionStorage.setItem("prefill-text", expandedDoc?.originalText ?? doc.originalText);
+    router.push("/dashboard/editor");
+  };
 
   const isFree = plan === "FREE";
 
@@ -103,7 +136,9 @@ export default function HistoryPage() {
         <div>
           <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fafafa", letterSpacing: "-0.5px" }}>History</h1>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>
-            {isFree ? "Upgrade to Pro to unlock history" : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
+            {isFree
+              ? `Showing last 5 of ${totalAll} documents. Upgrade for full history.`
+              : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
           </p>
         </div>
         <Link href="/dashboard/editor" style={{
@@ -116,21 +151,21 @@ export default function HistoryPage() {
         </Link>
       </div>
 
-      {/* Free plan gate */}
-      {isFree && (
+      {/* Free plan upsell */}
+      {isFree && totalAll > 5 && (
         <div style={{
           background: "rgba(139,92,246,0.06)",
           border: "1px solid rgba(139,92,246,0.2)",
-          borderRadius: "8px", padding: "20px 24px",
+          borderRadius: "8px", padding: "16px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: "16px", marginBottom: "20px",
         }}>
           <div>
-            <p style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa", marginBottom: "4px" }}>
-              History available on Pro — $9/month
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa", marginBottom: "3px" }}>
+              {totalAll - 5} more document{totalAll - 5 > 1 ? "s" : ""} hidden
             </p>
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
-              Access 30 days of history, unlimited rewrites, all tone modes.
+            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>
+              Upgrade to Pro for full history, unlimited rewrites, all tones.
             </p>
           </div>
           <Link href="/dashboard/settings" style={{
@@ -138,7 +173,7 @@ export default function HistoryPage() {
             padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
             flexShrink: 0,
           }}>
-            Upgrade →
+            Upgrade
           </Link>
         </div>
       )}
@@ -169,77 +204,171 @@ export default function HistoryPage() {
             background: "#8b5cf6", color: "#09090b", fontWeight: 700,
             padding: "8px 20px", borderRadius: "6px", textDecoration: "none", fontSize: "13px",
           }}>
-            Open Editor →
+            Open Editor
           </Link>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {documents.map((doc, idx) => (
-            <Link
-              key={doc.id}
-              href={`/dashboard/editor?doc=${doc.id}`}
-              style={{ textDecoration: "none", display: "block" }}
-            >
-              <div style={{
-                background: idx % 2 === 0 ? "#0f0f12" : "rgba(255,255,255,0.015)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: "8px", padding: "14px 16px",
-                display: "flex", alignItems: "center", gap: "14px",
-                cursor: "pointer",
-                transition: "border-color 0.15s, border-left-color 0.15s",
-              }}
-                className="history-row"
-              >
-                {/* Index */}
-                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", width: "20px", textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-mono), monospace" }}>
-                  {(pagination.page - 1) * 10 + idx + 1}
-                </span>
+          {documents.map((doc, idx) => {
+            const isExpanded = expandedId === doc.id;
+            return (
+              <div key={doc.id}>
+                <div
+                  onClick={() => void handleExpand(doc.id)}
+                  style={{
+                    background: idx % 2 === 0 ? "#0f0f12" : "rgba(255,255,255,0.015)",
+                    border: `1px solid ${isExpanded ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.06)"}`,
+                    borderRadius: isExpanded ? "8px 8px 0 0" : "8px",
+                    padding: "14px 16px",
+                    display: "flex", alignItems: "center", gap: "14px",
+                    cursor: "pointer",
+                    transition: "border-color 0.15s",
+                  }}
+                  className="history-row"
+                >
+                  {/* Index */}
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", width: "20px", textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-mono), monospace" }}>
+                    {(pagination.page - 1) * 10 + idx + 1}
+                  </span>
 
-                {/* Content */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5,
-                    overflow: "hidden", display: "-webkit-box",
-                    WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-                    minWidth: 0, maxWidth: "100%",
-                  }}>
-                    {doc.originalText}
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace" }}>
-                      {doc.wordCount} words
+                  {/* Content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5,
+                      overflow: "hidden", display: "-webkit-box",
+                      WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                      minWidth: 0, maxWidth: "100%",
+                    }}>
+                      {doc.title || doc.originalText}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
+                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace" }}>
+                        {doc.wordCount} words
+                      </span>
+                      {doc.rewrittenText && (
+                        <span style={{ fontSize: "11px", color: "#22c55e", fontWeight: 600 }}>Humanized</span>
+                      )}
+                      {doc.tone && doc.tone !== "standard" && (
+                        <span style={{ fontSize: "10px", color: "rgba(139,92,246,0.6)", padding: "1px 5px", borderRadius: "3px", background: "rgba(139,92,246,0.08)" }}>
+                          {doc.tone}
+                        </span>
+                      )}
+                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>
+                        {timeAgo(doc.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Score badges */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                    <span style={{
+                      fontSize: "13px", fontWeight: 800, color: scoreColor(doc.overallScore),
+                      background: scoreBg(doc.overallScore),
+                      padding: "3px 8px", borderRadius: "5px",
+                      fontFamily: "var(--font-geist-mono), monospace",
+                    }}>
+                      {Math.round(doc.overallScore)}
                     </span>
-                    {doc.rewrittenText && (
-                      <span style={{ fontSize: "11px", color: "#22c55e", fontWeight: 600 }}>✓ Humanized</span>
+                    {doc.humanizedScore !== null && (
+                      <>
+                        <ArrowRight size={10} color="rgba(255,255,255,0.15)" />
+                        <span style={{
+                          fontSize: "13px", fontWeight: 800, color: scoreColor(doc.humanizedScore),
+                          background: scoreBg(doc.humanizedScore),
+                          padding: "3px 8px", borderRadius: "5px",
+                          fontFamily: "var(--font-geist-mono), monospace",
+                        }}>
+                          {Math.round(doc.humanizedScore)}
+                        </span>
+                      </>
                     )}
-                    <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>
-                      {timeAgo(doc.createdAt)}
-                    </span>
+                    {isExpanded ? <ChevronUp size={14} color="rgba(255,255,255,0.2)" /> : <ChevronDown size={14} color="rgba(255,255,255,0.2)" />}
                   </div>
                 </div>
 
-                {/* Score badge */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
-                  <span style={{
-                    fontSize: "13px", fontWeight: 800, color: scoreColor(doc.overallScore),
-                    background: scoreBg(doc.overallScore),
-                    padding: "3px 8px", borderRadius: "5px",
-                    fontFamily: "var(--font-geist-mono), monospace",
+                {/* Expanded view */}
+                {isExpanded && (
+                  <div style={{
+                    background: "#0a0a0d",
+                    border: "1px solid rgba(139,92,246,0.25)",
+                    borderTop: "none",
+                    borderRadius: "0 0 8px 8px",
+                    padding: "16px",
+                    animation: "fadeInDown 0.2s ease",
                   }}>
-                    {Math.round(doc.overallScore)}
-                  </span>
-                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>
-                    {scoreLabel(doc.overallScore)}
-                  </span>
-                </div>
+                    {expandLoading ? (
+                      <div style={{ padding: "20px", textAlign: "center" }}>
+                        <div className="spin-sm" style={{ margin: "0 auto 8px" }} />
+                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>Loading...</span>
+                      </div>
+                    ) : expandedDoc && (
+                      <>
+                        <div style={{ marginBottom: "12px" }}>
+                          <label style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                            Original Text
+                          </label>
+                          <div style={{
+                            padding: "12px", borderRadius: "6px",
+                            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+                            fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7,
+                            maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
+                          }}>
+                            {expandedDoc.originalText}
+                          </div>
+                        </div>
+                        {expandedDoc.rewrittenText && (
+                          <div style={{ marginBottom: "12px" }}>
+                            <label style={{ fontSize: "10px", color: "rgba(34,197,94,0.6)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                              Humanized Text
+                            </label>
+                            <div style={{
+                              padding: "12px", borderRadius: "6px",
+                              background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)",
+                              fontSize: "13px", color: "rgba(255,255,255,0.7)", lineHeight: 1.7,
+                              maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
+                            }}>
+                              {expandedDoc.rewrittenText}
+                            </div>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                          <button
+                            onClick={() => handleReHumanize(doc)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "5px",
+                              padding: "7px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                              background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)",
+                              color: "#a78bfa", cursor: "pointer",
+                            }}
+                          >
+                            <RotateCcw size={11} /> Re-humanize
+                          </button>
+                          <button
+                            onClick={() => void handleDelete(doc.id)}
+                            disabled={deleting === doc.id}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "5px",
+                              padding: "7px 14px", borderRadius: "6px", fontSize: "12px",
+                              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)",
+                              color: "#ef4444", cursor: deleting === doc.id ? "not-allowed" : "pointer",
+                              opacity: deleting === doc.id ? 0.5 : 1,
+                            }}
+                          >
+                            <Trash2 size={11} /> {deleting === doc.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
+      {!isFree && pagination.totalPages > 1 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "24px" }}>
           <button
             onClick={() => void fetchDocuments(pagination.page - 1)}
@@ -282,6 +411,17 @@ export default function HistoryPage() {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
         }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .spin-sm {
+          width: 14px; height: 14px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.15);
+          border-top-color: #8b5cf6;
+          animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
