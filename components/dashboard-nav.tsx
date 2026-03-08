@@ -2,13 +2,14 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { PenLine, History, Settings, Zap, Crown, Sparkles, LayoutDashboard } from "lucide-react";
+import { PenLine, History, Settings, Zap, Crown, Sparkles, LayoutDashboard, Code2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard, desc: "Overview", exact: true },
   { href: "/dashboard/editor", label: "Editor", icon: PenLine, desc: "Analyze & humanize" },
   { href: "/dashboard/history", label: "History", icon: History, desc: "Past documents" },
+  { href: "/dashboard/api", label: "API", icon: Code2, desc: "Developer access" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, desc: "Account & usage" },
 ];
 
