@@ -35,8 +35,8 @@ model ApiKey {
   id                  String    @id @default(cuid())
   userId              String
   name                String    @default("Default")
-  keyHash             String    @unique
-  keyPrefix           String
+  keyHash             String?   @unique
+  keyPrefix           String    @default("")
   monthlyRequestCount Int       @default(0)
   monthlyResetAt      DateTime  @default(now())
   lastUsedAt          DateTime?
