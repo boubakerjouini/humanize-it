@@ -27,10 +27,14 @@ export async function GET(req: Request) {
       },
     });
 
+    const isFree = user.plan === "FREE";
+
     const url = new URL(req.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
-    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "10", 10)));
-    const skip = (page - 1) * limit;
+    const rawLimit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "10", 10)));
+    // FREE users: cap at 5 docs total
+    const limit = isFree ? Math.min(rawLimit, 5) : rawLimit;
+    const skip = isFree ? 0 : (page - 1) * limit;
 
     const [documents, total] = await Promise.all([
       db.document.findMany({
@@ -40,10 +44,13 @@ export async function GET(req: Request) {
         take: limit,
         select: {
           id: true,
+          title: true,
           originalText: true,
           overallScore: true,
+          humanizedScore: true,
           wordCount: true,
           rewrittenText: true,
+          tone: true,
           createdAt: true,
         },
       }),
@@ -55,14 +62,18 @@ export async function GET(req: Request) {
       originalText: doc.originalText.slice(0, 200),
     }));
 
+    const effectiveTotal = isFree ? Math.min(total, 5) : total;
+
     return NextResponse.json({
       documents: truncatedDocuments,
       pagination: {
-        page,
+        page: isFree ? 1 : page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        total: effectiveTotal,
+        totalPages: isFree ? 1 : Math.ceil(total / limit),
       },
+      plan: user.plan,
+      totalAll: total,
     });
   } catch (err) {
     console.error("[documents] error:", err);

@@ -31,15 +31,18 @@ model User {
 }
 
 model Document {
-  id             String   @id @default(cuid())
-  userId         String
-  originalText   String
-  analysisResult Json
-  overallScore   Float
-  rewrittenText  String?
-  rewriteModel   String?
-  wordCount      Int
-  createdAt      DateTime @default(now())
+  id              String   @id @default(cuid())
+  userId          String
+  title           String?
+  originalText    String
+  analysisResult  Json
+  overallScore    Float
+  rewrittenText   String?
+  rewriteModel    String?
+  tone            String?
+  humanizedScore  Float?
+  wordCount       Int
+  createdAt       DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

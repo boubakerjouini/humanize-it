@@ -5,7 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { humanizeText, type ToneOption } from "@/lib/algorithms/humanizeText";
-import type { AnalysisResult } from "@/lib/algorithms/analyzeText";
+import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { checkAndResetQuota } from "@/lib/quota";
@@ -111,12 +111,15 @@ export async function POST(req: Request) {
       langValue
     );
 
-    // 7. Update document with rewritten text
+    // 7. Score the humanized text and update document
+    const humanizedAnalysis = analyzeText(humanizedText);
     await db.document.update({
       where: { id: document.id },
       data: {
         rewrittenText: humanizedText,
         rewriteModel: "claude-sonnet-4-5",
+        tone: toneValue,
+        humanizedScore: humanizedAnalysis.score,
       },
     });
 
