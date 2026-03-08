@@ -10,7 +10,7 @@ function rateLimitHeaders(auth: { monthlyRequestCount: number; apiRequestsLimit:
   return {
     "X-RateLimit-Limit": String(auth.apiRequestsLimit),
     "X-RateLimit-Remaining": String(Math.max(0, auth.apiRequestsLimit - auth.monthlyRequestCount)),
-    "X-RateLimit-Reset": String(Math.floor(auth.monthlyResetAt.getTime() / 1000)),
+    "X-RateLimit-Reset": String(auth.monthlyResetAt.getTime()) // ms timestamp,
   };
 }
 

@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const headers = {
       "X-RateLimit-Limit": String(authResult.apiRequestsLimit),
       "X-RateLimit-Remaining": String(Math.max(0, authResult.apiRequestsLimit - authResult.monthlyRequestCount)),
-      "X-RateLimit-Reset": String(Math.floor(authResult.monthlyResetAt.getTime() / 1000)),
+      "X-RateLimit-Reset": String(authResult.monthlyResetAt.getTime()) // ms timestamp,
     };
 
     const user = await db.user.findUnique({

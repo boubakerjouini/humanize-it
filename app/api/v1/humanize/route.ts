@@ -13,7 +13,7 @@ function rateLimitHeaders(auth: { monthlyRequestCount: number; apiRequestsLimit:
   return {
     "X-RateLimit-Limit": String(auth.apiRequestsLimit),
     "X-RateLimit-Remaining": String(Math.max(0, auth.apiRequestsLimit - auth.monthlyRequestCount)),
-    "X-RateLimit-Reset": String(Math.floor(auth.monthlyResetAt.getTime() / 1000)),
+    "X-RateLimit-Reset": String(auth.monthlyResetAt.getTime()), // ms timestamp
   };
 }
 
@@ -72,11 +72,15 @@ export async function POST(req: Request) {
 
     const analysisResult = analyzeText(text);
     const { humanizedText, tokensUsed } = await humanizeText(text, toneValue, analysisResult, intensityValue);
+    const humanizedAnalysis = analyzeText(humanizedText);
 
     return NextResponse.json({
       humanizedText,
+      originalScore: Math.round(analysisResult.score),
+      humanizedScore: Math.round(humanizedAnalysis.score),
+      scoreDelta: Math.round(analysisResult.score - humanizedAnalysis.score),
+      confidenceBand: humanizedAnalysis.confidenceBand,
       tokensUsed,
-      originalScore: analysisResult.score,
     }, { headers });
   } catch (err) {
     console.error("[v1/humanize] error:", err);
