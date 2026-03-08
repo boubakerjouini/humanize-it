@@ -4,7 +4,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { humanizeText, type ToneOption } from "@/lib/algorithms/humanizeText";
+import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import type { AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse body
-    let body: { documentId?: unknown; tone?: unknown };
+    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { documentId, tone } = body;
+    const { documentId, tone, intensity } = body;
 
     if (typeof documentId !== "string" || !documentId) {
       return NextResponse.json(
@@ -50,6 +50,12 @@ export async function POST(req: Request) {
       typeof tone === "string" && VALID_TONES.includes(tone as ToneOption)
         ? (tone as ToneOption)
         : "standard";
+
+    const VALID_INTENSITIES: IntensityLevel[] = ["light", "medium", "heavy"];
+    const intensityValue: IntensityLevel =
+      typeof intensity === "string" && VALID_INTENSITIES.includes(intensity as IntensityLevel)
+        ? (intensity as IntensityLevel)
+        : "medium";
 
     // 3. Load user (auto-upsert in case webhook didn't fire)
     const user = await db.user.upsert({
@@ -102,7 +108,8 @@ export async function POST(req: Request) {
     const { humanizedText, tokensUsed } = await humanizeText(
       document.originalText,
       toneValue,
-      analysisResult
+      analysisResult,
+      intensityValue
     );
 
     // 7. Update document with rewritten text

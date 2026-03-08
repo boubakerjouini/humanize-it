@@ -7,10 +7,17 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
+type IntensityLevel = "light" | "medium" | "heavy";
+
+const INTENSITIES: { value: IntensityLevel; label: string; desc: string }[] = [
+  { value: "light", label: "Light", desc: "Subtle tweaks, keep original voice" },
+  { value: "medium", label: "Medium", desc: "Balanced rewrite" },
+  { value: "heavy", label: "Heavy", desc: "Complete overhaul" },
+];
 
 interface AnalyzeResponse {
   score: number;
@@ -159,6 +166,7 @@ export default function EditorPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [humanizing, setHumanizing] = useState(false);
   const [tone, setTone] = useState<ToneOption>("standard");
+  const [intensity, setIntensity] = useState<IntensityLevel>("medium");
   const [showAllPatterns, setShowAllPatterns] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -224,7 +232,7 @@ export default function EditorPage() {
     setHumanizedScore(null);
 
     try {
-      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone }) });
+      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, intensity }) });
       const data = await res.json() as { humanizedText?: string; error?: { message: string } };
       if (res.status === 402) { setShowUpgradeModal(true); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
@@ -392,6 +400,32 @@ export default function EditorPage() {
                   display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
                 }}
               />
+
+              {/* Intensity slider */}
+              <div style={{
+                padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
+                display: "flex", alignItems: "center", gap: "10px",
+              }}>
+                <SlidersHorizontal size={11} color="rgba(255,255,255,0.25)" />
+                <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Intensity</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, maxWidth: "220px" }}>
+                  {INTENSITIES.map(({ value, label }) => (
+                    <button key={value} onClick={() => setIntensity(value)} style={{
+                      flex: 1, padding: "4px 0", borderRadius: "4px", fontSize: "10px", fontWeight: 600,
+                      cursor: "pointer", border: "none", transition: "all 0.15s",
+                      background: intensity === value
+                        ? value === "light" ? "rgba(34,197,94,0.15)" : value === "medium" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)"
+                        : "rgba(255,255,255,0.03)",
+                      color: intensity === value
+                        ? value === "light" ? "#22c55e" : value === "medium" ? "#f97316" : "#ef4444"
+                        : "rgba(255,255,255,0.2)",
+                    }}>{label}</button>
+                  ))}
+                </div>
+                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
+                  {INTENSITIES.find(i => i.value === intensity)?.desc}
+                </span>
+              </div>
 
               {/* Toolbar */}
               <div style={{
