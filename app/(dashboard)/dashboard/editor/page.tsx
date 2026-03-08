@@ -7,10 +7,18 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3 } from "lucide-react";
 import { toast } from "sonner";
+import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
 
-type ToneOption = "standard" | "formal" | "casual" | "academic";
+type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
+type IntensityLevel = "light" | "medium" | "heavy";
+
+const INTENSITIES: { value: IntensityLevel; label: string; desc: string }[] = [
+  { value: "light", label: "Light", desc: "Subtle tweaks, keep original voice" },
+  { value: "medium", label: "Medium", desc: "Balanced rewrite" },
+  { value: "heavy", label: "Heavy", desc: "Complete overhaul" },
+];
 
 interface AnalyzeResponse {
   score: number;
@@ -21,11 +29,13 @@ interface AnalyzeResponse {
   documentId: string;
 }
 
-const TONES: { value: ToneOption; label: string }[] = [
-  { value: "standard", label: "Standard" },
-  { value: "formal", label: "Formal" },
-  { value: "casual", label: "Casual" },
-  { value: "academic", label: "Academic" },
+const TONES: { value: ToneOption; label: string; icon: string }[] = [
+  { value: "standard", label: "Standard", icon: "\u2696\uFE0F" },
+  { value: "formal", label: "Formal", icon: "\uD83C\uDFA9" },
+  { value: "casual", label: "Casual", icon: "\u2615" },
+  { value: "academic", label: "Academic", icon: "\uD83C\uDF93" },
+  { value: "storytelling", label: "Story", icon: "\uD83D\uDCD6" },
+  { value: "professional", label: "Pro", icon: "\uD83D\uDCBC" },
 ];
 
 function getScoreConfig(score: number) {
@@ -157,10 +167,16 @@ export default function EditorPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [humanizing, setHumanizing] = useState(false);
   const [tone, setTone] = useState<ToneOption>("standard");
+  const [intensity, setIntensity] = useState<IntensityLevel>("medium");
   const [showAllPatterns, setShowAllPatterns] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
+  const [paragraphMode, setParagraphMode] = useState(false);
+  const [paraScores, setParaScores] = useState<Record<number, number | null>>({});
+  const [paraHumanized, setParaHumanized] = useState<Record<number, string | null>>({});
+  const [paraHumanizing, setParaHumanizing] = useState<Record<number, boolean>>({});
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -222,7 +238,7 @@ export default function EditorPage() {
     setHumanizedScore(null);
 
     try {
-      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone }) });
+      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, intensity }) });
       const data = await res.json() as { humanizedText?: string; error?: { message: string } };
       if (res.status === 402) { setShowUpgradeModal(true); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
@@ -252,8 +268,70 @@ export default function EditorPage() {
     setHumanizedText(null);
     setHumanizedScore(null);
     setShowAllPatterns(false);
+    setParaScores({});
+    setParaHumanized({});
+    setParaHumanizing({});
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
+
+  // Paragraph mode helpers
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+
+  const handleAnalyzeParagraph = useCallback(async (paraText: string, idx: number) => {
+    if (!paraText || paraText.trim().length < 10) return;
+    try {
+      const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: paraText }) });
+      if (res.ok) {
+        const data = await res.json() as AnalyzeResponse;
+        setParaScores(prev => ({ ...prev, [idx]: data.score }));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleHumanizeParagraph = useCallback(async (idx: number) => {
+    const para = paragraphs[idx];
+    if (!para || para.trim().length < 10) return;
+    if (!isSignedIn) { setShowAuthModal(true); return; }
+
+    setParaHumanizing(prev => ({ ...prev, [idx]: true }));
+    try {
+      // First analyze the paragraph to get a documentId
+      const analyzeRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: para }) });
+      if (!analyzeRes.ok) { toast.error("Analysis failed."); return; }
+      const analyzeData = await analyzeRes.json() as AnalyzeResponse;
+
+      // Then humanize it
+      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: analyzeData.documentId, tone, intensity }) });
+      const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+      if (res.status === 402) { setShowUpgradeModal(true); return; }
+      if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
+
+      setParaHumanized(prev => ({ ...prev, [idx]: data.humanizedText ?? null }));
+
+      // Re-analyze for score
+      if (data.humanizedText) {
+        try {
+          const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.humanizedText }) });
+          if (reRes.ok) {
+            const reData = await reRes.json() as AnalyzeResponse;
+            setParaScores(prev => ({ ...prev, [idx]: reData.score }));
+          }
+        } catch { /* ignore */ }
+      }
+    } catch { toast.error("Network error."); }
+    finally { setParaHumanizing(prev => ({ ...prev, [idx]: false })); }
+  }, [paragraphs, tone, intensity, isSignedIn]);
+
+  // Auto-analyze paragraphs when paragraph mode is toggled on and we have result
+  useEffect(() => {
+    if (!paragraphMode || !result) return;
+    paragraphs.forEach((p, i) => {
+      if (p.trim().length >= 10 && paraScores[i] === undefined) {
+        void handleAnalyzeParagraph(p, i);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paragraphMode, result]);
 
   // Word count color
   const wordCountColor = wordCount === 0 ? "rgba(255,255,255,0.2)"
@@ -300,15 +378,16 @@ export default function EditorPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {/* Tone selector */}
-          <div style={{ display: "flex", gap: "3px" }}>
-            {TONES.map(({ value, label }) => (
+          <div style={{ display: "flex", gap: "3px", flexWrap: "wrap" }}>
+            {TONES.map(({ value, label, icon }) => (
               <button key={value} onClick={() => setTone(value)} style={{
-                padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
+                padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
                 border: `1px solid ${tone === value ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.06)"}`,
                 background: tone === value ? "rgba(139,92,246,0.12)" : "transparent",
                 color: tone === value ? "#8b5cf6" : "rgba(255,255,255,0.3)",
                 transition: "all 0.15s",
-              }}>{label}</button>
+                display: "flex", alignItems: "center", gap: "4px",
+              }}><span style={{ fontSize: "12px" }}>{icon}</span>{label}</button>
             ))}
           </div>
           {(result || humanizedText) && (
@@ -356,8 +435,20 @@ export default function EditorPage() {
                   <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.8 : 0.4 }} />
                 ))}
                 <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.15)", marginLeft: "8px", fontFamily: "monospace" }}>
-                  {analyzing ? "scanning…" : "your text"}
+                  {analyzing ? "scanning..." : "your text"}
                 </span>
+                {result && !analyzing && (
+                  <button onClick={() => setParagraphMode(p => !p)} style={{
+                    marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px",
+                    padding: "3px 8px", borderRadius: "4px", fontSize: "10px", cursor: "pointer",
+                    border: `1px solid ${paragraphMode ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.08)"}`,
+                    background: paragraphMode ? "rgba(139,92,246,0.1)" : "transparent",
+                    color: paragraphMode ? "#a78bfa" : "rgba(255,255,255,0.25)",
+                    transition: "all 0.15s",
+                  }}>
+                    <Rows3 size={10} /> Paragraph Mode
+                  </button>
+                )}
                 {analyzing && (
                   <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                     <div className="scan-pulse" />
@@ -390,6 +481,32 @@ export default function EditorPage() {
                 }}
               />
 
+              {/* Intensity slider */}
+              <div style={{
+                padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
+                display: "flex", alignItems: "center", gap: "10px",
+              }}>
+                <SlidersHorizontal size={11} color="rgba(255,255,255,0.25)" />
+                <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Intensity</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, maxWidth: "220px" }}>
+                  {INTENSITIES.map(({ value, label }) => (
+                    <button key={value} onClick={() => setIntensity(value)} style={{
+                      flex: 1, padding: "4px 0", borderRadius: "4px", fontSize: "10px", fontWeight: 600,
+                      cursor: "pointer", border: "none", transition: "all 0.15s",
+                      background: intensity === value
+                        ? value === "light" ? "rgba(34,197,94,0.15)" : value === "medium" ? "rgba(249,115,22,0.15)" : "rgba(239,68,68,0.15)"
+                        : "rgba(255,255,255,0.03)",
+                      color: intensity === value
+                        ? value === "light" ? "#22c55e" : value === "medium" ? "#f97316" : "#ef4444"
+                        : "rgba(255,255,255,0.2)",
+                    }}>{label}</button>
+                  ))}
+                </div>
+                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>
+                  {INTENSITIES.find(i => i.value === intensity)?.desc}
+                </span>
+              </div>
+
               {/* Toolbar */}
               <div style={{
                 padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
@@ -420,6 +537,88 @@ export default function EditorPage() {
                 </button>
               </div>
             </div>
+
+            {/* Paragraph Mode Cards */}
+            {paragraphMode && result && paragraphs.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", animation: "fadeInUp 0.3s ease" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                  <Rows3 size={12} color="#a78bfa" />
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
+                    {paragraphs.length} paragraph{paragraphs.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {paragraphs.map((para, idx) => {
+                  const score = paraScores[idx];
+                  const hText = paraHumanized[idx];
+                  const isHumanizing = paraHumanizing[idx] ?? false;
+                  const scoreColor = score === null || score === undefined ? "rgba(255,255,255,0.1)"
+                    : score >= 75 ? "#ef4444" : score >= 50 ? "#f97316" : score >= 30 ? "#eab308" : "#22c55e";
+
+                  return (
+                    <div key={idx} style={{
+                      background: "#0f0f12", borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}>
+                      {/* Paragraph score bar */}
+                      <div style={{
+                        height: "3px", background: "rgba(255,255,255,0.03)",
+                        borderRadius: "10px 10px 0 0", overflow: "hidden",
+                      }}>
+                        <div style={{
+                          height: "100%", width: score != null ? `${score}%` : "0%",
+                          background: scoreColor,
+                          transition: "width 0.5s ease, background 0.3s",
+                        }} />
+                      </div>
+                      <div style={{
+                        padding: "10px 14px",
+                        display: "flex", alignItems: "flex-start", gap: "10px",
+                      }}>
+                        {/* Score dot */}
+                        <div style={{
+                          width: "8px", height: "8px", borderRadius: "50%",
+                          background: scoreColor, flexShrink: 0, marginTop: "5px",
+                          transition: "background 0.3s",
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: "13px", lineHeight: 1.7,
+                            color: hText ? "#22c55e" : "rgba(255,255,255,0.7)",
+                            whiteSpace: "pre-wrap", wordBreak: "break-word",
+                          }}>
+                            {hText ?? para}
+                          </div>
+                          {score != null && (
+                            <span style={{
+                              fontSize: "10px", fontWeight: 600,
+                              color: scoreColor, opacity: 0.7, marginTop: "4px", display: "inline-block",
+                            }}>
+                              {Math.round(score)}% AI
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => void handleHumanizeParagraph(idx)}
+                          disabled={isHumanizing}
+                          style={{
+                            padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600,
+                            border: "1px solid rgba(139,92,246,0.2)",
+                            background: isHumanizing ? "rgba(139,92,246,0.08)" : "rgba(139,92,246,0.1)",
+                            color: isHumanizing ? "rgba(255,255,255,0.3)" : "#a78bfa",
+                            cursor: isHumanizing ? "not-allowed" : "pointer",
+                            flexShrink: 0, transition: "all 0.15s",
+                            display: "flex", alignItems: "center", gap: "4px",
+                          }}
+                        >
+                          {isHumanizing ? <><div className="spin-sm" style={{ width: 8, height: 8, borderWidth: 1.5 }} /></> : <><Sparkles size={9} /> Humanize</>}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Humanized output */}
             {(humanizing || isDone) && (
@@ -457,37 +656,58 @@ export default function EditorPage() {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => void handleCopy()} style={{
-                        display: "flex", alignItems: "center", gap: "5px",
-                        background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
-                        border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
-                        borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                        color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
-                        transition: "all 0.2s",
-                      }}>
-                        <Copy size={10} /> {copied ? "Copied!" : "Copy"}
-                      </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <button onClick={() => setShowDiff(d => !d)} style={{
+                          display: "flex", alignItems: "center", gap: "4px",
+                          background: showDiff ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.05)",
+                          border: `1px solid ${showDiff ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
+                          color: showDiff ? "#a78bfa" : "rgba(255,255,255,0.45)", fontSize: "11px",
+                          transition: "all 0.2s",
+                        }}>
+                          <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
+                        </button>
+                        <button onClick={() => void handleCopy()} style={{
+                          display: "flex", alignItems: "center", gap: "5px",
+                          background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
+                          border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
+                          color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
+                          transition: "all 0.2s",
+                        }}>
+                          <Copy size={10} /> {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
                     </div>
                     <div style={{
                       padding: "16px", fontSize: "14px", lineHeight: 1.8,
                       color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap",
                       maxHeight: "380px", overflow: "auto",
                     }}>
-                      {humanizedText}
+                      {showDiff ? (
+                        computeWordDiff(text, humanizedText).map((seg: DiffSegment, i: number) => (
+                          <span key={i} style={
+                            seg.type === "removed" ? { background: "rgba(239,68,68,0.15)", color: "#ef4444", textDecoration: "line-through", borderRadius: "2px", padding: "0 1px" }
+                            : seg.type === "added" ? { background: "rgba(34,197,94,0.15)", color: "#22c55e", borderRadius: "2px", padding: "0 1px" }
+                            : {}
+                          }>{seg.text}</span>
+                        ))
+                      ) : humanizedText}
                     </div>
                     <div style={{
                       padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
                       display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
                     }}>
                       <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginRight: "2px" }}>Try tone:</span>
-                      {TONES.map(({ value, label }) => (
+                      {TONES.map(({ value, label, icon }) => (
                         <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
-                          padding: "4px 10px", borderRadius: "5px", fontSize: "11px",
+                          padding: "4px 10px", borderRadius: "20px", fontSize: "11px",
                           background: tone === value ? "rgba(139,92,246,0.12)" : "rgba(255,255,255,0.04)",
                           border: `1px solid ${tone === value ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
                           color: tone === value ? "#a78bfa" : "rgba(255,255,255,0.35)", cursor: "pointer",
                           transition: "all 0.15s",
-                        }}>{label}</button>
+                          display: "flex", alignItems: "center", gap: "3px",
+                        }}><span style={{ fontSize: "11px" }}>{icon}</span>{label}</button>
                       ))}
                     </div>
                   </>

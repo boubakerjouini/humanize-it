@@ -8,7 +8,8 @@ import type { AnalysisResult } from "./analyzeText";
 import { analyzeText } from "./analyzeText";
 import { AI_VOCABULARY_TIER_1, SYCOPHANTIC_PHRASES } from "./patterns";
 
-export type ToneOption = "standard" | "formal" | "casual" | "academic";
+export type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
+export type IntensityLevel = "light" | "medium" | "heavy";
 
 // ---- Layer 3a: Forbidden word synonym map ----
 
@@ -69,11 +70,25 @@ const TONE_INSTRUCTIONS: Record<ToneOption, string> = {
     "Tone: relaxed and friendly. Contractions expected. Short sentences welcome.",
   academic:
     "Tone: scholarly and precise. Skip contractions, but keep short sentences, specificity, and varied rhythm.",
+  storytelling:
+    "Tone: narrative and engaging. Use anecdotes, vivid descriptions, and a storytelling arc. Write as if sharing an experience or explaining through a story. Weave in sensory details and personal observations.",
+  professional:
+    "Tone: polished business writing. Clear, direct, and authoritative. Use active voice, data-driven language, and executive-level clarity. No fluff, no filler. Write like a senior consultant's memo.",
+};
+
+// ---- Intensity instructions ----
+
+const INTENSITY_INSTRUCTIONS: Record<IntensityLevel, string> = {
+  light:
+    "INTENSITY: LIGHT. Make minimal changes. Keep the original voice and structure as much as possible. Only fix the most obvious AI tells (em dashes, banned words, uniform sentence length). Do NOT restructure paragraphs or rewrite sentences that already sound natural.",
+  medium: "",
+  heavy:
+    "INTENSITY: HEAVY. Completely overhaul this text. Restructure every paragraph. Rewrite every sentence from scratch. Change the opening, reorganize the flow, vary paragraph lengths dramatically. The output should share the same meaning but read like a completely different person wrote it. Be bold and creative.",
 };
 
 // ---- Layer 1: Radical system prompt ----
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(intensity: IntensityLevel = "medium"): string {
   return `You are a human rewriter. Your ONLY job: make AI-generated text completely undetectable by GPTZero, Turnitin, Originality.ai, and Copyleaks.
 
 THESE ARE THE EXACT SIGNALS DETECTORS USE — ELIMINATE ALL OF THEM:
@@ -130,7 +145,9 @@ G) BANNED STRUCTURES:
    - Oxford comma in every list (mix it up: sometimes skip it)
    - All paragraphs the same length
 
-OUTPUT RULE: Return ONLY the rewritten text. No intro like "Here is..." or "Sure, here's...". Just the text.`;
+OUTPUT RULE: Return ONLY the rewritten text. No intro like "Here is..." or "Sure, here's...". Just the text.
+
+${INTENSITY_INSTRUCTIONS[intensity] || ""}`;
 }
 
 // ---- Build user prompt for first pass ----
@@ -424,10 +441,11 @@ async function runClaudePass(
 export async function humanizeText(
   text: string,
   tone: ToneOption,
-  analysisResult: AnalysisResult
+  analysisResult: AnalysisResult,
+  intensity: IntensityLevel = "medium"
 ): Promise<{ humanizedText: string; tokensUsed: number }> {
   const maxTokens = Math.max(512, analysisResult.wordCount * 3);
-  const systemPrompt = buildSystemPrompt();
+  const systemPrompt = buildSystemPrompt(intensity);
   let totalTokens = 0;
 
   // --- Pass 1 ---
