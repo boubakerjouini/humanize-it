@@ -7,7 +7,7 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3 } from "lucide-react";
 import { toast } from "sonner";
 import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
 
@@ -173,6 +173,10 @@ export default function EditorPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
+  const [paragraphMode, setParagraphMode] = useState(false);
+  const [paraScores, setParaScores] = useState<Record<number, number | null>>({});
+  const [paraHumanized, setParaHumanized] = useState<Record<number, string | null>>({});
+  const [paraHumanizing, setParaHumanizing] = useState<Record<number, boolean>>({});
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -264,8 +268,70 @@ export default function EditorPage() {
     setHumanizedText(null);
     setHumanizedScore(null);
     setShowAllPatterns(false);
+    setParaScores({});
+    setParaHumanized({});
+    setParaHumanizing({});
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
+
+  // Paragraph mode helpers
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+
+  const handleAnalyzeParagraph = useCallback(async (paraText: string, idx: number) => {
+    if (!paraText || paraText.trim().length < 10) return;
+    try {
+      const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: paraText }) });
+      if (res.ok) {
+        const data = await res.json() as AnalyzeResponse;
+        setParaScores(prev => ({ ...prev, [idx]: data.score }));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleHumanizeParagraph = useCallback(async (idx: number) => {
+    const para = paragraphs[idx];
+    if (!para || para.trim().length < 10) return;
+    if (!isSignedIn) { setShowAuthModal(true); return; }
+
+    setParaHumanizing(prev => ({ ...prev, [idx]: true }));
+    try {
+      // First analyze the paragraph to get a documentId
+      const analyzeRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: para }) });
+      if (!analyzeRes.ok) { toast.error("Analysis failed."); return; }
+      const analyzeData = await analyzeRes.json() as AnalyzeResponse;
+
+      // Then humanize it
+      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: analyzeData.documentId, tone, intensity }) });
+      const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+      if (res.status === 402) { setShowUpgradeModal(true); return; }
+      if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
+
+      setParaHumanized(prev => ({ ...prev, [idx]: data.humanizedText ?? null }));
+
+      // Re-analyze for score
+      if (data.humanizedText) {
+        try {
+          const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.humanizedText }) });
+          if (reRes.ok) {
+            const reData = await reRes.json() as AnalyzeResponse;
+            setParaScores(prev => ({ ...prev, [idx]: reData.score }));
+          }
+        } catch { /* ignore */ }
+      }
+    } catch { toast.error("Network error."); }
+    finally { setParaHumanizing(prev => ({ ...prev, [idx]: false })); }
+  }, [paragraphs, tone, intensity, isSignedIn]);
+
+  // Auto-analyze paragraphs when paragraph mode is toggled on and we have result
+  useEffect(() => {
+    if (!paragraphMode || !result) return;
+    paragraphs.forEach((p, i) => {
+      if (p.trim().length >= 10 && paraScores[i] === undefined) {
+        void handleAnalyzeParagraph(p, i);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paragraphMode, result]);
 
   // Word count color
   const wordCountColor = wordCount === 0 ? "rgba(255,255,255,0.2)"
@@ -369,8 +435,20 @@ export default function EditorPage() {
                   <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.8 : 0.4 }} />
                 ))}
                 <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.15)", marginLeft: "8px", fontFamily: "monospace" }}>
-                  {analyzing ? "scanning…" : "your text"}
+                  {analyzing ? "scanning..." : "your text"}
                 </span>
+                {result && !analyzing && (
+                  <button onClick={() => setParagraphMode(p => !p)} style={{
+                    marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px",
+                    padding: "3px 8px", borderRadius: "4px", fontSize: "10px", cursor: "pointer",
+                    border: `1px solid ${paragraphMode ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.08)"}`,
+                    background: paragraphMode ? "rgba(139,92,246,0.1)" : "transparent",
+                    color: paragraphMode ? "#a78bfa" : "rgba(255,255,255,0.25)",
+                    transition: "all 0.15s",
+                  }}>
+                    <Rows3 size={10} /> Paragraph Mode
+                  </button>
+                )}
                 {analyzing && (
                   <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                     <div className="scan-pulse" />
@@ -459,6 +537,88 @@ export default function EditorPage() {
                 </button>
               </div>
             </div>
+
+            {/* Paragraph Mode Cards */}
+            {paragraphMode && result && paragraphs.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", animation: "fadeInUp 0.3s ease" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                  <Rows3 size={12} color="#a78bfa" />
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
+                    {paragraphs.length} paragraph{paragraphs.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                {paragraphs.map((para, idx) => {
+                  const score = paraScores[idx];
+                  const hText = paraHumanized[idx];
+                  const isHumanizing = paraHumanizing[idx] ?? false;
+                  const scoreColor = score === null || score === undefined ? "rgba(255,255,255,0.1)"
+                    : score >= 75 ? "#ef4444" : score >= 50 ? "#f97316" : score >= 30 ? "#eab308" : "#22c55e";
+
+                  return (
+                    <div key={idx} style={{
+                      background: "#0f0f12", borderRadius: "10px",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      overflow: "hidden",
+                    }}>
+                      {/* Paragraph score bar */}
+                      <div style={{
+                        height: "3px", background: "rgba(255,255,255,0.03)",
+                        borderRadius: "10px 10px 0 0", overflow: "hidden",
+                      }}>
+                        <div style={{
+                          height: "100%", width: score != null ? `${score}%` : "0%",
+                          background: scoreColor,
+                          transition: "width 0.5s ease, background 0.3s",
+                        }} />
+                      </div>
+                      <div style={{
+                        padding: "10px 14px",
+                        display: "flex", alignItems: "flex-start", gap: "10px",
+                      }}>
+                        {/* Score dot */}
+                        <div style={{
+                          width: "8px", height: "8px", borderRadius: "50%",
+                          background: scoreColor, flexShrink: 0, marginTop: "5px",
+                          transition: "background 0.3s",
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: "13px", lineHeight: 1.7,
+                            color: hText ? "#22c55e" : "rgba(255,255,255,0.7)",
+                            whiteSpace: "pre-wrap", wordBreak: "break-word",
+                          }}>
+                            {hText ?? para}
+                          </div>
+                          {score != null && (
+                            <span style={{
+                              fontSize: "10px", fontWeight: 600,
+                              color: scoreColor, opacity: 0.7, marginTop: "4px", display: "inline-block",
+                            }}>
+                              {Math.round(score)}% AI
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => void handleHumanizeParagraph(idx)}
+                          disabled={isHumanizing}
+                          style={{
+                            padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600,
+                            border: "1px solid rgba(139,92,246,0.2)",
+                            background: isHumanizing ? "rgba(139,92,246,0.08)" : "rgba(139,92,246,0.1)",
+                            color: isHumanizing ? "rgba(255,255,255,0.3)" : "#a78bfa",
+                            cursor: isHumanizing ? "not-allowed" : "pointer",
+                            flexShrink: 0, transition: "all 0.15s",
+                            display: "flex", alignItems: "center", gap: "4px",
+                          }}
+                        >
+                          {isHumanizing ? <><div className="spin-sm" style={{ width: 8, height: 8, borderWidth: 1.5 }} /></> : <><Sparkles size={9} /> Humanize</>}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Humanized output */}
             {(humanizing || isDone) && (
