@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse body
-    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; language?: unknown };
+    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; language?: unknown; aggressiveHint?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { documentId, tone, intensity, styleFingerprint, language } = body;
+    const { documentId, tone, intensity, styleFingerprint, language, aggressiveHint } = body;
 
     if (typeof documentId !== "string" || !documentId) {
       return NextResponse.json(
@@ -109,13 +109,15 @@ export async function POST(req: Request) {
       ? (styleFingerprint as Record<string, string>)
       : undefined;
     const langValue = typeof language === "string" && language ? language : undefined;
+    const hintValue = typeof aggressiveHint === "string" ? aggressiveHint : undefined;
     const { humanizedText, tokensUsed } = await humanizeText(
       document.originalText,
       toneValue,
       analysisResult,
       intensityValue,
       styleData,
-      langValue
+      langValue,
+      hintValue
     );
 
     // 7. Score the humanized text and update document

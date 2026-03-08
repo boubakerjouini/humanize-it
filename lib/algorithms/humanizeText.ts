@@ -502,10 +502,14 @@ export async function humanizeText(
   analysisResult: AnalysisResult,
   intensity: IntensityLevel = "medium",
   styleFingerprint?: Record<string, string>,
-  language?: string
+  language?: string,
+  aggressiveHint?: string
 ): Promise<{ humanizedText: string; tokensUsed: number }> {
   const maxTokens = Math.max(512, analysisResult.wordCount * 3);
-  const systemPrompt = buildSystemPrompt(intensity);
+  let systemPrompt = buildSystemPrompt(intensity);
+  if (aggressiveHint) {
+    systemPrompt += `\n\n${aggressiveHint}`;
+  }
   let totalTokens = 0;
 
   // Protect URLs and technical terms before processing
