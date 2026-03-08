@@ -7,8 +7,9 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows } from "lucide-react";
 import { toast } from "sonner";
+import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
 type IntensityLevel = "light" | "medium" | "heavy";
@@ -171,6 +172,7 @@ export default function EditorPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -494,23 +496,43 @@ export default function EditorPage() {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => void handleCopy()} style={{
-                        display: "flex", alignItems: "center", gap: "5px",
-                        background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
-                        border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
-                        borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                        color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
-                        transition: "all 0.2s",
-                      }}>
-                        <Copy size={10} /> {copied ? "Copied!" : "Copy"}
-                      </button>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                        <button onClick={() => setShowDiff(d => !d)} style={{
+                          display: "flex", alignItems: "center", gap: "4px",
+                          background: showDiff ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.05)",
+                          border: `1px solid ${showDiff ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
+                          color: showDiff ? "#a78bfa" : "rgba(255,255,255,0.45)", fontSize: "11px",
+                          transition: "all 0.2s",
+                        }}>
+                          <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
+                        </button>
+                        <button onClick={() => void handleCopy()} style={{
+                          display: "flex", alignItems: "center", gap: "5px",
+                          background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
+                          border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
+                          borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
+                          color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
+                          transition: "all 0.2s",
+                        }}>
+                          <Copy size={10} /> {copied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
                     </div>
                     <div style={{
                       padding: "16px", fontSize: "14px", lineHeight: 1.8,
                       color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap",
                       maxHeight: "380px", overflow: "auto",
                     }}>
-                      {humanizedText}
+                      {showDiff ? (
+                        computeWordDiff(text, humanizedText).map((seg: DiffSegment, i: number) => (
+                          <span key={i} style={
+                            seg.type === "removed" ? { background: "rgba(239,68,68,0.15)", color: "#ef4444", textDecoration: "line-through", borderRadius: "2px", padding: "0 1px" }
+                            : seg.type === "added" ? { background: "rgba(34,197,94,0.15)", color: "#22c55e", borderRadius: "2px", padding: "0 1px" }
+                            : {}
+                          }>{seg.text}</span>
+                        ))
+                      ) : humanizedText}
                     </div>
                     <div style={{
                       padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
