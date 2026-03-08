@@ -27,6 +27,9 @@ export interface PlanConfig {
   lsVariantId: string | null;
   /** Lemon Squeezy variant ID (annual) — set LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID / LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID */
   lsVariantIdAnnual?: string | null;
+  uploadEnabled: boolean;
+  uploadMaxWords: number;
+  uploadMonthlyLimit: number;
 }
 
 export const PLANS: Record<PlanId, PlanConfig> = {
@@ -47,6 +50,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiRequestsLimit: 0,
     apiKeysMax: 0,
     lsVariantId: null,
+    uploadEnabled: false,
+    uploadMaxWords: 0,
+    uploadMonthlyLimit: 0,
   },
   PRO: {
     id: "PRO",
@@ -67,6 +73,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiKeysMax: 3,
     lsVariantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID ?? null,
     lsVariantIdAnnual: process.env.LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID ?? null,
+    uploadEnabled: true,
+    uploadMaxWords: 10_000,
+    uploadMonthlyLimit: 20,
   },
   TEAM: {
     id: "TEAM",
@@ -87,6 +96,9 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiKeysMax: 10,
     lsVariantId: process.env.LEMONSQUEEZY_TEAM_VARIANT_ID ?? null,
     lsVariantIdAnnual: process.env.LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID ?? null,
+    uploadEnabled: true,
+    uploadMaxWords: 50_000,
+    uploadMonthlyLimit: 100,
   },
 } as const;
 
