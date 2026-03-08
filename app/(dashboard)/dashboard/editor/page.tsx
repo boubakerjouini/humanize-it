@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { usePostHog } from "posthog-js/react";
 import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { computeReadability, type ReadabilityMetrics } from "@/lib/readability";
+import { exportDocx, exportPdf } from "@/lib/export";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, FileText, FileDown, Layers, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic";
+type EditorMode = "single" | "bulk";
 
 interface AnalyzeResponse {
   score: number;
@@ -19,6 +22,16 @@ interface AnalyzeResponse {
   stats: { burstiness: number; typeTokenRatio: number; avgSentenceLength: number; fleschReadingEase: number };
   wordCount: number;
   documentId: string;
+}
+
+interface BulkItem {
+  id: number;
+  text: string;
+  result: AnalyzeResponse | null;
+  humanizedText: string | null;
+  humanizedScore: number | null;
+  status: "pending" | "analyzing" | "analyzed" | "humanizing" | "done" | "error";
+  error?: string;
 }
 
 const TONES: { value: ToneOption; label: string }[] = [
@@ -147,6 +160,117 @@ function HumanizingState() {
   );
 }
 
+// ── Readability Panel ──
+function ReadabilityPanel({ originalText, humanizedText }: { originalText: string; humanizedText: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const original = useMemo(() => computeReadability(originalText), [originalText]);
+  const humanized = useMemo(() => humanizedText ? computeReadability(humanizedText) : null, [humanizedText]);
+
+  const MetricRow = ({ label, originalVal, originalColor, humanizedVal, humanizedColor }: {
+    label: string; originalVal: string; originalColor: string; humanizedVal?: string; humanizedColor?: string;
+  }) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", flex: 1 }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <span style={{ fontSize: "12px", fontWeight: 700, color: originalColor, minWidth: "50px", textAlign: "right" }}>{originalVal}</span>
+        {humanizedVal !== undefined && (
+          <>
+            <ArrowRight size={9} color="rgba(255,255,255,0.15)" />
+            <span style={{ fontSize: "12px", fontWeight: 700, color: humanizedColor ?? originalColor, minWidth: "50px", textAlign: "right" }}>{humanizedVal}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{
+      background: "#0f0f12", borderRadius: "12px",
+      border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
+      animation: "fadeInUp 0.4s ease 0.15s both",
+    }}>
+      <button
+        onClick={() => setExpanded(e => !e)}
+        style={{
+          width: "100%", padding: "12px 16px",
+          background: "transparent", border: "none",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          cursor: "pointer", color: "rgba(255,255,255,0.65)",
+        }}
+      >
+        <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12px", fontWeight: 600 }}>
+          <BookOpen size={13} color="#8b5cf6" /> Readability Analysis
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{
+            fontSize: "11px", padding: "2px 8px", borderRadius: "4px",
+            background: `${original.fleschColor}15`, color: original.fleschColor,
+            fontWeight: 700,
+          }}>
+            {original.fleschLabel}
+          </span>
+          {expanded ? <ChevronUp size={13} color="rgba(255,255,255,0.3)" /> : <ChevronDown size={13} color="rgba(255,255,255,0.3)" />}
+        </div>
+      </button>
+      {expanded && (
+        <div style={{ padding: "4px 16px 14px", animation: "fadeInUp 0.2s ease" }}>
+          {humanized && (
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "24px", marginBottom: "4px", paddingBottom: "6px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Original</span>
+              <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px" }}>Humanized</span>
+            </div>
+          )}
+          <MetricRow
+            label="Flesch Reading Ease"
+            originalVal={`${original.fleschScore}`}
+            originalColor={original.fleschColor}
+            humanizedVal={humanized ? `${humanized.fleschScore}` : undefined}
+            humanizedColor={humanized?.fleschColor}
+          />
+          <MetricRow
+            label="Reading Time"
+            originalVal={`${original.readingTimeMinutes} min`}
+            originalColor="rgba(255,255,255,0.7)"
+            humanizedVal={humanized ? `${humanized.readingTimeMinutes} min` : undefined}
+            humanizedColor="rgba(255,255,255,0.7)"
+          />
+          <MetricRow
+            label="Avg Sentence Length"
+            originalVal={`${original.avgSentenceLength}w`}
+            originalColor={original.avgSentenceLength >= 18 && original.avgSentenceLength <= 25 ? "#f97316" : "#22c55e"}
+            humanizedVal={humanized ? `${humanized.avgSentenceLength}w` : undefined}
+            humanizedColor={humanized ? (humanized.avgSentenceLength >= 18 && humanized.avgSentenceLength <= 25 ? "#f97316" : "#22c55e") : undefined}
+          />
+          <MetricRow
+            label="Vocabulary Richness"
+            originalVal={`${original.vocabularyRichness}%`}
+            originalColor={original.vocabularyRichness < 40 ? "#f97316" : "#22c55e"}
+            humanizedVal={humanized ? `${humanized.vocabularyRichness}%` : undefined}
+            humanizedColor={humanized ? (humanized.vocabularyRichness < 40 ? "#f97316" : "#22c55e") : undefined}
+          />
+          <MetricRow
+            label="Grade Level"
+            originalVal={`${original.gradeLevel}`}
+            originalColor={original.gradeLevel > 12 ? "#f97316" : "#22c55e"}
+            humanizedVal={humanized ? `${humanized.gradeLevel}` : undefined}
+            humanizedColor={humanized ? (humanized.gradeLevel > 12 ? "#f97316" : "#22c55e") : undefined}
+          />
+          <div style={{ marginTop: "6px", display: "flex", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
+              Grade: {original.gradeLevelLabel}
+            </span>
+            {humanized && (
+              <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
+                Grade: {humanized.gradeLevelLabel}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EditorPage() {
   const { isSignedIn } = useAuth();
   const posthog = usePostHog();
@@ -163,6 +287,22 @@ export default function EditorPage() {
   const [copied, setCopied] = useState(false);
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Bulk mode state
+  const [editorMode, setEditorMode] = useState<EditorMode>("single");
+  const [bulkText, setBulkText] = useState("");
+  const [bulkItems, setBulkItems] = useState<BulkItem[]>([]);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
+  const [userPlan, setUserPlan] = useState<string>("FREE");
+  const bulkAbortRef = useRef(false);
+
+  // Fetch user plan
+  useEffect(() => {
+    fetch("/api/user-plan").then(r => r.ok ? r.json() : null).then((d: { plan?: string } | null) => {
+      if (d?.plan) setUserPlan(d.plan);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const prefill = sessionStorage.getItem("prefill-text");
@@ -255,6 +395,121 @@ export default function EditorPage() {
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
+  // ── Export handlers ──
+  const handleExportDocx = useCallback(async () => {
+    if (!humanizedText || !result) return;
+    try {
+      await exportDocx({
+        originalText: text,
+        humanizedText,
+        aiScore: result.score,
+        humanizedScore,
+        date: new Date(),
+      });
+      posthog?.capture("export_docx");
+      toast.success("Downloaded .docx");
+    } catch { toast.error("Export failed."); }
+  }, [humanizedText, result, text, humanizedScore, posthog]);
+
+  const handleExportPdf = useCallback(() => {
+    if (!humanizedText || !result) return;
+    try {
+      exportPdf({
+        originalText: text,
+        humanizedText,
+        aiScore: result.score,
+        humanizedScore,
+        date: new Date(),
+      });
+      posthog?.capture("export_pdf");
+      toast.success("Downloaded PDF");
+    } catch { toast.error("Export failed."); }
+  }, [humanizedText, result, text, humanizedScore, posthog]);
+
+  // ── Bulk mode handlers ──
+  const parseBulkTexts = useCallback(() => {
+    const texts = bulkText.split("---").map(t => t.trim()).filter(t => t.length >= 10);
+    return texts.map((t, i) => ({
+      id: i,
+      text: t,
+      result: null,
+      humanizedText: null,
+      humanizedScore: null,
+      status: "pending" as const,
+    }));
+  }, [bulkText]);
+
+  const handleBulkAnalyze = useCallback(async () => {
+    if (!isSignedIn) { setShowAuthModal(true); return; }
+    if (userPlan === "FREE") { setShowUpgradeModal(true); return; }
+
+    const items = parseBulkTexts();
+    if (items.length === 0) { toast.error("No valid texts found. Separate with ---"); return; }
+    setBulkItems(items);
+    setBulkProcessing(true);
+    setBulkProgress({ current: 0, total: items.length });
+    bulkAbortRef.current = false;
+
+    for (let i = 0; i < items.length; i++) {
+      if (bulkAbortRef.current) break;
+      setBulkProgress({ current: i + 1, total: items.length });
+      setBulkItems(prev => prev.map(item => item.id === i ? { ...item, status: "analyzing" } : item));
+
+      try {
+        const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: items[i].text }) });
+        if (res.status === 402) { setShowUpgradeModal(true); setBulkProcessing(false); return; }
+        const data = await res.json() as AnalyzeResponse & { error?: { message: string } };
+        if (!res.ok) {
+          setBulkItems(prev => prev.map(item => item.id === i ? { ...item, status: "error", error: data.error?.message ?? "Failed" } : item));
+          continue;
+        }
+        setBulkItems(prev => prev.map(item => item.id === i ? { ...item, result: data, status: "analyzed" } : item));
+      } catch {
+        setBulkItems(prev => prev.map(item => item.id === i ? { ...item, status: "error", error: "Network error" } : item));
+      }
+    }
+    setBulkProcessing(false);
+  }, [isSignedIn, userPlan, parseBulkTexts]);
+
+  const handleBulkHumanize = useCallback(async () => {
+    if (!isSignedIn) { setShowAuthModal(true); return; }
+    if (userPlan === "FREE") { setShowUpgradeModal(true); return; }
+
+    const analyzed = bulkItems.filter(item => item.result && item.status === "analyzed");
+    if (analyzed.length === 0) { toast.error("Analyze texts first."); return; }
+    setBulkProcessing(true);
+    bulkAbortRef.current = false;
+
+    for (let i = 0; i < analyzed.length; i++) {
+      if (bulkAbortRef.current) break;
+      const item = analyzed[i];
+      setBulkProgress({ current: i + 1, total: analyzed.length });
+      setBulkItems(prev => prev.map(b => b.id === item.id ? { ...b, status: "humanizing" } : b));
+
+      try {
+        const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: item.result!.documentId, tone }) });
+        if (res.status === 402) { setShowUpgradeModal(true); setBulkProcessing(false); return; }
+        const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+        if (!res.ok) {
+          setBulkItems(prev => prev.map(b => b.id === item.id ? { ...b, status: "error", error: data.error?.message ?? "Failed" } : b));
+          continue;
+        }
+
+        let hScore: number | null = null;
+        if (data.humanizedText) {
+          try {
+            const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.humanizedText }) });
+            if (reRes.ok) { const reData = await reRes.json() as AnalyzeResponse; hScore = reData.score; }
+          } catch { /* ignore */ }
+        }
+        setBulkItems(prev => prev.map(b => b.id === item.id ? { ...b, humanizedText: data.humanizedText ?? null, humanizedScore: hScore, status: "done" } : b));
+      } catch {
+        setBulkItems(prev => prev.map(b => b.id === item.id ? { ...b, status: "error", error: "Network error" } : b));
+      }
+    }
+    setBulkProcessing(false);
+  }, [bulkItems, isSignedIn, userPlan, tone]);
+
   // Word count color
   const wordCountColor = wordCount === 0 ? "rgba(255,255,255,0.2)"
     : wordCount > 1800 ? "#ef4444"
@@ -276,26 +531,55 @@ export default function EditorPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <Sparkles size={15} color="#8b5cf6" />
           <h1 style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa", margin: 0 }}>Editor</h1>
-          {/* Step breadcrumb */}
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            {[
-              { label: "Write", done: !!result || analyzing },
-              { label: "Analyze", done: !!result, active: analyzing },
-              { label: "Humanize", done: isDone, active: humanizing },
-            ].map(({ label, done, active }, i) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                {i > 0 && <div style={{ width: "14px", height: "1px", background: done || active ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.08)" }} />}
-                <span style={{
-                  fontSize: "11px", fontWeight: done || active ? 600 : 400,
-                  color: done ? "#22c55e" : active ? "#a78bfa" : "rgba(255,255,255,0.25)",
-                  display: "flex", alignItems: "center", gap: "3px",
-                }}>
-                  {done && <CheckCircle2 size={9} />}
-                  {label}
-                </span>
-              </div>
-            ))}
+
+          {/* Mode toggle */}
+          <div style={{ display: "flex", gap: "2px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", padding: "2px" }}>
+            <button onClick={() => setEditorMode("single")} style={{
+              padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
+              border: "none",
+              background: editorMode === "single" ? "rgba(139,92,246,0.15)" : "transparent",
+              color: editorMode === "single" ? "#a78bfa" : "rgba(255,255,255,0.3)",
+              transition: "all 0.15s",
+            }}>Single</button>
+            <button onClick={() => {
+              if (userPlan === "FREE" && !isSignedIn) { setShowAuthModal(true); return; }
+              if (userPlan === "FREE") { setShowUpgradeModal(true); return; }
+              setEditorMode("bulk");
+            }} style={{
+              padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
+              border: "none",
+              background: editorMode === "bulk" ? "rgba(139,92,246,0.15)" : "transparent",
+              color: editorMode === "bulk" ? "#a78bfa" : "rgba(255,255,255,0.3)",
+              display: "flex", alignItems: "center", gap: "4px",
+              transition: "all 0.15s",
+            }}>
+              <Layers size={10} /> Bulk
+              {userPlan === "FREE" && <span style={{ fontSize: "8px", background: "#8b5cf6", color: "#fff", padding: "1px 4px", borderRadius: "3px", fontWeight: 700 }}>PRO</span>}
+            </button>
           </div>
+
+          {/* Step breadcrumb (single mode only) */}
+          {editorMode === "single" && (
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              {[
+                { label: "Write", done: !!result || analyzing },
+                { label: "Analyze", done: !!result, active: analyzing },
+                { label: "Humanize", done: isDone, active: humanizing },
+              ].map(({ label, done, active }, i) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  {i > 0 && <div style={{ width: "14px", height: "1px", background: done || active ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.08)" }} />}
+                  <span style={{
+                    fontSize: "11px", fontWeight: done || active ? 600 : 400,
+                    color: done ? "#22c55e" : active ? "#a78bfa" : "rgba(255,255,255,0.25)",
+                    display: "flex", alignItems: "center", gap: "3px",
+                  }}>
+                    {done && <CheckCircle2 size={9} />}
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -311,7 +595,7 @@ export default function EditorPage() {
               }}>{label}</button>
             ))}
           </div>
-          {(result || humanizedText) && (
+          {editorMode === "single" && (result || humanizedText) && (
             <button onClick={handleReset} style={{
               display: "flex", alignItems: "center", gap: "4px",
               background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
@@ -324,340 +608,575 @@ export default function EditorPage() {
         </div>
       </div>
 
-      {/* ── Main Grid ── */}
+      {/* ── Main Content ── */}
       <div style={{ flex: 1, padding: "20px 24px", overflow: "auto" }}>
-        <div className="editor-grid" style={{
-          display: "grid",
-          gridTemplateColumns: showRightPanel ? "1fr 400px" : "1fr",
-          gap: "20px",
-          maxWidth: showRightPanel ? "1120px" : "720px",
-          margin: "0 auto",
-          transition: "max-width 0.4s ease",
-        }}>
 
-          {/* ── LEFT: Textarea + Humanized ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: 0 }}>
+        {/* ── SINGLE MODE ── */}
+        {editorMode === "single" && (
+          <div className="editor-grid" style={{
+            display: "grid",
+            gridTemplateColumns: showRightPanel ? "1fr 400px" : "1fr",
+            gap: "20px",
+            maxWidth: showRightPanel ? "1120px" : "720px",
+            margin: "0 auto",
+            transition: "max-width 0.4s ease",
+          }}>
 
-            {/* Textarea card */}
-            <div style={{
-              background: "#0f0f12", borderRadius: "12px",
-              border: `1.5px solid ${analyzing ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.07)"}`,
-              overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
-              boxShadow: analyzing ? "0 0 30px rgba(139,92,246,0.08)" : "none",
-            }}>
-              {/* Mac-style toolbar */}
-              <div style={{
-                padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)",
-                display: "flex", alignItems: "center", gap: "6px",
-                background: analyzing ? "rgba(139,92,246,0.04)" : "transparent",
-                transition: "background 0.3s",
-              }}>
-                {["#ef4444", "#eab308", "#22c55e"].map((c, i) => (
-                  <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.8 : 0.4 }} />
-                ))}
-                <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.15)", marginLeft: "8px", fontFamily: "monospace" }}>
-                  {analyzing ? "scanning…" : "your text"}
-                </span>
-                {analyzing && (
-                  <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div className="scan-pulse" />
-                    <span style={{ fontSize: "10px", color: "#a78bfa" }}>Analyzing</span>
-                  </div>
-                )}
-              </div>
+            {/* ── LEFT: Textarea + Humanized ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: 0 }}>
 
-              {/* Scan progress bar */}
-              {analyzing && (
-                <div style={{ height: "2px", background: "rgba(255,255,255,0.04)" }}>
-                  <div className="scan-bar" style={{ height: "100%", background: "linear-gradient(90deg, #8b5cf6, #a78bfa, #8b5cf6)", backgroundSize: "200% 100%" }} />
-                </div>
-              )}
-
-              <textarea
-                ref={textareaRef}
-                value={text}
-                onChange={e => {
-                  setText(e.target.value);
-                  if (result) { setResult(null); setHumanizedText(null); setHumanizedScore(null); }
-                }}
-                placeholder={"Paste or type AI-generated text here…\n\nTip: try text that starts with \"In today's rapidly evolving landscape\" or uses words like \"furthermore\", \"pivotal\", \"paradigm\""}
-                style={{
-                  width: "100%", minHeight: "280px", padding: "16px",
-                  background: "transparent", border: "none", outline: "none",
-                  resize: "vertical", color: "#f0f0f8", fontSize: "14px",
-                  lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
-                  display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
-                }}
-              />
-
-              {/* Toolbar */}
-              <div style={{
-                padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-              }}>
-                <span style={{ fontSize: "11px", color: wordCountColor, fontVariantNumeric: "tabular-nums", transition: "color 0.3s" }}>
-                  {wordCount > 0 ? `${wordCount.toLocaleString()} words` : "Paste text to get started"}
-                </span>
-                <button
-                  onClick={() => void handleAnalyze()}
-                  disabled={!canAnalyze}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "7px",
-                    padding: "10px 22px", borderRadius: "8px", border: "none",
-                    background: canAnalyze ? "linear-gradient(135deg, #8b5cf6, #7c3aed)" : "rgba(139,92,246,0.12)",
-                    color: canAnalyze ? "#fff" : "rgba(255,255,255,0.2)",
-                    fontSize: "13px", fontWeight: 700,
-                    cursor: canAnalyze ? "pointer" : "not-allowed",
-                    transition: "all 0.2s", flexShrink: 0,
-                    boxShadow: canAnalyze ? "0 4px 16px rgba(139,92,246,0.3)" : "none",
-                  }}
-                >
-                  {analyzing ? (
-                    <><div className="spin-sm" /> Scanning…</>
-                  ) : (
-                    <><Zap size={13} /> {result ? "Re-analyze" : "Analyze"} <ArrowRight size={11} /></>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Humanized output */}
-            {(humanizing || isDone) && (
+              {/* Textarea card */}
               <div style={{
                 background: "#0f0f12", borderRadius: "12px",
-                border: `1.5px solid ${isDone ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.2)"}`,
-                overflow: "hidden", animation: "fadeInUp 0.35s ease",
+                border: `1.5px solid ${analyzing ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.07)"}`,
+                overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
+                boxShadow: analyzing ? "0 0 30px rgba(139,92,246,0.08)" : "none",
               }}>
-                {humanizing ? (
-                  <HumanizingState />
-                ) : humanizedText && (
-                  <>
+                {/* Mac-style toolbar */}
+                <div style={{
+                  padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex", alignItems: "center", gap: "6px",
+                  background: analyzing ? "rgba(139,92,246,0.04)" : "transparent",
+                  transition: "background 0.3s",
+                }}>
+                  {["#ef4444", "#eab308", "#22c55e"].map((c, i) => (
+                    <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.8 : 0.4 }} />
+                  ))}
+                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.15)", marginLeft: "8px", fontFamily: "monospace" }}>
+                    {analyzing ? "scanning…" : "your text"}
+                  </span>
+                  {analyzing && (
+                    <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div className="scan-pulse" />
+                      <span style={{ fontSize: "10px", color: "#a78bfa" }}>Analyzing</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Scan progress bar */}
+                {analyzing && (
+                  <div style={{ height: "2px", background: "rgba(255,255,255,0.04)" }}>
+                    <div className="scan-bar" style={{ height: "100%", background: "linear-gradient(90deg, #8b5cf6, #a78bfa, #8b5cf6)", backgroundSize: "200% 100%" }} />
+                  </div>
+                )}
+
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={e => {
+                    setText(e.target.value);
+                    if (result) { setResult(null); setHumanizedText(null); setHumanizedScore(null); }
+                  }}
+                  placeholder={"Paste or type AI-generated text here…\n\nTip: try text that starts with \"In today's rapidly evolving landscape\" or uses words like \"furthermore\", \"pivotal\", \"paradigm\""}
+                  style={{
+                    width: "100%", minHeight: "280px", padding: "16px",
+                    background: "transparent", border: "none", outline: "none",
+                    resize: "vertical", color: "#f0f0f8", fontSize: "14px",
+                    lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
+                    display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
+                  }}
+                />
+
+                {/* Toolbar */}
+                <div style={{
+                  padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "11px", color: wordCountColor, fontVariantNumeric: "tabular-nums", transition: "color 0.3s" }}>
+                    {wordCount > 0 ? `${wordCount.toLocaleString()} words` : "Paste text to get started"}
+                  </span>
+                  <button
+                    onClick={() => void handleAnalyze()}
+                    disabled={!canAnalyze}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "7px",
+                      padding: "10px 22px", borderRadius: "8px", border: "none",
+                      background: canAnalyze ? "linear-gradient(135deg, #8b5cf6, #7c3aed)" : "rgba(139,92,246,0.12)",
+                      color: canAnalyze ? "#fff" : "rgba(255,255,255,0.2)",
+                      fontSize: "13px", fontWeight: 700,
+                      cursor: canAnalyze ? "pointer" : "not-allowed",
+                      transition: "all 0.2s", flexShrink: 0,
+                      boxShadow: canAnalyze ? "0 4px 16px rgba(139,92,246,0.3)" : "none",
+                    }}
+                  >
+                    {analyzing ? (
+                      <><div className="spin-sm" /> Scanning…</>
+                    ) : (
+                      <><Zap size={13} /> {result ? "Re-analyze" : "Analyze"} <ArrowRight size={11} /></>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Humanized output */}
+              {(humanizing || isDone) && (
+                <div style={{
+                  background: "#0f0f12", borderRadius: "12px",
+                  border: `1.5px solid ${isDone ? "rgba(34,197,94,0.25)" : "rgba(139,92,246,0.2)"}`,
+                  overflow: "hidden", animation: "fadeInUp 0.35s ease",
+                }}>
+                  {humanizing ? (
+                    <HumanizingState />
+                  ) : humanizedText && (
+                    <>
+                      <div style={{
+                        padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e", display: "flex", alignItems: "center", gap: "5px" }}>
+                            <CheckCircle2 size={13} /> Humanized
+                          </span>
+                          {humanizedScore !== null && result && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, background: "rgba(239,68,68,0.1)", color: "#ef4444", textDecoration: "line-through", opacity: 0.6 }}>
+                                {Math.round(result.score)}%
+                              </span>
+                              <ArrowRight size={9} color="rgba(255,255,255,0.2)" />
+                              <span style={{
+                                fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,
+                                background: humanizedScore < 30 ? "rgba(34,197,94,0.12)" : "rgba(249,115,22,0.1)",
+                                color: humanizedScore < 30 ? "#22c55e" : "#f97316",
+                                animation: "popIn 0.4s ease",
+                              }}>
+                                {Math.round(humanizedScore)}%
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {/* Export buttons */}
+                          <button onClick={() => void handleExportDocx()} title="Download .docx" style={{
+                            display: "flex", alignItems: "center", gap: "4px",
+                            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
+                            color: "rgba(255,255,255,0.45)", fontSize: "11px", transition: "all 0.2s",
+                          }}>
+                            <FileText size={10} /> .docx
+                          </button>
+                          <button onClick={handleExportPdf} title="Download PDF" style={{
+                            display: "flex", alignItems: "center", gap: "4px",
+                            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
+                            color: "rgba(255,255,255,0.45)", fontSize: "11px", transition: "all 0.2s",
+                          }}>
+                            <FileDown size={10} /> PDF
+                          </button>
+                          <button onClick={() => void handleCopy()} style={{
+                            display: "flex", alignItems: "center", gap: "5px",
+                            background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
+                            border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
+                            borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
+                            color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
+                            transition: "all 0.2s",
+                          }}>
+                            <Copy size={10} /> {copied ? "Copied!" : "Copy"}
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: "16px", fontSize: "14px", lineHeight: 1.8,
+                        color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap",
+                        maxHeight: "380px", overflow: "auto",
+                      }}>
+                        {humanizedText}
+                      </div>
+                      <div style={{
+                        padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
+                        display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
+                      }}>
+                        <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginRight: "2px" }}>Try tone:</span>
+                        {TONES.map(({ value, label }) => (
+                          <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
+                            padding: "4px 10px", borderRadius: "5px", fontSize: "11px",
+                            background: tone === value ? "rgba(139,92,246,0.12)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${tone === value ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
+                            color: tone === value ? "#a78bfa" : "rgba(255,255,255,0.35)", cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}>{label}</button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── RIGHT: Score + Patterns + Readability ── */}
+            {showRightPanel && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+                {/* Score card */}
+                <div style={{
+                  background: analyzing ? "#0f0f12" : (scoreConfig?.dimColor ?? "#0f0f12"),
+                  border: `1px solid ${analyzing ? "rgba(255,255,255,0.07)" : (scoreConfig?.border ?? "rgba(255,255,255,0.07)")}`,
+                  borderRadius: "14px", padding: "22px",
+                  animation: analyzing ? "none" : "fadeInUp 0.35s ease",
+                  transition: "background 0.5s, border-color 0.5s",
+                }}>
+                  {analyzing ? (
+                    /* Skeleton */
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                        <div style={{ width: 140, height: 140, borderRadius: "50%", flexShrink: 0 }}>
+                          <Skeleton width={140} height={140} radius={70} />
+                        </div>
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <Skeleton width="70%" height={12} />
+                          <Skeleton width="90%" height={10} />
+                          <Skeleton width="55%" height={10} />
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        {[0, 1, 2, 3].map(i => <Skeleton key={i} height={52} radius={8} />)}
+                      </div>
+                    </div>
+                  ) : result && scoreConfig && (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "18px" }}>
+                        <ScoreRing score={result.score} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "1.2px", color: scoreConfig.color, textTransform: "uppercase", marginBottom: "6px" }}>
+                            {scoreConfig.label}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: "6px" }}>
+                            {scoreConfig.desc}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                            {result.confidenceBand}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Stats */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                        {[
+                          { label: "Burstiness", val: result.stats.burstiness.toFixed(2), bad: result.stats.burstiness < 0.2, tip: "Sentence variation — low = AI uniform rhythm" },
+                          { label: "Vocab Diversity", val: result.stats.typeTokenRatio.toFixed(2), bad: result.stats.typeTokenRatio < 0.4, tip: "Word variety — low = repetitive word reuse" },
+                          { label: "Avg Sentence", val: `${result.stats.avgSentenceLength}w`, bad: result.stats.avgSentenceLength >= 18 && result.stats.avgSentenceLength <= 25, tip: "AI clusters around 18-25 words/sentence" },
+                          { label: "Readability", val: result.stats.fleschReadingEase.toFixed(0), bad: result.stats.fleschReadingEase >= 40 && result.stats.fleschReadingEase <= 60, tip: "Flesch score — AI typically scores 40-60" },
+                        ].map(({ label, val, bad, tip }) => (
+                          <div key={label} title={tip} style={{ background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "10px 12px", cursor: "help" }}>
+                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)", marginBottom: "4px" }}>{label}</div>
+                            <div style={{ fontSize: "18px", fontWeight: 800, color: bad ? "#f97316" : "#22c55e" }}>{val}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Readability Panel */}
+                {result && (
+                  <ReadabilityPanel originalText={text} humanizedText={humanizedText} />
+                )}
+
+                {/* Patterns */}
+                {analyzing ? (
+                  <div style={{ background: "#0f0f12", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <Skeleton width="55%" height={11} />
+                    {[0, 1, 2].map(i => <Skeleton key={i} height={36} radius={6} style={{ animationDelay: `${i * 0.15}s` }} />)}
+                  </div>
+                ) : result && result.patterns.length > 0 && (
+                  <div style={{
+                    background: "#0f0f12", borderRadius: "12px",
+                    border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
+                    animation: "fadeInUp 0.4s ease 0.1s both",
+                  }}>
                     <div style={{
                       padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e", display: "flex", alignItems: "center", gap: "5px" }}>
-                          <CheckCircle2 size={13} /> Humanized
-                        </span>
-                        {humanizedScore !== null && result && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                            <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, background: "rgba(239,68,68,0.1)", color: "#ef4444", textDecoration: "line-through", opacity: 0.6 }}>
-                              {Math.round(result.score)}%
-                            </span>
-                            <ArrowRight size={9} color="rgba(255,255,255,0.2)" />
-                            <span style={{
-                              fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,
-                              background: humanizedScore < 30 ? "rgba(34,197,94,0.12)" : "rgba(249,115,22,0.1)",
-                              color: humanizedScore < 30 ? "#22c55e" : "#f97316",
-                              animation: "popIn 0.4s ease",
-                            }}>
-                              {Math.round(humanizedScore)}%
-                            </span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>AI Patterns Detected</span>
+                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "rgba(139,92,246,0.1)", color: "#8b5cf6", fontWeight: 700 }}>
+                        {result.patterns.length}
+                      </span>
+                    </div>
+                    <div style={{ padding: "6px" }}>
+                      {[...result.patterns]
+                        .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 4) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 4))
+                        .slice(0, showAllPatterns ? undefined : 3)
+                        .map((p, i) => (
+                          <div key={p.id} style={{ opacity: i < visiblePatterns ? 1 : 0, transform: i < visiblePatterns ? "none" : "translateY(6px)", transition: "opacity 0.25s ease, transform 0.25s ease" }}>
+                            <PatternCard pattern={p} />
                           </div>
-                        )}
-                      </div>
-                      <button onClick={() => void handleCopy()} style={{
-                        display: "flex", alignItems: "center", gap: "5px",
-                        background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
-                        border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
-                        borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                        color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
-                        transition: "all 0.2s",
-                      }}>
-                        <Copy size={10} /> {copied ? "Copied!" : "Copy"}
+                        ))
+                      }
+                    </div>
+                    {result.patterns.length > 3 && (
+                      <button
+                        onClick={() => setShowAllPatterns(p => !p)}
+                        style={{
+                          width: "100%", padding: "9px", background: "rgba(255,255,255,0.02)",
+                          border: "none", borderTop: "1px solid rgba(255,255,255,0.05)",
+                          color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: "11px",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
+                        }}
+                      >
+                        {showAllPatterns ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> +{result.patterns.length - 3} more</>}
                       </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Humanize CTA */}
+                {result && !humanizing && !isDone && (
+                  <div style={{
+                    background: "#0f0f12", borderRadius: "12px",
+                    border: "1px solid rgba(139,92,246,0.15)", padding: "18px",
+                    animation: "fadeInUp 0.4s ease 0.2s both",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
+                      <Sparkles size={13} color="#8b5cf6" />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>Humanize with AI</span>
                     </div>
-                    <div style={{
-                      padding: "16px", fontSize: "14px", lineHeight: 1.8,
-                      color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap",
-                      maxHeight: "380px", overflow: "auto",
-                    }}>
-                      {humanizedText}
-                    </div>
-                    <div style={{
-                      padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
-                      display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
-                    }}>
-                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginRight: "2px" }}>Try tone:</span>
-                      {TONES.map(({ value, label }) => (
-                        <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
-                          padding: "4px 10px", borderRadius: "5px", fontSize: "11px",
-                          background: tone === value ? "rgba(139,92,246,0.12)" : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${tone === value ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
-                          color: tone === value ? "#a78bfa" : "rgba(255,255,255,0.35)", cursor: "pointer",
-                          transition: "all 0.15s",
-                        }}>{label}</button>
-                      ))}
-                    </div>
-                  </>
+                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", lineHeight: 1.6, marginBottom: "14px" }}>
+                      Multi-pass rewrite · 3 attempts · picks the best result
+                    </p>
+                    <button
+                      onClick={() => void handleHumanize()}
+                      style={{
+                        width: "100%", padding: "13px", borderRadius: "10px", border: "none",
+                        background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+                        color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                        boxShadow: "0 4px 20px rgba(139,92,246,0.3)", transition: "all 0.2s",
+                      }}
+                    >
+                      <Sparkles size={14} /> {scoreConfig?.ctaLabel ?? "Humanize"} <ArrowRight size={12} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Re-humanize after done */}
+                {isDone && result && (
+                  <button
+                    onClick={() => void handleHumanize()}
+                    style={{
+                      width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)",
+                      background: "rgba(139,92,246,0.08)", color: "#a78bfa",
+                      fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                      animation: "fadeInUp 0.3s ease",
+                    }}
+                  >
+                    <RotateCcw size={12} /> Humanize again
+                  </button>
                 )}
               </div>
             )}
           </div>
+        )}
 
-          {/* ── RIGHT: Score + Patterns ── */}
-          {showRightPanel && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-
-              {/* Score card */}
+        {/* ── BULK MODE ── */}
+        {editorMode === "bulk" && (
+          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            {/* Bulk textarea */}
+            {bulkItems.length === 0 && (
               <div style={{
-                background: analyzing ? "#0f0f12" : (scoreConfig?.dimColor ?? "#0f0f12"),
-                border: `1px solid ${analyzing ? "rgba(255,255,255,0.07)" : (scoreConfig?.border ?? "rgba(255,255,255,0.07)")}`,
-                borderRadius: "14px", padding: "22px",
-                animation: analyzing ? "none" : "fadeInUp 0.35s ease",
-                transition: "background 0.5s, border-color 0.5s",
+                background: "#0f0f12", borderRadius: "12px",
+                border: "1.5px solid rgba(255,255,255,0.07)", overflow: "hidden",
               }}>
-                {analyzing ? (
-                  /* Skeleton */
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                      <div style={{ width: 140, height: 140, borderRadius: "50%", flexShrink: 0 }}>
-                        <Skeleton width={140} height={140} radius={70} />
-                      </div>
-                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <Skeleton width="70%" height={12} />
-                        <Skeleton width="90%" height={10} />
-                        <Skeleton width="55%" height={10} />
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      {[0, 1, 2, 3].map(i => <Skeleton key={i} height={52} radius={8} />)}
-                    </div>
-                  </div>
-                ) : result && scoreConfig && (
-                  <>
-                    <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "18px" }}>
-                      <ScoreRing score={result.score} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "1.2px", color: scoreConfig.color, textTransform: "uppercase", marginBottom: "6px" }}>
-                          {scoreConfig.label}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.6, marginBottom: "6px" }}>
-                          {scoreConfig.desc}
-                        </div>
-                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
-                          {result.confidenceBand}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Stats */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                      {[
-                        { label: "Burstiness", val: result.stats.burstiness.toFixed(2), bad: result.stats.burstiness < 0.2, tip: "Sentence variation — low = AI uniform rhythm" },
-                        { label: "Vocab Diversity", val: result.stats.typeTokenRatio.toFixed(2), bad: result.stats.typeTokenRatio < 0.4, tip: "Word variety — low = repetitive word reuse" },
-                        { label: "Avg Sentence", val: `${result.stats.avgSentenceLength}w`, bad: result.stats.avgSentenceLength >= 18 && result.stats.avgSentenceLength <= 25, tip: "AI clusters around 18-25 words/sentence" },
-                        { label: "Readability", val: result.stats.fleschReadingEase.toFixed(0), bad: result.stats.fleschReadingEase >= 40 && result.stats.fleschReadingEase <= 60, tip: "Flesch score — AI typically scores 40-60" },
-                      ].map(({ label, val, bad, tip }) => (
-                        <div key={label} title={tip} style={{ background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "10px 12px", cursor: "help" }}>
-                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)", marginBottom: "4px" }}>{label}</div>
-                          <div style={{ fontSize: "18px", fontWeight: 800, color: bad ? "#f97316" : "#22c55e" }}>{val}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Patterns */}
-              {analyzing ? (
-                <div style={{ background: "#0f0f12", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <Skeleton width="55%" height={11} />
-                  {[0, 1, 2].map(i => <Skeleton key={i} height={36} radius={6} style={{ animationDelay: `${i * 0.15}s` }} />)}
-                </div>
-              ) : result && result.patterns.length > 0 && (
                 <div style={{
-                  background: "#0f0f12", borderRadius: "12px",
-                  border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
-                  animation: "fadeInUp 0.4s ease 0.1s both",
+                  padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex", alignItems: "center", gap: "6px",
                 }}>
-                  <div style={{
-                    padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                  }}>
-                    <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>AI Patterns Detected</span>
-                    <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "rgba(139,92,246,0.1)", color: "#8b5cf6", fontWeight: 700 }}>
-                      {result.patterns.length}
-                    </span>
-                  </div>
-                  <div style={{ padding: "6px" }}>
-                    {[...result.patterns]
-                      .sort((a, b) => ({ critical: 0, high: 1, medium: 2, low: 3 }[a.severity] ?? 4) - ({ critical: 0, high: 1, medium: 2, low: 3 }[b.severity] ?? 4))
-                      .slice(0, showAllPatterns ? undefined : 3)
-                      .map((p, i) => (
-                        <div key={p.id} style={{ opacity: i < visiblePatterns ? 1 : 0, transform: i < visiblePatterns ? "none" : "translateY(6px)", transition: "opacity 0.25s ease, transform 0.25s ease" }}>
-                          <PatternCard pattern={p} />
-                        </div>
-                      ))
-                    }
-                  </div>
-                  {result.patterns.length > 3 && (
-                    <button
-                      onClick={() => setShowAllPatterns(p => !p)}
-                      style={{
-                        width: "100%", padding: "9px", background: "rgba(255,255,255,0.02)",
-                        border: "none", borderTop: "1px solid rgba(255,255,255,0.05)",
-                        color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: "11px",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
-                      }}
-                    >
-                      {showAllPatterns ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> +{result.patterns.length - 3} more</>}
-                    </button>
-                  )}
+                  <Layers size={12} color="#8b5cf6" />
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Bulk Mode</span>
+                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginLeft: "auto" }}>Separate texts with ---</span>
                 </div>
-              )}
-
-              {/* Humanize CTA */}
-              {result && !humanizing && !isDone && (
+                <textarea
+                  value={bulkText}
+                  onChange={e => setBulkText(e.target.value)}
+                  placeholder={"Paste multiple texts here, separated by --- on its own line.\n\nExample:\n\nFirst text goes here...\n\n---\n\nSecond text goes here...\n\n---\n\nThird text goes here..."}
+                  style={{
+                    width: "100%", minHeight: "320px", padding: "16px",
+                    background: "transparent", border: "none", outline: "none",
+                    resize: "vertical", color: "#f0f0f8", fontSize: "14px",
+                    lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
+                    display: "block",
+                  }}
+                />
                 <div style={{
-                  background: "#0f0f12", borderRadius: "12px",
-                  border: "1px solid rgba(139,92,246,0.15)", padding: "18px",
-                  animation: "fadeInUp 0.4s ease 0.2s both",
+                  padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-                    <Sparkles size={13} color="#8b5cf6" />
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>Humanize with AI</span>
-                  </div>
-                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", lineHeight: 1.6, marginBottom: "14px" }}>
-                    Multi-pass rewrite · 3 attempts · picks the best result
-                  </p>
+                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+                    {parseBulkTexts().length} text{parseBulkTexts().length !== 1 ? "s" : ""} detected
+                  </span>
                   <button
-                    onClick={() => void handleHumanize()}
+                    onClick={() => void handleBulkAnalyze()}
+                    disabled={parseBulkTexts().length === 0}
                     style={{
-                      width: "100%", padding: "13px", borderRadius: "10px", border: "none",
+                      display: "flex", alignItems: "center", gap: "7px",
+                      padding: "10px 22px", borderRadius: "8px", border: "none",
+                      background: parseBulkTexts().length > 0 ? "linear-gradient(135deg, #8b5cf6, #7c3aed)" : "rgba(139,92,246,0.12)",
+                      color: parseBulkTexts().length > 0 ? "#fff" : "rgba(255,255,255,0.2)",
+                      fontSize: "13px", fontWeight: 700,
+                      cursor: parseBulkTexts().length > 0 ? "pointer" : "not-allowed",
+                      boxShadow: parseBulkTexts().length > 0 ? "0 4px 16px rgba(139,92,246,0.3)" : "none",
+                    }}
+                  >
+                    <Zap size={13} /> Analyze All <ArrowRight size={11} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Bulk progress */}
+            {bulkProcessing && (
+              <div style={{
+                background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)",
+                borderRadius: "10px", padding: "14px 18px", marginBottom: "16px",
+                display: "flex", alignItems: "center", gap: "12px",
+                animation: "fadeInUp 0.3s ease",
+              }}>
+                <div className="spin-sm" />
+                <span style={{ fontSize: "13px", color: "#a78bfa", fontWeight: 600 }}>
+                  Processing {bulkProgress.current}/{bulkProgress.total}...
+                </span>
+                <button onClick={() => { bulkAbortRef.current = true; }} style={{
+                  marginLeft: "auto", padding: "4px 10px", borderRadius: "5px",
+                  background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
+                  color: "#ef4444", fontSize: "11px", cursor: "pointer",
+                }}>Stop</button>
+              </div>
+            )}
+
+            {/* Bulk results */}
+            {bulkItems.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {/* Humanize All button */}
+                {!bulkProcessing && bulkItems.some(i => i.status === "analyzed") && (
+                  <div style={{ display: "flex", gap: "10px", marginBottom: "4px" }}>
+                    <button onClick={() => void handleBulkHumanize()} style={{
+                      flex: 1, padding: "13px", borderRadius: "10px", border: "none",
                       background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
                       color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                      boxShadow: "0 4px 20px rgba(139,92,246,0.3)", transition: "all 0.2s",
-                    }}
-                  >
-                    <Sparkles size={14} /> {scoreConfig?.ctaLabel ?? "Humanize"} <ArrowRight size={12} />
-                  </button>
-                </div>
-              )}
+                      boxShadow: "0 4px 20px rgba(139,92,246,0.3)",
+                    }}>
+                      <Sparkles size={14} /> Humanize All <ArrowRight size={12} />
+                    </button>
+                    <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
+                      padding: "13px 18px", borderRadius: "10px",
+                      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+                      color: "rgba(255,255,255,0.4)", fontSize: "13px", cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: "5px",
+                    }}>
+                      <RotateCcw size={12} /> Reset
+                    </button>
+                  </div>
+                )}
 
-              {/* Re-humanize after done */}
-              {isDone && result && (
-                <button
-                  onClick={() => void handleHumanize()}
-                  style={{
-                    width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)",
-                    background: "rgba(139,92,246,0.08)", color: "#a78bfa",
-                    fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                    animation: "fadeInUp 0.3s ease",
-                  }}
-                >
-                  <RotateCcw size={12} /> Humanize again
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+                {/* Reset when all done */}
+                {!bulkProcessing && bulkItems.every(i => i.status === "done" || i.status === "error") && bulkItems.some(i => i.status === "done") && (
+                  <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
+                    padding: "11px", borderRadius: "10px",
+                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+                    color: "rgba(255,255,255,0.4)", fontSize: "13px", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
+                    marginBottom: "4px",
+                  }}>
+                    <RotateCcw size={12} /> Start New Batch
+                  </button>
+                )}
+
+                {bulkItems.map((item) => {
+                  const itemScore = item.result ? getScoreConfig(item.result.score) : null;
+                  return (
+                    <div key={item.id} style={{
+                      background: "#0f0f12", borderRadius: "12px",
+                      border: `1px solid ${item.status === "done" ? "rgba(34,197,94,0.2)" : item.status === "error" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.06)"}`,
+                      overflow: "hidden", animation: "fadeInUp 0.3s ease",
+                    }}>
+                      {/* Card header */}
+                      <div style={{
+                        padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{
+                            fontSize: "11px", fontWeight: 700, color: "#8b5cf6",
+                            background: "rgba(139,92,246,0.1)", padding: "2px 8px", borderRadius: "4px",
+                          }}>#{item.id + 1}</span>
+                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+                            {item.text.split(/\s+/).length} words
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {item.status === "analyzing" || item.status === "humanizing" ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              <div className="spin-sm" />
+                              <span style={{ fontSize: "10px", color: "#a78bfa" }}>
+                                {item.status === "analyzing" ? "Analyzing" : "Humanizing"}
+                              </span>
+                            </div>
+                          ) : item.status === "error" ? (
+                            <span style={{ fontSize: "10px", color: "#ef4444" }}>{item.error}</span>
+                          ) : item.result && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              <span style={{
+                                fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700,
+                                background: `${itemScore!.color}15`, color: itemScore!.color,
+                              }}>
+                                {Math.round(item.result.score)}%
+                              </span>
+                              {item.humanizedScore !== null && (
+                                <>
+                                  <ArrowRight size={9} color="rgba(255,255,255,0.2)" />
+                                  <span style={{
+                                    fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700,
+                                    background: item.humanizedScore < 30 ? "rgba(34,197,94,0.12)" : "rgba(249,115,22,0.1)",
+                                    color: item.humanizedScore < 30 ? "#22c55e" : "#f97316",
+                                  }}>
+                                    {Math.round(item.humanizedScore)}%
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card body */}
+                      <div style={{ padding: "12px 14px" }}>
+                        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxHeight: "80px", overflow: "hidden", position: "relative" }}>
+                          {item.text.slice(0, 200)}{item.text.length > 200 ? "…" : ""}
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30px", background: "linear-gradient(transparent, #0f0f12)" }} />
+                        </div>
+                        {item.humanizedText && (
+                          <div style={{ marginTop: "10px", padding: "10px", borderRadius: "8px", background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.1)" }}>
+                            <div style={{ fontSize: "10px", color: "#22c55e", fontWeight: 600, marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <CheckCircle2 size={10} /> Humanized
+                            </div>
+                            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, maxHeight: "120px", overflow: "auto" }}>
+                              {item.humanizedText}
+                            </div>
+                            <button onClick={async () => {
+                              await navigator.clipboard.writeText(item.humanizedText!);
+                              toast.success(`Text #${item.id + 1} copied`);
+                            }} style={{
+                              marginTop: "6px", display: "flex", alignItems: "center", gap: "4px",
+                              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                              borderRadius: "4px", padding: "3px 8px", cursor: "pointer",
+                              color: "rgba(255,255,255,0.4)", fontSize: "10px",
+                            }}>
+                              <Copy size={9} /> Copy
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} currentPlan="FREE" />
+      <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} currentPlan={userPlan} />
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
