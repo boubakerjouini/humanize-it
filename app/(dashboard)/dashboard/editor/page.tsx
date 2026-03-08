@@ -9,7 +9,8 @@ import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
 import { computeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { exportDocx, exportPdf } from "@/lib/export";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, FileText, FileDown, Layers, BookOpen } from "lucide-react";
+import { simulateEngineScores, type EngineScore } from "@/lib/engines";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, FileText, FileDown, Layers, BookOpen, Lock, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
 
@@ -302,6 +303,8 @@ export default function EditorPage() {
   const [paraHumanized, setParaHumanized] = useState<Record<number, string | null>>({});
   const [paraHumanizing, setParaHumanizing] = useState<Record<number, boolean>>({});
   const [visiblePatterns, setVisiblePatterns] = useState(0);
+  const [engineScores, setEngineScores] = useState<EngineScore[] | null>(null);
+  const [humanizedEngineScores, setHumanizedEngineScores] = useState<EngineScore[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Bulk mode state
@@ -323,6 +326,10 @@ export default function EditorPage() {
   useEffect(() => {
     const prefill = sessionStorage.getItem("prefill-text");
     if (prefill) { setText(prefill); sessionStorage.removeItem("prefill-text"); }
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/user-plan").then(r => r.json()).then(d => setUserPlan(d.plan ?? "FREE")).catch(() => setUserPlan("FREE"));
   }, []);
 
   useEffect(() => {
@@ -356,6 +363,8 @@ export default function EditorPage() {
     setHumanizedText(null);
     setHumanizedScore(null);
     setShowAllPatterns(false);
+    setEngineScores(null);
+    setHumanizedEngineScores(null);
 
     try {
       const res = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
@@ -363,10 +372,13 @@ export default function EditorPage() {
       if (res.status === 402) { setShowUpgradeModal(true); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Analysis failed."); return; }
       setResult(data);
+      if (userPlan === "PRO" || userPlan === "TEAM") {
+        setEngineScores(simulateEngineScores(data.score));
+      }
       posthog?.capture("analysis_completed", { score: data.score, pattern_count: data.patterns.length });
     } catch { toast.error("Network error. Please try again."); }
     finally { setAnalyzing(false); }
-  }, [text, canAnalyze, wordCount, posthog]);
+  }, [text, canAnalyze, wordCount, posthog, userPlan]);
 
   const handleHumanize = useCallback(async (overrideTone?: ToneOption) => {
     if (!result) return;
@@ -387,13 +399,19 @@ export default function EditorPage() {
       if (data.humanizedText) {
         try {
           const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.humanizedText }) });
-          if (reRes.ok) { const reData = await reRes.json() as AnalyzeResponse; setHumanizedScore(reData.score); }
+          if (reRes.ok) {
+            const reData = await reRes.json() as AnalyzeResponse;
+            setHumanizedScore(reData.score);
+            if (userPlan === "PRO" || userPlan === "TEAM") {
+              setHumanizedEngineScores(simulateEngineScores(reData.score));
+            }
+          }
         } catch { /* ignore */ }
       }
       posthog?.capture("humanize_completed", { tone: useTone, original_score: result.score });
     } catch { toast.error("Network error. Please try again."); }
     finally { setHumanizing(false); }
-  }, [result, tone, isSignedIn, posthog]);
+  }, [result, tone, isSignedIn, posthog, userPlan]);
 
   const handleCopy = useCallback(async () => {
     if (!humanizedText) return;
@@ -1082,6 +1100,78 @@ export default function EditorPage() {
                 {/* Readability Panel */}
                 {result && (
                   <ReadabilityPanel originalText={text} humanizedText={humanizedText} />
+                )}
+
+                {/* Multi-Engine Detection Panel */}
+                {result && !analyzing && (
+                  <div style={{
+                    background: "#0f0f12", borderRadius: "12px",
+                    border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
+                    animation: "fadeInUp 0.4s ease 0.15s both",
+                  }}>
+                    <div style={{
+                      padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                        <Shield size={13} color="#8b5cf6" />
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>
+                          {humanizedEngineScores ? "Updated scores" : "How you score across detectors"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {(userPlan === "PRO" || userPlan === "TEAM") ? (
+                      <div style={{ padding: "10px 16px 6px" }}>
+                        {(humanizedEngineScores ?? engineScores ?? []).map((es, i) => {
+                          const barColor = es.score < 30 ? "#22c55e" : es.score < 60 ? "#eab308" : "#ef4444";
+                          const badgeBg = es.status === "PASS" ? "rgba(34,197,94,0.12)" : es.status === "RISKY" ? "rgba(234,179,8,0.1)" : "rgba(239,68,68,0.1)";
+                          const badgeColor = es.status === "PASS" ? "#22c55e" : es.status === "RISKY" ? "#eab308" : "#ef4444";
+                          return (
+                            <div key={es.engine} style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              padding: "8px 0",
+                              borderBottom: i < (humanizedEngineScores ?? engineScores ?? []).length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                              animation: `fadeInUp 0.3s ease ${0.05 * i}s both`,
+                            }}>
+                              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", width: "90px", flexShrink: 0, fontWeight: 500 }}>{es.engine}</span>
+                              <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+                                <div style={{
+                                  width: `${es.score}%`, height: "100%", borderRadius: "3px",
+                                  background: barColor, transition: "width 0.6s ease",
+                                }} />
+                              </div>
+                              <span style={{ fontSize: "11px", fontWeight: 700, color: barColor, width: "28px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{es.score}</span>
+                              <span style={{
+                                fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "3px",
+                                background: badgeBg, color: badgeColor, letterSpacing: "0.5px", width: "38px", textAlign: "center",
+                              }}>{es.status}</span>
+                            </div>
+                          );
+                        })}
+                        <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.18)", padding: "6px 0 4px", lineHeight: 1.4 }}>
+                          Scores are simulated estimates based on our detection algorithm
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ padding: "20px 16px", textAlign: "center" }}>
+                        <Lock size={20} color="rgba(255,255,255,0.15)" style={{ margin: "0 auto 8px" }} />
+                        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "4px", fontWeight: 500 }}>
+                          See how your text scores across 5 AI detectors
+                        </p>
+                        <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginBottom: "12px" }}>
+                          GPTZero · Turnitin · Originality.ai · Copyleaks · Winston AI
+                        </p>
+                        <button onClick={() => setShowUpgradeModal(true)} style={{
+                          padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(139,92,246,0.3)",
+                          background: "rgba(139,92,246,0.1)", color: "#a78bfa",
+                          fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                        }}>
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Patterns */}

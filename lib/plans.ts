@@ -19,6 +19,8 @@ export interface PlanConfig {
   watermark: boolean;
   /** Requests per minute */
   rateLimit: number;
+  /** API requests per month (0 = no access) */
+  apiRequestsLimit: number;
   /** Lemon Squeezy variant ID (monthly) — set LEMONSQUEEZY_PRO_VARIANT_ID / LEMONSQUEEZY_TEAM_VARIANT_ID */
   lsVariantId: string | null;
   /** Lemon Squeezy variant ID (annual) — set LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID / LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID */
@@ -40,6 +42,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiAccess: false,
     watermark: true,
     rateLimit: 5,
+    apiRequestsLimit: 0,
     lsVariantId: null,
   },
   PRO: {
@@ -54,9 +57,10 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     maxTextLength: 10_000,
     toneOptions: 3,
     historyDays: 30,
-    apiAccess: false,
+    apiAccess: true,
     watermark: false,
     rateLimit: 20,
+    apiRequestsLimit: 1_000,
     lsVariantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID ?? null,
     lsVariantIdAnnual: process.env.LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID ?? null,
   },
@@ -75,6 +79,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     apiAccess: true,
     watermark: false,
     rateLimit: 60,
+    apiRequestsLimit: 10_000,
     lsVariantId: process.env.LEMONSQUEEZY_TEAM_VARIANT_ID ?? null,
     lsVariantIdAnnual: process.env.LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID ?? null,
   },

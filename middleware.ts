@@ -11,6 +11,8 @@ const isPublicRoute = createRouteMatcher([
   // Extension uses custom HMAC JWT — auth handled inside route handler
   "/api/analyze(.*)",
   "/api/humanize(.*)",
+  // Developer API v1 — API key auth handled inside route handlers
+  "/api/v1(.*)",
   // Legal pages
   "/privacy",
   "/terms",

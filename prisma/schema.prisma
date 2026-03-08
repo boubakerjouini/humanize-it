@@ -28,6 +28,20 @@ model User {
   documents    Document[]
   subscription Subscription?
   redemptions  Redemption[]
+  apiKeys      ApiKey[]
+}
+
+model ApiKey {
+  id           String   @id @default(cuid())
+  userId       String
+  key          String   @unique
+  lastUsedAt   DateTime?
+  requestCount Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Document {
