@@ -8,7 +8,7 @@ import type { AnalysisResult } from "./analyzeText";
 import { analyzeText } from "./analyzeText";
 import { AI_VOCABULARY_TIER_1, SYCOPHANTIC_PHRASES } from "./patterns";
 
-export type ToneOption = "standard" | "formal" | "casual" | "academic";
+export type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
 
 // ---- Layer 3a: Forbidden word synonym map ----
 
@@ -69,6 +69,10 @@ const TONE_INSTRUCTIONS: Record<ToneOption, string> = {
     "Tone: relaxed and friendly. Contractions expected. Short sentences welcome.",
   academic:
     "Tone: scholarly and precise. Skip contractions, but keep short sentences, specificity, and varied rhythm.",
+  storytelling:
+    "Tone: narrative and engaging. Use anecdotes, vivid descriptions, and a storytelling arc. Write as if sharing an experience or explaining through a story. Weave in sensory details and personal observations.",
+  professional:
+    "Tone: polished business writing. Clear, direct, and authoritative. Use active voice, data-driven language, and executive-level clarity. No fluff, no filler. Write like a senior consultant's memo.",
 };
 
 // ---- Layer 1: Radical system prompt ----

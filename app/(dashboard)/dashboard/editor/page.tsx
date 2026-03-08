@@ -10,7 +10,7 @@ import type { PatternHit } from "@/lib/algorithms/analyzeText";
 import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
-type ToneOption = "standard" | "formal" | "casual" | "academic";
+type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
 
 interface AnalyzeResponse {
   score: number;
@@ -21,11 +21,13 @@ interface AnalyzeResponse {
   documentId: string;
 }
 
-const TONES: { value: ToneOption; label: string }[] = [
-  { value: "standard", label: "Standard" },
-  { value: "formal", label: "Formal" },
-  { value: "casual", label: "Casual" },
-  { value: "academic", label: "Academic" },
+const TONES: { value: ToneOption; label: string; icon: string }[] = [
+  { value: "standard", label: "Standard", icon: "\u2696\uFE0F" },
+  { value: "formal", label: "Formal", icon: "\uD83C\uDFA9" },
+  { value: "casual", label: "Casual", icon: "\u2615" },
+  { value: "academic", label: "Academic", icon: "\uD83C\uDF93" },
+  { value: "storytelling", label: "Story", icon: "\uD83D\uDCD6" },
+  { value: "professional", label: "Pro", icon: "\uD83D\uDCBC" },
 ];
 
 function getScoreConfig(score: number) {
@@ -300,15 +302,16 @@ export default function EditorPage() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {/* Tone selector */}
-          <div style={{ display: "flex", gap: "3px" }}>
-            {TONES.map(({ value, label }) => (
+          <div style={{ display: "flex", gap: "3px", flexWrap: "wrap" }}>
+            {TONES.map(({ value, label, icon }) => (
               <button key={value} onClick={() => setTone(value)} style={{
-                padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
+                padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
                 border: `1px solid ${tone === value ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.06)"}`,
                 background: tone === value ? "rgba(139,92,246,0.12)" : "transparent",
                 color: tone === value ? "#8b5cf6" : "rgba(255,255,255,0.3)",
                 transition: "all 0.15s",
-              }}>{label}</button>
+                display: "flex", alignItems: "center", gap: "4px",
+              }}><span style={{ fontSize: "12px" }}>{icon}</span>{label}</button>
             ))}
           </div>
           {(result || humanizedText) && (
@@ -480,14 +483,15 @@ export default function EditorPage() {
                       display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
                     }}>
                       <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)", marginRight: "2px" }}>Try tone:</span>
-                      {TONES.map(({ value, label }) => (
+                      {TONES.map(({ value, label, icon }) => (
                         <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
-                          padding: "4px 10px", borderRadius: "5px", fontSize: "11px",
+                          padding: "4px 10px", borderRadius: "20px", fontSize: "11px",
                           background: tone === value ? "rgba(139,92,246,0.12)" : "rgba(255,255,255,0.04)",
                           border: `1px solid ${tone === value ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
                           color: tone === value ? "#a78bfa" : "rgba(255,255,255,0.35)", cursor: "pointer",
                           transition: "all 0.15s",
-                        }}>{label}</button>
+                          display: "flex", alignItems: "center", gap: "3px",
+                        }}><span style={{ fontSize: "11px" }}>{icon}</span>{label}</button>
                       ))}
                     </div>
                   </>

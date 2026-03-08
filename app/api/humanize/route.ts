@@ -12,7 +12,7 @@ import { checkAndResetQuota } from "@/lib/quota";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
 
-const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
+const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 
 export async function POST(req: Request) {
   try {
