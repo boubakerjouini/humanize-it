@@ -17,6 +17,12 @@ export async function GET(req: Request) {
       );
     }
 
+    const headers = {
+      "X-RateLimit-Limit": String(authResult.apiRequestsLimit),
+      "X-RateLimit-Remaining": String(Math.max(0, authResult.apiRequestsLimit - authResult.monthlyRequestCount)),
+      "X-RateLimit-Reset": String(Math.floor(authResult.monthlyResetAt.getTime() / 1000)),
+    };
+
     const user = await db.user.findUnique({
       where: { id: authResult.userId },
     });
@@ -24,25 +30,20 @@ export async function GET(req: Request) {
     if (!user) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "User not found." } },
-        { status: 404 }
+        { status: 404, headers }
       );
     }
 
     const plan = PLANS[(user.plan as PlanId) ?? "FREE"];
 
-    // Get API key request count for this month
-    const apiKey = await db.apiKey.findUnique({
-      where: { id: authResult.apiKeyId },
-    });
-
     return NextResponse.json({
       plan: user.plan,
       wordsUsed: user.wordsUsed,
       wordsLimit: plan.wordsLimit,
-      apiRequestsUsed: apiKey?.requestCount ?? 0,
+      apiRequestsUsed: authResult.monthlyRequestCount,
       apiRequestsLimit: plan.apiRequestsLimit,
-      quotaResetAt: user.quotaResetAt,
-    });
+      monthlyResetAt: authResult.monthlyResetAt,
+    }, { headers });
   } catch (err) {
     console.error("[v1/usage] error:", err);
     return NextResponse.json(

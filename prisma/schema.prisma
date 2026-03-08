@@ -32,12 +32,16 @@ model User {
 }
 
 model ApiKey {
-  id           String   @id @default(cuid())
-  userId       String
-  key          String   @unique
-  lastUsedAt   DateTime?
-  requestCount Int      @default(0)
-  createdAt    DateTime @default(now())
+  id                  String    @id @default(cuid())
+  userId              String
+  name                String    @default("Default")
+  keyHash             String?   @unique
+  keyPrefix           String    @default("")
+  monthlyRequestCount Int       @default(0)
+  monthlyResetAt      DateTime  @default(now())
+  lastUsedAt          DateTime?
+  revokedAt           DateTime?
+  createdAt           DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -1,195 +1,232 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Copy, Key, RefreshCw, Lock, CheckCircle2, Code2, Terminal, Braces } from "lucide-react";
+import {
+  Copy, Key, Plus, Trash2, Lock, CheckCircle2, Terminal,
+  ExternalLink, AlertTriangle, X, Loader2, Clock,
+} from "lucide-react";
 import { toast } from "sonner";
+
+// ── Types ──────────────────────────────────────────────────
 
 interface ApiKeyData {
   id: string;
-  key?: string;
-  maskedKey: string;
+  name: string;
+  keyPrefix: string;
+  monthlyRequestCount: number;
+  monthlyResetAt: string;
   lastUsedAt: string | null;
-  requestCount: number;
+  revokedAt: string | null;
   createdAt: string;
 }
 
 interface ApiState {
-  apiKey: ApiKeyData | null;
-  usage: { requestCount: number; limit: number };
+  keys: ApiKeyData[];
   plan: string;
   apiAccess: boolean;
+  apiRequestsLimit: number;
+  apiKeysMax: number;
 }
 
-type CodeTab = "curl" | "python" | "javascript";
+// ── Helpers ────────────────────────────────────────────────
 
-const CODE_EXAMPLES: Record<CodeTab, string> = {
-  curl: `# Analyze text
-curl -X POST https://humanize-it.app/api/v1/analyze \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"text": "Your text to analyze..."}'
+function timeAgo(date: string | null): string {
+  if (!date) return "Never";
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
-# Humanize text
-curl -X POST https://humanize-it.app/api/v1/humanize \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"text": "Your text to humanize...", "tone": "standard"}'
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
 
-# Check usage
-curl https://humanize-it.app/api/v1/usage \\
-  -H "Authorization: Bearer YOUR_API_KEY"`,
+function currentMonth(): string {
+  return new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
 
-  python: `import requests
+// ── Usage Arc SVG ──────────────────────────────────────────
 
-API_KEY = "YOUR_API_KEY"
-BASE = "https://humanize-it.app/api/v1"
-headers = {"Authorization": f"Bearer {API_KEY}"}
+function UsageArc({ used, limit }: { used: number; limit: number }) {
+  const pct = limit > 0 ? Math.min(1, used / limit) : 0;
+  const r = 54;
+  const circ = 2 * Math.PI * r;
+  const arcLength = circ * 0.75; // 270 degrees
+  const offset = arcLength * (1 - pct);
 
-# Analyze text
-resp = requests.post(f"{BASE}/analyze",
-    headers=headers,
-    json={"text": "Your text to analyze..."})
-print(resp.json())
-# → {"score": 78, "confidenceBand": "likely-ai", ...}
+  // Color transition: blue→orange→red
+  let color = "#3b82f6";
+  if (pct > 0.8) color = "#ef4444";
+  else if (pct > 0.5) color = "#f59e0b";
 
-# Humanize text
-resp = requests.post(f"{BASE}/humanize",
-    headers=headers,
-    json={"text": "Your text to humanize...", "tone": "standard"})
-print(resp.json())
-# → {"humanizedText": "...", "originalScore": 78}
+  return (
+    <svg width="140" height="120" viewBox="0 0 140 120">
+      {/* Background arc */}
+      <circle
+        cx="70" cy="70" r={r}
+        fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"
+        strokeDasharray={`${arcLength} ${circ}`}
+        strokeDashoffset="0"
+        strokeLinecap="round"
+        transform="rotate(135 70 70)"
+      />
+      {/* Filled arc */}
+      <circle
+        cx="70" cy="70" r={r}
+        fill="none" stroke={color} strokeWidth="8"
+        strokeDasharray={`${arcLength} ${circ}`}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(135 70 70)"
+        style={{ transition: "stroke-dashoffset 0.8s ease, stroke 0.5s ease" }}
+      />
+      {/* Center text */}
+      <text x="70" y="65" textAnchor="middle" fill="#fafafa" fontSize="22" fontWeight="800" fontFamily="var(--font-geist-mono), monospace">
+        {used.toLocaleString()}
+      </text>
+      <text x="70" y="82" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="10">
+        of {limit.toLocaleString()}
+      </text>
+    </svg>
+  );
+}
 
-# Check usage
-resp = requests.get(f"{BASE}/usage", headers=headers)
-print(resp.json())`,
-
-  javascript: `const API_KEY = "YOUR_API_KEY";
-const BASE = "https://humanize-it.app/api/v1";
-
-// Analyze text
-const analysis = await fetch(\`\${BASE}/analyze\`, {
-  method: "POST",
-  headers: {
-    "Authorization": \`Bearer \${API_KEY}\`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ text: "Your text to analyze..." }),
-}).then(r => r.json());
-console.log(analysis);
-// → { score: 78, confidenceBand: "likely-ai", ... }
-
-// Humanize text
-const result = await fetch(\`\${BASE}/humanize\`, {
-  method: "POST",
-  headers: {
-    "Authorization": \`Bearer \${API_KEY}\`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ text: "Your text...", tone: "standard" }),
-}).then(r => r.json());
-console.log(result.humanizedText);
-
-// Check usage
-const usage = await fetch(\`\${BASE}/usage\`, {
-  headers: { "Authorization": \`Bearer \${API_KEY}\` },
-}).then(r => r.json());`,
-};
-
-const TAB_ICONS: Record<CodeTab, typeof Terminal> = {
-  curl: Terminal,
-  python: Code2,
-  javascript: Braces,
-};
+// ── Main Component ─────────────────────────────────────────
 
 export default function ApiPage() {
   const [state, setState] = useState<ApiState | null>(null);
-  const [newKey, setNewKey] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [codeTab, setCodeTab] = useState<CodeTab>("curl");
-  const [codeCopied, setCodeCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Create key modal
+  const [showCreate, setShowCreate] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [revealedId, setRevealedId] = useState<string | null>(null);
+  const [keyCopied, setKeyCopied] = useState(false);
+  const [keySaved, setKeySaved] = useState(false);
+
+  // Revoke modal
+  const [revokeTarget, setRevokeTarget] = useState<ApiKeyData | null>(null);
+  const [revokeConfirm, setRevokeConfirm] = useState("");
+  const [revoking, setRevoking] = useState(false);
 
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch("/api/api-keys");
-      const data = await res.json() as ApiState;
+      const res = await fetch("/api/keys");
+      const data = (await res.json()) as ApiState;
       setState(data);
     } catch {
-      toast.error("Failed to load API key info.");
+      toast.error("Failed to load API keys.");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => { void fetchState(); }, [fetchState]);
 
-  const handleGenerate = async () => {
-    setGenerating(true);
+  // ── Handlers ─────────────────────────────────────────────
+
+  const handleCreate = async () => {
+    setCreating(true);
     try {
-      const res = await fetch("/api/api-keys", { method: "POST" });
-      const data = await res.json() as { apiKey?: ApiKeyData; error?: { message: string } };
+      const res = await fetch("/api/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: createName.trim() || "Default" }),
+      });
+      const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error?.message ?? "Failed to generate key.");
+        toast.error(data.error?.message ?? "Failed to create key.");
         return;
       }
-      if (data.apiKey?.key) {
-        setNewKey(data.apiKey.key);
-        toast.success("New API key generated! Copy it now — it won't be shown again.");
-      }
+      setRevealedKey(data.key);
+      setRevealedId(data.id);
+      toast.success("API key created!");
       void fetchState();
     } catch {
       toast.error("Network error.");
     } finally {
-      setGenerating(false);
+      setCreating(false);
     }
   };
 
-  const handleCopyKey = async () => {
-    const keyToCopy = newKey ?? state?.apiKey?.maskedKey;
-    if (!keyToCopy) return;
-    await navigator.clipboard.writeText(keyToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleRevoke = async () => {
+    if (!revokeTarget) return;
+    setRevoking(true);
+    try {
+      const res = await fetch(`/api/keys/${revokeTarget.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error?.message ?? "Failed to revoke key.");
+        return;
+      }
+      toast.success("API key revoked.");
+      setRevokeTarget(null);
+      setRevokeConfirm("");
+      void fetchState();
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setRevoking(false);
+    }
   };
 
-  const handleCopyCode = async () => {
-    const code = CODE_EXAMPLES[codeTab].replace(/YOUR_API_KEY/g, newKey ?? "sk_live_your_key_here");
-    await navigator.clipboard.writeText(code);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
   };
 
-  if (!state) {
+  const handleCopyRevealedKey = async () => {
+    if (!revealedKey) return;
+    await copyToClipboard(revealedKey);
+    setKeyCopied(true);
+    setTimeout(() => setKeyCopied(false), 2000);
+  };
+
+  const closeReveal = () => {
+    setRevealedKey(null);
+    setRevealedId(null);
+    setKeyCopied(false);
+    setKeySaved(false);
+    setShowCreate(false);
+    setCreateName("");
+  };
+
+  // ── Loading ──────────────────────────────────────────────
+
+  if (loading) {
     return (
-      <div style={{ padding: "40px 24px", color: "rgba(255,255,255,0.3)", fontSize: "14px" }}>
-        Loading...
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 size={20} className="animate-spin text-zinc-500" />
       </div>
     );
   }
 
-  // FREE users see upgrade prompt
+  if (!state) return null;
+
+  // ── FREE plan gate ───────────────────────────────────────
+
   if (!state.apiAccess) {
     return (
-      <div style={{ minHeight: "100%", background: "#09090b", padding: "40px 24px" }}>
-        <div style={{
-          maxWidth: "480px", margin: "80px auto", textAlign: "center",
-          background: "#0f0f12", borderRadius: "16px", padding: "40px 32px",
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}>
-          <Lock size={32} color="rgba(255,255,255,0.15)" style={{ margin: "0 auto 16px" }} />
-          <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#fafafa", marginBottom: "8px" }}>
-            API Access Required
-          </h2>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", lineHeight: 1.6, marginBottom: "24px" }}>
+      <div className="min-h-full p-6 md:p-10">
+        <div className="max-w-md mx-auto mt-20 text-center rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-10">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800/50">
+            <Lock size={20} className="text-zinc-500" />
+          </div>
+          <h2 className="text-lg font-bold text-zinc-100 mb-2">API Access Required</h2>
+          <p className="text-sm text-zinc-500 leading-relaxed mb-6">
             The Developer API is available on Pro (1,000 req/mo) and Team (10,000 req/mo) plans.
             Integrate AI detection and humanization directly into your workflow.
           </p>
-          <a href="/dashboard/settings" style={{
-            display: "inline-flex", alignItems: "center", gap: "8px",
-            padding: "12px 24px", borderRadius: "10px",
-            background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-            color: "#fff", fontSize: "14px", fontWeight: 700,
-            textDecoration: "none",
-            boxShadow: "0 4px 16px rgba(139,92,246,0.3)",
-          }}>
+          <a
+            href="/dashboard/settings"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+          >
             Upgrade Plan
           </a>
         </div>
@@ -197,178 +234,324 @@ export default function ApiPage() {
     );
   }
 
-  const displayKey = newKey ?? state.apiKey?.maskedKey ?? "No key generated yet";
-  const usagePercent = state.usage.limit > 0 ? Math.min(100, Math.round((state.usage.requestCount / state.usage.limit) * 100)) : 0;
+  // ── Data ─────────────────────────────────────────────────
+
+  const activeKeys = state.keys.filter((k) => !k.revokedAt);
+  const revokedKeys = state.keys.filter((k) => k.revokedAt);
+  const totalUsage = state.keys.reduce((sum, k) => sum + (k.revokedAt ? 0 : k.monthlyRequestCount), 0);
+  const atKeyLimit = activeKeys.length >= state.apiKeysMax;
 
   return (
-    <div style={{ minHeight: "100%", background: "#09090b", padding: "24px" }}>
-      <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+    <div className="min-h-full p-4 md:p-8">
+      <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* Header */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <Key size={16} color="#8b5cf6" />
-            <h1 style={{ fontSize: "18px", fontWeight: 700, color: "#fafafa", margin: 0 }}>Developer API</h1>
+        {/* ── A) Header ─────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <Terminal size={16} className="text-blue-500" />
+              <h1 className="text-lg font-bold text-zinc-100">API Access</h1>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                {state.plan}
+              </span>
+            </div>
+            <p className="text-sm text-zinc-500">Integrate HumanizeIt into your apps</p>
           </div>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", margin: 0 }}>
-            Integrate HumanizeIt detection and rewriting into your apps.
-          </p>
+          <a
+            href="/docs/api"
+            target="_blank"
+            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            View Documentation <ExternalLink size={11} />
+          </a>
         </div>
 
-        {/* API Key Card */}
-        <div style={{
-          background: "#0f0f12", borderRadius: "14px",
-          border: "1px solid rgba(255,255,255,0.06)", padding: "20px",
-          marginBottom: "16px",
-        }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "12px" }}>
-            Your API Key
+        {/* ── B) Usage Card ─────────────────────────────── */}
+        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+                API Usage &mdash; {currentMonth()}
+              </h2>
+              <div className="text-2xl font-extrabold text-zinc-100">
+                {totalUsage.toLocaleString()} <span className="text-sm font-normal text-zinc-500">/ {state.apiRequestsLimit.toLocaleString()} requests</span>
+              </div>
+            </div>
+            <UsageArc used={totalUsage} limit={state.apiRequestsLimit} />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-zinc-600">
+            <Clock size={11} />
+            Resets {activeKeys[0] ? formatDate(activeKeys[0].monthlyResetAt) : "next month"}
+          </div>
+        </div>
+
+        {/* ── C) API Keys Section ───────────────────────── */}
+        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50">
+          <div className="flex items-center justify-between p-5 border-b border-zinc-800/40">
+            <div>
+              <h2 className="text-sm font-semibold text-zinc-200">API Keys</h2>
+              <p className="text-xs text-zinc-600 mt-0.5">Your secret API keys. Treat them like passwords.</p>
+            </div>
+            <button
+              onClick={() => { setShowCreate(true); setRevealedKey(null); setCreateName(""); setKeySaved(false); }}
+              disabled={atKeyLimit}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                atKeyLimit
+                  ? "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20"
+              }`}
+            >
+              <Plus size={13} />
+              Create new key
+            </button>
           </div>
 
-          <div style={{
-            display: "flex", alignItems: "center", gap: "10px",
-            background: "rgba(0,0,0,0.3)", borderRadius: "8px",
-            padding: "12px 14px", border: "1px solid rgba(255,255,255,0.06)",
-            marginBottom: "14px",
-          }}>
-            <code style={{
-              flex: 1, fontSize: "13px", fontFamily: "monospace",
-              color: newKey ? "#22c55e" : "rgba(255,255,255,0.5)",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {displayKey}
-            </code>
-            {(newKey || state.apiKey) && (
-              <button onClick={() => void handleCopyKey()} style={{
-                display: "flex", alignItems: "center", gap: "5px",
-                background: copied ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)",
-                border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
-                borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                color: copied ? "#22c55e" : "rgba(255,255,255,0.45)", fontSize: "11px",
-              }}>
-                {copied ? <><CheckCircle2 size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
-              </button>
+          {/* Keys list */}
+          <div className="divide-y divide-zinc-800/40">
+            {activeKeys.length === 0 && revokedKeys.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-4 opacity-20">
+                  <path d="M24 4C18.48 4 14 8.48 14 14c0 3.53 1.84 6.62 4.6 8.38L16 44h16l-2.6-21.62C32.16 20.62 34 17.53 34 14c0-5.52-4.48-10-10-10z" stroke="#fafafa" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <circle cx="24" cy="14" r="3" stroke="#fafafa" strokeWidth="1.5"/>
+                </svg>
+                <p className="text-sm text-zinc-500 mb-1">No API keys yet</p>
+                <p className="text-xs text-zinc-600">Create your first key to start using the API</p>
+              </div>
+            )}
+
+            {activeKeys.map((k) => (
+              <KeyRow
+                key={k.id}
+                data={k}
+                onCopy={() => { void copyToClipboard(`${k.keyPrefix}${"•".repeat(24)}`); toast.success("Key prefix copied"); }}
+                onRevoke={() => { setRevokeTarget(k); setRevokeConfirm(""); }}
+                isNew={k.id === revealedId}
+              />
+            ))}
+
+            {revokedKeys.length > 0 && (
+              <div className="px-5 py-3">
+                <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-2">Revoked</p>
+                {revokedKeys.map((k) => (
+                  <KeyRow key={k.id} data={k} onCopy={() => {}} onRevoke={() => {}} isNew={false} />
+                ))}
+              </div>
             )}
           </div>
 
-          {newKey && (
-            <div style={{
-              fontSize: "11px", color: "#eab308", background: "rgba(234,179,8,0.08)",
-              border: "1px solid rgba(234,179,8,0.15)", borderRadius: "6px",
-              padding: "8px 12px", marginBottom: "14px",
-            }}>
-              Copy your key now — it won&apos;t be shown again after you leave this page.
+          {atKeyLimit && (
+            <div className="px-5 py-3 border-t border-zinc-800/40 text-xs text-amber-400/70 flex items-center gap-2">
+              <AlertTriangle size={12} />
+              Maximum {state.apiKeysMax} active keys on {state.plan} plan.
+              {state.plan === "PRO" && <a href="/dashboard/settings" className="text-blue-400 hover:underline ml-1">Upgrade to Team</a>}
             </div>
           )}
-
-          <button
-            onClick={() => void handleGenerate()}
-            disabled={generating}
-            style={{
-              display: "flex", alignItems: "center", gap: "7px",
-              padding: "10px 18px", borderRadius: "8px", border: "none",
-              background: generating ? "rgba(139,92,246,0.12)" : "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-              color: generating ? "rgba(255,255,255,0.3)" : "#fff",
-              fontSize: "13px", fontWeight: 600, cursor: generating ? "not-allowed" : "pointer",
-              boxShadow: generating ? "none" : "0 2px 12px rgba(139,92,246,0.3)",
-            }}
-          >
-            <RefreshCw size={13} className={generating ? "spin-sm" : ""} />
-            {state.apiKey ? "Regenerate Key" : "Generate API Key"}
-          </button>
         </div>
 
-        {/* Usage Stats */}
-        <div style={{
-          background: "#0f0f12", borderRadius: "14px",
-          border: "1px solid rgba(255,255,255,0.06)", padding: "20px",
-          marginBottom: "16px",
-        }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "14px" }}>
-            Usage This Month
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-            <div style={{ background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "12px" }}>
-              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)", marginBottom: "4px" }}>API Requests</div>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#fafafa" }}>
-                {state.usage.requestCount.toLocaleString()}
-              </div>
-              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
-                of {state.usage.limit.toLocaleString()} / month
-              </div>
-            </div>
-            <div style={{ background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "12px" }}>
-              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.28)", marginBottom: "4px" }}>Plan</div>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#8b5cf6" }}>
-                {state.plan}
-              </div>
-              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>
-                {state.plan === "PRO" ? "1,000 req/mo" : "10,000 req/mo"}
-              </div>
-            </div>
-          </div>
-          <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
-            <div style={{
-              width: `${usagePercent}%`, height: "100%", borderRadius: "3px",
-              background: usagePercent > 80 ? "#ef4444" : usagePercent > 50 ? "#eab308" : "#22c55e",
-              transition: "width 0.6s ease",
-            }} />
-          </div>
-        </div>
+        {/* ── D) Create Key Modal ───────────────────────── */}
+        {showCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => !revealedKey && closeReveal()}>
+            <div
+              className="relative w-full max-w-md mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900 shadow-2xl animate-fade-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={closeReveal} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors">
+                <X size={16} />
+              </button>
 
-        {/* Code Examples */}
-        <div style={{
-          background: "#0f0f12", borderRadius: "14px",
-          border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
-        }}>
-          <div style={{
-            padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
-              Code Examples
-            </span>
-            <div style={{ display: "flex", gap: "3px" }}>
-              {(["curl", "python", "javascript"] as CodeTab[]).map((tab) => {
-                const Icon = TAB_ICONS[tab];
-                return (
-                  <button key={tab} onClick={() => setCodeTab(tab)} style={{
-                    display: "flex", alignItems: "center", gap: "5px",
-                    padding: "5px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
-                    border: `1px solid ${codeTab === tab ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.06)"}`,
-                    background: codeTab === tab ? "rgba(139,92,246,0.12)" : "transparent",
-                    color: codeTab === tab ? "#8b5cf6" : "rgba(255,255,255,0.3)",
-                  }}>
-                    <Icon size={11} />
-                    {tab}
+              {!revealedKey ? (
+                // ── Create form ──
+                <div className="p-6">
+                  <h3 className="text-sm font-semibold text-zinc-200 mb-4">Create a new API key</h3>
+                  <label className="block text-xs text-zinc-500 mb-1.5">Key name</label>
+                  <input
+                    type="text"
+                    value={createName}
+                    onChange={(e) => setCreateName(e.target.value)}
+                    placeholder="e.g. Production, My App, Testing"
+                    maxLength={50}
+                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                    autoFocus
+                    onKeyDown={(e) => e.key === "Enter" && !creating && handleCreate()}
+                  />
+                  <button
+                    onClick={() => void handleCreate()}
+                    disabled={creating}
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-semibold transition-all"
+                  >
+                    {creating ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : <>Create key</>}
                   </button>
-                );
-              })}
+                </div>
+              ) : (
+                // ── Reveal state ──
+                <div className="p-6">
+                  <h3 className="text-sm font-semibold text-zinc-200 mb-1">Your new API key</h3>
+                  <p className="text-xs text-zinc-500 mb-4">Copy it now. It will never be shown again.</p>
+
+                  {/* Key display with pulsing blue border */}
+                  <div className="relative rounded-xl border-2 border-blue-500 p-4 bg-[#0d1117] animate-[pulse-border_2s_ease-in-out_infinite]">
+                    <code className="block text-sm font-mono text-blue-300 break-all leading-relaxed select-all">
+                      {revealedKey}
+                    </code>
+                  </div>
+
+                  <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                    <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-300/80 leading-relaxed">
+                      Save this key now. It will never be shown again.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => void handleCopyRevealedKey()}
+                    className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
+                      keyCopied
+                        ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                        : "bg-blue-600 hover:bg-blue-500 text-white"
+                    }`}
+                  >
+                    {keyCopied ? <><CheckCircle2 size={14} /> Copied!</> : <><Copy size={14} /> Copy API Key</>}
+                  </button>
+
+                  <label className="flex items-center gap-2.5 mt-4 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={keySaved}
+                      onChange={(e) => setKeySaved(e.target.checked)}
+                      className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500/30"
+                    />
+                    <span className="text-xs text-zinc-400">I have saved my key</span>
+                  </label>
+
+                  <button
+                    onClick={closeReveal}
+                    disabled={!keySaved}
+                    className="mt-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:bg-zinc-800/50 disabled:text-zinc-600 disabled:cursor-not-allowed bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-          <div style={{ position: "relative" }}>
-            <pre style={{
-              padding: "16px 20px", margin: 0, overflow: "auto",
-              fontSize: "12px", lineHeight: 1.7, color: "rgba(255,255,255,0.6)",
-              fontFamily: "'SF Mono', 'Fira Code', monospace",
-              maxHeight: "400px",
-            }}>
-              {CODE_EXAMPLES[codeTab].replace(/YOUR_API_KEY/g, newKey ?? "sk_live_your_key_here")}
-            </pre>
-            <button onClick={() => void handleCopyCode()} style={{
-              position: "absolute", top: "10px", right: "10px",
-              display: "flex", alignItems: "center", gap: "4px",
-              background: codeCopied ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.06)",
-              border: `1px solid ${codeCopied ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)"}`,
-              borderRadius: "5px", padding: "4px 8px", cursor: "pointer",
-              color: codeCopied ? "#22c55e" : "rgba(255,255,255,0.35)", fontSize: "10px",
-            }}>
-              {codeCopied ? <><CheckCircle2 size={9} /> Copied</> : <><Copy size={9} /> Copy</>}
-            </button>
-          </div>
-        </div>
+        )}
 
+        {/* ── E) Revoke Confirmation Modal ──────────────── */}
+        {revokeTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setRevokeTarget(null)}>
+            <div
+              className="relative w-full max-w-sm mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900 shadow-2xl animate-fade-up p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={() => setRevokeTarget(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors">
+                <X size={16} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/10">
+                  <Trash2 size={14} className="text-red-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-zinc-200">Revoke API Key</h3>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                Revoking <strong className="text-zinc-200">{revokeTarget.name}</strong> will immediately break any apps using it. This cannot be undone.
+              </p>
+
+              <label className="block text-xs text-zinc-500 mb-1.5">
+                Type <span className="text-zinc-300 font-mono">{revokeTarget.name}</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={revokeConfirm}
+                onChange={(e) => setRevokeConfirm(e.target.value)}
+                placeholder={revokeTarget.name}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-red-500/50 transition-all"
+                autoFocus
+              />
+
+              <button
+                onClick={() => void handleRevoke()}
+                disabled={revokeConfirm !== revokeTarget.name || revoking}
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:bg-zinc-800/50 disabled:text-zinc-600 disabled:cursor-not-allowed bg-red-600 hover:bg-red-500 text-white"
+              >
+                {revoking ? <><Loader2 size={14} className="animate-spin" /> Revoking...</> : "Revoke key permanently"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* ── Pulse border animation (inline style) ───────── */}
+      <style>{`
+        @keyframes pulse-border {
+          0%, 100% { border-color: rgba(59,130,246,0.8); box-shadow: 0 0 12px rgba(59,130,246,0.15); }
+          50% { border-color: rgba(59,130,246,0.3); box-shadow: 0 0 4px rgba(59,130,246,0.05); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ── Key Row Component ──────────────────────────────────────
+
+function KeyRow({
+  data,
+  onCopy,
+  onRevoke,
+  isNew,
+}: {
+  data: ApiKeyData;
+  onCopy: () => void;
+  onRevoke: () => void;
+  isNew: boolean;
+}) {
+  const isRevoked = !!data.revokedAt;
+  const masked = `${data.keyPrefix}${"•".repeat(24)}`;
+
+  return (
+    <div className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${isNew ? "bg-blue-500/5" : ""} ${isRevoked ? "opacity-40" : "hover:bg-zinc-800/30"}`}>
+      {/* Status dot */}
+      <div className={`w-2 h-2 rounded-full shrink-0 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-sm font-medium text-zinc-200 truncate">{data.name}</span>
+          {isNew && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 uppercase">New</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <code className="text-xs font-mono text-zinc-500 truncate">{masked}</code>
+          {!isRevoked && (
+            <button onClick={onCopy} className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0" title="Copy prefix">
+              <Copy size={11} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="hidden sm:flex items-center gap-6 shrink-0">
+        <div className="text-right">
+          <div className="text-xs text-zinc-400 font-mono">{data.monthlyRequestCount.toLocaleString()}</div>
+          <div className="text-[10px] text-zinc-600">requests</div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-zinc-400">{timeAgo(data.lastUsedAt)}</div>
+          <div className="text-[10px] text-zinc-600">last used</div>
+        </div>
+      </div>
+
+      {/* Revoke button */}
+      {!isRevoked && (
+        <button
+          onClick={onRevoke}
+          className="p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0"
+          title="Revoke key"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
     </div>
   );
 }

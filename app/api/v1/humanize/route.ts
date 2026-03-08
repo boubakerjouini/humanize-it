@@ -7,7 +7,15 @@ import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption } from "@/lib/algorithms/humanizeText";
 import { authenticateApiKey } from "@/lib/api-key-auth";
 
-const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic"];
+const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
+
+function rateLimitHeaders(auth: { monthlyRequestCount: number; apiRequestsLimit: number; monthlyResetAt: Date }) {
+  return {
+    "X-RateLimit-Limit": String(auth.apiRequestsLimit),
+    "X-RateLimit-Remaining": String(Math.max(0, auth.apiRequestsLimit - auth.monthlyRequestCount)),
+    "X-RateLimit-Reset": String(Math.floor(auth.monthlyResetAt.getTime() / 1000)),
+  };
+}
 
 export async function POST(req: Request) {
   try {
@@ -19,27 +27,36 @@ export async function POST(req: Request) {
       );
     }
 
-    let body: { text?: unknown; tone?: unknown };
+    const headers = rateLimitHeaders(authResult);
+
+    if (authResult.monthlyRequestCount > authResult.apiRequestsLimit) {
+      return NextResponse.json(
+        { error: { code: "QUOTA_EXCEEDED", message: "Monthly API request quota exceeded." } },
+        { status: 429, headers: { ...headers, "Retry-After": String(Math.floor((authResult.monthlyResetAt.getTime() - Date.now()) / 1000)) } }
+      );
+    }
+
+    let body: { text?: unknown; tone?: unknown; intensity?: unknown };
     try {
       body = await req.json();
     } catch {
       return NextResponse.json(
         { error: { code: "INVALID_JSON", message: "Invalid JSON body." } },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
-    const { text, tone } = body;
+    const { text, tone, intensity } = body;
     if (typeof text !== "string" || text.length <= 10) {
       return NextResponse.json(
         { error: { code: "TEXT_TOO_SHORT", message: "Text must be at least 10 characters." } },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
     if (text.length > 10000) {
       return NextResponse.json(
         { error: { code: "TEXT_TOO_LONG", message: "Text must be at most 10,000 characters." } },
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
@@ -48,15 +65,19 @@ export async function POST(req: Request) {
         ? (tone as ToneOption)
         : "standard";
 
-    // Run analysis first to feed into humanizer
+    const validIntensities = ["light", "medium", "heavy"] as const;
+    const intensityValue = typeof intensity === "string" && validIntensities.includes(intensity as typeof validIntensities[number])
+      ? (intensity as typeof validIntensities[number])
+      : "medium";
+
     const analysisResult = analyzeText(text);
-    const { humanizedText, tokensUsed } = await humanizeText(text, toneValue, analysisResult);
+    const { humanizedText, tokensUsed } = await humanizeText(text, toneValue, analysisResult, intensityValue);
 
     return NextResponse.json({
       humanizedText,
       tokensUsed,
       originalScore: analysisResult.score,
-    });
+    }, { headers });
   } catch (err) {
     console.error("[v1/humanize] error:", err);
     return NextResponse.json(
