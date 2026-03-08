@@ -7,10 +7,21 @@ import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, Globe, X, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic";
+
+type LanguageOption = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
+
+const LANGUAGES: { value: LanguageOption; label: string; flag: string }[] = [
+  { value: "English", label: "English", flag: "\ud83c\uddec\ud83c\udde7" },
+  { value: "French", label: "French", flag: "\ud83c\uddeb\ud83c\uddf7" },
+  { value: "Spanish", label: "Spanish", flag: "\ud83c\uddea\ud83c\uddf8" },
+  { value: "Arabic", label: "Arabic", flag: "\ud83c\uddf8\ud83c\udde6" },
+  { value: "German", label: "German", flag: "\ud83c\udde9\ud83c\uddea" },
+  { value: "Italian", label: "Italian", flag: "\ud83c\uddee\ud83c\uddf9" },
+];
 
 interface AnalyzeResponse {
   score: number;
@@ -164,9 +175,30 @@ export default function EditorPage() {
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Style Clone state
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [styleSamples, setStyleSamples] = useState<string[]>(["", ""]);
+  const [styleFingerprint, setStyleFingerprint] = useState<Record<string, string> | null>(null);
+  const [styleLoading, setStyleLoading] = useState(false);
+  const [userPlan, setUserPlan] = useState<string | null>(null);
+
+  // Language state
+  const [language, setLanguage] = useState<LanguageOption>("English");
+  const [langOpen, setLangOpen] = useState(false);
+
   useEffect(() => {
     const prefill = sessionStorage.getItem("prefill-text");
     if (prefill) { setText(prefill); sessionStorage.removeItem("prefill-text"); }
+    // Load style fingerprint from localStorage
+    try {
+      const saved = localStorage.getItem("style-fingerprint");
+      if (saved) setStyleFingerprint(JSON.parse(saved));
+    } catch { /* ignore */ }
+    // Load language preference
+    const savedLang = localStorage.getItem("language-preference") as LanguageOption | null;
+    if (savedLang && LANGUAGES.some(l => l.value === savedLang)) setLanguage(savedLang);
+    // Fetch user plan for style clone gating
+    fetch("/api/user-plan").then(r => r.json()).then(d => setUserPlan(d.plan ?? "FREE")).catch(() => setUserPlan("FREE"));
   }, []);
 
   useEffect(() => {
@@ -222,7 +254,7 @@ export default function EditorPage() {
     setHumanizedScore(null);
 
     try {
-      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone }) });
+      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
       const data = await res.json() as { humanizedText?: string; error?: { message: string } };
       if (res.status === 402) { setShowUpgradeModal(true); return; }
       if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
@@ -237,7 +269,7 @@ export default function EditorPage() {
       posthog?.capture("humanize_completed", { tone: useTone, original_score: result.score });
     } catch { toast.error("Network error. Please try again."); }
     finally { setHumanizing(false); }
-  }, [result, tone, isSignedIn, posthog]);
+  }, [result, tone, isSignedIn, posthog, styleFingerprint, language]);
 
   const handleCopy = useCallback(async () => {
     if (!humanizedText) return;
@@ -254,6 +286,44 @@ export default function EditorPage() {
     setShowAllPatterns(false);
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
+
+  const handleLearnStyle = useCallback(async () => {
+    const validSamples = styleSamples.filter(s => s.trim().length >= 50);
+    if (validSamples.length < 2) { toast.error("Provide at least 2 samples (50+ chars each)."); return; }
+    setStyleLoading(true);
+    try {
+      const res = await fetch("/api/style-clone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ samples: validSamples }),
+      });
+      const data = await res.json() as { fingerprint?: Record<string, string>; error?: { message: string } };
+      if (res.status === 403) { toast.error("Style Clone requires a Pro or Team plan."); return; }
+      if (!res.ok) { toast.error(data.error?.message ?? "Failed to analyze style."); return; }
+      if (data.fingerprint) {
+        setStyleFingerprint(data.fingerprint);
+        localStorage.setItem("style-fingerprint", JSON.stringify(data.fingerprint));
+        toast.success("Style fingerprint learned!");
+        setStyleOpen(false);
+      }
+    } catch { toast.error("Network error."); }
+    finally { setStyleLoading(false); }
+  }, [styleSamples]);
+
+  const handleClearStyle = () => {
+    setStyleFingerprint(null);
+    localStorage.removeItem("style-fingerprint");
+    toast.success("Style cleared.");
+  };
+
+  const handleLanguageChange = (lang: LanguageOption) => {
+    setLanguage(lang);
+    localStorage.setItem("language-preference", lang);
+    setLangOpen(false);
+  };
+
+  const isRTL = language === "Arabic";
+  const isPaidPlan = userPlan === "PRO" || userPlan === "TEAM";
 
   // Word count color
   const wordCountColor = wordCount === 0 ? "rgba(255,255,255,0.2)"
@@ -299,6 +369,52 @@ export default function EditorPage() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Style Clone badge */}
+          {styleFingerprint && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: "4px",
+              padding: "4px 8px", borderRadius: "5px", fontSize: "10px", fontWeight: 600,
+              background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+              color: "#22c55e",
+            }}>
+              <Fingerprint size={10} /> Style Clone Active
+              <button onClick={handleClearStyle} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 0 2px", color: "#22c55e", display: "flex" }}>
+                <X size={9} />
+              </button>
+            </div>
+          )}
+          {/* Language selector */}
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setLangOpen(o => !o)} style={{
+              display: "flex", alignItems: "center", gap: "4px",
+              padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
+              border: `1px solid ${language !== "English" ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.06)"}`,
+              background: language !== "English" ? "rgba(139,92,246,0.12)" : "transparent",
+              color: language !== "English" ? "#8b5cf6" : "rgba(255,255,255,0.3)",
+              transition: "all 0.15s",
+            }}>
+              <Globe size={10} /> {LANGUAGES.find(l => l.value === language)?.flag} {language}
+            </button>
+            {langOpen && (
+              <div style={{
+                position: "absolute", top: "100%", right: 0, marginTop: "4px", zIndex: 50,
+                background: "#0f0f12", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px",
+                padding: "4px", minWidth: "140px", boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+              }}>
+                {LANGUAGES.map(({ value, label, flag }) => (
+                  <button key={value} onClick={() => handleLanguageChange(value)} style={{
+                    display: "flex", alignItems: "center", gap: "8px", width: "100%",
+                    padding: "7px 10px", borderRadius: "5px", fontSize: "12px", cursor: "pointer",
+                    background: language === value ? "rgba(139,92,246,0.12)" : "transparent",
+                    color: language === value ? "#8b5cf6" : "rgba(255,255,255,0.5)",
+                    border: "none", textAlign: "left", fontWeight: language === value ? 600 : 400,
+                  }}>
+                    <span>{flag}</span> {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {/* Tone selector */}
           <div style={{ display: "flex", gap: "3px" }}>
             {TONES.map(({ value, label }) => (
@@ -337,6 +453,83 @@ export default function EditorPage() {
 
           {/* ── LEFT: Textarea + Humanized ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", minWidth: 0 }}>
+
+            {/* Style Clone panel */}
+            {isPaidPlan && (
+              <div style={{
+                background: "#0f0f12", borderRadius: "12px",
+                border: `1px solid ${styleOpen ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.07)"}`,
+                overflow: "hidden", transition: "border-color 0.3s",
+              }}>
+                <button onClick={() => setStyleOpen(o => !o)} style={{
+                  width: "100%", padding: "10px 14px",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: "transparent", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Fingerprint size={13} color="#8b5cf6" />
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>Style Clone</span>
+                    {styleFingerprint && (
+                      <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(34,197,94,0.1)", color: "#22c55e", fontWeight: 600 }}>Active</span>
+                    )}
+                  </div>
+                  {styleOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+                {styleOpen && (
+                  <div style={{ padding: "0 14px 14px", animation: "fadeInUp 0.2s ease" }}>
+                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginBottom: "10px", lineHeight: 1.5 }}>
+                      Paste 2-3 samples of your writing. We'll extract your style and apply it to humanizations.
+                    </p>
+                    {styleSamples.map((sample, i) => (
+                      <div key={i} style={{ marginBottom: "8px" }}>
+                        <label style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", marginBottom: "3px", display: "block" }}>
+                          Sample {i + 1} {i < 2 ? "(required)" : "(optional)"}
+                        </label>
+                        <textarea
+                          value={sample}
+                          onChange={e => {
+                            const next = [...styleSamples];
+                            next[i] = e.target.value;
+                            setStyleSamples(next);
+                          }}
+                          placeholder="Paste a paragraph of your own writing..."
+                          style={{
+                            width: "100%", minHeight: "70px", padding: "8px 10px",
+                            background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)",
+                            borderRadius: "6px", color: "#f0f0f8", fontSize: "12px",
+                            lineHeight: 1.6, fontFamily: "inherit", resize: "vertical",
+                            outline: "none", boxSizing: "border-box", display: "block",
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {styleSamples.length < 3 && (
+                      <button onClick={() => setStyleSamples([...styleSamples, ""])} style={{
+                        fontSize: "11px", color: "#8b5cf6", background: "none", border: "none",
+                        cursor: "pointer", padding: "4px 0", marginBottom: "8px",
+                      }}>+ Add sample 3</button>
+                    )}
+                    <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                      <button onClick={() => void handleLearnStyle()} disabled={styleLoading} style={{
+                        padding: "8px 16px", borderRadius: "6px", border: "none",
+                        background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+                        color: "#fff", fontSize: "12px", fontWeight: 600, cursor: styleLoading ? "not-allowed" : "pointer",
+                        opacity: styleLoading ? 0.6 : 1,
+                      }}>
+                        {styleLoading ? "Analyzing..." : "Learn My Style"}
+                      </button>
+                      {styleFingerprint && (
+                        <button onClick={handleClearStyle} style={{
+                          padding: "8px 16px", borderRadius: "6px",
+                          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                          color: "rgba(255,255,255,0.4)", fontSize: "12px", cursor: "pointer",
+                        }}>Clear Style</button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Textarea card */}
             <div style={{
@@ -387,6 +580,7 @@ export default function EditorPage() {
                   resize: "vertical", color: "#f0f0f8", fontSize: "14px",
                   lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
                   display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
+                  direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
                 }}
               />
 
@@ -472,6 +666,7 @@ export default function EditorPage() {
                       padding: "16px", fontSize: "14px", lineHeight: 1.8,
                       color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap",
                       maxHeight: "380px", overflow: "auto",
+                      direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
                     }}>
                       {humanizedText}
                     </div>
