@@ -8,11 +8,13 @@ import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import type { PatternHit } from "@/lib/algorithms/analyzeText";
 import { computeReadability, type ReadabilityMetrics } from "@/lib/readability";
-import { exportDocx, exportPdf } from "@/lib/export";
 import { simulateEngineScores, type EngineScore } from "@/lib/engines";
-import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, FileText, FileDown, Layers, BookOpen, Lock, Shield, Globe, X, Fingerprint } from "lucide-react";
+import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, Layers, BookOpen, Lock, Shield, Globe, X, Fingerprint, Upload, FileUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
+import { UploadZone } from "@/components/ui/upload-zone";
+import { PLANS, type PlanId } from "@/lib/plans";
+import type { ExtractResult } from "@/lib/extract-document";
 
 type ToneOption = "standard" | "formal" | "casual" | "academic" | "storytelling" | "professional";
 type IntensityLevel = "light" | "medium" | "heavy";
@@ -131,7 +133,7 @@ function Skeleton({ width = "100%", height = 16, radius = 6, style = {} }: { wid
 }
 
 // Humanizing orb animation
-function HumanizingState() {
+function HumanizingState({ chunkProgress }: { chunkProgress?: { current: number; total: number } | null }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -159,24 +161,45 @@ function HumanizingState() {
       </div>
       <div>
         <p style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.8)", textAlign: "center", marginBottom: "6px" }}>
-          AI is rewriting your text
-          <span className="dots"><span>.</span><span>.</span><span>.</span></span>
+          {chunkProgress && chunkProgress.total > 1
+            ? `Humanizing chunk ${chunkProgress.current} of ${chunkProgress.total}`
+            : <>AI is rewriting your text<span className="dots"><span>.</span><span>.</span><span>.</span></span></>
+          }
         </p>
         <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
-          Multi-pass engine · up to 3 attempts · picking the best
+          {chunkProgress && chunkProgress.total > 1
+            ? "Processing large document in sections"
+            : "Multi-pass engine · up to 3 attempts · picking the best"
+          }
         </p>
       </div>
-      <div style={{ display: "flex", gap: "6px" }}>
-        {["Pass 1", "Pass 2", "Pass 3"].map((p, i) => (
-          <div key={p} style={{
-            fontSize: "10px", color: "rgba(255,255,255,0.3)",
-            padding: "3px 8px", borderRadius: "4px",
-            background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)",
-            animation: `passGlow 1.8s ease-in-out infinite`,
-            animationDelay: `${i * 0.6}s`,
-          }}>{p}</div>
-        ))}
-      </div>
+      {chunkProgress && chunkProgress.total > 1 ? (
+        <div style={{ width: "200px" }}>
+          <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+            <div style={{
+              height: "100%", borderRadius: "3px",
+              background: "linear-gradient(90deg, #8b5cf6, #a78bfa)",
+              width: `${(chunkProgress.current / chunkProgress.total) * 100}%`,
+              transition: "width 0.4s ease",
+            }} />
+          </div>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", textAlign: "center", marginTop: "6px" }}>
+            {Math.round((chunkProgress.current / chunkProgress.total) * 100)}%
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", gap: "6px" }}>
+          {["Pass 1", "Pass 2", "Pass 3"].map((p, i) => (
+            <div key={p} style={{
+              fontSize: "10px", color: "rgba(255,255,255,0.3)",
+              padding: "3px 8px", borderRadius: "4px",
+              background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)",
+              animation: `passGlow 1.8s ease-in-out infinite`,
+              animationDelay: `${i * 0.6}s`,
+            }}>{p}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -336,6 +359,14 @@ export default function EditorPage() {
   const [language, setLanguage] = useState<LanguageOption>("English");
   const [langOpen, setLangOpen] = useState(false);
 
+  // Upload state
+  const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+
+  // Chunked humanization state
+  const [chunkProgress, setChunkProgress] = useState<{ current: number; total: number } | null>(null);
+  const chunkAbortRef = useRef(false);
+
   // Fetch user plan
   useEffect(() => {
     fetch("/api/user-plan").then(r => r.ok ? r.json() : null).then((d: { plan?: string } | null) => {
@@ -410,6 +441,28 @@ export default function EditorPage() {
     finally { setAnalyzing(false); }
   }, [text, canAnalyze, wordCount, posthog, userPlan]);
 
+  // Split text into chunks at paragraph boundaries
+  const splitIntoChunks = useCallback((inputText: string, maxWords: number): string[] => {
+    const paragraphs = inputText.split(/\n\n+/);
+    const chunks: string[] = [];
+    let current: string[] = [];
+    let currentWords = 0;
+
+    for (const para of paragraphs) {
+      const paraWords = para.split(/\s+/).filter(Boolean).length;
+      if (currentWords + paraWords > maxWords && current.length > 0) {
+        chunks.push(current.join("\n\n"));
+        current = [para];
+        currentWords = paraWords;
+      } else {
+        current.push(para);
+        currentWords += paraWords;
+      }
+    }
+    if (current.length > 0) chunks.push(current.join("\n\n"));
+    return chunks;
+  }, []);
+
   const handleHumanize = useCallback(async (overrideTone?: ToneOption) => {
     if (!result) return;
     if (!isSignedIn) { setShowAuthModal(true); return; }
@@ -418,17 +471,51 @@ export default function EditorPage() {
     setHumanizing(true);
     setHumanizedText(null);
     setHumanizedScore(null);
+    setChunkProgress(null);
+    chunkAbortRef.current = false;
+
+    const needsChunking = wordCount > 1500;
 
     try {
-      const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, intensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
-      const data = await res.json() as { humanizedText?: string; error?: { message: string } };
-      if (res.status === 402) { setShowUpgradeModal(true); return; }
-      if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
+      let finalText: string;
 
-      setHumanizedText(data.humanizedText ?? null);
-      if (data.humanizedText) {
+      if (needsChunking) {
+        // Chunked humanization
+        const chunks = splitIntoChunks(text, 1500);
+        setChunkProgress({ current: 0, total: chunks.length });
+        const results: string[] = [];
+
+        for (let i = 0; i < chunks.length; i++) {
+          if (chunkAbortRef.current) { toast.error("Humanization cancelled."); return; }
+          setChunkProgress({ current: i + 1, total: chunks.length });
+
+          // Analyze chunk first
+          const analyzeRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: chunks[i] }) });
+          if (!analyzeRes.ok) { toast.error(`Chunk ${i + 1} analysis failed.`); return; }
+          const analyzeData = await analyzeRes.json() as AnalyzeResponse;
+
+          // Humanize chunk
+          const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: analyzeData.documentId, tone: useTone, intensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
+          const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+          if (res.status === 402) { setShowUpgradeModal(true); return; }
+          if (!res.ok) { toast.error(data.error?.message ?? `Chunk ${i + 1} failed. Try again.`); return; }
+          results.push(data.humanizedText ?? chunks[i]);
+        }
+
+        finalText = results.join("\n\n");
+      } else {
+        // Single-chunk flow (existing behavior)
+        const res = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: result.documentId, tone: useTone, intensity, styleFingerprint: styleFingerprint ?? undefined, language: language !== "English" ? language : undefined }) });
+        const data = await res.json() as { humanizedText?: string; error?: { message: string } };
+        if (res.status === 402) { setShowUpgradeModal(true); return; }
+        if (!res.ok) { toast.error(data.error?.message ?? "Humanization failed."); return; }
+        finalText = data.humanizedText ?? "";
+      }
+
+      setHumanizedText(finalText);
+      if (finalText) {
         try {
-          const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.humanizedText }) });
+          const reRes = await fetch("/api/analyze", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: finalText.slice(0, 5000) }) });
           if (reRes.ok) {
             const reData = await reRes.json() as AnalyzeResponse;
             setHumanizedScore(reData.score);
@@ -440,8 +527,8 @@ export default function EditorPage() {
       }
       posthog?.capture("humanize_completed", { tone: useTone, original_score: result.score });
     } catch { toast.error("Network error. Please try again."); }
-    finally { setHumanizing(false); }
-  }, [result, tone, isSignedIn, posthog, userPlan, styleFingerprint, language]);
+    finally { setHumanizing(false); setChunkProgress(null); }
+  }, [result, tone, isSignedIn, posthog, userPlan, styleFingerprint, language, wordCount, text, splitIntoChunks, intensity]);
 
   const handleCopy = useCallback(async () => {
     if (!humanizedText) return;
@@ -451,6 +538,32 @@ export default function EditorPage() {
     posthog?.capture("text_copied");
   }, [humanizedText, posthog]);
 
+  const handleUploadExtracted = useCallback((extracted: ExtractResult) => {
+    setText(extracted.text);
+    setUploadedFileName(extracted.fileName);
+    setInputMode("paste");
+    setResult(null);
+    setHumanizedText(null);
+    setHumanizedScore(null);
+    toast.success(`Loaded ${extracted.fileName} — ${extracted.wordCount.toLocaleString()} words`);
+  }, []);
+
+  const handleDownloadTxt = useCallback(() => {
+    if (!humanizedText) return;
+    const blob = new Blob([humanizedText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const baseName = uploadedFileName
+      ? uploadedFileName.replace(/\.[^.]+$/, "")
+      : `text-${Date.now()}`;
+    a.href = url;
+    a.download = `humanized-${baseName}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    posthog?.capture("download_txt");
+    toast.success("Downloaded .txt");
+  }, [humanizedText, uploadedFileName, posthog]);
+
   const handleReset = () => {
     setResult(null);
     setHumanizedText(null);
@@ -459,6 +572,7 @@ export default function EditorPage() {
     setParaScores({});
     setParaHumanized({});
     setParaHumanizing({});
+    setUploadedFileName(null);
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
 
@@ -517,36 +631,6 @@ export default function EditorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paragraphMode, result]);
 
-  // ── Export handlers ──
-  const handleExportDocx = useCallback(async () => {
-    if (!humanizedText || !result) return;
-    try {
-      await exportDocx({
-        originalText: text,
-        humanizedText,
-        aiScore: result.score,
-        humanizedScore,
-        date: new Date(),
-      });
-      posthog?.capture("export_docx");
-      toast.success("Downloaded .docx");
-    } catch { toast.error("Export failed."); }
-  }, [humanizedText, result, text, humanizedScore, posthog]);
-
-  const handleExportPdf = useCallback(() => {
-    if (!humanizedText || !result) return;
-    try {
-      exportPdf({
-        originalText: text,
-        humanizedText,
-        aiScore: result.score,
-        humanizedScore,
-        date: new Date(),
-      });
-      posthog?.capture("export_pdf");
-      toast.success("Downloaded PDF");
-    } catch { toast.error("Export failed."); }
-  }, [humanizedText, result, text, humanizedScore, posthog]);
 
   // ── Bulk mode handlers ──
   const parseBulkTexts = useCallback(() => {
@@ -909,7 +993,55 @@ export default function EditorPage() {
                 </div>
               )}
 
+              {/* Input mode toggle */}
+              {!result && !analyzing && (
+                <div style={{ display: "flex", gap: "2px", background: "rgba(255,255,255,0.04)", borderRadius: "8px", padding: "3px", alignSelf: "flex-start" }}>
+                  <button onClick={() => setInputMode("paste")} style={{
+                    padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                    border: "none", display: "flex", alignItems: "center", gap: "5px",
+                    background: inputMode === "paste" ? "rgba(139,92,246,0.15)" : "transparent",
+                    color: inputMode === "paste" ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                    transition: "all 0.15s",
+                  }}>
+                    <span style={{ fontSize: "13px" }}>&#9998;</span> Paste text
+                  </button>
+                  <button onClick={() => setInputMode("upload")} style={{
+                    padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
+                    border: "none", display: "flex", alignItems: "center", gap: "5px",
+                    background: inputMode === "upload" ? "rgba(139,92,246,0.15)" : "transparent",
+                    color: inputMode === "upload" ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                    transition: "all 0.15s",
+                  }}>
+                    <FileUp size={12} /> Upload document
+                  </button>
+                </div>
+              )}
+
+              {/* Upload zone */}
+              {inputMode === "upload" && !result && !analyzing && (
+                <UploadZone
+                  onExtracted={handleUploadExtracted}
+                  plan={userPlan}
+                  uploadEnabled={(PLANS[userPlan as PlanId] ?? PLANS.FREE).uploadEnabled}
+                />
+              )}
+
+              {/* Uploaded file banner */}
+              {uploadedFileName && inputMode === "paste" && !result && (
+                <div style={{
+                  padding: "8px 14px", borderRadius: "8px",
+                  background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)",
+                  display: "flex", alignItems: "center", gap: "8px",
+                }}>
+                  <FileUp size={12} color="#a78bfa" />
+                  <span style={{ fontSize: "12px", color: "#a78bfa", fontWeight: 500 }}>
+                    Loaded from {uploadedFileName} — {wordCount.toLocaleString()} words
+                  </span>
+                </div>
+              )}
+
               {/* Textarea card */}
+              {(inputMode === "paste" || result || analyzing) && (
               <div style={{
                 background: "#0f0f12", borderRadius: "12px",
                 border: `1.5px solid ${analyzing ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.07)"}`,
@@ -1030,6 +1162,7 @@ export default function EditorPage() {
                   </button>
                 </div>
               </div>
+              )}
 
               {/* Paragraph Mode Cards */}
               {paragraphMode && result && paragraphs.length > 0 && (
@@ -1119,7 +1252,7 @@ export default function EditorPage() {
                   overflow: "hidden", animation: "fadeInUp 0.35s ease",
                 }}>
                   {humanizing ? (
-                    <HumanizingState />
+                    <HumanizingState chunkProgress={chunkProgress} />
                   ) : humanizedText && (
                     <>
                       <div style={{
@@ -1159,22 +1292,13 @@ export default function EditorPage() {
                           }}>
                             <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
                           </button>
-                          {/* Export buttons */}
-                          <button onClick={() => void handleExportDocx()} title="Download .docx" style={{
+                          <button onClick={handleDownloadTxt} title="Download .txt" style={{
                             display: "flex", alignItems: "center", gap: "4px",
                             background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
                             color: "rgba(255,255,255,0.45)", fontSize: "11px", transition: "all 0.2s",
                           }}>
-                            <FileText size={10} /> .docx
-                          </button>
-                          <button onClick={handleExportPdf} title="Download PDF" style={{
-                            display: "flex", alignItems: "center", gap: "4px",
-                            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
-                            color: "rgba(255,255,255,0.45)", fontSize: "11px", transition: "all 0.2s",
-                          }}>
-                            <FileDown size={10} /> PDF
+                            <Download size={10} /> .txt
                           </button>
                           <button onClick={() => void handleCopy()} style={{
                             display: "flex", alignItems: "center", gap: "5px",
