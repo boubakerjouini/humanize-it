@@ -14,6 +14,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/humanize(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
+  // Blog
+  "/blog(.*)",
   // Legal pages
   "/privacy",
   "/terms",

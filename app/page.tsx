@@ -271,6 +271,7 @@ export default function LandingPage() {
             <a onClick={() => smoothScroll("how-it-works")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
             <a onClick={() => smoothScroll("pricing")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
             <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Extension</a>
+            <Link href="/blog" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -339,6 +340,9 @@ export default function LandingPage() {
           <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
             color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none",
           }}>Chrome Extension</a>
+          <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
+            color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none",
+          }}>Blog</Link>
         </div>
       )}
 
