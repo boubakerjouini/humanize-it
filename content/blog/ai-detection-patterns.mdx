@@ -13,286 +13,286 @@ import { DetectorWidget } from '@/components/blog/detector-widget'
 
 ## AI Detectors Aren't Magic — They're Pattern Matchers
 
-Most people treat AI detectors like a black box. Text goes in, a verdict comes out, and nobody really knows what happened in between. That's a problem. If you don't know what's being measured, you can't fix it.
+Most people treat AI detectors like a black box. Text goes in, a number comes out, and you're just supposed to trust it. That's not good enough.
 
-Here's the truth: AI detectors don't "understand" your writing. They don't read it the way a human would. They scan for statistical patterns — specific, measurable, predictable signals that separate machine-generated text from human-written text. That's it.
+Here's the thing — AI detectors don't actually "understand" your writing. They don't read it the way a person would. They run statistical checks. Specific, measurable signals that separate machine text from human text. That's all they do.
 
-So how do AI detectors work, exactly? They run your text through a gauntlet of pattern checks. Each pattern gets a score. Those scores roll up into a final probability: AI or human. Once you understand the individual patterns, you can address them one by one. No guesswork.
+So how do they work? Your text gets run through a bunch of pattern checks. Each one gets scored. Scores get rolled up into a probability: AI or human. Nothing mysterious about it. And once you know the individual patterns, you can fix them one at a time.
 
-HumanizeIt's detection engine analyzes 40 patterns total. In this article, we're breaking down the 24 most impactful ones — the patterns that move the needle the most. We'll show you what each one measures, why it matters, and how to fix it.
+HumanizeIt's engine checks 40 patterns total. This article covers the 24 biggest ones — the patterns that actually move your score. I'll show you what each one measures, why it matters, and what to do about it.
 
 ## The Core Concept: Perplexity and Burstiness
 
-Before we get into the specific patterns, you need to understand the two foundational metrics that underpin almost every AI detector on the market.
+Two metrics underpin almost every detector on the market. You need to understand these before anything else makes sense.
 
 ### Perplexity: How Predictable Is Your Writing?
 
-Perplexity measures how surprising your word choices are. When a language model generates text, it picks the most statistically likely next word at each step. The result? Smooth, predictable sentences where every word feels like the "obvious" choice.
+Perplexity measures how surprising your word choices are. When a language model writes, it picks the most statistically likely next word at every step. The result is smooth, predictable text where every word feels like the "obvious" choice.
 
-Human writing is different. We pick weird words. We use phrasing that a probability model wouldn't predict. We write things that are technically less "optimal" but more interesting.
+Human writing is different. We pick weird words. We phrase things in ways a probability model wouldn't predict. We write stuff that's technically less "optimal" but way more interesting.
 
-Compare these two sentences:
+Compare:
 
 **Low perplexity (AI-like):** "Artificial intelligence has the potential to transform various industries and improve efficiency across multiple sectors."
 
 **High perplexity (human-like):** "AI is going to gut some industries and supercharge others — and honestly, nobody knows which ones yet."
 
-Both say roughly the same thing. But the second one has unexpected word choices ("gut," "supercharge"), an em dash, a personal aside. A detector would score the first as far more likely to be AI-generated.
+Same basic idea. But the second one has unexpected words ("gut," "supercharge"), an em dash, a personal aside. A detector would nail the first one as AI. The second? Reads human.
 
 ### Burstiness: How Much Does Your Writing Vary?
 
-Burstiness measures variation in sentence length and complexity. AI text tends to be eerily uniform — sentences hover around the same length, paragraphs follow the same structure, complexity stays flat. Human writing is messy. Short sentences. Then a long, winding one that piles clause on top of clause until it almost loses the thread. Then another short one.
+Burstiness is about variation in sentence length and complexity. AI text is eerily uniform — sentences hover at the same length, paragraphs follow the same template, complexity stays flat throughout. Human writing isn't like that. Short sentence. Then a long one that piles clause on top of clause until it almost loses the thread but somehow pulls it back together at the end. Then another short one.
 
-Look at this AI-typical paragraph:
+Here's a typical AI paragraph:
 
 *"Machine learning algorithms can process large datasets efficiently. These algorithms identify patterns that would be difficult for humans to detect. The results can then be used to make informed decisions about various business processes."*
 
-Every sentence is 10-14 words. Same structure. Same rhythm. Now look at a human version:
+Every sentence is 10-14 words. Same structure. Same rhythm. Now a human version:
 
 *"ML algorithms chew through massive datasets — fast. They spot patterns we'd never catch. And that's where it gets interesting: businesses can actually use those patterns to make calls they'd never have the data for otherwise, which completely changes the game."*
 
-Wild variation. A 7-word sentence, then 7, then 35. That's burstiness. Detectors love seeing it.
+A 7-word sentence, then 7, then 35. That's burstiness. Detectors love seeing it.
 
 ## Category 1: Sentence Structure Patterns
 
-These six patterns focus on how your sentences are built. Structure is the easiest thing for detectors to measure and one of the strongest signals of AI text patterns.
+Six patterns about how your sentences are built. Detectors measure structure easily and it's one of the strongest AI signals.
 
 ### 1. Uniform Sentence Length
 
-**What detectors look for:** A standard deviation in sentence word count that's too low. If your sentences cluster between 14 and 18 words, that's a red flag.
+**What detectors look for:** Standard deviation in sentence word count that's too low. If your sentences cluster between 14 and 18 words, that's a problem.
 
 **Example:** "The project was completed on time. The team worked efficiently throughout. The results exceeded initial expectations." — All roughly the same length.
 
-**Fix:** Deliberately mix it up. Throw in a 3-word sentence. Follow it with a 30-word monster. Let your writing breathe unevenly.
+**Fix:** Mix it up on purpose. Drop a 3-word sentence in there. Follow it with a 30-word monster. Let your writing breathe unevenly.
 
 ### 2. No Sentence Fragments
 
-**What detectors look for:** Every sentence being grammatically complete. Humans use fragments constantly in informal and even semi-formal writing.
+**What detectors look for:** Every sentence being grammatically complete. Humans use fragments all the time — in casual writing, in semi-formal writing, everywhere.
 
 **Example:** AI never writes "Not even close." or "Big mistake." as standalone sentences.
 
-**Fix:** Drop in fragments where they'd feel natural. After a question. Before a pivot. Like this.
+**Fix:** Use fragments where they'd feel natural. After a question. Before a pivot. Like this.
 
 ### 3. Absence of Run-On Sentences
 
-**What detectors look for:** Perfect sentence boundaries everywhere. No comma splices, no sentences that probably should've been two.
+**What detectors look for:** Perfect sentence boundaries everywhere. No comma splices, no sentences that should've been split.
 
-**Example:** Humans write things like "I tried the new tool it was actually pretty good" — technically wrong, but natural.
+**Example:** Humans write things like "I tried the new tool it was actually pretty good" — wrong technically, but it sounds natural.
 
-**Fix:** Let a comma splice slip in occasionally. Don't make every sentence a grammar textbook example.
+**Fix:** Let a comma splice happen. Don't turn every sentence into a grammar textbook example, that's not how people write.
 
 ### 4. Formulaic Paragraph Openers
 
-**What detectors look for:** Patterns like "Furthermore," "Additionally," "Moreover," "It is important to note that" starting every paragraph.
+**What detectors look for:** Paragraphs starting with "Furthermore," "Additionally," "Moreover," or "It is important to note that."
 
 **Example:** "Furthermore, the data suggests..." / "Additionally, researchers have found..." / "Moreover, it is worth noting..."
 
-**Fix:** Start paragraphs with "Look," or "Here's the thing:" or "So" or just... dive in without a transition word.
+**Fix:** Start with "Look," or "Here's the thing:" or "So" or just dive straight into the thought. No preamble needed.
 
 ### 5. Perfect Parallel Structure
 
-**What detectors look for:** Lists and multi-part sentences where every element follows the exact same grammatical template.
+**What detectors look for:** Lists where every element follows the exact same grammatical template.
 
-**Example:** "The system improves efficiency, enhances productivity, and increases output." — Three identical verb-noun structures.
+**Example:** "The system improves efficiency, enhances productivity, and increases output." — Three identical verb-noun structures. It's too clean.
 
 **Fix:** Break the pattern. "The system makes things faster, your team gets more done, and output goes through the roof."
 
 ### 6. Consistent Sentence Complexity
 
-**What detectors look for:** A steady level of syntactic complexity — no sudden shifts between simple and compound-complex sentences.
+**What detectors look for:** Steady syntactic complexity throughout — no jumps between simple and compound-complex sentences.
 
-**Fix:** Alternate deliberately. Simple sentence. Then build a complex one with multiple subordinate clauses that winds through an idea before arriving at the point. Then go simple again.
+**Fix:** Alternate on purpose. Simple sentence. Then build a complex one with subordinate clauses that winds through an idea before finally arriving at the point. Then simple again. That rhythm is what detectors want to see.
 
 ## Category 2: Vocabulary Patterns
 
-Word choice is where AI text really gives itself away. If you've ever wondered what does AI writing look like at the word level, this category is your answer.
+Word choice is where AI text really trips up. If you've wondered what AI writing actually looks like at the word level — this is it.
 
 ### 7. Overuse of "AI Vocabulary"
 
-**What detectors look for:** Words that LLMs lean on heavily: "utilize," "leverage," "delve," "tapestry," "multifaceted," "landscape," "foster," "comprehensive," "facilitate."
+**What detectors look for:** Words that LLMs lean on way too hard: "utilize," "delve," "tapestry," "multifaceted," "landscape," "foster," "comprehensive," "facilitate."
 
-**Example:** "We must leverage these insights to foster a comprehensive understanding of the multifaceted landscape."
+**Example:** "We must leverage these insights to foster a comprehensive understanding of the multifaceted landscape." (I've seen ChatGPT produce sentences almost exactly like this. It's almost a parody of itself.)
 
-**Fix:** Use normal words. "Use" instead of "utilize." "Dig into" instead of "delve." "Complicated" instead of "multifaceted." Write like you talk.
+**Fix:** Normal words. "Use" not "utilize." "Dig into" not "delve." "Complicated" not "multifaceted." Write like you talk.
 
 ### 8. Lack of Slang or Informal Words
 
-**What detectors look for:** An absence of colloquial language, casual phrasing, or anything that wouldn't appear in a formal report.
+**What detectors look for:** Zero colloquial language. Nothing casual, nothing you'd hear in a real conversation.
 
-**Example:** AI writes "this is quite impressive." Humans write "this is seriously cool" or "this slaps."
+**Example:** AI writes "this is quite impressive." A human writes "this is seriously cool" or just "this slaps."
 
-**Fix:** Sprinkle in informal language where it fits your audience. Not everywhere — just enough to sound like a real person.
+**Fix:** Sprinkle in informal language that fits your audience. Not everywhere — just enough to sound like you're an actual person and not a very polite robot.
 
 ### 9. Uniform Formality Level
 
-**What detectors look for:** A perfectly consistent register throughout the entire text. No shifts between formal and casual.
+**What detectors look for:** Perfectly consistent register throughout. No shifts between formal and casual.
 
-**Fix:** Let your formality fluctuate. Be precise and technical in one paragraph, then drop into casual mode for the next. That's how people actually write.
+**Fix:** Let your formality wander. Be technical in one paragraph, then drop into casual mode for the next. That's how real people write. We code-switch constantly and don't even think about it.
 
 ### 10. Excessive Hedging Words
 
-**What detectors look for:** Dense clusters of "perhaps," "might," "could potentially," "it is possible that," "arguably." AI hedges constantly because it's trained to avoid strong claims.
+**What detectors look for:** Clusters of "perhaps," "might," "could potentially," "it is possible that." AI hedges constantly because it's trained to avoid strong claims.
 
-**Example:** "It could potentially be argued that this might perhaps lead to improved outcomes."
+**Example:** "It could potentially be argued that this might perhaps lead to improved outcomes." (Reading that sentence out loud is honestly painful.)
 
-**Fix:** Take a stance. "This leads to better outcomes." Be direct. You can hedge sometimes, but not every other sentence.
+**Fix:** Take a stance. "This leads to better outcomes." Done. You can hedge sometimes, but pick your spots.
 
 ### 11. Missing Contractions
 
-**What detectors look for:** "Do not" instead of "don't." "It is" instead of "it's." "They would" instead of "they'd." A low contraction rate is a strong AI signal.
+**What detectors look for:** "Do not" instead of "don't." "It is" instead of "it's." A low contraction rate is one of the strongest AI signals — and one of the easiest to fix.
 
-**Fix:** Contract everything you naturally would in speech. "Don't," "can't," "it's," "they're," "wouldn't." If you'd say it contracted out loud, write it contracted.
+**Fix:** Contract everything you naturally would in conversation. "Don't," "can't," "it's," "they're," "wouldn't." If you'd say it contracted out loud, write it that way.
 
 ### 12. Over-Precise Language
 
-**What detectors look for:** Unnecessarily exact phrasing where approximate language would be more natural. AI tends toward precision even when it doesn't matter.
+**What detectors look for:** Unnecessarily exact phrasing where approximation would sound more natural.
 
 **Example:** "Approximately 73% of users reported satisfaction levels above the median threshold." vs. "Most users were happy with it."
 
-**Fix:** Round numbers. Use "most" instead of exact percentages when precision isn't the point. Be vague where humans would be vague.
+**Fix:** Round your numbers. Say "most" instead of exact percentages when precision doesn't matter. Be vague where humans would be vague — which is most of the time.
 
 ## Category 3: Style and Voice Patterns
 
-This is where the question of what does AI writing look like gets really interesting. These patterns detect the absence of a human voice — the personality gap.
+This is where it gets interesting. These patterns detect the absence of a human voice — the personality gap that AI can't seem to close.
 
 ### 13. No Personal Anecdotes
 
-**What detectors look for:** Complete absence of first-person experience. No "I once..." or "In my experience..." or references to personal situations.
+**What detectors look for:** Zero first-person experience. No "I once..." or "In my experience..." anywhere.
 
-**Fix:** Drop in a brief personal reference where relevant. "I've tested a dozen tools and most of them..." Even a small one shifts the signal.
+**Fix:** Drop a brief personal reference where it fits. "I've tested a dozen tools and most of them..." Even something small shifts the signal.
 
 ### 14. Missing Opinion Statements
 
-**What detectors look for:** Balanced, neutral language throughout. No strong "I think X is wrong" or "This is the best approach, hands down."
+**What detectors look for:** Balanced, neutral language throughout. No "I think X is wrong" or "This is the best approach, hands down."
 
-**Fix:** State opinions. Disagree with something. Recommend something. Have a take.
+**Fix:** State opinions. Disagree with something. Recommend one thing over another. Have a take. Fence-sitting is an AI tell.
 
 ### 15. Passive Voice Overuse
 
-**What detectors look for:** High ratio of passive constructions. "The data was analyzed" instead of "We analyzed the data." AI defaults to passive because it's safer.
+**What detectors look for:** High ratio of passive constructions. "The data was analyzed" instead of "We analyzed the data."
 
-**Fix:** Rewrite passives to active. "We ran the analysis" beats "The analysis was conducted" every time.
+**Fix:** Flip passives to active. "We ran the analysis" beats "The analysis was conducted." Every time.
 
 ### 16. Absence of Humor or Sarcasm
 
-**What detectors look for:** Zero tonal variation in the direction of humor, irony, or sarcasm. AI plays it straight — always.
+**What detectors look for:** Zero tonal variation toward humor or irony. AI plays it straight, always.
 
-**Fix:** A dry aside, a self-deprecating comment, or a bit of sarcasm goes a long way. You don't need to be a comedian. Just be human.
+**Fix:** A dry aside or a self-deprecating comment goes a long way. You don't need to be a comedian. Just don't write like a terms-of-service document.
 
 ### 17. Consistent Emotional Tone
 
-**What detectors look for:** Flat affect. No shifts between enthusiasm, frustration, skepticism, or excitement within the text.
+**What detectors look for:** Flat affect throughout. No shifts between enthusiasm, frustration, or skepticism.
 
-**Fix:** Let your tone shift with the content. Be excited about something that's exciting. Be frustrated about something that's frustrating. React to your own material.
+**Fix:** Let your tone match the content. Be excited about cool stuff. Be annoyed about annoying stuff. React to your own material — a reader can tell when you're on autopilot.
 
 ### 18. Missing Self-References
 
-**What detectors look for:** No "I," "we," "my," or "our" — or extremely infrequent use. AI tends to write from a detached, omniscient perspective.
+**What detectors look for:** No "I," "we," "my," or "our" — or barely any. AI writes from this detached, omniscient perspective that no human actually uses.
 
-**Fix:** Use "I" and "we" where natural. Reference your own experience, your own team, your own opinion.
+**Fix:** Say "I" and "we" where it's natural. Reference your experience, your team, your opinion.
 
 ## Category 4: Content Patterns
 
-The final six patterns look at higher-level content organization. These are subtler, but sophisticated detectors absolutely check for them.
+These six look at higher-level organization. They're subtler, but good detectors absolutely check them.
 
 ### 19. Perfect Transitions Between Paragraphs
 
-**What detectors look for:** Every paragraph flowing flawlessly into the next with a clear logical connector. Real writing sometimes just... jumps.
+**What detectors look for:** Every paragraph flowing into the next with a clear logical connector.
+
+Real writing sometimes just jumps.
 
 **Fix:** Let some transitions be abrupt. Not every paragraph needs to connect smoothly to the one before it.
 
 ### 20. Balanced "On One Hand / On the Other" Structure
 
-**What detectors look for:** Perfectly balanced pros-and-cons framing where every positive is followed by a counterpoint of equal weight.
+**What detectors look for:** Perfectly balanced pros-and-cons where every positive gets a counterpoint of equal weight.
 
-**Fix:** Be unbalanced. Spend three sentences on one side and one on the other. Or skip the counterpoint entirely when your position is clear.
+**Fix:** Be lopsided. Spend three sentences on one side and one on the other. Or just skip the counterpoint when your position is clear. Real arguments aren't perfectly balanced — they're weighted toward what the writer actually believes.
 
 ### 21. Formulaic Conclusions
 
-**What detectors look for:** "In conclusion," "To summarize," "In summary," "Overall," as paragraph openers in the final section.
+**What detectors look for:** "In conclusion," "To summarize," "Overall," kicking off the final section.
 
-**Fix:** Just end. Make your last point and stop. Or circle back to your opening. Don't announce that you're concluding.
+**Fix:** Just end. Make your last point and stop. Or circle back to your opening. Don't announce that you're wrapping up.
 
 ### 22. No Tangential Asides
 
-**What detectors look for:** Every sentence directly serving the main argument. No digressions, no side thoughts, no "by the way" moments.
+**What detectors look for:** Every sentence directly serving the main argument. No digressions.
 
-**Fix:** Go on a brief tangent. Mention something tangentially related. Add a parenthetical thought (even if it's not strictly necessary). It's what real writers do.
+**Fix:** Go on a brief tangent. Mention something tangentially related. Add a parenthetical thought (even if it's not strictly necessary — like this one). Real writers do this constantly.
 
 ### 23. Over-Explanation of Simple Concepts
 
-**What detectors look for:** Spending 2-3 sentences explaining something that could be said in half a sentence. AI pads for thoroughness.
+**What detectors look for:** Two or three sentences explaining something that needs half a sentence.
 
 **Example:** "Artificial intelligence, which refers to computer systems designed to perform tasks that typically require human intelligence, has become increasingly prevalent in recent years."
 
-**Fix:** Trust your reader. If they know what AI is, don't define it. Move faster through familiar ground.
+**Fix:** Trust your reader. If they know what AI is, don't define it. Move faster.
 
 ### 24. Lists That Are Too Clean
 
-**What detectors look for:** Bulleted or numbered lists where every item is the same length, same structure, same depth.
+**What detectors look for:** Bulleted lists where every item is the same length, same structure, same depth.
 
-**Fix:** Make your lists uneven. One item gets two sentences of explanation. Another gets four words. That's how people actually organize thoughts — imperfectly.
+**Fix:** Make your lists uneven. One item gets two sentences. Another gets four words. That's how people actually think — not in perfectly formatted parallel structures.
 
 ## How HumanizeIt Scores Each Pattern
 
-HumanizeIt's detection engine runs your text through all 40 patterns (including the 24 covered here plus 16 additional statistical and structural checks). Each pattern gets an individual score, and those scores combine into an overall AI probability rating from 0 to 100.
+HumanizeIt runs your text through all 40 patterns (the 24 here plus 16 additional statistical checks). Each pattern gets scored individually, and those scores combine into an overall AI probability from 0 to 100.
 
-A score of 0-30 means your text reads as strongly human. 30-60 is the gray zone — some detectors might flag it, others won't. Above 60, most detectors will call it AI-generated.
+0-30 means your text reads as strongly human. 30-60 is the gray zone — some detectors flag it, others don't. Above 60, most detectors are going to call it AI.
 
 <Callout type="info">
 HumanizeIt doesn't just give you a single number. It breaks down your score by category — structure, vocabulary, style, and content — so you know exactly where to focus your edits. The patterns with the highest individual scores are the ones dragging your text into detection range.
 </Callout>
 
-Want to see how do AI detectors work on your own text? Try pasting something below.
+Want to test your own text? Paste something below.
 
 <DetectorWidget />
 
 ## Fixing Your Scores: Quick Tips by Category
 
-You don't need to address all 24 patterns to drop below the detection threshold. Here's the cheat sheet.
+You don't need to fix all 24 patterns. Here's the cheat sheet.
 
 ### Structure Fixes
 
-Vary everything. Throw in fragments. Let a run-on slide. Start a paragraph with "Look" instead of "Furthermore." Break rules on purpose — but make it look natural, not chaotic.
+Vary everything. Fragments are your friend. Let a run-on slide. Start a paragraph with "Look" instead of "Furthermore." Break rules on purpose — just make it look natural.
 
 ### Vocabulary Fixes
 
-Ban the AI word list from your writing. Use "use" not "utilize." Add contractions everywhere. Drop in a casual phrase or two. Write closer to how you'd explain something to a smart friend over coffee.
+Ban the AI word list. "Use" not "utilize." Contractions everywhere. Drop in something casual. Write like you'd explain it to a smart friend, not a review board.
 
 ### Style Fixes
 
-Add yourself to the text. State an opinion. Reference a personal experience. Crack a dry joke. Shift your tone — be enthusiastic in one paragraph and measured in the next. Let the reader feel a human behind the words.
+Put yourself in the text. State an opinion. Reference something you've actually experienced. Crack a dry joke. Shift your tone between paragraphs — enthusiastic here, measured there. Let someone reading it feel that a real person wrote it.
 
 ### Content Fixes
 
-Be imperfect on purpose. Skip a transition. Go on a tangent. Don't balance every argument. Let your conclusion just... end. Make your lists messy. Trust your reader to follow you without being led by the hand through every logical step.
+Be imperfect on purpose. Skip a transition. Wander off-topic for a sentence. Don't balance every argument equally. Let your conclusion just stop. Make your lists messy. Trust your reader to keep up without being walked through every logical step like a golden retriever being trained to sit.
 
 ## Frequently Asked Questions
 
 ### How many patterns does HumanizeIt actually check?
 
-The full engine analyzes 40 distinct patterns. This article covers the 24 that have the most impact on your detection score. The remaining 16 are more granular statistical measures — things like token probability distributions, n-gram frequency analysis, and entropy calculations.
+Forty. This article covers the 24 that matter most for your detection score. The other 16 are more granular — token probability distributions, n-gram frequency stuff, entropy calculations. Important under the hood, but the 24 here are where you should focus your editing.
 
 ### Can fixing just a few patterns make a difference?
 
-Absolutely. In our testing, addressing the top 5 highest-scoring patterns in a given text typically drops the overall AI probability by 20-35 points. You don't need to fix everything. Fix the worst offenders first.
+Yeah, a big one. In my testing, fixing the top 5 worst-scoring patterns in a piece typically drops the overall AI probability by 20-35 points. You don't need to fix everything. Hit the worst offenders first and you'll be surprised how far that gets you.
 
 ### Do different detectors weight patterns differently?
 
-Yes. GPTZero leans heavily on perplexity and burstiness. Originality.ai puts more weight on vocabulary and sentence structure patterns. Turnitin focuses on longer-range content patterns. HumanizeIt's engine is calibrated to approximate the weighted average across major detectors.
+They do. GPTZero cares most about perplexity and burstiness. Originality.ai puts more weight on vocabulary and sentence structure. Turnitin focuses on longer-range content patterns. HumanizeIt's engine is calibrated to approximate the weighted average across all the major detectors, so if you pass it, you'll usually pass them.
 
 ### Should I fix all 24 patterns or focus on the worst ones?
 
-Focus on the worst ones. Diminishing returns kick in fast. If your text scores high on 3-4 patterns and low on the rest, fixing those 3-4 will usually be enough to clear detection thresholds. HumanizeIt's category breakdown tells you exactly which ones to prioritize.
+Focus on the worst ones. Diminishing returns are real. If your text scores high on 3-4 patterns and low on the rest, fixing those 3-4 is usually enough. HumanizeIt's breakdown tells you exactly which to prioritize — don't waste time on patterns where you're already scoring fine.
 
 ### How often are new patterns added?
 
-We recalibrate the engine regularly as AI models evolve and detectors update their methods. New patterns get added when we identify signals that detectors have started weighting more heavily. The core 24 covered here have been stable and high-impact since we launched.
+We recalibrate as models and detectors evolve. New patterns get added when we spot signals that detectors have started weighting more heavily. The 24 here have been stable and high-impact since launch — they're the core patterns that aren't going anywhere.
 
 ## The Bottom Line
 
-AI detectors aren't mysterious. They're pattern matchers running statistical checks on your text. Now you know exactly which patterns they check — 24 of the most impactful ones, organized into four categories.
+AI detectors are pattern matchers running statistical checks. You now know 24 of those checks, organized into four categories.
 
-The key insight: you don't need perfect scores across every pattern. You need to identify the 3-5 patterns where your text scores worst and address those specifically. That targeted approach is faster, more effective, and produces text that actually reads well — not just text that dodges detection.
-
-Understanding how do AI detectors work gives you the ability to write smarter, edit with precision, and stop guessing about why your text keeps getting flagged. Whether you use HumanizeIt to automate the fixes or do it manually with this guide, the playbook is the same: know the patterns, measure your text against them, fix what's broken.
+You don't need perfect scores across all of them. Find the 3-5 patterns where your text scores worst, fix those, and you're probably clear. That targeted approach is faster, more effective, and produces text that actually reads well — not just text that squeaks past detection.
