@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     shortcut: "/favicon.ico",
-    apple: "/favicon.svg",
+    apple: "/favicon.ico",
   },
   openGraph: {
     title: "HumanizeIt — Detect & Humanize AI Text",
