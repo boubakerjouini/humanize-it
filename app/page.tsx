@@ -144,6 +144,7 @@ export default function LandingPage() {
   const [showResult, setShowResult] = useState(false);
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -228,6 +229,11 @@ export default function LandingPage() {
         .fade-in { animation: fadeInUp 0.6s ease-out forwards; }
         .fade-in-delay { animation: fadeInUp 0.6s ease-out 0.15s forwards; opacity: 0; }
         .fade-in-delay2 { animation: fadeInUp 0.6s ease-out 0.3s forwards; opacity: 0; }
+        .faq-answer { overflow: hidden; transition: max-height 0.35s ease, opacity 0.3s ease; }
+        .faq-answer[data-open="false"] { max-height: 0; opacity: 0; }
+        .faq-answer[data-open="true"] { max-height: 400px; opacity: 1; }
+        .faq-chevron { transition: transform 0.3s ease; }
+        .faq-chevron[data-open="true"] { transform: rotate(180deg); }
         @media (max-width: 768px) {
           .desktop-only { display: none !important; }
           .mobile-nav-links { display: flex !important; }
@@ -343,7 +349,7 @@ export default function LandingPage() {
       )}
 
       {/* ── SECTION 2: LIVE DEMO ── */}
-      <section id="demo" style={{
+      <section id="demo" aria-label="Live AI detection demo" style={{
         padding: "80px 24px", paddingTop: "100px",
         background: "rgba(255,255,255,0.01)",
       }}>
@@ -590,7 +596,7 @@ export default function LandingPage() {
             margin: "0 0 20px",
             color: "#fafafa",
           }}>
-            Your AI text,{" "}
+            Humanize AI Text.{" "}
             <span style={{
               background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)",
               WebkitBackgroundClip: "text",
@@ -598,7 +604,7 @@ export default function LandingPage() {
               backgroundClip: "text",
               backgroundSize: "200% 200%",
               animation: "gradientShift 4s ease infinite",
-            }}>sounds human.</span>
+            }}>Beat Every Detector.</span>
           </h1>
 
           {/* Subtitle */}
@@ -607,9 +613,9 @@ export default function LandingPage() {
             color: "#a0a0b0",
             lineHeight: 1.7,
             margin: "0 auto 36px",
-            maxWidth: "520px",
+            maxWidth: "560px",
           }}>
-            Paste any AI-generated text. Get a human score instantly. Rewrite with one click. Beats GPTZero, Turnitin &amp; Originality.ai.
+            The most advanced AI text humanizer — paste any AI-generated text, get a detection score instantly, and rewrite it into undetectable AI writing with one click.
           </p>
 
           {/* Two CTAs */}
@@ -659,7 +665,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── SECTION 3: HOW IT WORKS ── */}
-      <section id="how-it-works" style={{
+      <section id="how-it-works" aria-label="How it works" style={{
         padding: "80px 24px",
         borderTop: "1px solid rgba(255,255,255,0.05)",
         borderBottom: "1px solid rgba(255,255,255,0.05)",
@@ -870,7 +876,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── SECTION 7: PRICING ── */}
-      <section id="pricing" style={{
+      <section id="pricing" aria-label="Pricing plans" style={{
         padding: "80px 24px",
         borderTop: "1px solid rgba(255,255,255,0.05)",
       }}>
@@ -1063,6 +1069,118 @@ export default function LandingPage() {
               }}>
                 {app}
               </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ SECTION ── */}
+      <section id="faq" aria-label="Frequently asked questions" style={{
+        padding: "80px 24px",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+      }}>
+        <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+          <p style={{
+            textAlign: "center", fontSize: "11px", fontWeight: 700,
+            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
+            marginBottom: "14px",
+          }}>
+            FAQ
+          </p>
+          <h2 style={{
+            textAlign: "center",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-1px",
+            marginBottom: "48px", color: "#fafafa",
+          }}>
+            Everything You Need to Know
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {([
+              {
+                q: "Is HumanizeIt actually free?",
+                a: "Yes — the free tier gives you 500 words per day with 1 humanization. No credit card required. Pro plan ($9/mo) gives 50,000 words/month.",
+              },
+              {
+                q: "How does the AI detection work?",
+                a: "We analyze your text against 24 detection patterns used by tools like GPTZero, Turnitin, and Originality.ai — including sentence entropy, vocabulary diversity, burstiness score, and more. You get a 0–100 score with a breakdown of which patterns triggered.",
+              },
+              {
+                q: "Will my humanized text pass GPTZero?",
+                a: "Our V3 multi-pass humanizer is specifically trained to reduce the patterns GPTZero flags. Most users see their score drop below 25 (green zone). Results vary by text length and complexity.",
+              },
+              {
+                q: "What AI tools does it work with?",
+                a: "Optimized for ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, and Llama outputs. Any AI-generated text.",
+              },
+              {
+                q: "Does it work for academic papers and essays?",
+                a: "Yes — it's especially effective for academic content. The humanizer preserves meaning while restructuring sentences to avoid the patterns Turnitin's AI detector and Copyleaks flag.",
+              },
+              {
+                q: "Is my text stored or shared?",
+                a: "No. Text is processed in memory and immediately discarded. We don't store, log, or train on your content.",
+              },
+              {
+                q: "What's the difference between detecting and humanizing?",
+                a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns — using a 3-pass process that preserves your original meaning.",
+              },
+              {
+                q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
+                a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
+              },
+            ] as { q: string; a: string }[]).map((item, i) => (
+              <div key={i} style={{
+                background: "#0e0e12",
+                border: `1px solid ${openFaq === i ? V.brandBorder : "rgba(255,255,255,0.06)"}`,
+                borderRadius: "12px",
+                overflow: "hidden",
+                transition: "border-color 0.3s",
+              }}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                  style={{
+                    width: "100%",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "18px 22px",
+                    background: "transparent", border: "none",
+                    cursor: "pointer", textAlign: "left",
+                  }}
+                >
+                  <span style={{
+                    fontSize: "15px", fontWeight: 600, color: "#fafafa",
+                    lineHeight: 1.4, paddingRight: "16px",
+                  }}>
+                    {item.q}
+                  </span>
+                  <span
+                    className="faq-chevron"
+                    data-open={openFaq === i ? "true" : "false"}
+                    style={{
+                      fontSize: "18px", color: V.brand, flexShrink: 0,
+                      lineHeight: 1,
+                    }}
+                  >
+                    &#x25BE;
+                  </span>
+                </button>
+                <div
+                  className="faq-answer"
+                  data-open={openFaq === i ? "true" : "false"}
+                >
+                  <p style={{
+                    padding: "0 22px 18px",
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#a0a0b0",
+                    lineHeight: 1.7,
+                  }}>
+                    {item.a}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
