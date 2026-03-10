@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -28,11 +28,11 @@ const clerkHandler = clerkMiddleware(async (auth) => {
 
 // Custom middleware: bypass Clerk entirely for public routes
 // This ensures the landing page stays up even when Clerk FAPI is degraded
-export default async function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest, event: NextFetchEvent) {
   if (isPublicRoute(request)) {
     return NextResponse.next();
   }
-  return clerkHandler(request);
+  return clerkHandler(request, event);
 }
 
 export const config = {
