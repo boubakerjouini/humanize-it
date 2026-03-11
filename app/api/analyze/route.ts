@@ -52,19 +52,38 @@ export async function POST(req: Request) {
     }
 
     // 4. Load user from DB (auto-upsert in case webhook didn't fire)
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
-        clerkId,
-        email: `${clerkId}@placeholder.humanize-it.app`,
-        plan: "FREE",
-        wordsUsed: 0,
-      },
-    });
+    let user;
+    try {
+      user = await db.user.upsert({
+        where: { clerkId },
+        update: {},
+        create: {
+          clerkId,
+          email: `${clerkId}@placeholder.humanize-it.app`,
+          plan: "FREE",
+          wordsUsed: 0,
+        },
+      });
+    } catch (dbErr) {
+      console.error("[analyze] DB connection/query failed on user upsert:", dbErr);
+      const message =
+        dbErr instanceof Error && dbErr.message.includes("connect")
+          ? "Database connection failed. Please try again later."
+          : "Failed to load user data.";
+      return NextResponse.json(
+        { error: { code: "DB_ERROR", message } },
+        { status: 503 }
+      );
+    }
 
     // 4b. Reset quota if period has expired (daily for FREE, monthly for PRO/TEAM)
-    const freshUser = await checkAndResetQuota(user);
+    let freshUser;
+    try {
+      freshUser = await checkAndResetQuota(user);
+    } catch (dbErr) {
+      console.error("[analyze] quota reset failed:", dbErr);
+      freshUser = user; // continue with stale quota rather than failing
+    }
 
     // 5. Check word quota
     const plan = PLANS[freshUser.plan as keyof typeof PLANS] ?? PLANS["FREE"];
@@ -106,11 +125,15 @@ export async function POST(req: Request) {
       console.error("[analyze] failed to save document (table may not exist):", dbErr);
     }
 
-    // 8. Increment wordsUsed
-    await db.user.update({
-      where: { id: user.id },
-      data: { wordsUsed: { increment: wordCount } },
-    });
+    // 8. Increment wordsUsed (resilient — analysis works even if this fails)
+    try {
+      await db.user.update({
+        where: { id: user.id },
+        data: { wordsUsed: { increment: wordCount } },
+      });
+    } catch (dbErr) {
+      console.error("[analyze] failed to increment wordsUsed:", dbErr);
+    }
 
     // 9. Track event
     trackServer(clerkId, "text_analyzed", {
