@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
+import { track } from "@vercel/analytics";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -150,7 +151,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                 ) : plan.id !== "FREE" ? (
                   <a
                     href={`/api/checkout?plan=${plan.id.toLowerCase()}`}
-                    onClick={() => posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan })}
+                    onClick={() => { posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan }); track("upgrade_cta_clicked", { plan: plan.id }); }}
                     style={{
                       display: "block", padding: "8px", borderRadius: "6px",
                       fontSize: "12px", fontWeight: 600, textDecoration: "none",

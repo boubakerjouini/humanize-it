@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { usePostHog } from "posthog-js/react";
+import { track } from "@vercel/analytics";
 import { PatternCard } from "@/components/ui/pattern-card";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -517,6 +518,7 @@ export default function EditorPage() {
     if (!isSignedIn) { setShowAuthModal(true); return; }
     const useTone = overrideTone ?? tone;
     posthog?.capture("humanize_clicked", { tone: useTone, score: result.score });
+    track("humanize_clicked", { tone: useTone, score: result.score });
     setHumanizing(true);
     setHumanizedText(null);
     setHumanizedScore(null);

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, UserButton, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { Loader2 } from "lucide-react";
+import { track } from "@vercel/analytics";
 
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
@@ -943,7 +944,7 @@ export default function LandingPage() {
                     </SignedIn>
                   </>
                 ) : (
-                  <a href={plan.href ?? "#"} style={{
+                  <a href={plan.href ?? "#"} onClick={() => track("beta_access_clicked", { plan: plan.id })} style={{
                     display: "block", textAlign: "center", textDecoration: "none",
                     padding: "10px", borderRadius: "7px",
                     fontSize: "13px", fontWeight: 600,
