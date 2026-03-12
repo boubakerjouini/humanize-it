@@ -944,7 +944,7 @@ export default function LandingPage() {
                     </SignedIn>
                   </>
                 ) : (
-                  <a href={plan.href ?? "#"} onClick={() => track("beta_access_clicked", { plan: plan.id })} style={{
+                  <a href={plan.href ?? "#"} onClick={() => track("beta_access_clicked", { plan: plan.name })} style={{
                     display: "block", textAlign: "center", textDecoration: "none",
                     padding: "10px", borderRadius: "7px",
                     fontSize: "13px", fontWeight: 600,
