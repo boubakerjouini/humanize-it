@@ -14,8 +14,18 @@ import { getClerkIdFromRequest } from "@/lib/extension-auth";
 export async function POST(req: Request) {
   try {
     // 1. Auth — support both Clerk session and extension Bearer token
-    const { userId: clerkSessionId } = await auth();
-    const clerkId = getClerkIdFromRequest(req, clerkSessionId ?? null);
+    // Note: /api/analyze is in publicRoutes so Clerk middleware is bypassed.
+    // In @clerk/nextjs v6, calling auth() without middleware processing throws
+    // instead of returning { userId: null }. Wrap in try/catch to handle this.
+    let clerkSessionId: string | null = null;
+    try {
+      const authResult = await auth();
+      clerkSessionId = authResult.userId;
+    } catch {
+      // Clerk middleware bypassed for this route — treat as unauthenticated
+      clerkSessionId = null;
+    }
+    const clerkId = getClerkIdFromRequest(req, clerkSessionId);
     if (!clerkId) {
       return NextResponse.json(
         { error: { code: "UNAUTHORIZED", message: "Authentication required." } },
