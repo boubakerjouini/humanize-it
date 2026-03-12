@@ -1,5 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -23,19 +22,14 @@ const isPublicRoute = createRouteMatcher([
   "/refunds",
 ]);
 
-// Clerk middleware for protected routes only
-const clerkHandler = clerkMiddleware(async (auth) => {
-  await auth.protect();
-});
-
-// Custom middleware: bypass Clerk entirely for public routes
-// This ensures the landing page stays up even when Clerk FAPI is degraded
-export default async function middleware(request: NextRequest, event: NextFetchEvent) {
-  if (isPublicRoute(request)) {
-    return NextResponse.next();
+// Standard Clerk middleware: runs on ALL routes so session cookies are always
+// processed (enabling auth() to return userId for logged-in users on public
+// routes). Only PROTECTS non-public routes (redirects to sign-in if not authed).
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
-  return clerkHandler(request, event);
-}
+});
 
 export const config = {
   matcher: [
