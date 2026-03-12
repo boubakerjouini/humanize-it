@@ -57,9 +57,9 @@ const PLANS_MONTHLY = [
     period: "/month",
     desc: "For serious writers",
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Upgrade to Pro \u2192",
+    cta: "Request Beta Access",
     pro: true,
-    href: LS_BASE + VARIANT_IDS.proMonthly,
+    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt PRO Beta Access",
   },
   {
     name: "Team",
@@ -67,9 +67,9 @@ const PLANS_MONTHLY = [
     period: "/month",
     desc: "For teams & agencies",
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Start Team Plan \u2192",
+    cta: "Request Beta Access",
     pro: false,
-    href: LS_BASE + VARIANT_IDS.teamMonthly,
+    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt TEAM Beta Access",
   },
 ];
 
@@ -90,9 +90,9 @@ const PLANS_ANNUAL = [
     period: "/month",
     desc: "For serious writers",
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Upgrade to Pro \u2192",
+    cta: "Request Beta Access",
     pro: true,
-    href: LS_BASE + VARIANT_IDS.proAnnual,
+    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt PRO Beta Access",
   },
   {
     name: "Team",
@@ -100,9 +100,9 @@ const PLANS_ANNUAL = [
     period: "/month",
     desc: "For teams & agencies",
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Start Team Plan \u2192",
+    cta: "Request Beta Access",
     pro: false,
-    href: LS_BASE + VARIANT_IDS.teamAnnual,
+    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt TEAM Beta Access",
   },
 ];
 
@@ -935,6 +935,20 @@ export default function LandingPage() {
             )}
           </div>
 
+          {/* Beta badge */}
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              fontSize: "12px", fontWeight: 500,
+              color: "rgba(255,255,255,0.4)",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              padding: "5px 14px", borderRadius: "100px",
+            }}>
+              🚀 Currently in Beta — Paid plans coming soon
+            </span>
+          </div>
+
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
             {plans.map((plan, i) => (
               <div key={plan.name} style={{
@@ -1007,35 +1021,16 @@ export default function LandingPage() {
                     </SignedIn>
                   </>
                 ) : (
-                  <>
-                    <SignedOut>
-                      <SignUpButton mode="modal">
-                        <button style={{
-                          display: "block", width: "100%", textAlign: "center",
-                          padding: "10px", borderRadius: "7px",
-                          fontSize: "13px", fontWeight: 600,
-                          background: plan.pro ? V.brand : "transparent",
-                          color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
-                          border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
-                          cursor: "pointer",
-                        }}>
-                          {plan.cta}
-                        </button>
-                      </SignUpButton>
-                    </SignedOut>
-                    <SignedIn>
-                      <a href={plan.href ?? "#"} style={{
-                        display: "block", textAlign: "center", textDecoration: "none",
-                        padding: "10px", borderRadius: "7px",
-                        fontSize: "13px", fontWeight: 600,
-                        background: plan.pro ? V.brand : "transparent",
-                        color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
-                        border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
-                      }}>
-                        {plan.cta}
-                      </a>
-                    </SignedIn>
-                  </>
+                  <a href={plan.href ?? "#"} style={{
+                    display: "block", textAlign: "center", textDecoration: "none",
+                    padding: "10px", borderRadius: "7px",
+                    fontSize: "13px", fontWeight: 600,
+                    background: plan.pro ? V.brand : "transparent",
+                    color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
+                    border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
+                  }}>
+                    {plan.cta}
+                  </a>
                 )}
               </div>
             ))}
