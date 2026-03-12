@@ -106,26 +106,6 @@ const PLANS_ANNUAL = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote: "Finally an AI humanizer that actually works. My essays pass Turnitin now.",
-    name: "Sarah K.",
-    role: "Graduate Student",
-    initial: "S",
-  },
-  {
-    quote: "I use it every day for LinkedIn posts. My engagement went up 40%.",
-    name: "Marcus T.",
-    role: "Content Creator",
-    initial: "M",
-  },
-  {
-    quote: "My team uses it for all client deliverables. Worth every penny.",
-    name: "Priya R.",
-    role: "Marketing Agency",
-    initial: "P",
-  },
-];
 
 const COMPARISON = [
   { label: "GPTZero", us: "\u2705", quill: "\u26A0\uFE0F", undet: "\u2705" },
@@ -762,64 +742,6 @@ export default function LandingPage() {
                 Works on: Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── SECTION 5: SOCIAL PROOF ── */}
-      <section style={{
-        padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
-      }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-          <p style={{
-            textAlign: "center", fontSize: "11px", fontWeight: 700,
-            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
-            marginBottom: "14px",
-          }}>
-            Testimonials
-          </p>
-          <h2 style={{
-            textAlign: "center",
-            fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#fafafa",
-          }}>
-            Loved by writers everywhere
-          </h2>
-
-          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-            {TESTIMONIALS.map((t, i) => (
-              <div key={t.name} style={{
-                background: "#0e0e12",
-                border: "1px solid rgba(139,92,246,0.15)",
-                borderRadius: "12px",
-                padding: "24px",
-                opacity: 0,
-                animation: `slideInLeft 0.5s ease ${i * 0.1}s forwards`,
-              }}>
-                <p style={{
-                  fontSize: "14px", color: "rgba(255,255,255,0.65)",
-                  lineHeight: 1.7, fontStyle: "italic", marginBottom: "20px",
-                }}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{
-                    width: "36px", height: "36px", borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${V.brand}, #a78bfa)`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "14px", fontWeight: 700, color: "#fafafa",
-                  }}>
-                    {t.initial}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>{t.name}</div>
-                    <div style={{ fontSize: "11px", color: "#6b6b80" }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </section>
