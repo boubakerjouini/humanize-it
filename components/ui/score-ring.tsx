@@ -90,7 +90,7 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true }
           }}>
             {Math.round(score)}
           </span>
-          <span style={{ fontSize: `${size * 0.09}px`, color: "#9ca3af", marginTop: "2px" }}>
+          <span style={{ fontSize: `${size * 0.09}px`, color: "#4b5563", marginTop: "2px" }}>
             / 100
           </span>
         </div>

@@ -115,7 +115,7 @@ function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
         <div style={{ fontSize: "48px", fontWeight: 800, color: "#0a0a0a", lineHeight: 1, letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-heading)" }}>
           {displayed}
         </div>
-        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>Human Score</div>
+        <div style={{ fontSize: "11px", color: "#4b5563", marginTop: "2px" }}>Human Score</div>
       </div>
     </div>
   );
@@ -170,7 +170,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
               : <>AI is rewriting your text<span className="dots"><span>.</span><span>.</span><span>.</span></span></>
           }
         </p>
-        <p style={{ fontSize: "12px", color: "#9ca3af", textAlign: "center" }}>
+        <p style={{ fontSize: "12px", color: "#4b5563", textAlign: "center" }}>
           {chunkProgress && chunkProgress.total > 1
             ? "Processing large document in sections"
             : "Multi-pass engine · up to 3 attempts · picking the best"
@@ -187,7 +187,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
               transition: "width 0.4s ease",
             }} />
           </div>
-          <p style={{ fontSize: "10px", color: "#9ca3af", textAlign: "center", marginTop: "6px" }}>
+          <p style={{ fontSize: "10px", color: "#4b5563", textAlign: "center", marginTop: "6px" }}>
             {Math.round((chunkProgress.current / chunkProgress.total) * 100)}%
           </p>
         </div>
@@ -201,7 +201,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
             return (
               <div key={p} style={{
                 fontSize: "10px",
-                color: isDone ? "#16a34a" : isActive ? "#7c3aed" : "#9ca3af",
+                color: isDone ? "#16a34a" : isActive ? "#7c3aed" : "#4b5563",
                 padding: "3px 8px", borderRadius: "4px",
                 background: isDone ? "#f0fdf4" : isActive ? "#f3e8ff" : "#faf5ff",
                 border: `1px solid ${isDone ? "rgba(22,163,74,0.25)" : isActive ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.15)"}`,
@@ -229,7 +229,7 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
     label: string; originalVal: string; originalColor: string; humanizedVal?: string; humanizedColor?: string;
   }) => (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f3f4f6" }}>
-      <span style={{ fontSize: "11px", color: "#6b7280", flex: 1 }}>{label}</span>
+      <span style={{ fontSize: "11px", color: "#374151", flex: 1 }}>{label}</span>
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <span style={{ fontSize: "12px", fontWeight: 700, color: originalColor, minWidth: "50px", textAlign: "right" }}>{originalVal}</span>
         {humanizedVal !== undefined && (
@@ -268,15 +268,15 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
           }}>
             {original.fleschLabel}
           </span>
-          {expanded ? <ChevronUp size={13} color="#9ca3af" /> : <ChevronDown size={13} color="#9ca3af" />}
+          {expanded ? <ChevronUp size={13} color="#4b5563" /> : <ChevronDown size={13} color="#4b5563" />}
         </div>
       </button>
       {expanded && (
         <div style={{ padding: "4px 16px 14px", animation: "fadeInUp 0.2s ease" }}>
           {humanized && (
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "24px", marginBottom: "4px", paddingBottom: "6px", borderBottom: "1px solid #e5e7eb" }}>
-              <span style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px" }}>Original</span>
-              <span style={{ fontSize: "9px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px" }}>Humanized</span>
+              <span style={{ fontSize: "9px", color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.5px" }}>Original</span>
+              <span style={{ fontSize: "9px", color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px" }}>Humanized</span>
             </div>
           )}
           <MetricRow
@@ -315,11 +315,11 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
             humanizedColor={humanized ? (humanized.gradeLevel > 12 ? "#f97316" : "#16a34a") : undefined}
           />
           <div style={{ marginTop: "6px", display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "10px", color: "#9ca3af" }}>
+            <span style={{ fontSize: "10px", color: "#4b5563" }}>
               Grade: {original.gradeLevelLabel}
             </span>
             {humanized && (
-              <span style={{ fontSize: "10px", color: "#9ca3af" }}>
+              <span style={{ fontSize: "10px", color: "#4b5563" }}>
                 Grade: {humanized.gradeLevelLabel}
               </span>
             )}
@@ -851,7 +851,7 @@ export default function EditorPage() {
   const isPaidPlan = userPlan === "PRO" || userPlan === "TEAM";
 
   // Word count color
-  const wordCountColor = wordCount === 0 ? "#9ca3af"
+  const wordCountColor = wordCount === 0 ? "#4b5563"
     : wordCount > 1800 ? "#dc2626"
     : wordCount > 1500 ? "#d97706"
     : "#16a34a";
@@ -878,7 +878,7 @@ export default function EditorPage() {
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
               background: editorMode === "single" ? "#f3e8ff" : "transparent",
-              color: editorMode === "single" ? "#7c3aed" : "#6b7280",
+              color: editorMode === "single" ? "#7c3aed" : "#374151",
               transition: "all 0.15s",
             }}>Single</button>
             <button onClick={() => {
@@ -889,7 +889,7 @@ export default function EditorPage() {
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
               background: editorMode === "bulk" ? "#f3e8ff" : "transparent",
-              color: editorMode === "bulk" ? "#7c3aed" : "#6b7280",
+              color: editorMode === "bulk" ? "#7c3aed" : "#374151",
               display: "flex", alignItems: "center", gap: "4px",
               transition: "all 0.15s",
             }}>
@@ -920,7 +920,7 @@ export default function EditorPage() {
                       display: "flex", alignItems: "center", justifyContent: "center",
                       fontSize: "10px", fontWeight: 700, flexShrink: 0,
                       background: done ? "#059669" : active ? "#7c3aed" : "transparent",
-                      color: done || active ? "#fff" : "#9ca3af",
+                      color: done || active ? "#fff" : "#4b5563",
                       border: done || active ? "none" : "2px solid #e5e7eb",
                       transition: "all 0.3s",
                     }}>
@@ -928,7 +928,7 @@ export default function EditorPage() {
                     </div>
                     <span style={{
                       fontSize: "11px", fontWeight: done || active ? 600 : 400,
-                      color: done ? "#059669" : active ? "#7c3aed" : "#9ca3af",
+                      color: done ? "#059669" : active ? "#7c3aed" : "#4b5563",
                       transition: "color 0.3s",
                     }}>
                       {label}
@@ -962,7 +962,7 @@ export default function EditorPage() {
               padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: `1px solid ${language !== "English" ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
               background: language !== "English" ? "#f3e8ff" : "transparent",
-              color: language !== "English" ? "#7c3aed" : "#6b7280",
+              color: language !== "English" ? "#7c3aed" : "#374151",
               transition: "all 0.15s",
             }}>
               <Globe size={10} /> {LANGUAGES.find(l => l.value === language)?.flag} {language}
@@ -978,7 +978,7 @@ export default function EditorPage() {
                     display: "flex", alignItems: "center", gap: "8px", width: "100%",
                     padding: "7px 10px", borderRadius: "5px", fontSize: "12px", cursor: "pointer",
                     background: language === value ? "#f3e8ff" : "transparent",
-                    color: language === value ? "#7c3aed" : "#6b7280",
+                    color: language === value ? "#7c3aed" : "#374151",
                     border: "none", textAlign: "left", fontWeight: language === value ? 600 : 400,
                   }}>
                     <span>{flag}</span> {label}
@@ -994,7 +994,7 @@ export default function EditorPage() {
                 padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
                 border: `1px solid ${tone === value ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
                 background: tone === value ? "#f3e8ff" : "transparent",
-                color: tone === value ? "#7c3aed" : "#6b7280",
+                color: tone === value ? "#7c3aed" : "#374151",
                 transition: "all 0.15s",
                 display: "flex", alignItems: "center", gap: "4px",
               }}><span style={{ fontSize: "12px" }}>{icon}</span>{label}</button>
@@ -1004,7 +1004,7 @@ export default function EditorPage() {
             <button onClick={handleReset} style={{
               display: "flex", alignItems: "center", gap: "4px",
               background: "#f9fafb", border: "1px solid #e5e7eb",
-              borderRadius: "6px", padding: "4px 10px", color: "#6b7280",
+              borderRadius: "6px", padding: "4px 10px", color: "#374151",
               cursor: "pointer", fontSize: "11px",
             }}>
               <RotateCcw size={10} /> New
@@ -1041,7 +1041,7 @@ export default function EditorPage() {
                   <button onClick={() => setStyleOpen(o => !o)} style={{
                     width: "100%", padding: "10px 14px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "transparent", border: "none", cursor: "pointer", color: "#6b7280",
+                    background: "transparent", border: "none", cursor: "pointer", color: "#374151",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <Fingerprint size={13} color="#7c3aed" />
@@ -1054,12 +1054,12 @@ export default function EditorPage() {
                   </button>
                   {styleOpen && (
                     <div style={{ padding: "0 14px 14px", animation: "fadeInUp 0.2s ease" }}>
-                      <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "10px", lineHeight: 1.5 }}>
+                      <p style={{ fontSize: "11px", color: "#4b5563", marginBottom: "10px", lineHeight: 1.5 }}>
                         Paste 2-3 samples of your writing. We&apos;ll extract your style and apply it to humanizations.
                       </p>
                       {styleSamples.map((sample, i) => (
                         <div key={i} style={{ marginBottom: "8px" }}>
-                          <label style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "3px", display: "block" }}>
+                          <label style={{ fontSize: "10px", color: "#4b5563", marginBottom: "3px", display: "block" }}>
                             Sample {i + 1} {i < 2 ? "(required)" : "(optional)"}
                           </label>
                           <textarea
@@ -1099,7 +1099,7 @@ export default function EditorPage() {
                           <button onClick={handleClearStyle} style={{
                             padding: "8px 16px", borderRadius: "6px",
                             background: "#f9fafb", border: "1px solid #e5e7eb",
-                            color: "#6b7280", fontSize: "12px", cursor: "pointer",
+                            color: "#374151", fontSize: "12px", cursor: "pointer",
                           }}>Clear Style</button>
                         )}
                       </div>
@@ -1115,7 +1115,7 @@ export default function EditorPage() {
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
                     background: inputMode === "paste" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "paste" ? "#7c3aed" : "#6b7280",
+                    color: inputMode === "paste" ? "#7c3aed" : "#374151",
                     transition: "all 0.15s",
                   }}>
                     <span style={{ fontSize: "13px" }}>&#9998;</span> Paste text
@@ -1124,7 +1124,7 @@ export default function EditorPage() {
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
                     background: inputMode === "upload" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "upload" ? "#7c3aed" : "#6b7280",
+                    color: inputMode === "upload" ? "#7c3aed" : "#374151",
                     transition: "all 0.15s",
                   }}>
                     <FileUp size={12} /> Upload document
@@ -1182,7 +1182,7 @@ export default function EditorPage() {
                       padding: "3px 8px", borderRadius: "4px", fontSize: "10px", cursor: "pointer",
                       border: `1px solid ${paragraphMode ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
                       background: paragraphMode ? "#f3e8ff" : "transparent",
-                      color: paragraphMode ? "#7c3aed" : "#9ca3af",
+                      color: paragraphMode ? "#7c3aed" : "#4b5563",
                       transition: "all 0.15s",
                     }}>
                       <Rows3 size={10} /> Paragraph Mode
@@ -1227,8 +1227,8 @@ export default function EditorPage() {
                   padding: "8px 14px", borderTop: "1px solid #e5e7eb",
                   display: "flex", alignItems: "center", gap: "10px",
                 }}>
-                  <SlidersHorizontal size={11} color="#9ca3af" />
-                  <span style={{ fontSize: "10px", color: "#9ca3af", flexShrink: 0 }}>Intensity</span>
+                  <SlidersHorizontal size={11} color="#4b5563" />
+                  <span style={{ fontSize: "10px", color: "#4b5563", flexShrink: 0 }}>Intensity</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, maxWidth: "220px" }}>
                     {INTENSITIES.map(({ value, label }) => (
                       <button key={value} onClick={() => setIntensity(value)} style={{
@@ -1239,7 +1239,7 @@ export default function EditorPage() {
                           : "#f9fafb",
                         color: intensity === value
                           ? value === "light" ? "#16a34a" : value === "medium" ? "#f97316" : "#dc2626"
-                          : "#9ca3af",
+                          : "#4b5563",
                       }}>{label}</button>
                     ))}
                   </div>
@@ -1263,7 +1263,7 @@ export default function EditorPage() {
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
                       background: canAnalyze ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
-                      color: canAnalyze ? "#fff" : "#9ca3af",
+                      color: canAnalyze ? "#fff" : "#4b5563",
                       fontSize: "13px", fontWeight: 700,
                       cursor: canAnalyze ? "pointer" : "not-allowed",
                       transition: "all 0.2s", flexShrink: 0,
@@ -1285,7 +1285,7 @@ export default function EditorPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", animation: "fadeInUp 0.3s ease" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
                     <Rows3 size={12} color="#7c3aed" />
-                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#6b7280" }}>
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>
                       {paragraphs.length} paragraph{paragraphs.length !== 1 ? "s" : ""}
                     </span>
                   </div>
@@ -1346,7 +1346,7 @@ export default function EditorPage() {
                               padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600,
                               border: "1px solid rgba(124,58,237,0.2)",
                               background: isHumanizing ? "#faf5ff" : "#f3e8ff",
-                              color: isHumanizing ? "#9ca3af" : "#7c3aed",
+                              color: isHumanizing ? "#4b5563" : "#7c3aed",
                               cursor: isHumanizing ? "not-allowed" : "pointer",
                               flexShrink: 0, transition: "all 0.15s",
                               display: "flex", alignItems: "center", gap: "4px",
@@ -1417,7 +1417,7 @@ export default function EditorPage() {
                             background: showDiff ? "#f3e8ff" : "#f9fafb",
                             border: `1px solid ${showDiff ? "rgba(124,58,237,0.25)" : "#e5e7eb"}`,
                             borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                            color: showDiff ? "#7c3aed" : "#6b7280", fontSize: "11px",
+                            color: showDiff ? "#7c3aed" : "#374151", fontSize: "11px",
                             transition: "all 0.2s",
                           }}>
                             <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
@@ -1426,7 +1426,7 @@ export default function EditorPage() {
                             display: "flex", alignItems: "center", gap: "4px",
                             background: "#f9fafb", border: "1px solid #e5e7eb",
                             borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
-                            color: "#6b7280", fontSize: "11px", transition: "all 0.2s",
+                            color: "#374151", fontSize: "11px", transition: "all 0.2s",
                           }}>
                             <Download size={10} /> .txt
                           </button>
@@ -1435,7 +1435,7 @@ export default function EditorPage() {
                             background: copied ? "rgba(22,163,74,0.06)" : "#f9fafb",
                             border: `1px solid ${copied ? "rgba(22,163,74,0.2)" : "#e5e7eb"}`,
                             borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                            color: copied ? "#16a34a" : "#6b7280", fontSize: "11px",
+                            color: copied ? "#16a34a" : "#374151", fontSize: "11px",
                             transition: "all 0.2s",
                           }}>
                             <Copy size={10} /> {copied ? "Copied!" : "Copy"}
@@ -1463,13 +1463,13 @@ export default function EditorPage() {
                         padding: "10px 16px", borderTop: "1px solid #e5e7eb",
                         display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
                       }}>
-                        <span style={{ fontSize: "10px", color: "#9ca3af", marginRight: "2px" }}>Try tone:</span>
+                        <span style={{ fontSize: "10px", color: "#4b5563", marginRight: "2px" }}>Try tone:</span>
                         {TONES.map(({ value, label, icon }) => (
                           <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
                             padding: "4px 10px", borderRadius: "20px", fontSize: "11px",
                             background: tone === value ? "#f3e8ff" : "#f9fafb",
                             border: `1px solid ${tone === value ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
-                            color: tone === value ? "#7c3aed" : "#6b7280", cursor: "pointer",
+                            color: tone === value ? "#7c3aed" : "#374151", cursor: "pointer",
                             transition: "all 0.15s",
                             display: "flex", alignItems: "center", gap: "3px",
                           }}><span style={{ fontSize: "11px" }}>{icon}</span>{label}</button>
@@ -1519,10 +1519,10 @@ export default function EditorPage() {
                           <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "1.2px", color: scoreConfig.color, textTransform: "uppercase", marginBottom: "6px" }}>
                             {scoreConfig.label}
                           </div>
-                          <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.6, marginBottom: "6px" }}>
+                          <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.6, marginBottom: "6px" }}>
                             {scoreConfig.desc}
                           </div>
-                          <div style={{ fontSize: "11px", color: "#9ca3af", background: "#f9fafb", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                          <div style={{ fontSize: "11px", color: "#4b5563", background: "#f9fafb", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
                             {result.confidenceBand}
                           </div>
                         </div>
@@ -1536,7 +1536,7 @@ export default function EditorPage() {
                           { label: "Readability", val: result.stats.fleschReadingEase.toFixed(0), bad: result.stats.fleschReadingEase >= 40 && result.stats.fleschReadingEase <= 60, tip: "Flesch score — AI typically scores 40-60" },
                         ].map(({ label, val, bad, tip }) => (
                           <div key={label} title={tip} style={{ background: "#f9fafb", borderRadius: "8px", padding: "10px 12px", cursor: "help" }}>
-                            <div style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "4px" }}>{label}</div>
+                            <div style={{ fontSize: "10px", color: "#4b5563", marginBottom: "4px" }}>{label}</div>
                             <div style={{ fontSize: "18px", fontWeight: 800, color: bad ? "#f97316" : "#16a34a" }}>{val}</div>
                           </div>
                         ))}
@@ -1583,7 +1583,7 @@ export default function EditorPage() {
                               borderBottom: i < (humanizedEngineScores ?? engineScores ?? []).length - 1 ? "1px solid #f3f4f6" : "none",
                               animation: `fadeInUp 0.3s ease ${0.05 * i}s both`,
                             }}>
-                              <span style={{ fontSize: "11px", color: "#6b7280", width: "90px", flexShrink: 0, fontWeight: 500 }}>{es.engine}</span>
+                              <span style={{ fontSize: "11px", color: "#374151", width: "90px", flexShrink: 0, fontWeight: 500 }}>{es.engine}</span>
                               <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "#f3f4f6", overflow: "hidden" }}>
                                 <div style={{
                                   width: `${es.score}%`, height: "100%", borderRadius: "3px",
@@ -1605,10 +1605,10 @@ export default function EditorPage() {
                     ) : (
                       <div style={{ padding: "20px 16px", textAlign: "center" }}>
                         <Lock size={20} color="#d1d5db" style={{ margin: "0 auto 8px" }} />
-                        <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px", fontWeight: 500 }}>
+                        <p style={{ fontSize: "12px", color: "#374151", marginBottom: "4px", fontWeight: 500 }}>
                           See how your text scores across 5 AI detectors
                         </p>
-                        <p style={{ fontSize: "10px", color: "#9ca3af", marginBottom: "12px" }}>
+                        <p style={{ fontSize: "10px", color: "#4b5563", marginBottom: "12px" }}>
                           GPTZero · Turnitin · Originality.ai · Copyleaks · Winston AI
                         </p>
                         <button onClick={() => setShowUpgradeModal(true)} style={{
@@ -1662,7 +1662,7 @@ export default function EditorPage() {
                         style={{
                           width: "100%", padding: "9px", background: "#f9fafb",
                           border: "none", borderTop: "1px solid #e5e7eb",
-                          color: "#9ca3af", cursor: "pointer", fontSize: "11px",
+                          color: "#4b5563", cursor: "pointer", fontSize: "11px",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
                         }}
                       >
@@ -1684,7 +1684,7 @@ export default function EditorPage() {
                       <Sparkles size={13} color="#7c3aed" />
                       <span style={{ fontSize: "13px", fontWeight: 600, color: "#0a0a0a", fontFamily: "var(--font-heading)" }}>Humanize with AI</span>
                     </div>
-                    <p style={{ fontSize: "11px", color: "#9ca3af", lineHeight: 1.6, marginBottom: "14px" }}>
+                    <p style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6, marginBottom: "14px" }}>
                       Multi-pass rewrite · 3 attempts · picks the best result
                     </p>
                     <button
@@ -1737,8 +1737,8 @@ export default function EditorPage() {
                   display: "flex", alignItems: "center", gap: "6px",
                 }}>
                   <Layers size={12} color="#7c3aed" />
-                  <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600 }}>Bulk Mode</span>
-                  <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>Separate texts with ---</span>
+                  <span style={{ fontSize: "11px", color: "#374151", fontWeight: 600 }}>Bulk Mode</span>
+                  <span style={{ fontSize: "10px", color: "#4b5563", marginLeft: "auto" }}>Separate texts with ---</span>
                 </div>
                 <textarea
                   value={bulkText}
@@ -1756,7 +1756,7 @@ export default function EditorPage() {
                   padding: "10px 14px", borderTop: "1px solid #e5e7eb",
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
-                  <span style={{ fontSize: "11px", color: "#9ca3af" }}>
+                  <span style={{ fontSize: "11px", color: "#4b5563" }}>
                     {parseBulkTexts().length} text{parseBulkTexts().length !== 1 ? "s" : ""} detected
                   </span>
                   <button
@@ -1766,7 +1766,7 @@ export default function EditorPage() {
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
                       background: parseBulkTexts().length > 0 ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
-                      color: parseBulkTexts().length > 0 ? "#fff" : "#9ca3af",
+                      color: parseBulkTexts().length > 0 ? "#fff" : "#4b5563",
                       fontSize: "13px", fontWeight: 700,
                       cursor: parseBulkTexts().length > 0 ? "pointer" : "not-allowed",
                       boxShadow: parseBulkTexts().length > 0 ? "0 4px 12px rgba(124,58,237,0.15)" : "none",
@@ -1816,7 +1816,7 @@ export default function EditorPage() {
                     <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
                       padding: "13px 18px", borderRadius: "12px",
                       background: "#f9fafb", border: "1px solid #e5e7eb",
-                      color: "#6b7280", fontSize: "13px", cursor: "pointer",
+                      color: "#374151", fontSize: "13px", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: "5px",
                     }}>
                       <RotateCcw size={12} /> Reset
@@ -1829,7 +1829,7 @@ export default function EditorPage() {
                   <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
                     padding: "11px", borderRadius: "10px",
                     background: "#f9fafb", border: "1px solid #e5e7eb",
-                    color: "#6b7280", fontSize: "13px", cursor: "pointer",
+                    color: "#374151", fontSize: "13px", cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
                     marginBottom: "4px",
                   }}>
@@ -1856,7 +1856,7 @@ export default function EditorPage() {
                             fontSize: "11px", fontWeight: 700, color: "#7c3aed",
                             background: "#f3e8ff", padding: "2px 8px", borderRadius: "4px",
                           }}>#{item.id + 1}</span>
-                          <span style={{ fontSize: "11px", color: "#9ca3af" }}>
+                          <span style={{ fontSize: "11px", color: "#4b5563" }}>
                             {item.text.split(/\s+/).length} words
                           </span>
                         </div>
@@ -1897,7 +1897,7 @@ export default function EditorPage() {
 
                       {/* Card body */}
                       <div style={{ padding: "12px 14px" }}>
-                        <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.7, maxHeight: "80px", overflow: "hidden", position: "relative" }}>
+                        <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.7, maxHeight: "80px", overflow: "hidden", position: "relative" }}>
                           {item.text.slice(0, 200)}{item.text.length > 200 ? "…" : ""}
                           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30px", background: "linear-gradient(transparent, #ffffff)" }} />
                         </div>
@@ -1916,7 +1916,7 @@ export default function EditorPage() {
                               marginTop: "6px", display: "flex", alignItems: "center", gap: "4px",
                               background: "#f9fafb", border: "1px solid #e5e7eb",
                               borderRadius: "4px", padding: "3px 8px", cursor: "pointer",
-                              color: "#6b7280", fontSize: "10px",
+                              color: "#374151", fontSize: "10px",
                             }}>
                               <Copy size={9} /> Copy
                             </button>

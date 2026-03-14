@@ -96,14 +96,14 @@ export function PatternCard({ pattern }: PatternCardProps) {
           </span>
 
           {/* Hit count */}
-          <span style={{ fontSize: "11px", color: "#9ca3af", flexShrink: 0 }}>
+          <span style={{ fontSize: "11px", color: "#4b5563", flexShrink: 0 }}>
             {pattern.hits} hit{pattern.hits !== 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Chevron */}
         <span style={{
-          color: "#9ca3af", fontSize: "12px", flexShrink: 0,
+          color: "#4b5563", fontSize: "12px", flexShrink: 0,
           transform: open ? "rotate(180deg)" : "rotate(0deg)",
           transition: "transform 0.2s",
           display: "inline-block",
@@ -118,7 +118,7 @@ export function PatternCard({ pattern }: PatternCardProps) {
           borderTop: "1px solid #f3f4f6",
           background: "#f9fafb",
         }}>
-          <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
+          <p style={{ fontSize: "12px", color: "#374151", lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
             {explanation}
           </p>
           {pattern.examples.length > 0 && (

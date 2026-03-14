@@ -43,7 +43,7 @@ function UsageBar({ label, used, limit, warning }: { label: string; used: number
   return (
     <div style={{ marginBottom: "16px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-        <span style={{ fontSize: "12px", color: "#6b7280" }}>{label}</span>
+        <span style={{ fontSize: "12px", color: "#374151" }}>{label}</span>
         <span style={{ fontSize: "12px", color: "#4b5563", fontFamily: "var(--font-geist-mono), monospace" }}>
           {used.toLocaleString()} / {limit === -1 ? "∞" : limit.toLocaleString()}
         </span>
@@ -135,7 +135,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
         <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#111827", letterSpacing: "-0.5px" }}>Settings</h1>
-        <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
+        <p style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>
           Manage your plan, usage, and account.
         </p>
       </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#dc2626", marginBottom: "3px" }}>
                 ⚠ Payment failed
               </p>
-              <p style={{ fontSize: "12px", color: "#6b7280" }}>
+              <p style={{ fontSize: "12px", color: "#374151" }}>
                 Your last payment couldn&apos;t be processed. Update your payment method to keep your plan.
               </p>
             </div>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
               fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "100px",
               letterSpacing: "0.5px",
               background: isFree ? "#f3f4f6" : "linear-gradient(135deg, #f3e8ff, #faf5ff)",
-              color: isFree ? "#6b7280" : "#7e22ce",
+              color: isFree ? "#374151" : "#7e22ce",
               border: isFree ? "1px solid #e5e7eb" : "1px solid rgba(126,34,206,0.3)",
             }}>
               {usage?.plan ?? "FREE"}
@@ -197,20 +197,20 @@ export default function SettingsPage() {
                 warning
               />
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
-                <span style={{ fontSize: "12px", color: "#6b7280" }}>Rewrites used</span>
+                <span style={{ fontSize: "12px", color: "#374151" }}>Rewrites used</span>
                 <span style={{ fontSize: "12px", color: "#4b5563", fontFamily: "var(--font-geist-mono), monospace" }}>
                   {usage.rewriteCount} / {usage.rewriteLimit === -1 ? "∞" : usage.rewriteLimit}
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "12px", color: "#6b7280" }}>Quota resets</span>
+                <span style={{ fontSize: "12px", color: "#374151" }}>Quota resets</span>
                 <span style={{ fontSize: "12px", color: "#4b5563" }}>
                   {formatDate(usage.quotaResetAt)}
                 </span>
               </div>
               {usage.stripeCurrentPeriodEnd && (
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Renews on</span>
+                  <span style={{ fontSize: "12px", color: "#374151" }}>Renews on</span>
                   <span style={{ fontSize: "12px", color: isPastDue ? "#dc2626" : "#4b5563" }}>
                     {formatDate(usage.stripeCurrentPeriodEnd)}
                     {isPastDue && " ⚠"}
@@ -277,7 +277,7 @@ export default function SettingsPage() {
                 style={{
                   padding: "11px 16px",
                   background: "transparent", border: "1px solid #e5e7eb",
-                  borderRadius: "6px", fontSize: "12px", fontWeight: 500, color: "#6b7280",
+                  borderRadius: "6px", fontSize: "12px", fontWeight: 500, color: "#374151",
                   cursor: loadingCheckout ? "not-allowed" : "pointer",
                   flexShrink: 0,
                 }}
@@ -316,7 +316,7 @@ export default function SettingsPage() {
             <h2 style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>Have a discount code?</h2>
           </div>
           <div style={{ padding: "20px" }}>
-            <p style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "14px" }}>
+            <p style={{ fontSize: "12px", color: "#4b5563", marginBottom: "14px" }}>
               Redeem a code to unlock a Pro or Team plan instantly.
             </p>
             <div className="redeem-row" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -366,11 +366,11 @@ export default function SettingsPage() {
               <p style={{ fontSize: "14px", fontWeight: 500, color: "#111827", marginBottom: "3px" }}>
                 {user?.fullName ?? "—"}
               </p>
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+              <p style={{ fontSize: "12px", color: "#4b5563" }}>
                 {user?.primaryEmailAddress?.emailAddress ?? "—"}
               </p>
             </div>
-            <span style={{ fontSize: "11px", color: "#9ca3af" }}>
+            <span style={{ fontSize: "11px", color: "#4b5563" }}>
               To update your profile, click your avatar in the sidebar.
             </span>
           </div>

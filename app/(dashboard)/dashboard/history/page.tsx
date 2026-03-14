@@ -135,7 +135,7 @@ export default function HistoryPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#111827", letterSpacing: "-0.5px" }}>History</h1>
-          <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
+          <p style={{ fontSize: "13px", color: "#4b5563", marginTop: "4px" }}>
             {isFree
               ? `Showing last 5 of ${totalAll} documents. Upgrade for full history.`
               : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
@@ -164,7 +164,7 @@ export default function HistoryPage() {
             <p style={{ fontSize: "13px", fontWeight: 600, color: "#111827", marginBottom: "3px" }}>
               {totalAll - 5} more document{totalAll - 5 > 1 ? "s" : ""} hidden
             </p>
-            <p style={{ fontSize: "12px", color: "#9ca3af" }}>
+            <p style={{ fontSize: "12px", color: "#4b5563" }}>
               Upgrade to Pro for full history, unlimited rewrites, all tones.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function HistoryPage() {
           display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
         }}>
           <FileText size={32} style={{ color: "#d1d5db", marginBottom: "16px" }} />
-          <p style={{ fontSize: "14px", fontWeight: 600, color: "#9ca3af", marginBottom: "6px" }}>No documents yet</p>
+          <p style={{ fontSize: "14px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>No documents yet</p>
           <p style={{ fontSize: "13px", color: "#d1d5db", marginBottom: "20px" }}>
             Head to the editor and analyze your first text.
           </p>
@@ -242,7 +242,7 @@ export default function HistoryPage() {
                       {doc.title || doc.originalText}
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-                      <span style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "var(--font-geist-mono), monospace" }}>
+                      <span style={{ fontSize: "11px", color: "#4b5563", fontFamily: "var(--font-geist-mono), monospace" }}>
                         {doc.wordCount} words
                       </span>
                       {doc.rewrittenText && (
@@ -299,12 +299,12 @@ export default function HistoryPage() {
                     {expandLoading ? (
                       <div style={{ padding: "20px", textAlign: "center" }}>
                         <div className="spin-sm" style={{ margin: "0 auto 8px" }} />
-                        <span style={{ fontSize: "12px", color: "#9ca3af" }}>Loading...</span>
+                        <span style={{ fontSize: "12px", color: "#4b5563" }}>Loading...</span>
                       </div>
                     ) : expandedDoc && (
                       <>
                         <div style={{ marginBottom: "12px" }}>
-                          <label style={{ fontSize: "10px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                          <label style={{ fontSize: "10px", color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
                             Original Text
                           </label>
                           <div style={{
@@ -376,14 +376,14 @@ export default function HistoryPage() {
             style={{
               display: "flex", alignItems: "center", gap: "6px",
               background: "transparent", border: "1px solid #e5e7eb",
-              color: "#6b7280", fontSize: "12px", fontWeight: 500,
+              color: "#374151", fontSize: "12px", fontWeight: 500,
               padding: "7px 14px", borderRadius: "5px", cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
               opacity: pagination.page <= 1 ? 0.4 : 1,
             }}
           >
             <ChevronLeft size={13} /> Prev
           </button>
-          <span style={{ fontSize: "12px", color: "#9ca3af", fontFamily: "var(--font-geist-mono), monospace" }}>
+          <span style={{ fontSize: "12px", color: "#4b5563", fontFamily: "var(--font-geist-mono), monospace" }}>
             {pagination.page} / {pagination.totalPages}
           </span>
           <button
@@ -392,7 +392,7 @@ export default function HistoryPage() {
             style={{
               display: "flex", alignItems: "center", gap: "6px",
               background: "transparent", border: "1px solid #e5e7eb",
-              color: "#6b7280", fontSize: "12px", fontWeight: 500,
+              color: "#374151", fontSize: "12px", fontWeight: 500,
               padding: "7px 14px", borderRadius: "5px", cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
               opacity: pagination.page >= pagination.totalPages ? 0.4 : 1,
             }}

@@ -139,20 +139,20 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                       Popular
                     </div>
                   )}
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: isPro ? "rgba(255,255,255,0.8)" : "#6b7280", marginBottom: "6px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: isPro ? "rgba(255,255,255,0.8)" : "#374151", marginBottom: "6px" }}>
                     {plan.name}
                   </div>
                   <div style={{ fontSize: "28px", fontWeight: 800, color: isPro ? "#ffffff" : "#111827", lineHeight: 1 }}>
                     {plan.price}
-                    <span style={{ fontSize: "13px", fontWeight: 400, color: isPro ? "rgba(255,255,255,0.6)" : "#9ca3af" }}>{plan.period}</span>
+                    <span style={{ fontSize: "13px", fontWeight: 400, color: isPro ? "rgba(255,255,255,0.6)" : "#4b5563" }}>{plan.period}</span>
                   </div>
-                  <div style={{ fontSize: "12px", color: isPro ? "rgba(255,255,255,0.6)" : "#9ca3af", margin: "8px 0 12px" }}>
+                  <div style={{ fontSize: "12px", color: isPro ? "rgba(255,255,255,0.6)" : "#4b5563", margin: "8px 0 12px" }}>
                     {plan.words}
                   </div>
                   {isCurrent ? (
                     <div style={{
                       padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: 600,
-                      background: isPro ? "rgba(255,255,255,0.15)" : "#f3f4f6", color: isPro ? "rgba(255,255,255,0.7)" : "#9ca3af",
+                      background: isPro ? "rgba(255,255,255,0.15)" : "#f3f4f6", color: isPro ? "rgba(255,255,255,0.7)" : "#4b5563",
                     }}>
                       Current
                     </div>
@@ -179,7 +179,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
           {/* What you unlock */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{
-              fontSize: "11px", fontWeight: 600, color: "#9ca3af",
+              fontSize: "11px", fontWeight: 600, color: "#4b5563",
               textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px",
             }}>
               What you unlock:
@@ -202,7 +202,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
           {/* Discount code */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{
-              fontSize: "11px", fontWeight: 600, color: "#9ca3af",
+              fontSize: "11px", fontWeight: 600, color: "#4b5563",
               textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px",
             }}>
               Have a discount code?
@@ -248,7 +248,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
             style={{
               width: "100%", padding: "10px", borderRadius: "10px",
               background: "transparent", border: "1px solid #e5e7eb",
-              color: "#9ca3af", fontSize: "13px", cursor: "pointer",
+              color: "#4b5563", fontSize: "13px", cursor: "pointer",
             }}
           >
             Maybe later
