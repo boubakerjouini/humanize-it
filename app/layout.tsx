@@ -12,8 +12,8 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt — Detect & Humanize AI Text",
-  description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human. Free to start.",
+  title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
+  description: "Paste your ChatGPT text and get an undetectable, naturally human version in seconds. Beats GPTZero, Turnitin & Originality.ai. Free plan available — no credit card required.",
   metadataBase: new URL("https://humanizeit.app"),
   icons: {
     icon: [
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     apple: "/favicon.ico",
   },
   openGraph: {
-    title: "HumanizeIt — Detect & Humanize AI Text",
+    title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
     description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human.",
     url: "https://humanizeit.app",
     siteName: "HumanizeIt",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HumanizeIt — Detect & Humanize AI Text",
+    title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
     description: "Score your text against 24 AI detection patterns and rewrite it to sound 100% human.",
     images: ["/og-image.png"],
   },
