@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     canonical: "https://humanizeit.app",
   },
   verification: {
-    google: "PLACEHOLDER_GSC_TOKEN",
+    // GSC verified via DNS — no meta tag needed
   },
 };
 
