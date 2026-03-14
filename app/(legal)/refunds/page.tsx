@@ -2,8 +2,8 @@ export const metadata = { title: 'Refund Policy — HumanizeIt' }
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>
-    <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#fff', marginBottom: '12px', borderBottom: '1px solid rgba(139,92,246,0.2)', paddingBottom: '8px' }}>{title}</h2>
-    <div style={{ color: '#a0a0b8', lineHeight: 1.8, fontSize: '15px' }}>{children}</div>
+    <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#111827', marginBottom: '12px', borderBottom: '1px solid rgba(139,92,246,0.2)', paddingBottom: '8px' }}>{title}</h2>
+    <div style={{ color: '#4b5563', lineHeight: 1.8, fontSize: '15px' }}>{children}</div>
   </section>
 )
 
@@ -11,8 +11,8 @@ export default function RefundsPage() {
   return (
     <>
       <div style={{ marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>Refund Policy</h1>
-        <p style={{ color: '#555577', fontSize: '14px' }}>Last updated: March 5, 2026</p>
+        <h1 style={{ fontSize: '36px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>Refund Policy</h1>
+        <p style={{ color: '#6b7280', fontSize: '14px' }}>Last updated: March 5, 2026</p>
       </div>
 
       <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '12px', padding: '20px 24px', marginBottom: '40px', color: '#c4b5fd', fontSize: '15px', lineHeight: 1.7 }}>
@@ -20,7 +20,7 @@ export default function RefundsPage() {
       </div>
 
       <Section title="1. Annual Plans — 14-Day Money-Back Guarantee">
-        <p>If you purchase an annual plan (Pro Annual at $79/year or Team Annual at $249/year) and are not satisfied, you can request a full refund within <strong style={{ color: '#e0e0f0' }}>14 days</strong> of the purchase date. No questions asked.</p>
+        <p>If you purchase an annual plan (Pro Annual at $79/year or Team Annual at $249/year) and are not satisfied, you can request a full refund within <strong style={{ color: '#111827' }}>14 days</strong> of the purchase date. No questions asked.</p>
       </Section>
 
       <Section title="2. Monthly Plans">
@@ -37,7 +37,7 @@ export default function RefundsPage() {
 
       <Section title="4. How to Request a Refund">
         <ol style={{ paddingLeft: '20px' }}>
-          <li style={{ marginBottom: '8px' }}>Email <strong style={{ color: '#e0e0f0' }}>support@humanizeit.app</strong></li>
+          <li style={{ marginBottom: '8px' }}>Email <strong style={{ color: '#111827' }}>support@humanizeit.app</strong></li>
           <li style={{ marginBottom: '8px' }}>Include your order ID (found in your receipt email from Lemon Squeezy)</li>
           <li style={{ marginBottom: '8px' }}>Briefly describe the reason (optional for annual plans within 14 days)</li>
         </ol>
@@ -49,7 +49,7 @@ export default function RefundsPage() {
       </Section>
 
       <Section title="6. Contact">
-        <p><strong style={{ color: '#e0e0f0' }}>support@humanizeit.app</strong> — we read every email.</p>
+        <p><strong style={{ color: '#111827' }}>support@humanizeit.app</strong> — we read every email.</p>
       </Section>
     </>
   )

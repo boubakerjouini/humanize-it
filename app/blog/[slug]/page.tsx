@@ -1,89 +1,24 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { getAllPosts, getPostBySlug } from "@/lib/blog";
-import { ArticleLayout } from "@/components/blog/article-layout";
+import { notFound, redirect } from "next/navigation";
+import { getAllPosts } from "@/lib/blog";
 
-// Map of slug -> dynamic import for MDX content
-const mdxModules: Record<string, () => Promise<{ default: React.ComponentType }>> = {
-  "how-to-bypass-ai-detection": () => import("@/content/blog/how-to-bypass-ai-detection.mdx"),
-  "ai-detection-patterns": () => import("@/content/blog/ai-detection-patterns.mdx"),
-};
+// All individual posts have their own directories — this dynamic route
+// handles any unknown slug gracefully.
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  return []; // Individual pages handle their own routes
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) return {};
-  return {
-    title: `${post.title} | HumanizeIt`,
-    description: post.description,
-    alternates: { canonical: `https://humanizeit.app/blog/${post.slug}` },
-    openGraph: {
-      title: post.title,
-      description: post.description,
-      url: `https://humanizeit.app/blog/${post.slug}`,
-      siteName: "HumanizeIt",
-      type: "article",
-      publishedTime: post.date,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.description,
-    },
-  };
-}
-
-export default async function BlogArticlePage({
+export default async function BlogSlugPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) notFound();
+  const posts = getAllPosts();
+  const post = posts.find((p) => p.slug === slug);
 
-  const loader = mdxModules[slug];
-  if (!loader) notFound();
+  if (!post) return notFound();
 
-  const { default: MDXContent } = await loader();
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: post.title,
-    description: post.description,
-    datePublished: post.date,
-    author: {
-      "@type": "Organization",
-      name: "HumanizeIt",
-      url: "https://humanizeit.app",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "HumanizeIt",
-      url: "https://humanizeit.app",
-    },
-    mainEntityOfPage: `https://humanizeit.app/blog/${post.slug}`,
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <ArticleLayout post={post}>
-        <MDXContent />
-      </ArticleLayout>
-    </>
-  );
+  // Redirect to the named route if it exists
+  redirect(`/blog/${slug}`);
 }
