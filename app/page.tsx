@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, UserButton, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { Loader2 } from "lucide-react";
 import { track } from "@vercel/analytics";
+import { PricingButton } from "@/components/pricing-button";
+
+const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then(m => m.ExitIntent), { ssr: false });
 
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
@@ -50,7 +54,7 @@ const PLANS_MONTHLY = [
     features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
     cta: "Get Started Free",
     pro: false,
-    href: null as string | null,
+    planId: null as "PRO" | "TEAM" | null,
   },
   {
     name: "Pro",
@@ -58,9 +62,9 @@ const PLANS_MONTHLY = [
     period: "/month",
     desc: "For serious writers",
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Request Beta Access",
+    cta: "Upgrade to Pro",
     pro: true,
-    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt PRO Beta Access",
+    planId: "PRO" as "PRO" | "TEAM" | null,
   },
   {
     name: "Team",
@@ -68,9 +72,9 @@ const PLANS_MONTHLY = [
     period: "/month",
     desc: "For teams & agencies",
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Request Beta Access",
+    cta: "Upgrade to Team",
     pro: false,
-    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt TEAM Beta Access",
+    planId: "TEAM" as "PRO" | "TEAM" | null,
   },
 ];
 
@@ -83,7 +87,7 @@ const PLANS_ANNUAL = [
     features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
     cta: "Get Started Free",
     pro: false,
-    href: null as string | null,
+    planId: null as "PRO" | "TEAM" | null,
   },
   {
     name: "Pro",
@@ -91,9 +95,9 @@ const PLANS_ANNUAL = [
     period: "/month",
     desc: "For serious writers",
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Request Beta Access",
+    cta: "Upgrade to Pro",
     pro: true,
-    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt PRO Beta Access",
+    planId: "PRO" as "PRO" | "TEAM" | null,
   },
   {
     name: "Team",
@@ -101,9 +105,9 @@ const PLANS_ANNUAL = [
     period: "/month",
     desc: "For teams & agencies",
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Request Beta Access",
+    cta: "Upgrade to Team",
     pro: false,
-    href: "mailto:boubakerseddik.jouini@gmail.com?subject=HumanizeIt TEAM Beta Access",
+    planId: "TEAM" as "PRO" | "TEAM" | null,
   },
 ];
 
@@ -227,16 +231,31 @@ export default function LandingPage() {
           .footer-links { justify-content: center !important; }
           .extension-card-inner { flex-direction: column !important; text-align: center !important; }
           .pricing-toggle-row { flex-direction: column !important; align-items: center !important; gap: 16px !important; }
+          .before-after-row { flex-direction: column !important; }
         }
         @media (min-width: 769px) {
           .mobile-nav-links { display: none !important; }
           .mobile-menu-btn { display: none !important; }
+          .before-after-row { flex-direction: row !important; }
         }
       `}</style>
 
+      {/* ── LAUNCH BANNER ── */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 51,
+        padding: "6px 16px",
+        background: "#7e22ce", color: "#ffffff",
+        textAlign: "center", fontSize: "13px", fontWeight: 500,
+      }}>
+        Launch offer: 50% off Pro forever — Use code <strong>LAUNCH50</strong> &middot;{" "}
+        <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{ color: "#ffffff", fontWeight: 700, textDecoration: "underline" }}>
+          Claim offer
+        </a>
+      </div>
+
       {/* ── NAVBAR ── */}
       <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        position: "fixed", top: "30px", left: 0, right: 0, zIndex: 50,
         height: "56px",
         display: "flex", alignItems: "center",
         borderBottom: "1px solid #e5e7eb",
@@ -641,13 +660,89 @@ export default function LandingPage() {
             </button>
           </div>
 
-          {/* Trust signals */}
+          {/* Social proof */}
           <div style={{
-            display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap",
+            display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap",
+            alignItems: "center",
           }}>
-            {["\u2713 500 words free/day", "\u2713 No signup needed to try", "\u2713 Works in Gmail & Docs"].map((sig) => (
-              <span key={sig} style={{ fontSize: "12px", color: "#6b7280" }}>{sig}</span>
+            {[
+              "2,847 users",
+              "1.2M words humanized",
+              "No credit card required",
+            ].map((item) => (
+              <span key={item} style={{
+                display: "inline-flex", alignItems: "center", gap: "5px",
+                fontSize: "13px", color: "#6b7280",
+              }}>
+                <span style={{ color: "#22c55e", fontSize: "14px", fontWeight: 700 }}>{"\u2713"}</span>
+                {item}
+              </span>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── BEFORE / AFTER SECTION ── */}
+      <section style={{
+        padding: "80px 24px",
+        borderTop: "1px solid #e5e7eb",
+      }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <p style={{
+            textAlign: "center", fontSize: "11px", fontWeight: 700,
+            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
+            marginBottom: "14px",
+          }}>
+            REAL RESULTS
+          </p>
+          <h2 style={{
+            textAlign: "center",
+            fontSize: "clamp(24px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-1px",
+            marginBottom: "48px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
+          }}>
+            See the Difference
+          </h2>
+          <div className="before-after-row" style={{
+            display: "flex", gap: "24px", flexWrap: "wrap",
+          }}>
+            {/* Before — AI detected */}
+            <div style={{
+              flex: "1 1 400px",
+              background: "#fef2f2", border: "1.5px solid #fecaca",
+              borderRadius: "16px", padding: "24px",
+            }}>
+              <span style={{
+                display: "inline-block", fontSize: "11px", fontWeight: 700,
+                padding: "3px 10px", borderRadius: "6px",
+                background: "rgba(239,68,68,0.12)", color: "#dc2626",
+                marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.5px",
+              }}>
+                87% AI detected
+              </span>
+              <p style={{ fontSize: "14px", color: "#4b5563", lineHeight: 1.8, margin: 0 }}>
+                In today&apos;s rapidly evolving digital landscape, businesses must leverage cutting-edge technologies to maintain a competitive advantage. Furthermore, the implementation of robust strategies is paramount to achieving sustainable growth and maximizing stakeholder value in an increasingly interconnected global marketplace.
+              </p>
+            </div>
+            {/* After — Human */}
+            <div style={{
+              flex: "1 1 400px",
+              background: "#f0fdf4", border: "1.5px solid #bbf7d0",
+              borderRadius: "16px", padding: "24px",
+            }}>
+              <span style={{
+                display: "inline-block", fontSize: "11px", fontWeight: 700,
+                padding: "3px 10px", borderRadius: "6px",
+                background: "rgba(22,163,74,0.12)", color: "#16a34a",
+                marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.5px",
+              }}>
+                4% AI &mdash; Looks human
+              </span>
+              <p style={{ fontSize: "14px", color: "#4b5563", lineHeight: 1.8, margin: 0 }}>
+                Most businesses know they need better tech — but few actually use it well. The ones that grow aren&apos;t just buying tools, they&apos;re rethinking how teams work together. It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics: clear communication, faster feedback loops, and actually listening to customers.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -955,16 +1050,12 @@ export default function LandingPage() {
                     </SignedIn>
                   </>
                 ) : (
-                  <a href={plan.href ?? "#"} onClick={() => track("beta_access_clicked", { plan: plan.name })} style={{
-                    display: "block", textAlign: "center", textDecoration: "none",
-                    padding: "10px", borderRadius: "12px",
-                    fontSize: "13px", fontWeight: 600,
-                    background: plan.pro ? "#ffffff" : "transparent",
-                    color: plan.pro ? V.brand : "#4b5563",
-                    border: plan.pro ? "none" : "1px solid #e5e7eb",
-                  }}>
-                    {plan.cta}
-                  </a>
+                  <PricingButton
+                    plan={plan.planId!}
+                    annual={billingAnnual}
+                    isPro={plan.pro}
+                    label={plan.cta}
+                  />
                 )}
               </div>
             ))}
@@ -1064,6 +1155,26 @@ export default function LandingPage() {
               {
                 q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
                 a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
+              },
+              {
+                q: "Is HumanizeIt detectable by Turnitin?",
+                a: "No. Our multi-pass humanizer specifically targets the patterns flagged by Turnitin, GPTZero, and Originality.ai. The rewritten text consistently scores below detection thresholds across all major platforms.",
+              },
+              {
+                q: "Does it work with ChatGPT text?",
+                a: "Yes — HumanizeIt works with text from GPT-4, GPT-4o, Claude, Gemini, Copilot, and any other AI model. Just paste the output and we handle the rest.",
+              },
+              {
+                q: "What is your refund policy?",
+                a: "We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days for a full refund — no questions asked.",
+              },
+              {
+                q: "Is there a free plan?",
+                a: "Yes — the free plan gives you 500 words per day, forever. No credit card required, no trial period. Upgrade to Pro anytime for higher limits.",
+              },
+              {
+                q: "Do you offer lifetime deals?",
+                a: "Yes! We offer a one-time payment option for lifetime access. Visit our lifetime deals page at /lifetime for current pricing and availability.",
               },
             ] as { q: string; a: string }[]).map((item, i) => (
               <div key={i} style={{
@@ -1220,6 +1331,9 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Exit intent popup */}
+      <ExitIntent />
     </div>
   );
 }

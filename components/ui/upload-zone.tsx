@@ -85,31 +85,31 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
   if (!uploadEnabled) {
     return (
       <div style={{
-        borderRadius: "12px", border: "1.5px dashed rgba(255,255,255,0.1)",
+        borderRadius: "12px", border: "1.5px dashed #d1d5db",
         padding: "32px 24px", textAlign: "center",
-        background: "rgba(0,0,0,0.2)", position: "relative", overflow: "hidden",
+        background: "#f9fafb", position: "relative", overflow: "hidden",
       }}>
         <div style={{
           position: "absolute", inset: 0,
-          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)",
+          background: "rgba(255,255,255,0.7)", backdropFilter: "blur(2px)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           zIndex: 2,
         }}>
-          <Lock size={24} color="rgba(255,255,255,0.3)" style={{ marginBottom: "10px" }} />
-          <p style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
+          <Lock size={24} color="#9ca3af" style={{ marginBottom: "10px" }} />
+          <p style={{ fontSize: "13px", fontWeight: 600, color: "#4b5563", marginBottom: "6px" }}>
             Upload available on PRO &amp; TEAM plans
           </p>
           <a href="/dashboard/billing" style={{
-            padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(139,92,246,0.3)",
-            background: "rgba(139,92,246,0.1)", color: "#a78bfa",
+            padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(126,34,206,0.3)",
+            background: "#faf5ff", color: "#a855f7",
             fontSize: "12px", fontWeight: 600, cursor: "pointer", textDecoration: "none",
             display: "inline-block", marginTop: "4px",
           }}>
             Upgrade
           </a>
         </div>
-        <Upload size={28} color="rgba(255,255,255,0.1)" style={{ marginBottom: "8px" }} />
-        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.15)" }}>Drop your PDF, Word doc, or .txt here</p>
+        <Upload size={28} color="#d1d5db" style={{ marginBottom: "8px" }} />
+        <p style={{ fontSize: "13px", color: "#d1d5db" }}>Drop your PDF, Word doc, or .txt here</p>
       </div>
     );
   }
@@ -122,28 +122,28 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
 
     return (
       <div style={{
-        borderRadius: "12px", border: "1.5px solid rgba(34,197,94,0.25)",
-        background: "#0f0f12", overflow: "hidden",
+        borderRadius: "12px", border: "1.5px solid rgba(22,163,74,0.25)",
+        background: "#ffffff", overflow: "hidden",
         animation: "fadeInUp 0.3s ease",
       }}>
         {/* File info header */}
         <div style={{
-          padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+          padding: "12px 16px", borderBottom: "1px solid #e5e7eb",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <CheckCircle2 size={14} color="#22c55e" />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "#22c55e" }}>Document loaded</span>
+            <CheckCircle2 size={14} color="#16a34a" />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "#16a34a" }}>Document loaded</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{
               fontSize: "10px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,
-              background: "rgba(139,92,246,0.1)", color: "#a78bfa", textTransform: "uppercase",
+              background: "#faf5ff", color: "#a855f7", textTransform: "uppercase",
             }}>
               {result.fileType}
             </span>
             {result.pageCount && (
-              <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>
+              <span style={{ fontSize: "10px", color: "#9ca3af" }}>
                 {result.pageCount} page{result.pageCount !== 1 ? "s" : ""}
               </span>
             )}
@@ -153,11 +153,11 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
         {/* File details */}
         <div style={{ padding: "12px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-            <FileText size={12} color="rgba(255,255,255,0.3)" />
-            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>
+            <FileText size={12} color="#9ca3af" />
+            <span style={{ fontSize: "12px", color: "#4b5563", fontWeight: 500 }}>
               {result.fileName}
             </span>
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+            <span style={{ fontSize: "11px", color: "#9ca3af" }}>
               — {result.wordCount.toLocaleString()} words
             </span>
           </div>
@@ -182,11 +182,11 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
           {/* Preview */}
           <div style={{
             padding: "10px 12px", borderRadius: "8px",
-            background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.05)",
+            background: "#f9fafb", border: "1px solid #e5e7eb",
             maxHeight: "100px", overflow: "auto",
           }}>
             <p style={{
-              fontSize: "11px", color: "rgba(255,255,255,0.4)", lineHeight: 1.6,
+              fontSize: "11px", color: "#6b7280", lineHeight: 1.6,
               fontFamily: "monospace", whiteSpace: "pre-wrap", margin: 0,
             }}>
               {result.text.slice(0, 300)}{result.text.length > 300 ? "..." : ""}
@@ -196,7 +196,7 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
 
         {/* Actions */}
         <div style={{
-          padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
+          padding: "10px 16px", borderTop: "1px solid #e5e7eb",
           display: "flex", alignItems: "center", gap: "8px",
         }}>
           <button
@@ -204,9 +204,9 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
             style={{
               flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
               padding: "10px", borderRadius: "8px", border: "none",
-              background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+              background: "linear-gradient(135deg, #7e22ce, #9333ea)",
               color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(139,92,246,0.3)",
+              boxShadow: "0 4px 16px rgba(126,34,206,0.3)",
             }}
           >
             Use this text <ArrowRight size={12} />
@@ -216,8 +216,8 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
             style={{
               display: "flex", alignItems: "center", gap: "5px",
               padding: "10px 14px", borderRadius: "8px",
-              background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.4)", fontSize: "12px", cursor: "pointer",
+              background: "#f3f4f6", border: "1px solid #e5e7eb",
+              color: "#6b7280", fontSize: "12px", cursor: "pointer",
             }}
           >
             <RotateCcw size={11} /> Different file
@@ -231,17 +231,17 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
   if (state === "error") {
     return (
       <div style={{
-        borderRadius: "12px", border: "1.5px solid rgba(239,68,68,0.3)",
-        padding: "24px", textAlign: "center", background: "rgba(239,68,68,0.04)",
+        borderRadius: "12px", border: "1.5px solid rgba(220,38,38,0.3)",
+        padding: "24px", textAlign: "center", background: "rgba(220,38,38,0.04)",
         animation: "fadeInUp 0.3s ease",
       }}>
-        <AlertTriangle size={28} color="#ef4444" style={{ marginBottom: "10px" }} />
-        <p style={{ fontSize: "13px", color: "#ef4444", fontWeight: 600, marginBottom: "6px" }}>{error}</p>
+        <AlertTriangle size={28} color="#dc2626" style={{ marginBottom: "10px" }} />
+        <p style={{ fontSize: "13px", color: "#dc2626", fontWeight: 600, marginBottom: "6px" }}>{error}</p>
         <button
           onClick={reset}
           style={{
-            padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(239,68,68,0.25)",
-            background: "rgba(239,68,68,0.08)", color: "#ef4444",
+            padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(220,38,38,0.25)",
+            background: "rgba(220,38,38,0.08)", color: "#dc2626",
             fontSize: "12px", fontWeight: 600, cursor: "pointer", marginTop: "6px",
           }}
         >
@@ -255,12 +255,12 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
   if (state === "extracting") {
     return (
       <div style={{
-        borderRadius: "12px", border: "1.5px dashed rgba(139,92,246,0.3)",
+        borderRadius: "12px", border: "1.5px dashed rgba(126,34,206,0.3)",
         padding: "32px 24px", textAlign: "center",
-        background: "rgba(139,92,246,0.04)",
+        background: "#faf5ff",
       }}>
         <div className="spin-sm" style={{ width: 24, height: 24, borderWidth: 2.5, margin: "0 auto 12px" }} />
-        <p style={{ fontSize: "13px", color: "#a78bfa", fontWeight: 600 }}>Reading your document...</p>
+        <p style={{ fontSize: "13px", color: "#a855f7", fontWeight: 600 }}>Reading your document...</p>
       </div>
     );
   }
@@ -276,9 +276,9 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
       onClick={() => fileRef.current?.click()}
       style={{
         borderRadius: "12px",
-        border: `1.5px dashed ${isDragging ? "#3b82f6" : "rgba(113,113,122,0.4)"}`,
+        border: `1.5px dashed ${isDragging ? "#3b82f6" : "#d1d5db"}`,
         padding: "28px 24px", textAlign: "center", cursor: "pointer",
-        background: isDragging ? "rgba(59,130,246,0.06)" : "rgba(0,0,0,0.15)",
+        background: isDragging ? "rgba(59,130,246,0.04)" : "#f9fafb",
         transition: "all 0.2s ease",
       }}
     >
@@ -291,24 +291,24 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
       />
       <FileUp
         size={isDragging ? 32 : 28}
-        color={isDragging ? "#3b82f6" : "rgba(255,255,255,0.25)"}
+        color={isDragging ? "#3b82f6" : "#9ca3af"}
         style={{ marginBottom: "10px", transition: "all 0.2s" }}
       />
       <p style={{
         fontSize: "13px", fontWeight: 600, marginBottom: "4px",
-        color: isDragging ? "#3b82f6" : "rgba(255,255,255,0.5)",
+        color: isDragging ? "#3b82f6" : "#6b7280",
       }}>
         {isDragging ? "Drop to upload" : "Drop your PDF, Word doc, or .txt here"}
       </p>
-      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", marginBottom: "12px" }}>
+      <p style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "12px" }}>
         or click to browse
       </p>
       <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
         {["PDF", "DOCX", "TXT"].map((fmt) => (
           <span key={fmt} style={{
             fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "4px",
-            background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px",
+            background: "#f3f4f6", border: "1px solid #e5e7eb",
+            color: "#9ca3af", letterSpacing: "0.5px",
           }}>
             {fmt}
           </span>

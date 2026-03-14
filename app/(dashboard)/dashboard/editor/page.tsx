@@ -11,6 +11,7 @@ import type { PatternHit } from "@/lib/algorithms/analyzeText";
 import { computeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { simulateEngineScores, type EngineScore } from "@/lib/engines";
 import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, Layers, BookOpen, Lock, Shield, Globe, X, Fingerprint, Upload, FileUp, Download } from "lucide-react";
+import { ShareScore } from "@/components/ui/share-score";
 import { toast } from "sonner";
 import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
 import { UploadZone } from "@/components/ui/upload-zone";
@@ -1379,6 +1380,10 @@ export default function EditorPage() {
                           )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {/* Share score */}
+                          {humanizedScore !== null && result && (
+                            <ShareScore score={result.score} humanizedScore={humanizedScore} />
+                          )}
                           {/* Diff view toggle */}
                           <button onClick={() => setShowDiff(d => !d)} style={{
                             display: "flex", alignItems: "center", gap: "4px",

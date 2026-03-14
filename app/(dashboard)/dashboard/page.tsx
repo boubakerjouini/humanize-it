@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Zap, ArrowRight, FileText, Clock, TrendingUp, Sparkles } from "lucide-react";
+import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
 
 interface UsageData {
   plan: string;
@@ -83,6 +84,9 @@ export default function DashboardHomePage() {
 
   return (
     <div style={{ padding: "32px 24px", maxWidth: "860px", margin: "0 auto" }}>
+
+      {/* Onboarding checklist */}
+      <OnboardingChecklist />
 
       {/* Greeting */}
       <div style={{ marginBottom: "32px" }}>
