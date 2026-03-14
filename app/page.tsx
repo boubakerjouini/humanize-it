@@ -11,7 +11,7 @@ import { track } from "@vercel/analytics";
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
   if (s >= 50) return "#f97316";
-  if (s >= 25) return "#eab308";
+  if (s >= 25) return "#d97706";
   return "#22c55e";
 }
 
@@ -23,12 +23,12 @@ function getScoreLabel(s: number): { label: string; sub: string } {
 }
 
 const V = {
-  brand: "#8b5cf6",
-  brandHover: "#7c3aed",
-  brandDim: "rgba(139,92,246,0.08)",
-  brandBorder: "rgba(139,92,246,0.25)",
-  brandGlow: "rgba(139,92,246,0.15)",
-  brandGlowSoft: "rgba(139,92,246,0.06)",
+  brand: "#7e22ce",
+  brandHover: "#9333ea",
+  brandDim: "rgba(126,34,206,0.06)",
+  brandBorder: "rgba(126,34,206,0.15)",
+  brandGlow: "rgba(126,34,206,0.1)",
+  brandGlowSoft: "rgba(126,34,206,0.04)",
 };
 
 const LS_BASE = "https://humanizeit.lemonsqueezy.com/checkout/buy/";
@@ -167,10 +167,10 @@ export default function LandingPage() {
 
   return (
     <div style={{
-      background: "#09090b",
+      background: "#ffffff",
       minHeight: "100vh",
-      color: "#fafafa",
-      fontFamily: "var(--font-geist-sans), Inter, -apple-system, sans-serif",
+      color: "#111827",
+      fontFamily: "Inter, -apple-system, sans-serif",
     }}>
       {/* Keyframe animations */}
       <style>{`
@@ -187,8 +187,8 @@ export default function LandingPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-          50% { box-shadow: 0 0 40px rgba(139,92,246,0.6); }
+          0%, 100% { box-shadow: 0 0 20px rgba(126,34,206,0.15); }
+          50% { box-shadow: 0 0 40px rgba(126,34,206,0.25); }
         }
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
@@ -239,9 +239,9 @@ export default function LandingPage() {
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         height: "56px",
         display: "flex", alignItems: "center",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid #e5e7eb",
         backdropFilter: "blur(16px) saturate(180%)",
-        background: "rgba(9,9,11,0.88)",
+        background: "rgba(255,255,255,0.88)",
         animation: "fadeIn 0.3s ease forwards",
       }}>
         <div style={{
@@ -249,25 +249,25 @@ export default function LandingPage() {
           width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}>
-            <span style={{ fontSize: "19px", fontWeight: 800, color: V.brand, letterSpacing: "-0.5px", lineHeight: 1 }}>H.</span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: "#3b0764", letterSpacing: "-0.5px", lineHeight: 1 }}>H.</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#3b0764" }}>Humanize<span style={{ color: "#9333ea" }}>It</span></span>
           </Link>
 
           <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <a onClick={() => smoothScroll("demo")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
-            <a onClick={() => smoothScroll("how-it-works")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
-            <a onClick={() => smoothScroll("pricing")} style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Extension</a>
-            <Link href="/blog" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
+            <a onClick={() => smoothScroll("demo")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
+            <a onClick={() => smoothScroll("how-it-works")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
+            <a onClick={() => smoothScroll("pricing")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
+            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Extension</a>
+            <Link href="/blog" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <SignedOut>
               <SignInButton mode="modal">
                 <button className="desktop-only" style={{
-                  color: "rgba(255,255,255,0.55)", fontSize: "13px",
+                  color: "#4b5563", fontSize: "13px",
                   padding: "6px 14px", borderRadius: "6px",
-                  border: "1px solid rgba(255,255,255,0.10)",
+                  border: "1px solid #e5e7eb",
                   background: "transparent", cursor: "pointer",
                 }}>
                   Sign in
@@ -275,8 +275,8 @@ export default function LandingPage() {
               </SignInButton>
               <SignUpButton mode="modal">
                 <button style={{
-                  background: V.brand, color: "#fafafa", fontSize: "13px", fontWeight: 600,
-                  padding: "6px 16px", borderRadius: "6px",
+                  background: V.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
+                  padding: "6px 16px", borderRadius: "12px",
                   border: "none", cursor: "pointer",
                 }}>
                   Get Started Free
@@ -285,8 +285,8 @@ export default function LandingPage() {
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#fafafa", fontSize: "13px", fontWeight: 600,
-                padding: "6px 16px", borderRadius: "6px", textDecoration: "none",
+                background: V.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
+                padding: "6px 16px", borderRadius: "12px", textDecoration: "none",
               }}>
                 Dashboard &rarr;
               </Link>
@@ -297,7 +297,7 @@ export default function LandingPage() {
               className="mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                background: "transparent", border: "none", color: "#fafafa",
+                background: "transparent", border: "none", color: "#111827",
                 fontSize: "20px", cursor: "pointer", padding: "4px 8px",
               }}
             >
@@ -311,8 +311,8 @@ export default function LandingPage() {
       {mobileMenuOpen && (
         <div className="mobile-nav-links" style={{
           position: "fixed", top: "56px", left: 0, right: 0, zIndex: 49,
-          background: "rgba(9,9,11,0.96)", backdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(255,255,255,0.96)", backdropFilter: "blur(16px)",
+          borderBottom: "1px solid #e5e7eb",
           flexDirection: "column", padding: "16px 24px", gap: "16px",
         }}>
           {[
@@ -321,14 +321,14 @@ export default function LandingPage() {
             { label: "Pricing", id: "pricing" },
           ].map(({ label, id }) => (
             <a key={id} onClick={() => { smoothScroll(id); setMobileMenuOpen(false); }} style={{
-              color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none", cursor: "pointer",
+              color: "#4b5563", fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
           <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
-            color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none",
+            color: "#4b5563", fontSize: "14px", textDecoration: "none",
           }}>Chrome Extension</a>
           <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
-            color: "rgba(255,255,255,0.6)", fontSize: "14px", textDecoration: "none",
+            color: "#4b5563", fontSize: "14px", textDecoration: "none",
           }}>Blog</Link>
         </div>
       )}
@@ -336,7 +336,7 @@ export default function LandingPage() {
       {/* ── SECTION 2: LIVE DEMO ── */}
       <section id="demo" aria-label="Live AI detection demo" style={{
         padding: "80px 24px", paddingTop: "100px",
-        background: "rgba(255,255,255,0.01)",
+        background: "#ffffff",
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto", opacity: 0, animation: "fadeInUp 0.5s ease forwards" }}>
           <p style={{
@@ -350,33 +350,34 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "12px", color: "#fafafa",
+            marginBottom: "12px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Try it now &mdash; no signup needed
           </h2>
-          <p style={{ textAlign: "center", fontSize: "15px", color: "#6b6b80", marginBottom: "36px" }}>
+          <p style={{ textAlign: "center", fontSize: "15px", color: "#6b7280", marginBottom: "36px" }}>
             Paste any AI text and see the detection score instantly.
           </p>
 
           {/* Textarea card */}
           <div style={{
-            background: "#0e0e12",
-            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(139,92,246,0.15)"}`,
-            borderRadius: "12px",
+            background: "#ffffff",
+            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(126,34,206,0.15)"}`,
+            borderRadius: "16px",
             overflow: "hidden",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+            boxShadow: "0 4px 12px rgba(126,34,206,0.1)",
             transition: "border-color 0.3s",
           }}>
             {/* Editor toolbar */}
             <div style={{
               padding: "10px 16px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: "1px solid #e5e7eb",
               display: "flex", alignItems: "center", gap: "8px",
             }}>
               <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#ef4444", opacity: 0.6 }} />
-              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#7c3aed", opacity: 0.6 }} />
+              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#9333ea", opacity: 0.6 }} />
               <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#22c55e", opacity: 0.6 }} />
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", marginLeft: "8px", fontFamily: "var(--font-geist-mono), monospace" }}>
+              <span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "8px", fontFamily: "var(--font-geist-mono), monospace" }}>
                 analyzeText()
               </span>
             </div>
@@ -392,7 +393,7 @@ export default function LandingPage() {
                 border: "none",
                 outline: "none",
                 resize: "none",
-                color: "#fafafa",
+                color: "#111827",
                 fontSize: "14px",
                 lineHeight: 1.8,
                 fontFamily: "inherit",
@@ -404,20 +405,20 @@ export default function LandingPage() {
             {/* Bottom toolbar */}
             <div style={{
               padding: "10px 16px",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderTop: "1px solid #e5e7eb",
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
+              <span style={{ fontSize: "11px", color: "#9ca3af" }}>
                 {wordCount} word{wordCount !== 1 ? "s" : ""}
               </span>
               <button
                 onClick={handleAnalyze}
                 disabled={!canAnalyze}
                 style={{
-                  background: canAnalyze ? V.brand : "rgba(139,92,246,0.2)",
-                  color: canAnalyze ? "#fafafa" : "rgba(255,255,255,0.3)",
+                  background: canAnalyze ? V.brand : "rgba(126,34,206,0.2)",
+                  color: canAnalyze ? "#ffffff" : "#9ca3af",
                   fontSize: "13px", fontWeight: 700,
-                  padding: "8px 20px", borderRadius: "7px",
+                  padding: "8px 20px", borderRadius: "12px",
                   border: "none", cursor: canAnalyze ? "pointer" : "not-allowed",
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   transition: "all 0.15s",
@@ -435,10 +436,11 @@ export default function LandingPage() {
           {mounted && result && scoreConf && (
             <div style={{
               marginTop: "20px",
-              background: "#0e0e12",
+              background: "#ffffff",
               border: `1px solid ${scoreColor(score)}30`,
-              borderRadius: "12px",
+              borderRadius: "16px",
               padding: "24px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
             }}>
               {/* Score row */}
               <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", marginBottom: "8px" }}>
@@ -450,17 +452,17 @@ export default function LandingPage() {
                 }}>
                   {Math.round(score)}
                 </div>
-                <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.3)", marginBottom: "10px" }}>/100</div>
+                <div style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "10px" }}>/100</div>
               </div>
               <div style={{ fontSize: "12px", fontWeight: 800, color: scoreColor(score), letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "4px" }}>
                 {scoreConf.label}
               </div>
-              <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, marginBottom: "16px" }}>
+              <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.5, marginBottom: "16px" }}>
                 {scoreConf.sub}
               </div>
 
               {/* Progress bar */}
-              <div style={{ height: "4px", background: "rgba(255,255,255,0.06)", borderRadius: "2px", overflow: "hidden", marginBottom: "16px" }}>
+              <div style={{ height: "4px", background: "#e5e7eb", borderRadius: "2px", overflow: "hidden", marginBottom: "16px" }}>
                 <div style={{
                   height: "100%", borderRadius: "2px",
                   background: `linear-gradient(90deg, ${scoreColor(score)}80, ${scoreColor(score)})`,
@@ -471,20 +473,20 @@ export default function LandingPage() {
               {/* Top 3 patterns */}
               {topPatterns.length > 0 && (
                 <div style={{ marginBottom: "16px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                     Top patterns detected
                   </div>
                   {topPatterns.map(p => (
                     <div key={p.id} style={{
                       display: "flex", alignItems: "center", gap: "8px",
                       padding: "8px 0",
-                      borderBottom: "1px solid rgba(255,255,255,0.04)",
-                      fontSize: "13px", color: "rgba(255,255,255,0.55)",
+                      borderBottom: "1px solid #f3f4f6",
+                      fontSize: "13px", color: "#4b5563",
                     }}>
                       <span style={{
                         fontSize: "10px", fontWeight: 600, padding: "2px 6px", borderRadius: "3px",
-                        background: p.severity === "critical" || p.severity === "high" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.06)",
-                        color: p.severity === "critical" || p.severity === "high" ? "#ef4444" : "rgba(255,255,255,0.4)",
+                        background: p.severity === "critical" || p.severity === "high" ? "rgba(239,68,68,0.12)" : "#f3f4f6",
+                        color: p.severity === "critical" || p.severity === "high" ? "#ef4444" : "#6b7280",
                         textTransform: "uppercase",
                       }}>
                         {p.severity}
@@ -501,8 +503,8 @@ export default function LandingPage() {
                   <button style={{
                     display: "block", width: "100%", textAlign: "center",
                     padding: "12px",
-                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                    color: "#fafafa", borderRadius: "8px", border: "none",
+                    background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                    color: "#ffffff", borderRadius: "12px", border: "none",
                     fontSize: "14px", fontWeight: 700, cursor: "pointer",
                   }}>
                     Humanize this text &rarr; Sign up free to unlock
@@ -518,8 +520,8 @@ export default function LandingPage() {
                   style={{
                     display: "block", width: "100%", textAlign: "center",
                     padding: "12px",
-                    background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
-                    color: "#fafafa", borderRadius: "8px", border: "none",
+                    background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                    color: "#ffffff", borderRadius: "12px", border: "none",
                     fontSize: "14px", fontWeight: 700, cursor: "pointer",
                   }}
                 >
@@ -544,7 +546,7 @@ export default function LandingPage() {
         <div style={{
           position: "absolute", top: "20%", left: "30%",
           width: "500px", height: "500px",
-          background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(126,34,206,0.05) 0%, transparent 70%)",
           borderRadius: "50%", filter: "blur(80px)",
           animation: "drift1 12s ease-in-out infinite",
           pointerEvents: "none",
@@ -552,7 +554,7 @@ export default function LandingPage() {
         <div style={{
           position: "absolute", top: "40%", right: "20%",
           width: "400px", height: "400px",
-          background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(126,34,206,0.04) 0%, transparent 70%)",
           borderRadius: "50%", filter: "blur(60px)",
           animation: "drift2 15s ease-in-out infinite",
           pointerEvents: "none",
@@ -564,11 +566,11 @@ export default function LandingPage() {
           <div className="fade-in" style={{
             display: "inline-flex", alignItems: "center", gap: "6px",
             border: `1px solid ${V.brandBorder}`,
-            background: V.brandDim,
+            background: "#f3e8ff",
             borderRadius: "100px", padding: "5px 14px", marginBottom: "28px",
-            fontSize: "12px", color: "#c4b5fd", fontWeight: 500, cursor: "pointer",
+            fontSize: "12px", color: V.brand, fontWeight: 500, cursor: "pointer",
           }} onClick={() => smoothScroll("extension")}>
-            <span>\u2728</span>
+            <span>{"\u2728"}</span>
             <span>New: Chrome Extension available</span>
           </div>
 
@@ -579,11 +581,12 @@ export default function LandingPage() {
             lineHeight: 1.08,
             letterSpacing: "-2.5px",
             margin: "0 0 20px",
-            color: "#fafafa",
+            color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Humanize AI Text.{" "}
             <span style={{
-              background: "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%)",
+              background: "linear-gradient(135deg, #7e22ce 0%, #9333ea 50%, #a855f7 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -595,7 +598,7 @@ export default function LandingPage() {
           {/* Subtitle */}
           <p className="fade-in-delay" style={{
             fontSize: "17px",
-            color: "#a0a0b0",
+            color: "#6b7280",
             lineHeight: 1.7,
             margin: "0 auto 36px",
             maxWidth: "560px",
@@ -608,10 +611,10 @@ export default function LandingPage() {
             <SignedOut>
               <SignUpButton mode="modal">
                 <button style={{
-                  background: V.brand, color: "#fafafa", fontWeight: 700,
-                  padding: "14px 28px", borderRadius: "8px", border: "none",
+                  background: V.brand, color: "#ffffff", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "12px", border: "none",
                   fontSize: "15px", cursor: "pointer",
-                  boxShadow: `0 0 40px ${V.brandGlow}`,
+                  boxShadow: `0 4px 12px ${V.brandGlow}`,
                 }}>
                   Start Free &mdash; No credit card
                 </button>
@@ -619,19 +622,19 @@ export default function LandingPage() {
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#fafafa", fontWeight: 700,
-                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
+                background: V.brand, color: "#ffffff", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "12px", textDecoration: "none",
                 fontSize: "15px",
-                boxShadow: `0 0 40px ${V.brandGlow}`,
+                boxShadow: `0 4px 12px ${V.brandGlow}`,
                 display: "inline-flex", alignItems: "center",
               }}>
                 Open Dashboard &rarr;
               </Link>
             </SignedIn>
             <button onClick={() => smoothScroll("demo")} style={{
-              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
-              padding: "14px 28px", borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "transparent", color: "#4b5563", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "12px",
+              border: "1px solid #e5e7eb",
               fontSize: "15px", cursor: "pointer",
             }}>
               See how it works &darr;
@@ -643,7 +646,7 @@ export default function LandingPage() {
             display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap",
           }}>
             {["\u2713 500 words free/day", "\u2713 No signup needed to try", "\u2713 Works in Gmail & Docs"].map((sig) => (
-              <span key={sig} style={{ fontSize: "12px", color: "#6b6b80" }}>{sig}</span>
+              <span key={sig} style={{ fontSize: "12px", color: "#6b7280" }}>{sig}</span>
             ))}
           </div>
         </div>
@@ -652,8 +655,8 @@ export default function LandingPage() {
       {/* ── SECTION 3: HOW IT WORKS ── */}
       <section id="how-it-works" aria-label="How it works" style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e5e7eb",
+        borderBottom: "1px solid #e5e7eb",
       }}>
         <div style={{ maxWidth: "860px", margin: "0 auto" }}>
           <p style={{
@@ -667,7 +670,8 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "52px", color: "#fafafa",
+            marginBottom: "52px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Three steps. Zero friction.
           </h2>
@@ -683,15 +687,16 @@ export default function LandingPage() {
               { icon: "\u2705", title: "Humanize", desc: "One click rewrites it to sound natural and pass detectors." },
             ].map(({ icon, title, desc }) => (
               <div key={title} style={{
-                background: "#0e0e12",
-                border: "1px solid rgba(139,92,246,0.15)",
-                borderRadius: "12px",
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: "16px",
                 padding: "28px 24px",
                 textAlign: "center",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 <div style={{ fontSize: "32px", marginBottom: "16px" }}>{icon}</div>
-                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#fafafa" }}>{title}</h3>
-                <p style={{ fontSize: "14px", color: "#a0a0b0", lineHeight: 1.6 }}>{desc}</p>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#3b0764", fontFamily: "var(--font-heading)" }}>{title}</h3>
+                <p style={{ fontSize: "14px", color: "#6b7280", lineHeight: 1.6 }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -702,7 +707,7 @@ export default function LandingPage() {
       <section id="extension" style={{ padding: "80px 24px" }}>
         <div style={{
           maxWidth: "900px", margin: "0 auto",
-          background: "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(139,92,246,0.04) 100%)",
+          background: "linear-gradient(135deg, rgba(126,34,206,0.06) 0%, rgba(126,34,206,0.02) 100%)",
           border: `1px solid ${V.brandBorder}`,
           borderRadius: "16px",
           padding: "48px 40px",
@@ -713,33 +718,34 @@ export default function LandingPage() {
               <h2 style={{
                 fontSize: "clamp(22px, 3vw, 30px)",
                 fontWeight: 700, letterSpacing: "-0.5px",
-                marginBottom: "12px", color: "#fafafa",
+                marginBottom: "12px", color: "#3b0764",
+                fontFamily: "var(--font-heading)",
               }}>
                 HumanizeIt is now a Chrome Extension
               </h2>
-              <p style={{ fontSize: "15px", color: "#a0a0b0", lineHeight: 1.7, marginBottom: "24px" }}>
+              <p style={{ fontSize: "15px", color: "#6b7280", lineHeight: 1.7, marginBottom: "24px" }}>
                 Analyze and humanize text directly in Gmail, Google Docs, LinkedIn, and Notion &mdash; without leaving the page.
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
                 <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
-                  background: V.brand, color: "#fafafa", fontWeight: 700,
-                  padding: "12px 24px", borderRadius: "8px",
+                  background: V.brand, color: "#ffffff", fontWeight: 700,
+                  padding: "12px 24px", borderRadius: "12px",
                   fontSize: "14px", textDecoration: "none",
                 }}>
                   Install Chrome Extension &rarr;
                 </a>
                 <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
                   display: "inline-flex", alignItems: "center",
-                  background: "transparent", color: "rgba(255,255,255,0.6)",
-                  padding: "12px 24px", borderRadius: "8px",
-                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "transparent", color: "#4b5563",
+                  padding: "12px 24px", borderRadius: "12px",
+                  border: "1px solid #e5e7eb",
                   fontSize: "14px", textDecoration: "none", fontWeight: 600,
                 }}>
                   Learn more
                 </a>
               </div>
-              <p style={{ fontSize: "12px", color: "#6b6b80" }}>
+              <p style={{ fontSize: "12px", color: "#6b7280" }}>
                 Works on: Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
               </p>
             </div>
@@ -750,7 +756,7 @@ export default function LandingPage() {
       {/* ── SECTION 6: COMPARISON TABLE ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e5e7eb",
       }}>
         <div style={{ maxWidth: "700px", margin: "0 auto" }}>
           <p style={{
@@ -764,33 +770,35 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#fafafa",
+            marginBottom: "48px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Beats every AI detector
           </h2>
 
           <div style={{
-            background: "#0e0e12",
-            border: "1px solid rgba(139,92,246,0.15)",
-            borderRadius: "12px",
+            background: "#ffffff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "16px",
             overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
           }}>
             <table className="comparison-table" style={{
               width: "100%", borderCollapse: "collapse",
               fontSize: "14px",
             }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <th style={{ padding: "14px 16px", textAlign: "left", color: "#6b6b80", fontWeight: 600, fontSize: "12px" }}></th>
+                <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <th style={{ padding: "14px 16px", textAlign: "left", color: "#6b7280", fontWeight: 600, fontSize: "12px" }}></th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: V.brand, fontWeight: 700, fontSize: "13px" }}>HumanizeIt</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b6b80", fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b6b80", fontWeight: 600, fontSize: "13px" }}>Undetectable.ai</th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b7280", fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b7280", fontWeight: 600, fontSize: "13px" }}>Undetectable.ai</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
-                  <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
-                    <td style={{ padding: "12px 16px", color: "#a0a0b0", fontWeight: 500 }}>{row.label}</td>
+                  <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                    <td style={{ padding: "12px 16px", color: "#4b5563", fontWeight: 500 }}>{row.label}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.us}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.quill}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.undet}</td>
@@ -805,7 +813,7 @@ export default function LandingPage() {
       {/* ── SECTION 7: PRICING ── */}
       <section id="pricing" aria-label="Pricing plans" style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e5e7eb",
       }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <p style={{
@@ -819,7 +827,8 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "12px", color: "#fafafa",
+            marginBottom: "12px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Start free. Upgrade when ready.
           </h2>
@@ -829,22 +838,23 @@ export default function LandingPage() {
             display: "flex", justifyContent: "center", alignItems: "center",
             gap: "12px", marginBottom: "48px",
           }}>
-            <span style={{ fontSize: "13px", color: !billingAnnual ? "#fafafa" : "#6b6b80", fontWeight: 600 }}>Monthly</span>
+            <span style={{ fontSize: "13px", color: !billingAnnual ? "#111827" : "#6b7280", fontWeight: 600 }}>Monthly</span>
             <button onClick={() => setBillingAnnual(!billingAnnual)} style={{
               width: "44px", height: "24px", borderRadius: "12px",
-              background: billingAnnual ? V.brand : "rgba(255,255,255,0.12)",
+              background: billingAnnual ? V.brand : "#e5e7eb",
               border: "none", cursor: "pointer", position: "relative",
               transition: "background 0.2s",
             }}>
               <div style={{
                 width: "18px", height: "18px", borderRadius: "50%",
-                background: "#fafafa",
+                background: "#ffffff",
                 position: "absolute", top: "3px",
                 left: billingAnnual ? "23px" : "3px",
                 transition: "left 0.2s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
               }} />
             </button>
-            <span style={{ fontSize: "13px", color: billingAnnual ? "#fafafa" : "#6b6b80", fontWeight: 600 }}>
+            <span style={{ fontSize: "13px", color: billingAnnual ? "#111827" : "#6b7280", fontWeight: 600 }}>
               Annual
             </span>
             {billingAnnual && (
@@ -863,51 +873,52 @@ export default function LandingPage() {
             <span style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
               fontSize: "12px", fontWeight: 500,
-              color: "rgba(255,255,255,0.4)",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              color: "#6b7280",
+              background: "#f3e8ff",
+              border: "1px solid rgba(126,34,206,0.15)",
               padding: "5px 14px", borderRadius: "100px",
             }}>
-              🚀 Currently in Beta — Paid plans coming soon
+              {"\uD83D\uDE80"} Currently in Beta — Paid plans coming soon
             </span>
           </div>
 
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
             {plans.map((plan, i) => (
               <div key={plan.name} style={{
-                background: plan.pro ? "rgba(139,92,246,0.05)" : "#0e0e12",
-                border: plan.pro ? `1px solid ${V.brand}` : "1px solid rgba(139,92,246,0.15)",
-                borderRadius: "12px",
+                background: plan.pro ? V.brand : "#ffffff",
+                border: plan.pro ? `1px solid ${V.brand}` : "1px solid #e5e7eb",
+                borderRadius: "16px",
                 padding: "28px 22px",
                 position: "relative",
-                boxShadow: plan.pro ? `0 0 40px ${V.brandGlowSoft}, 0 0 80px rgba(139,92,246,0.04)` : "none",
+                boxShadow: plan.pro ? `0 4px 12px rgba(126,34,206,0.2)` : "0 1px 3px rgba(0,0,0,0.06)",
                 opacity: 0,
                 animation: `fadeInUp 0.5s ease ${i * 0.1}s forwards`,
               }}>
                 {plan.pro && (
                   <div style={{
                     position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
-                    background: V.brand, color: "#fafafa",
+                    background: "#ffffff", color: V.brand,
                     fontSize: "11px", fontWeight: 700,
                     padding: "3px 14px", borderRadius: "100px",
                     whiteSpace: "nowrap",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                   }}>
                     Most Popular
                   </div>
                 )}
 
-                <div style={{ fontSize: "12px", color: "#6b6b80", marginBottom: "4px" }}>{plan.desc}</div>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fafafa", marginBottom: "16px" }}>{plan.name}</div>
+                <div style={{ fontSize: "12px", color: plan.pro ? "rgba(255,255,255,0.7)" : "#6b7280", marginBottom: "4px" }}>{plan.desc}</div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: plan.pro ? "#ffffff" : "#111827", marginBottom: "16px" }}>{plan.name}</div>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "20px" }}>
-                  <span style={{ fontSize: "40px", fontWeight: 800, color: "#fafafa", letterSpacing: "-2px" }}>{plan.price}</span>
-                  <span style={{ fontSize: "13px", color: "#6b6b80" }}>{plan.period}</span>
+                  <span style={{ fontSize: "40px", fontWeight: 800, color: plan.pro ? "#ffffff" : "#111827", letterSpacing: "-2px" }}>{plan.price}</span>
+                  <span style={{ fontSize: "13px", color: plan.pro ? "rgba(255,255,255,0.7)" : "#6b7280" }}>{plan.period}</span>
                 </div>
 
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {plan.features.map((f) => (
-                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>
-                      <span style={{ color: V.brand, fontSize: "12px", flexShrink: 0 }}>{"\u2713"}</span>
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: plan.pro ? "rgba(255,255,255,0.85)" : "#4b5563" }}>
+                      <span style={{ color: plan.pro ? "#ffffff" : V.brand, fontSize: "12px", flexShrink: 0 }}>{"\u2713"}</span>
                       {f}
                     </li>
                   ))}
@@ -919,11 +930,11 @@ export default function LandingPage() {
                       <SignUpButton mode="modal">
                         <button style={{
                           display: "block", width: "100%", textAlign: "center",
-                          padding: "10px", borderRadius: "7px",
+                          padding: "10px", borderRadius: "12px",
                           fontSize: "13px", fontWeight: 600,
                           background: "transparent",
-                          color: "rgba(255,255,255,0.6)",
-                          border: "1px solid rgba(255,255,255,0.12)",
+                          color: "#4b5563",
+                          border: "1px solid #e5e7eb",
                           cursor: "pointer",
                         }}>
                           {plan.cta}
@@ -933,11 +944,11 @@ export default function LandingPage() {
                     <SignedIn>
                       <Link href="/dashboard/editor" style={{
                         display: "block", textAlign: "center", textDecoration: "none",
-                        padding: "10px", borderRadius: "7px",
+                        padding: "10px", borderRadius: "12px",
                         fontSize: "13px", fontWeight: 600,
                         background: "transparent",
-                        color: "rgba(255,255,255,0.6)",
-                        border: "1px solid rgba(255,255,255,0.12)",
+                        color: "#4b5563",
+                        border: "1px solid #e5e7eb",
                       }}>
                         Open Dashboard
                       </Link>
@@ -946,11 +957,11 @@ export default function LandingPage() {
                 ) : (
                   <a href={plan.href ?? "#"} onClick={() => track("beta_access_clicked", { plan: plan.name })} style={{
                     display: "block", textAlign: "center", textDecoration: "none",
-                    padding: "10px", borderRadius: "7px",
+                    padding: "10px", borderRadius: "12px",
                     fontSize: "13px", fontWeight: 600,
-                    background: plan.pro ? V.brand : "transparent",
-                    color: plan.pro ? "#fafafa" : "rgba(255,255,255,0.6)",
-                    border: plan.pro ? "none" : "1px solid rgba(255,255,255,0.12)",
+                    background: plan.pro ? "#ffffff" : "transparent",
+                    color: plan.pro ? V.brand : "#4b5563",
+                    border: plan.pro ? "none" : "1px solid #e5e7eb",
                   }}>
                     {plan.cta}
                   </a>
@@ -964,7 +975,7 @@ export default function LandingPage() {
       {/* ── SECTION 8: EXTENSION MINI ── */}
       <section style={{
         padding: "60px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e5e7eb",
         textAlign: "center",
       }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
@@ -972,11 +983,12 @@ export default function LandingPage() {
           <h2 style={{
             fontSize: "clamp(22px, 3vw, 30px)",
             fontWeight: 700, letterSpacing: "-0.5px",
-            marginBottom: "12px", color: "#fafafa",
+            marginBottom: "12px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Use it anywhere you write
           </h2>
-          <p style={{ fontSize: "15px", color: "#a0a0b0", lineHeight: 1.7, marginBottom: "24px" }}>
+          <p style={{ fontSize: "15px", color: "#6b7280", lineHeight: 1.7, marginBottom: "24px" }}>
             The HumanizeIt extension works in any text field on any website.
           </p>
           <div style={{
@@ -984,9 +996,9 @@ export default function LandingPage() {
           }}>
             {["Gmail", "Google Docs", "LinkedIn", "Notion", "Substack", "WordPress"].map((app) => (
               <span key={app} style={{
-                fontSize: "13px", color: "#6b6b80",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                fontSize: "13px", color: "#4b5563",
+                background: "#faf5ff",
+                border: "1px solid #e5e7eb",
                 borderRadius: "8px", padding: "8px 16px",
               }}>
                 {app}
@@ -999,7 +1011,7 @@ export default function LandingPage() {
       {/* ── FAQ SECTION ── */}
       <section id="faq" aria-label="Frequently asked questions" style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid #e5e7eb",
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
           <p style={{
@@ -1013,7 +1025,8 @@ export default function LandingPage() {
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
             fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#fafafa",
+            marginBottom: "48px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Everything You Need to Know
           </h2>
@@ -1054,11 +1067,12 @@ export default function LandingPage() {
               },
             ] as { q: string; a: string }[]).map((item, i) => (
               <div key={i} style={{
-                background: "#0e0e12",
-                border: `1px solid ${openFaq === i ? V.brandBorder : "rgba(255,255,255,0.06)"}`,
-                borderRadius: "12px",
+                background: "#ffffff",
+                border: `1px solid ${openFaq === i ? V.brandBorder : "#e5e7eb"}`,
+                borderRadius: "16px",
                 overflow: "hidden",
                 transition: "border-color 0.3s",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -1072,7 +1086,7 @@ export default function LandingPage() {
                   }}
                 >
                   <span style={{
-                    fontSize: "15px", fontWeight: 600, color: "#fafafa",
+                    fontSize: "15px", fontWeight: 600, color: "#111827",
                     lineHeight: 1.4, paddingRight: "16px",
                   }}>
                     {item.q}
@@ -1096,7 +1110,7 @@ export default function LandingPage() {
                     padding: "0 22px 18px",
                     margin: 0,
                     fontSize: "14px",
-                    color: "#a0a0b0",
+                    color: "#6b7280",
                     lineHeight: 1.7,
                   }}>
                     {item.a}
@@ -1111,11 +1125,11 @@ export default function LandingPage() {
       {/* ── SECTION 9: FINAL CTA ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(139,92,246,0.1)",
+        borderTop: "1px solid rgba(126,34,206,0.1)",
       }}>
         <div style={{
           maxWidth: "700px", margin: "0 auto",
-          background: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(139,92,246,0.04) 100%)",
+          background: "linear-gradient(135deg, rgba(126,34,206,0.06) 0%, rgba(126,34,206,0.02) 100%)",
           border: `1px solid ${V.brandBorder}`,
           borderRadius: "16px",
           padding: "56px 40px",
@@ -1124,21 +1138,22 @@ export default function LandingPage() {
           <h2 style={{
             fontSize: "clamp(26px, 4vw, 40px)",
             fontWeight: 800, letterSpacing: "-1.5px",
-            lineHeight: 1.1, marginBottom: "14px", color: "#fafafa",
+            lineHeight: 1.1, marginBottom: "14px", color: "#3b0764",
+            fontFamily: "var(--font-heading)",
           }}>
             Ready to make your writing sound human?
           </h2>
-          <p style={{ fontSize: "15px", color: "#a0a0b0", marginBottom: "32px" }}>
+          <p style={{ fontSize: "15px", color: "#6b7280", marginBottom: "32px" }}>
             Start free &mdash; 500 words/day, no credit card required.
           </p>
           <div className="two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
             <SignedOut>
               <SignUpButton mode="modal">
                 <button style={{
-                  background: V.brand, color: "#fafafa", fontWeight: 700,
-                  padding: "14px 28px", borderRadius: "8px", border: "none",
+                  background: V.brand, color: "#ffffff", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "12px", border: "none",
                   fontSize: "15px", cursor: "pointer",
-                  boxShadow: `0 0 40px ${V.brandGlow}`,
+                  boxShadow: `0 4px 12px ${V.brandGlow}`,
                 }}>
                   Start Writing Free &rarr;
                 </button>
@@ -1146,10 +1161,10 @@ export default function LandingPage() {
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#fafafa", fontWeight: 700,
-                padding: "14px 28px", borderRadius: "8px", textDecoration: "none",
+                background: V.brand, color: "#ffffff", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "12px", textDecoration: "none",
                 fontSize: "15px",
-                boxShadow: `0 0 40px ${V.brandGlow}`,
+                boxShadow: `0 4px 12px ${V.brandGlow}`,
                 display: "inline-flex", alignItems: "center",
               }}>
                 Open Dashboard &rarr;
@@ -1157,9 +1172,9 @@ export default function LandingPage() {
             </SignedIn>
             <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-flex", alignItems: "center",
-              background: "transparent", color: "rgba(255,255,255,0.6)", fontWeight: 600,
-              padding: "14px 28px", borderRadius: "8px",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: "transparent", color: "#4b5563", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "12px",
+              border: "1px solid #e5e7eb",
               fontSize: "15px", textDecoration: "none",
             }}>
               Install Chrome Extension
@@ -1170,8 +1185,9 @@ export default function LandingPage() {
 
       {/* ── SECTION 10: FOOTER ── */}
       <footer style={{
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderTop: "1px solid #e5e7eb",
         padding: "24px",
+        background: "#ffffff",
       }}>
         <div className="footer-inner" style={{
           maxWidth: "1140px", margin: "0 auto",
@@ -1179,8 +1195,8 @@ export default function LandingPage() {
           flexWrap: "wrap", gap: "16px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-            <span style={{ fontSize: "16px", fontWeight: 800, color: V.brand }}>H.</span>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>HumanizeIt</span>
+            <span style={{ fontSize: "16px", fontWeight: 800, color: "#3b0764" }}>H.</span>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#6b7280" }}>HumanizeIt</span>
           </div>
           <div className="footer-links" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             {[
@@ -1190,17 +1206,17 @@ export default function LandingPage() {
               { label: "Sign in", href: "/sign-in" },
               { label: "Sign up", href: "/sign-up" },
             ].map(({ label, href }) => (
-              <a key={label} href={href} style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)", textDecoration: "none" }}>
+              <a key={label} href={href} style={{ fontSize: "12px", color: "#9ca3af", textDecoration: "none" }}>
                 {label}
               </a>
             ))}
           </div>
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.18)" }}>
+          <p style={{ fontSize: "12px", color: "#9ca3af" }}>
             &copy; 2026 HumanizeIt &middot;{" "}
-            <a href="/privacy" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy</a> &middot;{" "}
-            <a href="/terms" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms</a> &middot;{" "}
-            <a href="/cookies" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Cookies</a> &middot;{" "}
-            <a href="/refunds" style={{ color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Refunds</a>
+            <a href="/privacy" style={{ color: "#6b7280", textDecoration: "none" }}>Privacy</a> &middot;{" "}
+            <a href="/terms" style={{ color: "#6b7280", textDecoration: "none" }}>Terms</a> &middot;{" "}
+            <a href="/cookies" style={{ color: "#6b7280", textDecoration: "none" }}>Cookies</a> &middot;{" "}
+            <a href="/refunds" style={{ color: "#6b7280", textDecoration: "none" }}>Refunds</a>
           </p>
         </div>
       </footer>

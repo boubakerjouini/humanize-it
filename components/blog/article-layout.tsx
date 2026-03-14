@@ -13,8 +13,8 @@ export function ArticleLayout({
     <div
       style={{
         minHeight: "100vh",
-        background: "#09090b",
-        color: "#fafafa",
+        background: "#ffffff",
+        color: "#111827",
       }}
     >
       {/* Nav */}
@@ -26,9 +26,9 @@ export function ArticleLayout({
           height: "56px",
           display: "flex",
           alignItems: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid #e5e7eb",
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(9,9,11,0.88)",
+          background: "rgba(255,255,255,0.88)",
           padding: "0 24px",
         }}
       >
@@ -46,12 +46,12 @@ export function ArticleLayout({
             href="/"
             style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}
           >
-            <span style={{ fontSize: "19px", fontWeight: 800, color: "#8b5cf6", letterSpacing: "-0.5px" }}>H.</span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: "#7e22ce", letterSpacing: "-0.5px" }}>H.</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="/blog" style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
-            <Link href="/dashboard/editor" style={{ background: "#8b5cf6", color: "#fafafa", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: "6px", textDecoration: "none" }}>
+            <Link href="/blog" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
+            <Link href="/dashboard/editor" style={{ background: "#7e22ce", color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: "6px", textDecoration: "none" }}>
               Try Free &rarr;
             </Link>
           </div>
@@ -66,7 +66,7 @@ export function ArticleLayout({
             display: "inline-flex",
             alignItems: "center",
             gap: "6px",
-            color: "rgba(255,255,255,0.4)",
+            color: "#6b7280",
             fontSize: "13px",
             textDecoration: "none",
             marginBottom: "32px",
@@ -82,7 +82,7 @@ export function ArticleLayout({
               display: "inline-block",
               fontSize: "12px",
               fontWeight: 600,
-              color: "#8b5cf6",
+              color: "#7e22ce",
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               marginBottom: "12px",
@@ -96,7 +96,7 @@ export function ArticleLayout({
               fontWeight: 800,
               lineHeight: 1.15,
               letterSpacing: "-0.02em",
-              color: "#fafafa",
+              color: "#111827",
               margin: "0 0 16px",
             }}
           >
@@ -108,7 +108,7 @@ export function ArticleLayout({
               alignItems: "center",
               gap: "16px",
               fontSize: "13px",
-              color: "rgba(255,255,255,0.4)",
+              color: "#6b7280",
             }}
           >
             <span>{new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
@@ -124,24 +124,24 @@ export function ArticleLayout({
         <div
           style={{
             marginTop: "56px",
-            border: "1px solid rgba(139,92,246,0.3)",
+            border: "1px solid rgba(126,34,206,0.3)",
             borderRadius: "12px",
-            background: "rgba(139,92,246,0.06)",
+            background: "#faf5ff",
             padding: "32px",
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#fafafa", marginBottom: "8px" }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: "#111827", marginBottom: "8px" }}>
             Try HumanizeIt Free
           </div>
-          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.55)", marginBottom: "20px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "15px", color: "#4b5563", marginBottom: "20px", lineHeight: 1.5 }}>
             Paste your text, get an AI detection score, and humanize it in seconds.
           </p>
           <Link
             href="/"
             style={{
               display: "inline-block",
-              background: "#8b5cf6",
+              background: "#7e22ce",
               color: "#fff",
               fontSize: "15px",
               fontWeight: 600,

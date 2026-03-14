@@ -42,12 +42,12 @@ const PATTERN_EXPLANATIONS: Record<string, string> = {
   "low-perplexity": "Most sentences start with common, predictable words.",
 };
 
-function severityStyles(severity: string): { borderColor: string; iconColor: string; badgeBg: string; badgeColor: string } {
+function severityStyles(severity: string): { borderColor: string; badgeBg: string; badgeColor: string } {
   switch (severity) {
-    case "critical": return { borderColor: "#ef4444", iconColor: "#ef4444", badgeBg: "rgba(239,68,68,0.12)", badgeColor: "#f87171" };
-    case "high":     return { borderColor: "#8b5cf6", iconColor: "#8b5cf6", badgeBg: "rgba(139,92,246,0.12)", badgeColor: "#a78bfa" };
-    case "medium":   return { borderColor: "#a78bfa", iconColor: "#a78bfa", badgeBg: "rgba(167,139,250,0.12)", badgeColor: "#fcd34d" };
-    default:         return { borderColor: "#22c55e", iconColor: "#22c55e", badgeBg: "rgba(34,197,94,0.12)", badgeColor: "#4ade80" };
+    case "critical":
+    case "high":     return { borderColor: "#dc2626", badgeBg: "#fef2f2", badgeColor: "#dc2626" };
+    case "medium":   return { borderColor: "#d97706", badgeBg: "#fffbeb", badgeColor: "#d97706" };
+    default:         return { borderColor: "#16a34a", badgeBg: "#f0fdf4", badgeColor: "#16a34a" };
   }
 }
 
@@ -58,12 +58,12 @@ export function PatternCard({ pattern }: PatternCardProps) {
 
   return (
     <div style={{
-      background: "#0f0f12",
-      border: "1px solid rgba(255,255,255,0.06)",
-      borderLeft: `3px solid ${styles.borderColor}`,
-      borderRadius: "6px",
+      background: "#ffffff",
+      border: "1px solid #e5e7eb",
+      borderLeft: `4px solid ${styles.borderColor}`,
+      borderRadius: "12px",
       overflow: "hidden",
-      transition: "border-color 0.15s",
+      transition: "box-shadow 0.15s",
     }}>
       <button
         onClick={() => setOpen(!open)}
@@ -81,21 +81,14 @@ export function PatternCard({ pattern }: PatternCardProps) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
-          {/* Dot */}
-          <span style={{
-            width: "7px", height: "7px", borderRadius: "50%",
-            background: styles.iconColor, flexShrink: 0,
-            boxShadow: `0 0 6px ${styles.iconColor}80`,
-          }} />
-
           {/* Label */}
-          <span style={{ fontSize: "13px", fontWeight: 500, color: "#fafafa", minWidth: 0 }}>
+          <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827", minWidth: 0 }}>
             {pattern.label}
           </span>
 
           {/* Severity badge */}
           <span style={{
-            fontSize: "10px", fontWeight: 600, padding: "2px 6px", borderRadius: "4px",
+            fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "100px",
             background: styles.badgeBg, color: styles.badgeColor,
             textTransform: "uppercase", letterSpacing: "0.5px", flexShrink: 0,
           }}>
@@ -103,29 +96,29 @@ export function PatternCard({ pattern }: PatternCardProps) {
           </span>
 
           {/* Hit count */}
-          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>
+          <span style={{ fontSize: "11px", color: "#9ca3af", flexShrink: 0 }}>
             {pattern.hits} hit{pattern.hits !== 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Chevron */}
         <span style={{
-          color: "rgba(255,255,255,0.3)", fontSize: "12px", flexShrink: 0,
+          color: "#9ca3af", fontSize: "12px", flexShrink: 0,
           transform: open ? "rotate(180deg)" : "rotate(0deg)",
           transition: "transform 0.2s",
           display: "inline-block",
         }}>
-          ▾
+          &#9662;
         </span>
       </button>
 
       {open && (
         <div style={{
-          padding: "0 14px 14px 30px",
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          background: "rgba(255,255,255,0.01)",
+          padding: "0 14px 14px 18px",
+          borderTop: "1px solid #f3f4f6",
+          background: "#f9fafb",
         }}>
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
+          <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
             {explanation}
           </p>
           {pattern.examples.length > 0 && (
@@ -133,10 +126,10 @@ export function PatternCard({ pattern }: PatternCardProps) {
               {pattern.examples.map((ex, i) => (
                 <code key={i} style={{
                   fontSize: "11px", padding: "3px 8px",
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "4px", color: "rgba(255,255,255,0.55)",
-                  fontFamily: "var(--font-geist-mono), monospace",
+                  background: "#f3e8ff",
+                  border: "1px solid #e9d5ff",
+                  borderRadius: "6px", color: "#7e22ce",
+                  fontFamily: "var(--font-mono), monospace",
                 }}>
                   {ex}
                 </code>

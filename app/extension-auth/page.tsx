@@ -4,12 +4,12 @@ import { useUser, SignIn } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 
 const V = {
-  bg: "#09090b",
-  card: "#0e0e12",
-  border: "rgba(139,92,246,0.2)",
-  violet: "#8b5cf6",
-  white: "#fafafa",
-  muted: "#a0a0b0",
+  bg: "#ffffff",
+  card: "#ffffff",
+  border: "rgba(126,34,206,0.2)",
+  violet: "#7e22ce",
+  white: "#111827",
+  muted: "#6b7280",
 };
 
 export default function ExtensionAuthPage() {
@@ -65,6 +65,7 @@ export default function ExtensionAuthPage() {
     maxWidth: "420px",
     width: "100%",
     textAlign: "center",
+    boxShadow: "0 0 40px rgba(126,34,206,0.06)",
   };
 
   return (
@@ -132,7 +133,7 @@ export default function ExtensionAuthPage() {
         {isLoaded && isSignedIn && status === "error" && (
           <>
             <div style={{ fontSize: "40px", marginBottom: "12px" }}>❌</div>
-            <p style={{ color: "#ef4444", fontSize: "16px", fontWeight: 600, margin: "0 0 8px" }}>
+            <p style={{ color: "#dc2626", fontSize: "16px", fontWeight: 600, margin: "0 0 8px" }}>
               Something went wrong
             </p>
             <p style={{ color: V.muted, fontSize: "13px", margin: "0 0 16px" }}>
@@ -142,7 +143,7 @@ export default function ExtensionAuthPage() {
               onClick={() => setStatus("idle")}
               style={{
                 background: V.violet,
-                color: V.white,
+                color: "#ffffff",
                 border: "none",
                 borderRadius: "8px",
                 padding: "10px 20px",

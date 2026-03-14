@@ -5,10 +5,10 @@ import { analyzeText } from "@/lib/algorithms/analyzeText";
 import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 
 function scoreColor(s: number): string {
-  if (s >= 75) return "#ef4444";
+  if (s >= 75) return "#dc2626";
   if (s >= 50) return "#f97316";
   if (s >= 25) return "#eab308";
-  return "#22c55e";
+  return "#16a34a";
 }
 
 function scoreLabel(s: number): string {
@@ -41,14 +41,14 @@ export function DetectorWidget() {
   return (
     <div
       style={{
-        border: "1px solid rgba(139,92,246,0.25)",
+        border: "1px solid rgba(126,34,206,0.25)",
         borderRadius: "12px",
-        background: "rgba(139,92,246,0.04)",
+        background: "#faf5ff",
         padding: "24px",
         margin: "32px 0",
       }}
     >
-      <div style={{ fontSize: "15px", fontWeight: 600, color: "#fafafa", marginBottom: "12px" }}>
+      <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827", marginBottom: "12px" }}>
         Try It — Paste Any Text
       </div>
       <textarea
@@ -58,11 +58,11 @@ export function DetectorWidget() {
         style={{
           width: "100%",
           minHeight: "120px",
-          background: "rgba(0,0,0,0.3)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
           borderRadius: "8px",
           padding: "12px 14px",
-          color: "#fafafa",
+          color: "#111827",
           fontSize: "14px",
           lineHeight: 1.6,
           resize: "vertical",
@@ -74,7 +74,7 @@ export function DetectorWidget() {
         disabled={loading || text.trim().split(/\s+/).length < 30}
         style={{
           marginTop: "12px",
-          background: loading ? "#6d28d9" : "#8b5cf6",
+          background: loading ? "#6d28d9" : "#7e22ce",
           color: "#fff",
           border: "none",
           borderRadius: "8px",
@@ -105,7 +105,7 @@ export function DetectorWidget() {
               <div style={{ fontSize: "14px", fontWeight: 600, color: scoreColor(result.score) }}>
                 {scoreLabel(result.score)}
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>
                 AI Detection Score
               </div>
             </div>
@@ -113,7 +113,7 @@ export function DetectorWidget() {
 
           {topPatterns.length > 0 && (
             <div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 Top Triggered Patterns
               </div>
               {topPatterns.map((p) => (
@@ -124,11 +124,11 @@ export function DetectorWidget() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "8px 0",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    borderBottom: "1px solid #e5e7eb",
                     fontSize: "13px",
                   }}
                 >
-                  <span style={{ color: "rgba(255,255,255,0.7)" }}>{p.label}</span>
+                  <span style={{ color: "#374151" }}>{p.label}</span>
                   <span
                     style={{
                       fontSize: "11px",
@@ -136,13 +136,13 @@ export function DetectorWidget() {
                       borderRadius: "4px",
                       background:
                         p.severity === "critical"
-                          ? "rgba(239,68,68,0.15)"
+                          ? "rgba(220,38,38,0.1)"
                           : p.severity === "high"
-                            ? "rgba(249,115,22,0.15)"
-                            : "rgba(234,179,8,0.15)",
+                            ? "rgba(249,115,22,0.1)"
+                            : "rgba(234,179,8,0.1)",
                       color:
                         p.severity === "critical"
-                          ? "#ef4444"
+                          ? "#dc2626"
                           : p.severity === "high"
                             ? "#f97316"
                             : "#eab308",
@@ -161,13 +161,13 @@ export function DetectorWidget() {
         style={{
           marginTop: "16px",
           paddingTop: "12px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid #e5e7eb",
           fontSize: "13px",
-          color: "rgba(255,255,255,0.35)",
+          color: "#9ca3af",
         }}
       >
         Get full analysis + humanization at{" "}
-        <a href="/" style={{ color: "#8b5cf6", textDecoration: "none" }}>
+        <a href="/" style={{ color: "#7e22ce", textDecoration: "none" }}>
           humanizeit.app &rarr;
         </a>
       </div>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 import { Providers } from "./providers";
@@ -8,16 +7,6 @@ import { PostHogPageview } from "@/components/posthog-pageview";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +66,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark">
+      <html lang="en" suppressHydrationWarning>
         <head>
           <script
             type="application/ld+json"
@@ -190,7 +179,7 @@ export default function RootLayout({
             }}
           />
         </head>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className="antialiased">
           <Providers>
             <Suspense fallback={null}>
               <PostHogPageview />

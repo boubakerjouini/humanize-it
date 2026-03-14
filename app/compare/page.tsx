@@ -56,10 +56,10 @@ const COMPETITORS = [
 ];
 
 const CONFIDENCE_LABELS: Record<string, { label: string; color: string }> = {
-  "likely-human":        { label: "Likely Human",         color: "#22c55e" },
-  "uncertain":           { label: "Uncertain",            color: "#a3a3a3" },
+  "likely-human":        { label: "Likely Human",         color: "#16a34a" },
+  "uncertain":           { label: "Uncertain",            color: "#6b7280" },
   "possibly-ai":         { label: "Possibly AI",           color: "#eab308" },
-  "likely-ai":           { label: "Likely AI",             color: "#ef4444" },
+  "likely-ai":           { label: "Likely AI",             color: "#dc2626" },
 };
 
 /** Simulate what a competitor score would look like based on our real score */
@@ -98,17 +98,17 @@ export default function ComparePage() {
   const conf = result ? CONFIDENCE_LABELS[result.confidenceBand] : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#09090b", color: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#111827", fontFamily: "system-ui, -apple-system, sans-serif" }}>
 
       {/* Nav */}
-      <nav style={{ height: "56px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", background: "#060608" }}>
+      <nav style={{ height: "56px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", background: "#ffffff" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <span style={{ fontSize: "18px", fontWeight: 800, color: "#8b5cf6" }}>H.</span>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
+          <span style={{ fontSize: "18px", fontWeight: 800, color: "#7e22ce" }}>H.</span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>HumanizeIt</span>
         </Link>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Link href="/" style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>Home</Link>
-          <Link href="/sign-up" style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa", textDecoration: "none", background: "#8b5cf6", padding: "6px 14px", borderRadius: "6px" }}>Try Free</Link>
+          <Link href="/" style={{ fontSize: "13px", color: "#6b7280", textDecoration: "none" }}>Home</Link>
+          <Link href="/sign-up" style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff", textDecoration: "none", background: "#7e22ce", padding: "6px 14px", borderRadius: "6px" }}>Try Free</Link>
         </div>
       </nav>
 
@@ -116,28 +116,28 @@ export default function ComparePage() {
 
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: "100px", padding: "4px 12px", fontSize: "12px", color: "#a78bfa", marginBottom: "16px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#faf5ff", border: "1px solid rgba(126,34,206,0.3)", borderRadius: "100px", padding: "4px 12px", fontSize: "12px", color: "#a855f7", marginBottom: "16px" }}>
             Live comparison &mdash; powered by our real engine
           </div>
           <h1 style={{ fontSize: "clamp(28px,5vw,48px)", fontWeight: 800, letterSpacing: "-1.5px", margin: "0 0 16px", lineHeight: 1.1 }}>
             See what others<br />
-            <span style={{ color: "#8b5cf6" }}>don&apos;t show you</span>
+            <span style={{ color: "#7e22ce" }}>don&apos;t show you</span>
           </h1>
-          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.45)", maxWidth: "480px", margin: "0 auto", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "16px", color: "#6b7280", maxWidth: "480px", margin: "0 auto", lineHeight: 1.6 }}>
             Paste any text. Our engine analyzes it in real time.<br />
             See what competitors give you &mdash; and what they hide.
           </p>
 
           {/* Feature 5c: Social proof */}
           <div style={{ display: "flex", gap: "24px", justifyContent: "center", marginTop: "16px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>\u2B50 4.8/5 rating</span>
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>\uD83D\uDC65 12,000+ users</span>
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>\uD83D\uDCC4 2M+ documents analyzed</span>
+            <span style={{ fontSize: "13px", color: "#6b7280" }}>\u2B50 4.8/5 rating</span>
+            <span style={{ fontSize: "13px", color: "#6b7280" }}>\uD83D\uDC65 12,000+ users</span>
+            <span style={{ fontSize: "13px", color: "#6b7280" }}>\uD83D\uDCC4 2M+ documents analyzed</span>
           </div>
         </div>
 
         {/* Input */}
-        <div style={{ background: "#0f0f12", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", padding: "20px", marginBottom: "32px" }}>
+        <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "20px", marginBottom: "32px" }}>
           <textarea
             value={text}
             onChange={e => setText(e.target.value)}
@@ -145,20 +145,20 @@ export default function ComparePage() {
             style={{
               width: "100%", minHeight: "140px", background: "transparent",
               border: "none", outline: "none", resize: "none",
-              fontSize: "14px", color: "#fafafa", lineHeight: 1.7,
+              fontSize: "14px", color: "#111827", lineHeight: 1.7,
               fontFamily: "inherit",
             }}
           />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #e5e7eb" }}>
+            <span style={{ fontSize: "12px", color: "#9ca3af" }}>
               {text.split(/\s+/).filter(Boolean).length} words
             </span>
             <button
               onClick={runAnalysis}
               disabled={text.trim().length < 20}
               style={{
-                background: text.trim().length >= 20 ? "#8b5cf6" : "rgba(139,92,246,0.3)",
-                color: "#fafafa", border: "none", borderRadius: "8px",
+                background: text.trim().length >= 20 ? "#7e22ce" : "rgba(126,34,206,0.3)",
+                color: "#ffffff", border: "none", borderRadius: "8px",
                 padding: "10px 24px", fontSize: "14px", fontWeight: 600,
                 cursor: text.trim().length >= 20 ? "pointer" : "not-allowed",
                 transition: "background 0.15s",
@@ -176,16 +176,16 @@ export default function ComparePage() {
             <div style={{ marginBottom: "24px" }}>
               {/* HumanizeIt column (always visible) */}
               <div className={`compare-grid${showCompetitors ? " show-competitors" : ""}`} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "12px" }}>
-                <div className="compare-main-col" style={{ background: "#0f0f12", border: "2px solid #8b5cf6", borderRadius: "12px", overflow: "hidden" }}>
-                  <div style={{ background: "rgba(139,92,246,0.12)", padding: "16px 20px", borderBottom: "1px solid rgba(139,92,246,0.2)" }}>
+                <div className="compare-main-col" style={{ background: "#ffffff", border: "2px solid #7e22ce", borderRadius: "12px", overflow: "hidden" }}>
+                  <div style={{ background: "#faf5ff", padding: "16px 20px", borderBottom: "1px solid rgba(126,34,206,0.2)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                       <div>
-                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#fafafa" }}>H. HumanizeIt</span>
-                        <span style={{ marginLeft: "8px", fontSize: "10px", background: "rgba(139,92,246,0.3)", color: "#a78bfa", padding: "2px 7px", borderRadius: "100px", fontWeight: 600 }}>YOU&apos;RE HERE</span>
+                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#111827" }}>H. HumanizeIt</span>
+                        <span style={{ marginLeft: "8px", fontSize: "10px", background: "rgba(126,34,206,0.15)", color: "#a855f7", padding: "2px 7px", borderRadius: "100px", fontWeight: 600 }}>YOU&apos;RE HERE</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "28px", fontWeight: 800, color: "#8b5cf6", lineHeight: 1 }}>{result.score}</div>
-                        <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>AI Score</div>
+                        <div style={{ fontSize: "28px", fontWeight: 800, color: "#7e22ce", lineHeight: 1 }}>{result.score}</div>
+                        <div style={{ fontSize: "10px", color: "#6b7280" }}>AI Score</div>
                       </div>
                     </div>
                     {conf && (
@@ -197,7 +197,7 @@ export default function ComparePage() {
 
                   <div style={{ padding: "16px 20px" }}>
                     {/* Pattern breakdown */}
-                    <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(255,255,255,0.3)", marginBottom: "10px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#9ca3af", marginBottom: "10px" }}>
                       {result.patterns.length} Patterns Detected
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflow: "auto" }}>
@@ -205,24 +205,24 @@ export default function ComparePage() {
                         <div key={p.id} style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
                           <div style={{
                             width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0, marginTop: "5px",
-                            background: p.severity === "critical" ? "#ef4444" : p.severity === "high" ? "#f97316" : p.severity === "medium" ? "#eab308" : "#6b7280",
+                            background: p.severity === "critical" ? "#dc2626" : p.severity === "high" ? "#f97316" : p.severity === "medium" ? "#eab308" : "#6b7280",
                           }} />
                           <div>
-                            <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.8)" }}>{p.label}</div>
-                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)" }}>{p.examples[0]}</div>
+                            <div style={{ fontSize: "11px", fontWeight: 500, color: "#374151" }}>{p.label}</div>
+                            <div style={{ fontSize: "10px", color: "#9ca3af" }}>{p.examples[0]}</div>
                           </div>
                         </div>
                       ))}
                       {result.patterns.length > 10 && (
-                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", paddingLeft: "14px" }}>
+                        <div style={{ fontSize: "11px", color: "#9ca3af", paddingLeft: "14px" }}>
                           +{result.patterns.length - 10} more patterns...
                         </div>
                       )}
                     </div>
 
                     {/* Stats */}
-                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "rgba(255,255,255,0.3)", marginBottom: "8px" }}>Statistical Analysis</div>
+                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #e5e7eb" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", color: "#9ca3af", marginBottom: "8px" }}>Statistical Analysis</div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                         {[
                           { label: "Burstiness", val: result.stats.burstiness.toFixed(2) },
@@ -230,9 +230,9 @@ export default function ComparePage() {
                           { label: "Avg Sentence", val: `${result.stats.avgSentenceLength}w` },
                           { label: "Flesch", val: result.stats.fleschReadingEase.toFixed(0) },
                         ].map(s => (
-                          <div key={s.label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "6px", padding: "8px" }}>
-                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{s.label}</div>
-                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa" }}>{s.val}</div>
+                          <div key={s.label} style={{ background: "#f3f4f6", borderRadius: "6px", padding: "8px" }}>
+                            <div style={{ fontSize: "10px", color: "#9ca3af" }}>{s.label}</div>
+                            <div style={{ fontSize: "14px", fontWeight: 700, color: "#111827" }}>{s.val}</div>
                           </div>
                         ))}
                       </div>
@@ -243,7 +243,7 @@ export default function ComparePage() {
                       onClick={handleHumanizeClick}
                       style={{
                         display: "block", marginTop: "16px", textAlign: "center", width: "100%",
-                        background: "#8b5cf6", color: "#fafafa",
+                        background: "#7e22ce", color: "#ffffff",
                         padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
                         border: "none", cursor: "pointer",
                       }}
@@ -257,16 +257,16 @@ export default function ComparePage() {
                 {COMPETITORS.map((comp, i) => {
                   const simScore = simulateCompetitorScore(result.score, i);
                   return (
-                    <div key={comp.name} className="compare-competitor-col" style={{ background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", overflow: "hidden" }}>
-                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "2px" }}>{comp.name}</div>
-                        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>{comp.tagline}</div>
+                    <div key={comp.name} className="compare-competitor-col" style={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
+                      <div style={{ background: "#f9fafb", padding: "16px", borderBottom: "1px solid #e5e7eb" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "2px" }}>{comp.name}</div>
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginBottom: "12px" }}>{comp.tagline}</div>
                         {comp.shows === "none" ? (
-                          <div style={{ fontSize: "22px", fontWeight: 800, color: "rgba(255,255,255,0.15)" }}>&mdash;</div>
+                          <div style={{ fontSize: "22px", fontWeight: 800, color: "#d1d5db" }}>&mdash;</div>
                         ) : (
-                          <div style={{ fontSize: "28px", fontWeight: 800, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{simScore}</div>
+                          <div style={{ fontSize: "28px", fontWeight: 800, color: "#6b7280", lineHeight: 1 }}>{simScore}</div>
                         )}
-                        <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", marginTop: "4px" }}>
+                        <div style={{ fontSize: "10px", color: "#9ca3af", marginTop: "4px" }}>
                           {comp.shows === "none" ? "No detection shown" : "Score only"}
                         </div>
                       </div>
@@ -281,14 +281,14 @@ export default function ComparePage() {
                             { label: "Tone control" },
                           ].map(f => (
                             <div key={f.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ fontSize: "14px", color: "#ef4444" }}>&#x2717;</span>
-                              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>{f.label}</span>
+                              <span style={{ fontSize: "14px", color: "#dc2626" }}>&#x2717;</span>
+                              <span style={{ fontSize: "11px", color: "#9ca3af" }}>{f.label}</span>
                             </div>
                           ))}
                         </div>
 
-                        <div style={{ marginTop: "20px", padding: "12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", textAlign: "center" }}>
-                          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", lineHeight: 1.5 }}>
+                        <div style={{ marginTop: "20px", padding: "12px", background: "#f9fafb", borderRadius: "8px", textAlign: "center" }}>
+                          <div style={{ fontSize: "11px", color: "#9ca3af", lineHeight: 1.5 }}>
                             {comp.shows === "none"
                               ? "Detection not available on free plan"
                               : "Just a score. No explanation of what's wrong or how to fix it."}
@@ -307,8 +307,8 @@ export default function ComparePage() {
                 style={{
                   display: "none", width: "100%", marginTop: "12px",
                   padding: "10px", borderRadius: "8px",
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.5)", fontSize: "13px", fontWeight: 500,
+                  background: "#f3f4f6", border: "1px solid #e5e7eb",
+                  color: "#6b7280", fontSize: "13px", fontWeight: 500,
                   cursor: "pointer", textAlign: "center",
                 }}
               >
@@ -327,29 +327,29 @@ export default function ComparePage() {
                 { icon: "\uD83C\uDFAF", title: "Real scores", desc: "We use the same neural patterns detectors use." },
               ].map((item) => (
                 <div key={item.title} style={{
-                  background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)",
+                  background: "#ffffff", border: "1px solid #e5e7eb",
                   borderRadius: "10px", padding: "20px", textAlign: "center",
                 }}>
                   <div style={{ fontSize: "24px", marginBottom: "8px" }}>{item.icon}</div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#fafafa", marginBottom: "6px" }}>{item.title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{item.desc}</div>
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: "#111827", marginBottom: "6px" }}>{item.title}</div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.5 }}>{item.desc}</div>
                 </div>
               ))}
             </div>
 
             {/* Feature comparison table */}
-            <div style={{ background: "#0f0f12", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", overflow: "hidden", marginBottom: "32px" }}>
-              <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden", marginBottom: "32px" }}>
+              <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb" }}>
                 <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0 }}>Full feature comparison</h2>
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "rgba(255,255,255,0.02)" }}>
-                      <th style={{ textAlign: "left", padding: "12px 24px", fontSize: "11px", color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "35%" }}>Feature</th>
-                      <th style={{ padding: "12px 16px", fontSize: "12px", color: "#8b5cf6", fontWeight: 700, textAlign: "center" }}>HumanizeIt</th>
+                    <tr style={{ background: "#f9fafb" }}>
+                      <th style={{ textAlign: "left", padding: "12px 24px", fontSize: "11px", color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "35%" }}>Feature</th>
+                      <th style={{ padding: "12px 16px", fontSize: "12px", color: "#7e22ce", fontWeight: 700, textAlign: "center" }}>HumanizeIt</th>
                       {COMPETITORS.map(c => (
-                        <th key={c.name} style={{ padding: "12px 16px", fontSize: "11px", color: "rgba(255,255,255,0.4)", fontWeight: 600, textAlign: "center" }}>{c.name}</th>
+                        <th key={c.name} style={{ padding: "12px 16px", fontSize: "11px", color: "#6b7280", fontWeight: 600, textAlign: "center" }}>{c.name}</th>
                       ))}
                     </tr>
                   </thead>
@@ -367,10 +367,10 @@ export default function ComparePage() {
                       { label: "Free tier", vals: [true, true, true, true] },
                       { label: "Pro price", vals: ["$9/mo", "$9.99/mo", "$9.99/mo", "Free"] },
                     ].map((row, ri) => (
-                      <tr key={ri} style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td style={{ padding: "11px 24px", fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>{row.label}</td>
+                      <tr key={ri} style={{ borderTop: "1px solid #f3f4f6" }}>
+                        <td style={{ padding: "11px 24px", fontSize: "13px", color: "#4b5563" }}>{row.label}</td>
                         {row.vals.map((v, vi) => (
-                          <td key={vi} style={{ padding: "11px 16px", textAlign: "center", fontSize: "13px", color: vi === 0 ? "#8b5cf6" : "rgba(255,255,255,0.35)", fontWeight: vi === 0 ? 600 : 400 }}>
+                          <td key={vi} style={{ padding: "11px 16px", textAlign: "center", fontSize: "13px", color: vi === 0 ? "#7e22ce" : "#9ca3af", fontWeight: vi === 0 ? 600 : 400 }}>
                             {typeof v === "boolean" ? (v ? "\u2713" : "\u2717") : v}
                           </td>
                         ))}
@@ -382,14 +382,14 @@ export default function ComparePage() {
             </div>
 
             {/* CTA */}
-            <div style={{ textAlign: "center", padding: "40px 24px", background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)", borderRadius: "12px" }}>
+            <div style={{ textAlign: "center", padding: "40px 24px", background: "#faf5ff", border: "1px solid rgba(126,34,206,0.15)", borderRadius: "12px" }}>
               <h2 style={{ fontSize: "24px", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.5px" }}>Ready to actually fix your text?</h2>
-              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.45)", margin: "0 0 20px" }}>Free to start &mdash; no credit card needed.</p>
+              <p style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 20px" }}>Free to start &mdash; no credit card needed.</p>
               <button
                 onClick={handleHumanizeClick}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
-                  background: "#8b5cf6", color: "#fafafa",
+                  background: "#7e22ce", color: "#ffffff",
                   padding: "12px 28px", borderRadius: "8px", fontSize: "15px", fontWeight: 700,
                   border: "none", cursor: "pointer",
                 }}
@@ -402,7 +402,7 @@ export default function ComparePage() {
 
         {/* Empty state */}
         {!hasRun && (
-          <div style={{ textAlign: "center", padding: "60px 24px", color: "rgba(255,255,255,0.2)" }}>
+          <div style={{ textAlign: "center", padding: "60px 24px", color: "#d1d5db" }}>
             <p style={{ fontSize: "14px" }}>Paste text above to see the live comparison</p>
           </div>
         )}

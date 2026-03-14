@@ -61,7 +61,7 @@ function UsageArc({ used, limit }: { used: number; limit: number }) {
 
   // Color transition: blue→orange→red
   let color = "#3b82f6";
-  if (pct > 0.8) color = "#ef4444";
+  if (pct > 0.8) color = "#dc2626";
   else if (pct > 0.5) color = "#f59e0b";
 
   return (
@@ -69,7 +69,7 @@ function UsageArc({ used, limit }: { used: number; limit: number }) {
       {/* Background arc */}
       <circle
         cx="70" cy="70" r={r}
-        fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8"
+        fill="none" stroke="#e5e7eb" strokeWidth="8"
         strokeDasharray={`${arcLength} ${circ}`}
         strokeDashoffset="0"
         strokeLinecap="round"
@@ -86,10 +86,10 @@ function UsageArc({ used, limit }: { used: number; limit: number }) {
         style={{ transition: "stroke-dashoffset 0.8s ease, stroke 0.5s ease" }}
       />
       {/* Center text */}
-      <text x="70" y="65" textAnchor="middle" fill="#fafafa" fontSize="22" fontWeight="800" fontFamily="var(--font-geist-mono), monospace">
+      <text x="70" y="65" textAnchor="middle" fill="#111827" fontSize="22" fontWeight="800" fontFamily="var(--font-geist-mono), monospace">
         {used.toLocaleString()}
       </text>
-      <text x="70" y="82" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="10">
+      <text x="70" y="82" textAnchor="middle" fill="#9ca3af" fontSize="10">
         of {limit.toLocaleString()}
       </text>
     </svg>
@@ -202,7 +202,7 @@ export default function ApiPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 size={20} className="animate-spin text-zinc-500" />
+        <Loader2 size={20} className="animate-spin text-gray-400" />
       </div>
     );
   }
@@ -214,12 +214,12 @@ export default function ApiPage() {
   if (!state.apiAccess) {
     return (
       <div className="min-h-full p-6 md:p-10">
-        <div className="max-w-md mx-auto mt-20 text-center rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-10">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800/50">
-            <Lock size={20} className="text-zinc-500" />
+        <div className="max-w-md mx-auto mt-20 text-center rounded-2xl border border-gray-200 bg-white p-10">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+            <Lock size={20} className="text-gray-400" />
           </div>
-          <h2 className="text-lg font-bold text-zinc-100 mb-2">API Access Required</h2>
-          <p className="text-sm text-zinc-500 leading-relaxed mb-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-2">API Access Required</h2>
+          <p className="text-sm text-gray-500 leading-relaxed mb-6">
             The Developer API is available on Pro (1,000 req/mo) and Team (10,000 req/mo) plans.
             Integrate AI detection and humanization directly into your workflow.
           </p>
@@ -250,54 +250,54 @@ export default function ApiPage() {
           <div>
             <div className="flex items-center gap-2.5 mb-1">
               <Terminal size={16} className="text-blue-500" />
-              <h1 className="text-lg font-bold text-zinc-100">API Access</h1>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <h1 className="text-lg font-bold text-gray-900">API Access</h1>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
                 {state.plan}
               </span>
             </div>
-            <p className="text-sm text-zinc-500">Integrate HumanizeIt into your apps</p>
+            <p className="text-sm text-gray-500">Integrate HumanizeIt into your apps</p>
           </div>
           <a
             href="/docs/api"
             target="_blank"
-            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors"
           >
             View Documentation <ExternalLink size={11} />
           </a>
         </div>
 
         {/* ── B) Usage Card ─────────────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50 p-6">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                 API Usage &mdash; {currentMonth()}
               </h2>
-              <div className="text-2xl font-extrabold text-zinc-100">
-                {totalUsage.toLocaleString()} <span className="text-sm font-normal text-zinc-500">/ {state.apiRequestsLimit.toLocaleString()} requests</span>
+              <div className="text-2xl font-extrabold text-gray-900">
+                {totalUsage.toLocaleString()} <span className="text-sm font-normal text-gray-500">/ {state.apiRequestsLimit.toLocaleString()} requests</span>
               </div>
             </div>
             <UsageArc used={totalUsage} limit={state.apiRequestsLimit} />
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-600">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
             <Clock size={11} />
             Resets {activeKeys[0] ? formatDate(activeKeys[0].monthlyResetAt) : "next month"}
           </div>
         </div>
 
         {/* ── C) API Keys Section ───────────────────────── */}
-        <div className="rounded-2xl border border-zinc-800/60 bg-zinc-900/50">
-          <div className="flex items-center justify-between p-5 border-b border-zinc-800/40">
+        <div className="rounded-2xl border border-gray-200 bg-white">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-200">API Keys</h2>
-              <p className="text-xs text-zinc-600 mt-0.5">Your secret API keys. Treat them like passwords.</p>
+              <h2 className="text-sm font-semibold text-gray-800">API Keys</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Your secret API keys. Treat them like passwords.</p>
             </div>
             <button
               onClick={() => { setShowCreate(true); setRevealedKey(null); setCreateName(""); setKeySaved(false); }}
               disabled={atKeyLimit}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
                 atKeyLimit
-                  ? "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20"
               }`}
             >
@@ -307,15 +307,15 @@ export default function ApiPage() {
           </div>
 
           {/* Keys list */}
-          <div className="divide-y divide-zinc-800/40">
+          <div className="divide-y divide-gray-100">
             {activeKeys.length === 0 && revokedKeys.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-4 opacity-20">
-                  <path d="M24 4C18.48 4 14 8.48 14 14c0 3.53 1.84 6.62 4.6 8.38L16 44h16l-2.6-21.62C32.16 20.62 34 17.53 34 14c0-5.52-4.48-10-10-10z" stroke="#fafafa" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <circle cx="24" cy="14" r="3" stroke="#fafafa" strokeWidth="1.5"/>
+                  <path d="M24 4C18.48 4 14 8.48 14 14c0 3.53 1.84 6.62 4.6 8.38L16 44h16l-2.6-21.62C32.16 20.62 34 17.53 34 14c0-5.52-4.48-10-10-10z" stroke="#111827" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <circle cx="24" cy="14" r="3" stroke="#111827" strokeWidth="1.5"/>
                 </svg>
-                <p className="text-sm text-zinc-500 mb-1">No API keys yet</p>
-                <p className="text-xs text-zinc-600">Create your first key to start using the API</p>
+                <p className="text-sm text-gray-500 mb-1">No API keys yet</p>
+                <p className="text-xs text-gray-400">Create your first key to start using the API</p>
               </div>
             )}
 
@@ -331,7 +331,7 @@ export default function ApiPage() {
 
             {revokedKeys.length > 0 && (
               <div className="px-5 py-3">
-                <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-wider mb-2">Revoked</p>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Revoked</p>
                 {revokedKeys.map((k) => (
                   <KeyRow key={k.id} data={k} onCopy={() => {}} onRevoke={() => {}} isNew={false} />
                 ))}
@@ -340,44 +340,44 @@ export default function ApiPage() {
           </div>
 
           {atKeyLimit && (
-            <div className="px-5 py-3 border-t border-zinc-800/40 text-xs text-amber-400/70 flex items-center gap-2">
+            <div className="px-5 py-3 border-t border-gray-100 text-xs text-amber-600 flex items-center gap-2">
               <AlertTriangle size={12} />
               Maximum {state.apiKeysMax} active keys on {state.plan} plan.
-              {state.plan === "PRO" && <a href="/dashboard/settings" className="text-blue-400 hover:underline ml-1">Upgrade to Team</a>}
+              {state.plan === "PRO" && <a href="/dashboard/settings" className="text-blue-600 hover:underline ml-1">Upgrade to Team</a>}
             </div>
           )}
         </div>
 
         {/* ── D) Create Key Modal ───────────────────────── */}
         {showCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => !revealedKey && closeReveal()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => !revealedKey && closeReveal()}>
             <div
-              className="relative w-full max-w-md mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900 shadow-2xl animate-fade-up"
+              className="relative w-full max-w-md mx-4 rounded-2xl border border-gray-200 bg-white shadow-2xl animate-fade-up"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={closeReveal} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors">
+              <button onClick={closeReveal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <X size={16} />
               </button>
 
               {!revealedKey ? (
                 // ── Create form ──
                 <div className="p-6">
-                  <h3 className="text-sm font-semibold text-zinc-200 mb-4">Create a new API key</h3>
-                  <label className="block text-xs text-zinc-500 mb-1.5">Key name</label>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-4">Create a new API key</h3>
+                  <label className="block text-xs text-gray-500 mb-1.5">Key name</label>
                   <input
                     type="text"
                     value={createName}
                     onChange={(e) => setCreateName(e.target.value)}
                     placeholder="e.g. Production, My App, Testing"
                     maxLength={50}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-3 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 transition-all"
                     autoFocus
                     onKeyDown={(e) => e.key === "Enter" && !creating && handleCreate()}
                   />
                   <button
                     onClick={() => void handleCreate()}
                     disabled={creating}
-                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-semibold transition-all"
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-gray-100 disabled:text-gray-400 text-white text-sm font-semibold transition-all"
                   >
                     {creating ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : <>Create key</>}
                   </button>
@@ -385,19 +385,19 @@ export default function ApiPage() {
               ) : (
                 // ── Reveal state ──
                 <div className="p-6">
-                  <h3 className="text-sm font-semibold text-zinc-200 mb-1">Your new API key</h3>
-                  <p className="text-xs text-zinc-500 mb-4">Copy it now. It will never be shown again.</p>
+                  <h3 className="text-sm font-semibold text-gray-800 mb-1">Your new API key</h3>
+                  <p className="text-xs text-gray-500 mb-4">Copy it now. It will never be shown again.</p>
 
                   {/* Key display with pulsing blue border */}
-                  <div className="relative rounded-xl border-2 border-blue-500 p-4 bg-[#0d1117] animate-[pulse-border_2s_ease-in-out_infinite]">
-                    <code className="block text-sm font-mono text-blue-300 break-all leading-relaxed select-all">
+                  <div className="relative rounded-xl border-2 border-blue-500 p-4 bg-gray-50 animate-[pulse-border_2s_ease-in-out_infinite]">
+                    <code className="block text-sm font-mono text-blue-600 break-all leading-relaxed select-all">
                       {revealedKey}
                     </code>
                   </div>
 
-                  <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                    <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-amber-300/80 leading-relaxed">
+                  <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                    <AlertTriangle size={13} className="text-amber-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700 leading-relaxed">
                       Save this key now. It will never be shown again.
                     </p>
                   </div>
@@ -406,7 +406,7 @@ export default function ApiPage() {
                     onClick={() => void handleCopyRevealedKey()}
                     className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
                       keyCopied
-                        ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                        ? "bg-green-50 border border-green-200 text-green-600"
                         : "bg-blue-600 hover:bg-blue-500 text-white"
                     }`}
                   >
@@ -418,15 +418,15 @@ export default function ApiPage() {
                       type="checkbox"
                       checked={keySaved}
                       onChange={(e) => setKeySaved(e.target.checked)}
-                      className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-500 focus:ring-blue-500/30"
+                      className="w-4 h-4 rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30"
                     />
-                    <span className="text-xs text-zinc-400">I have saved my key</span>
+                    <span className="text-xs text-gray-500">I have saved my key</span>
                   </label>
 
                   <button
                     onClick={closeReveal}
                     disabled={!keySaved}
-                    className="mt-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:bg-zinc-800/50 disabled:text-zinc-600 disabled:cursor-not-allowed bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
+                    className="mt-3 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed bg-gray-100 hover:bg-gray-200 text-gray-600"
                   >
                     Done
                   </button>
@@ -438,42 +438,42 @@ export default function ApiPage() {
 
         {/* ── E) Revoke Confirmation Modal ──────────────── */}
         {revokeTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setRevokeTarget(null)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setRevokeTarget(null)}>
             <div
-              className="relative w-full max-w-sm mx-4 rounded-2xl border border-zinc-700/50 bg-zinc-900 shadow-2xl animate-fade-up p-6"
+              className="relative w-full max-w-sm mx-4 rounded-2xl border border-gray-200 bg-white shadow-2xl animate-fade-up p-6"
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={() => setRevokeTarget(null)} className="absolute top-4 right-4 text-zinc-500 hover:text-zinc-300 transition-colors">
+              <button onClick={() => setRevokeTarget(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                 <X size={16} />
               </button>
 
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/10">
-                  <Trash2 size={14} className="text-red-400" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
+                  <Trash2 size={14} className="text-red-500" />
                 </div>
-                <h3 className="text-sm font-semibold text-zinc-200">Revoke API Key</h3>
+                <h3 className="text-sm font-semibold text-gray-800">Revoke API Key</h3>
               </div>
 
-              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                Revoking <strong className="text-zinc-200">{revokeTarget.name}</strong> will immediately break any apps using it. This cannot be undone.
+              <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                Revoking <strong className="text-gray-800">{revokeTarget.name}</strong> will immediately break any apps using it. This cannot be undone.
               </p>
 
-              <label className="block text-xs text-zinc-500 mb-1.5">
-                Type <span className="text-zinc-300 font-mono">{revokeTarget.name}</span> to confirm
+              <label className="block text-xs text-gray-500 mb-1.5">
+                Type <span className="text-gray-700 font-mono">{revokeTarget.name}</span> to confirm
               </label>
               <input
                 type="text"
                 value={revokeConfirm}
                 onChange={(e) => setRevokeConfirm(e.target.value)}
                 placeholder={revokeTarget.name}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-red-500/50 transition-all"
+                className="w-full px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-red-500/50 transition-all"
                 autoFocus
               />
 
               <button
                 onClick={() => void handleRevoke()}
                 disabled={revokeConfirm !== revokeTarget.name || revoking}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:bg-zinc-800/50 disabled:text-zinc-600 disabled:cursor-not-allowed bg-red-600 hover:bg-red-500 text-white"
+                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed bg-red-600 hover:bg-red-500 text-white"
               >
                 {revoking ? <><Loader2 size={14} className="animate-spin" /> Revoking...</> : "Revoke key permanently"}
               </button>
@@ -510,20 +510,20 @@ function KeyRow({
   const masked = `${data.keyPrefix}${"•".repeat(24)}`;
 
   return (
-    <div className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${isNew ? "bg-blue-500/5" : ""} ${isRevoked ? "opacity-40" : "hover:bg-zinc-800/30"}`}>
+    <div className={`flex items-center gap-4 px-5 py-3.5 transition-colors ${isNew ? "bg-blue-50" : ""} ${isRevoked ? "opacity-40" : "hover:bg-gray-50"}`}>
       {/* Status dot */}
       <div className={`w-2 h-2 rounded-full shrink-0 ${isRevoked ? "bg-red-500" : "bg-green-500"}`} />
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-medium text-zinc-200 truncate">{data.name}</span>
-          {isNew && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 uppercase">New</span>}
+          <span className="text-sm font-medium text-gray-800 truncate">{data.name}</span>
+          {isNew && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 uppercase">New</span>}
         </div>
         <div className="flex items-center gap-2">
-          <code className="text-xs font-mono text-zinc-500 truncate">{masked}</code>
+          <code className="text-xs font-mono text-gray-500 truncate">{masked}</code>
           {!isRevoked && (
-            <button onClick={onCopy} className="text-zinc-600 hover:text-zinc-400 transition-colors shrink-0" title="Copy prefix">
+            <button onClick={onCopy} className="text-gray-400 hover:text-gray-600 transition-colors shrink-0" title="Copy prefix">
               <Copy size={11} />
             </button>
           )}
@@ -533,12 +533,12 @@ function KeyRow({
       {/* Stats */}
       <div className="hidden sm:flex items-center gap-6 shrink-0">
         <div className="text-right">
-          <div className="text-xs text-zinc-400 font-mono">{data.monthlyRequestCount.toLocaleString()}</div>
-          <div className="text-[10px] text-zinc-600">requests</div>
+          <div className="text-xs text-gray-500 font-mono">{data.monthlyRequestCount.toLocaleString()}</div>
+          <div className="text-[10px] text-gray-400">requests</div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-zinc-400">{timeAgo(data.lastUsedAt)}</div>
-          <div className="text-[10px] text-zinc-600">last used</div>
+          <div className="text-xs text-gray-500">{timeAgo(data.lastUsedAt)}</div>
+          <div className="text-[10px] text-gray-400">last used</div>
         </div>
       </div>
 
@@ -546,7 +546,7 @@ function KeyRow({
       {!isRevoked && (
         <button
           onClick={onRevoke}
-          className="p-1.5 rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0"
+          className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
           title="Revoke key"
         >
           <Trash2 size={13} />

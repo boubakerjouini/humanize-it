@@ -11,9 +11,9 @@ interface ScoreRingProps {
 
 function scoreColor(s: number): string {
   if (s >= 75) return "#ef4444";
-  if (s >= 50) return "#8b5cf6";
-  if (s >= 25) return "#a78bfa";
-  return "#22c55e";
+  if (s >= 50) return "#7e22ce";
+  if (s >= 25) return "#a855f7";
+  return "#16a34a";
 }
 
 function scoreLabel(s: number): string {
@@ -54,10 +54,10 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true }
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="#e5e7eb"
             strokeWidth={strokeWidth}
           />
-          {/* Progress */}
+          {/* Progress — conic gradient effect via stroke */}
           <circle
             ref={circleRef}
             cx={size / 2}
@@ -70,7 +70,7 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true }
             strokeDasharray={circumference}
             strokeDashoffset={animate ? circumference : offset}
             style={{
-              filter: `drop-shadow(0 0 6px ${color}60)`,
+              filter: `drop-shadow(0 0 4px ${color}40)`,
               transition: animate ? undefined : "none",
             }}
           />
@@ -84,20 +84,21 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true }
         }}>
           <span style={{
             fontSize: `${size * 0.28}px`, fontWeight: 800,
-            lineHeight: 1, color,
+            lineHeight: 1, color: "#3b0764",
             letterSpacing: "-1px",
+            fontFamily: "var(--font-heading)",
           }}>
             {Math.round(score)}
           </span>
-          <span style={{ fontSize: `${size * 0.09}px`, color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+          <span style={{ fontSize: `${size * 0.09}px`, color: "#9ca3af", marginTop: "2px" }}>
             / 100
           </span>
         </div>
       </div>
 
       {/* Label */}
-      <div style={{ fontSize: "12px", fontWeight: 500, color, textAlign: "center" }}>
-        {scoreLabel(score)}
+      <div style={{ fontSize: "12px", fontWeight: 500, color: "#4b5563", textAlign: "center" }}>
+        Human Score
       </div>
     </div>
   );

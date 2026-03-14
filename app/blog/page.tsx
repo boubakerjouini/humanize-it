@@ -21,7 +21,7 @@ export default function BlogPage() {
   const posts = getAllPosts();
 
   return (
-    <div style={{ minHeight: "100vh", background: "#09090b", color: "#fafafa" }}>
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#111827" }}>
       {/* Nav */}
       <nav
         style={{
@@ -31,9 +31,9 @@ export default function BlogPage() {
           height: "56px",
           display: "flex",
           alignItems: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid #e5e7eb",
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(9,9,11,0.88)",
+          background: "rgba(255,255,255,0.88)",
           padding: "0 24px",
         }}
       >
@@ -51,16 +51,16 @@ export default function BlogPage() {
             href="/"
             style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}
           >
-            <span style={{ fontSize: "19px", fontWeight: 800, color: "#8b5cf6", letterSpacing: "-0.5px" }}>H.</span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#fafafa" }}>HumanizeIt</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: "#7e22ce", letterSpacing: "-0.5px" }}>H.</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="/blog" style={{ color: "#8b5cf6", fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
+            <Link href="/blog" style={{ color: "#7e22ce", fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
             <Link
               href="/dashboard/editor"
               style={{
-                background: "#8b5cf6",
-                color: "#fafafa",
+                background: "#7e22ce",
+                color: "#ffffff",
                 fontSize: "13px",
                 fontWeight: 600,
                 padding: "6px 16px",
@@ -87,7 +87,7 @@ export default function BlogPage() {
         >
           Blog
         </h1>
-        <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.45)", lineHeight: 1.5, maxWidth: "520px" }}>
+        <p style={{ fontSize: "16px", color: "#6b7280", lineHeight: 1.5, maxWidth: "520px" }}>
           Expert guides on AI detection, humanizing AI text, and writing that passes every detector.
         </p>
       </div>
@@ -116,17 +116,17 @@ export default function BlogPage() {
                   style={{
                     fontSize: "11px",
                     fontWeight: 600,
-                    color: "#8b5cf6",
+                    color: "#7e22ce",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                     padding: "3px 8px",
                     borderRadius: "4px",
-                    background: "rgba(139,92,246,0.1)",
+                    background: "#faf5ff",
                   }}
                 >
                   {post.category}
                 </span>
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
+                <span style={{ fontSize: "12px", color: "#9ca3af" }}>
                   {post.readingTime} min read
                 </span>
               </div>
@@ -136,7 +136,7 @@ export default function BlogPage() {
                   fontWeight: 700,
                   lineHeight: 1.3,
                   marginBottom: "8px",
-                  color: "#fafafa",
+                  color: "#111827",
                 }}
               >
                 {post.title}
@@ -145,13 +145,13 @@ export default function BlogPage() {
                 style={{
                   fontSize: "14px",
                   lineHeight: 1.55,
-                  color: "rgba(255,255,255,0.45)",
+                  color: "#6b7280",
                   marginBottom: "16px",
                 }}
               >
                 {post.excerpt}
               </p>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.25)" }}>
+              <div style={{ fontSize: "12px", color: "#9ca3af" }}>
                 {new Date(post.date).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",

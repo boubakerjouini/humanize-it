@@ -32,17 +32,17 @@ interface DocumentsResponse {
 }
 
 function scoreColor(s: number): string {
-  if (s >= 75) return "#ef4444";
+  if (s >= 75) return "#dc2626";
   if (s >= 50) return "#f97316";
   if (s >= 30) return "#eab308";
-  return "#22c55e";
+  return "#16a34a";
 }
 
 function scoreBg(s: number): string {
-  if (s >= 75) return "rgba(239,68,68,0.12)";
-  if (s >= 50) return "rgba(249,115,22,0.12)";
-  if (s >= 30) return "rgba(234,179,8,0.10)";
-  return "rgba(34,197,94,0.12)";
+  if (s >= 75) return "rgba(220,38,38,0.1)";
+  if (s >= 50) return "rgba(249,115,22,0.1)";
+  if (s >= 30) return "rgba(234,179,8,0.08)";
+  return "rgba(22,163,74,0.1)";
 }
 
 function timeAgo(iso: string): string {
@@ -134,8 +134,8 @@ export default function HistoryPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#fafafa", letterSpacing: "-0.5px" }}>History</h1>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", marginTop: "4px" }}>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#111827", letterSpacing: "-0.5px" }}>History</h1>
+          <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "4px" }}>
             {isFree
               ? `Showing last 5 of ${totalAll} documents. Upgrade for full history.`
               : `${pagination.total} document${pagination.total !== 1 ? "s" : ""} analyzed`}
@@ -143,7 +143,7 @@ export default function HistoryPage() {
         </div>
         <Link href="/dashboard/editor" style={{
           display: "flex", alignItems: "center", gap: "6px",
-          background: "#8b5cf6", color: "#09090b", fontWeight: 600,
+          background: "#7e22ce", color: "#ffffff", fontWeight: 600,
           padding: "8px 14px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
         }}>
           <Plus size={13} />
@@ -154,22 +154,22 @@ export default function HistoryPage() {
       {/* Free plan upsell */}
       {isFree && totalAll > 5 && (
         <div style={{
-          background: "rgba(139,92,246,0.06)",
-          border: "1px solid rgba(139,92,246,0.2)",
+          background: "#faf5ff",
+          border: "1px solid rgba(126,34,206,0.2)",
           borderRadius: "8px", padding: "16px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: "16px", marginBottom: "20px",
         }}>
           <div>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: "#fafafa", marginBottom: "3px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600, color: "#111827", marginBottom: "3px" }}>
               {totalAll - 5} more document{totalAll - 5 > 1 ? "s" : ""} hidden
             </p>
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>
+            <p style={{ fontSize: "12px", color: "#9ca3af" }}>
               Upgrade to Pro for full history, unlimited rewrites, all tones.
             </p>
           </div>
           <Link href="/dashboard/settings" style={{
-            background: "#8b5cf6", color: "#09090b", fontWeight: 700,
+            background: "#7e22ce", color: "#ffffff", fontWeight: 700,
             padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
             flexShrink: 0,
           }}>
@@ -184,24 +184,24 @@ export default function HistoryPage() {
           {[...Array(5)].map((_, i) => (
             <div key={i} style={{
               height: "72px", borderRadius: "8px",
-              background: "rgba(255,255,255,0.04)",
+              background: "#f3f4f6",
               animation: "pulse 2s infinite",
             }} />
           ))}
         </div>
       ) : documents.length === 0 ? (
         <div style={{
-          background: "#0f0f12", border: "1px dashed rgba(255,255,255,0.08)",
+          background: "#ffffff", border: "1px dashed #e5e7eb",
           borderRadius: "8px", padding: "64px 24px",
           display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
         }}>
-          <FileText size={32} style={{ color: "rgba(255,255,255,0.1)", marginBottom: "16px" }} />
-          <p style={{ fontSize: "14px", fontWeight: 600, color: "rgba(255,255,255,0.35)", marginBottom: "6px" }}>No documents yet</p>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.2)", marginBottom: "20px" }}>
+          <FileText size={32} style={{ color: "#d1d5db", marginBottom: "16px" }} />
+          <p style={{ fontSize: "14px", fontWeight: 600, color: "#9ca3af", marginBottom: "6px" }}>No documents yet</p>
+          <p style={{ fontSize: "13px", color: "#d1d5db", marginBottom: "20px" }}>
             Head to the editor and analyze your first text.
           </p>
           <Link href="/dashboard/editor" style={{
-            background: "#8b5cf6", color: "#09090b", fontWeight: 700,
+            background: "#7e22ce", color: "#ffffff", fontWeight: 700,
             padding: "8px 20px", borderRadius: "6px", textDecoration: "none", fontSize: "13px",
           }}>
             Open Editor
@@ -216,8 +216,8 @@ export default function HistoryPage() {
                 <div
                   onClick={() => void handleExpand(doc.id)}
                   style={{
-                    background: idx % 2 === 0 ? "#0f0f12" : "rgba(255,255,255,0.015)",
-                    border: `1px solid ${isExpanded ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.06)"}`,
+                    background: idx % 2 === 0 ? "#ffffff" : "#f9fafb",
+                    border: `1px solid ${isExpanded ? "rgba(126,34,206,0.25)" : "#e5e7eb"}`,
                     borderRadius: isExpanded ? "8px 8px 0 0" : "8px",
                     padding: "14px 16px",
                     display: "flex", alignItems: "center", gap: "14px",
@@ -227,14 +227,14 @@ export default function HistoryPage() {
                   className="history-row"
                 >
                   {/* Index */}
-                  <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", width: "20px", textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-mono), monospace" }}>
+                  <span style={{ fontSize: "11px", color: "#d1d5db", width: "20px", textAlign: "right", flexShrink: 0, fontFamily: "var(--font-geist-mono), monospace" }}>
                     {(pagination.page - 1) * 10 + idx + 1}
                   </span>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                      fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5,
+                      fontSize: "13px", color: "#4b5563", lineHeight: 1.5,
                       overflow: "hidden", display: "-webkit-box",
                       WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                       minWidth: 0, maxWidth: "100%",
@@ -242,18 +242,18 @@ export default function HistoryPage() {
                       {doc.title || doc.originalText}
                     </p>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontFamily: "var(--font-geist-mono), monospace" }}>
+                      <span style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "var(--font-geist-mono), monospace" }}>
                         {doc.wordCount} words
                       </span>
                       {doc.rewrittenText && (
-                        <span style={{ fontSize: "11px", color: "#22c55e", fontWeight: 600 }}>Humanized</span>
+                        <span style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600 }}>Humanized</span>
                       )}
                       {doc.tone && doc.tone !== "standard" && (
-                        <span style={{ fontSize: "10px", color: "rgba(139,92,246,0.6)", padding: "1px 5px", borderRadius: "3px", background: "rgba(139,92,246,0.08)" }}>
+                        <span style={{ fontSize: "10px", color: "rgba(126,34,206,0.6)", padding: "1px 5px", borderRadius: "3px", background: "#f3e8ff" }}>
                           {doc.tone}
                         </span>
                       )}
-                      <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)" }}>
+                      <span style={{ fontSize: "11px", color: "#d1d5db" }}>
                         {timeAgo(doc.createdAt)}
                       </span>
                     </div>
@@ -271,7 +271,7 @@ export default function HistoryPage() {
                     </span>
                     {doc.humanizedScore !== null && (
                       <>
-                        <ArrowRight size={10} color="rgba(255,255,255,0.15)" />
+                        <ArrowRight size={10} color="#d1d5db" />
                         <span style={{
                           fontSize: "13px", fontWeight: 800, color: scoreColor(doc.humanizedScore),
                           background: scoreBg(doc.humanizedScore),
@@ -282,15 +282,15 @@ export default function HistoryPage() {
                         </span>
                       </>
                     )}
-                    {isExpanded ? <ChevronUp size={14} color="rgba(255,255,255,0.2)" /> : <ChevronDown size={14} color="rgba(255,255,255,0.2)" />}
+                    {isExpanded ? <ChevronUp size={14} color="#d1d5db" /> : <ChevronDown size={14} color="#d1d5db" />}
                   </div>
                 </div>
 
                 {/* Expanded view */}
                 {isExpanded && (
                   <div style={{
-                    background: "#0a0a0d",
-                    border: "1px solid rgba(139,92,246,0.25)",
+                    background: "#f9fafb",
+                    border: "1px solid rgba(126,34,206,0.25)",
                     borderTop: "none",
                     borderRadius: "0 0 8px 8px",
                     padding: "16px",
@@ -299,18 +299,18 @@ export default function HistoryPage() {
                     {expandLoading ? (
                       <div style={{ padding: "20px", textAlign: "center" }}>
                         <div className="spin-sm" style={{ margin: "0 auto 8px" }} />
-                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>Loading...</span>
+                        <span style={{ fontSize: "12px", color: "#9ca3af" }}>Loading...</span>
                       </div>
                     ) : expandedDoc && (
                       <>
                         <div style={{ marginBottom: "12px" }}>
-                          <label style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                          <label style={{ fontSize: "10px", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
                             Original Text
                           </label>
                           <div style={{
                             padding: "12px", borderRadius: "6px",
-                            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-                            fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7,
+                            background: "#f3f4f6", border: "1px solid #e5e7eb",
+                            fontSize: "13px", color: "#4b5563", lineHeight: 1.7,
                             maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
                           }}>
                             {expandedDoc.originalText}
@@ -318,13 +318,13 @@ export default function HistoryPage() {
                         </div>
                         {expandedDoc.rewrittenText && (
                           <div style={{ marginBottom: "12px" }}>
-                            <label style={{ fontSize: "10px", color: "rgba(34,197,94,0.6)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                            <label style={{ fontSize: "10px", color: "rgba(22,163,74,0.6)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
                               Humanized Text
                             </label>
                             <div style={{
                               padding: "12px", borderRadius: "6px",
-                              background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)",
-                              fontSize: "13px", color: "rgba(255,255,255,0.7)", lineHeight: 1.7,
+                              background: "rgba(22,163,74,0.04)", border: "1px solid rgba(22,163,74,0.12)",
+                              fontSize: "13px", color: "#374151", lineHeight: 1.7,
                               maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
                             }}>
                               {expandedDoc.rewrittenText}
@@ -337,8 +337,8 @@ export default function HistoryPage() {
                             style={{
                               display: "flex", alignItems: "center", gap: "5px",
                               padding: "7px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
-                              background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)",
-                              color: "#a78bfa", cursor: "pointer",
+                              background: "#f3e8ff", border: "1px solid rgba(126,34,206,0.2)",
+                              color: "#a855f7", cursor: "pointer",
                             }}
                           >
                             <RotateCcw size={11} /> Re-humanize
@@ -349,8 +349,8 @@ export default function HistoryPage() {
                             style={{
                               display: "flex", alignItems: "center", gap: "5px",
                               padding: "7px 14px", borderRadius: "6px", fontSize: "12px",
-                              background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)",
-                              color: "#ef4444", cursor: deleting === doc.id ? "not-allowed" : "pointer",
+                              background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.15)",
+                              color: "#dc2626", cursor: deleting === doc.id ? "not-allowed" : "pointer",
                               opacity: deleting === doc.id ? 0.5 : 1,
                             }}
                           >
@@ -375,15 +375,15 @@ export default function HistoryPage() {
             disabled={pagination.page <= 1 || loading}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500,
+              background: "transparent", border: "1px solid #e5e7eb",
+              color: "#6b7280", fontSize: "12px", fontWeight: 500,
               padding: "7px 14px", borderRadius: "5px", cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
               opacity: pagination.page <= 1 ? 0.4 : 1,
             }}
           >
             <ChevronLeft size={13} /> Prev
           </button>
-          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", fontFamily: "var(--font-geist-mono), monospace" }}>
+          <span style={{ fontSize: "12px", color: "#9ca3af", fontFamily: "var(--font-geist-mono), monospace" }}>
             {pagination.page} / {pagination.totalPages}
           </span>
           <button
@@ -391,8 +391,8 @@ export default function HistoryPage() {
             disabled={pagination.page >= pagination.totalPages || loading}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              background: "transparent", border: "1px solid rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 500,
+              background: "transparent", border: "1px solid #e5e7eb",
+              color: "#6b7280", fontSize: "12px", fontWeight: 500,
               padding: "7px 14px", borderRadius: "5px", cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
               opacity: pagination.page >= pagination.totalPages ? 0.4 : 1,
             }}
@@ -404,8 +404,8 @@ export default function HistoryPage() {
 
       <style>{`
         .history-row:hover {
-          border-left: 3px solid #8b5cf6 !important;
-          border-color: rgba(139,92,246,0.25) !important;
+          border-left: 3px solid #7e22ce !important;
+          border-color: rgba(126,34,206,0.25) !important;
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.5; }
@@ -417,8 +417,8 @@ export default function HistoryPage() {
         }
         .spin-sm {
           width: 14px; height: 14px; border-radius: 50%;
-          border: 2px solid rgba(255,255,255,0.15);
-          border-top-color: #8b5cf6;
+          border: 2px solid #e5e7eb;
+          border-top-color: #7e22ce;
           animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }

@@ -73,7 +73,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.7)", backdropFilter: "blur(2px)",
+        background: "rgba(0,0,0,0.3)", backdropFilter: "blur(4px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "16px",
       }}
@@ -82,169 +82,178 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: "520px",
-          background: "#0f0f12", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "16px", padding: "32px", position: "relative",
+          background: "#ffffff", border: "1px solid #e5e7eb",
+          borderRadius: "24px", overflow: "hidden", position: "relative",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
         }}
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          style={{
-            position: "absolute", top: "16px", right: "16px",
-            background: "transparent", border: "none", color: "rgba(255,255,255,0.4)",
-            fontSize: "18px", cursor: "pointer", padding: "4px", lineHeight: 1,
-          }}
-        >
-          &#x2715;
-        </button>
+        {/* Purple gradient header strip */}
+        <div style={{
+          background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+          padding: "24px 32px",
+          position: "relative",
+        }}>
+          {/* Close */}
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute", top: "16px", right: "16px",
+              background: "transparent", border: "none", color: "rgba(255,255,255,0.7)",
+              fontSize: "18px", cursor: "pointer", padding: "4px", lineHeight: 1,
+            }}
+          >
+            &#x2715;
+          </button>
 
-        {/* Header */}
-        <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#fafafa", marginBottom: "6px" }}>
-          You&apos;ve reached your daily limit
-        </h2>
-        <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", marginBottom: "24px" }}>
-          Upgrade to keep humanizing
-        </p>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#ffffff", marginBottom: "6px", fontFamily: "var(--font-heading)" }}>
+            You&apos;ve reached your daily limit
+          </h2>
+          <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)" }}>
+            Upgrade to keep humanizing
+          </p>
+        </div>
 
-        {/* Plan cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "24px" }}>
-          {PLANS.map((plan) => {
-            const isCurrent = currentPlan.toUpperCase() === plan.id;
-            const isPro = plan.id === "PRO";
-            return (
-              <div
-                key={plan.id}
+        <div style={{ padding: "24px 32px 32px" }}>
+          {/* Plan cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "24px" }}>
+            {PLANS.map((plan) => {
+              const isCurrent = currentPlan.toUpperCase() === plan.id;
+              const isPro = plan.id === "PRO";
+              return (
+                <div
+                  key={plan.id}
+                  style={{
+                    background: isPro ? "#7e22ce" : "#ffffff",
+                    border: `1px solid ${isPro ? "#7e22ce" : "#e5e7eb"}`,
+                    borderRadius: "12px", padding: "16px", textAlign: "center",
+                    position: "relative",
+                  }}
+                >
+                  {plan.popular && (
+                    <div style={{
+                      position: "absolute", top: "-8px", left: "50%", transform: "translateX(-50%)",
+                      background: "#a855f7", color: "#ffffff", fontSize: "9px", fontWeight: 700,
+                      padding: "2px 8px", borderRadius: "100px", textTransform: "uppercase",
+                      letterSpacing: "0.5px", whiteSpace: "nowrap",
+                    }}>
+                      Popular
+                    </div>
+                  )}
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: isPro ? "rgba(255,255,255,0.8)" : "#6b7280", marginBottom: "6px" }}>
+                    {plan.name}
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: 800, color: isPro ? "#ffffff" : "#111827", lineHeight: 1 }}>
+                    {plan.price}
+                    <span style={{ fontSize: "13px", fontWeight: 400, color: isPro ? "rgba(255,255,255,0.6)" : "#9ca3af" }}>{plan.period}</span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: isPro ? "rgba(255,255,255,0.6)" : "#9ca3af", margin: "8px 0 12px" }}>
+                    {plan.words}
+                  </div>
+                  {isCurrent ? (
+                    <div style={{
+                      padding: "8px", borderRadius: "8px", fontSize: "12px", fontWeight: 600,
+                      background: isPro ? "rgba(255,255,255,0.15)" : "#f3f4f6", color: isPro ? "rgba(255,255,255,0.7)" : "#9ca3af",
+                    }}>
+                      Current
+                    </div>
+                  ) : plan.id !== "FREE" ? (
+                    <a
+                      href={`/api/checkout?plan=${plan.id.toLowerCase()}`}
+                      onClick={() => { posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan }); track("upgrade_cta_clicked", { plan: plan.id }); }}
+                      style={{
+                        display: "block", padding: "8px", borderRadius: "8px",
+                        fontSize: "12px", fontWeight: 600, textDecoration: "none",
+                        background: isPro ? "#ffffff" : "#7e22ce",
+                        color: isPro ? "#7e22ce" : "#ffffff",
+                        textAlign: "center",
+                      }}
+                    >
+                      Upgrade &rarr;
+                    </a>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* What you unlock */}
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{
+              fontSize: "11px", fontWeight: 600, color: "#9ca3af",
+              textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px",
+            }}>
+              What you unlock:
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {[
+                "Unlimited humanizations (within plan)",
+                "4 tone modes",
+                "History & saved documents",
+                "Priority processing",
+              ].map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#4b5563" }}>
+                  <span style={{ color: "#16a34a" }}>&#x2713;</span>
+                  {f}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Discount code */}
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{
+              fontSize: "11px", fontWeight: 600, color: "#9ca3af",
+              textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px",
+            }}>
+              Have a discount code?
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Enter code..."
                 style={{
-                  background: isPro ? "rgba(139,92,246,0.08)" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${isPro ? "rgba(139,92,246,0.3)" : "rgba(255,255,255,0.07)"}`,
-                  borderRadius: "10px", padding: "16px", textAlign: "center",
-                  position: "relative",
+                  flex: 1, padding: "10px 12px", borderRadius: "10px",
+                  background: "#f9fafb", border: "1px solid #e5e7eb",
+                  color: "#111827", fontSize: "13px", outline: "none",
+                }}
+              />
+              <button
+                onClick={handleRedeem}
+                disabled={redeeming || !code.trim()}
+                style={{
+                  padding: "10px 16px", borderRadius: "10px", border: "none",
+                  background: code.trim() ? "#7e22ce" : "#e9d5ff",
+                  color: code.trim() ? "#ffffff" : "#a855f7", fontSize: "13px", fontWeight: 600,
+                  cursor: code.trim() ? "pointer" : "not-allowed",
                 }}
               >
-                {plan.popular && (
-                  <div style={{
-                    position: "absolute", top: "-8px", left: "50%", transform: "translateX(-50%)",
-                    background: "#8b5cf6", color: "#fafafa", fontSize: "9px", fontWeight: 700,
-                    padding: "2px 8px", borderRadius: "100px", textTransform: "uppercase",
-                    letterSpacing: "0.5px", whiteSpace: "nowrap",
-                  }}>
-                    Popular
-                  </div>
-                )}
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
-                  {plan.name}
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: 800, color: "#fafafa", lineHeight: 1 }}>
-                  {plan.price}
-                  <span style={{ fontSize: "13px", fontWeight: 400, color: "rgba(255,255,255,0.35)" }}>{plan.period}</span>
-                </div>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: "8px 0 12px" }}>
-                  {plan.words}
-                </div>
-                {isCurrent ? (
-                  <div style={{
-                    padding: "8px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
-                    background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)",
-                  }}>
-                    Current
-                  </div>
-                ) : plan.id !== "FREE" ? (
-                  <a
-                    href={`/api/checkout?plan=${plan.id.toLowerCase()}`}
-                    onClick={() => { posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan }); track("upgrade_cta_clicked", { plan: plan.id }); }}
-                    style={{
-                      display: "block", padding: "8px", borderRadius: "6px",
-                      fontSize: "12px", fontWeight: 600, textDecoration: "none",
-                      background: isPro ? "#8b5cf6" : "rgba(255,255,255,0.08)",
-                      color: isPro ? "#fafafa" : "rgba(255,255,255,0.6)",
-                      textAlign: "center",
-                    }}
-                  >
-                    Upgrade &rarr;
-                  </a>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* What you unlock */}
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{
-            fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.3)",
-            textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px",
-          }}>
-            What you unlock:
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {[
-              "Unlimited humanizations (within plan)",
-              "4 tone modes",
-              "History & saved documents",
-              "Priority processing",
-            ].map((f) => (
-              <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>
-                <span style={{ color: "#22c55e" }}>&#x2713;</span>
-                {f}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Discount code */}
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{
-            fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.3)",
-            textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px",
-          }}>
-            Have a discount code?
-          </div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter code..."
-              style={{
-                flex: 1, padding: "10px 12px", borderRadius: "6px",
-                background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                color: "#fafafa", fontSize: "13px", outline: "none",
-              }}
-            />
-            <button
-              onClick={handleRedeem}
-              disabled={redeeming || !code.trim()}
-              style={{
-                padding: "10px 16px", borderRadius: "6px", border: "none",
-                background: code.trim() ? "#8b5cf6" : "rgba(139,92,246,0.3)",
-                color: "#fafafa", fontSize: "13px", fontWeight: 600,
-                cursor: code.trim() ? "pointer" : "not-allowed",
-              }}
-            >
-              {redeeming ? "..." : "Apply"}
-            </button>
-          </div>
-          {codeStatus && (
-            <div style={{
-              marginTop: "6px", fontSize: "12px",
-              color: codeStatus.type === "success" ? "#22c55e" : "#ef4444",
-            }}>
-              {codeStatus.message}
+                {redeeming ? "..." : "Apply"}
+              </button>
             </div>
-          )}
-        </div>
+            {codeStatus && (
+              <div style={{
+                marginTop: "6px", fontSize: "12px",
+                color: codeStatus.type === "success" ? "#16a34a" : "#dc2626",
+              }}>
+                {codeStatus.message}
+              </div>
+            )}
+          </div>
 
-        {/* Maybe later */}
-        <button
-          onClick={onClose}
-          style={{
-            width: "100%", padding: "10px", borderRadius: "6px",
-            background: "transparent", border: "1px solid rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.3)", fontSize: "13px", cursor: "pointer",
-          }}
-        >
-          Maybe later
-        </button>
+          {/* Maybe later */}
+          <button
+            onClick={onClose}
+            style={{
+              width: "100%", padding: "10px", borderRadius: "10px",
+              background: "transparent", border: "1px solid #e5e7eb",
+              color: "#9ca3af", fontSize: "13px", cursor: "pointer",
+            }}
+          >
+            Maybe later
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -7,9 +7,9 @@ const icons = {
 };
 
 const colors = {
-  tip: { border: "rgba(34,197,94,0.3)", bg: "rgba(34,197,94,0.06)", icon: "#22c55e" },
+  tip: { border: "rgba(22,163,74,0.3)", bg: "rgba(22,163,74,0.06)", icon: "#16a34a" },
   warning: { border: "rgba(249,115,22,0.3)", bg: "rgba(249,115,22,0.06)", icon: "#f97316" },
-  info: { border: "rgba(139,92,246,0.3)", bg: "rgba(139,92,246,0.06)", icon: "#8b5cf6" },
+  info: { border: "rgba(126,34,206,0.3)", bg: "rgba(126,34,206,0.06)", icon: "#7e22ce" },
 };
 
 export function Callout({
@@ -35,7 +35,7 @@ export function Callout({
       }}
     >
       <Icon size={20} style={{ color: c.icon, flexShrink: 0, marginTop: "2px" }} />
-      <div style={{ fontSize: "15px", lineHeight: 1.65, color: "rgba(255,255,255,0.8)" }}>
+      <div style={{ fontSize: "15px", lineHeight: 1.65, color: "#374151" }}>
         {children}
       </div>
     </div>
