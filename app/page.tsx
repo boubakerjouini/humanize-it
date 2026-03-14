@@ -27,12 +27,12 @@ function getScoreLabel(s: number): { label: string; sub: string } {
 }
 
 const V = {
-  brand: "#7e22ce",
-  brandHover: "#9333ea",
-  brandDim: "rgba(126,34,206,0.06)",
-  brandBorder: "rgba(126,34,206,0.15)",
-  brandGlow: "rgba(126,34,206,0.1)",
-  brandGlowSoft: "rgba(126,34,206,0.04)",
+  brand: "#7c3aed",
+  brandHover: "#6d28d9",
+  brandDim: "rgba(124,58,237,0.06)",
+  brandBorder: "rgba(124,58,237,0.15)",
+  brandGlow: "rgba(124,58,237,0.1)",
+  brandGlowSoft: "rgba(124,58,237,0.04)",
 };
 
 const LS_BASE = "https://humanizeit.lemonsqueezy.com/checkout/buy/";
@@ -191,8 +191,8 @@ export default function LandingPage() {
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 20px rgba(126,34,206,0.15); }
-          50% { box-shadow: 0 0 40px rgba(126,34,206,0.25); }
+          0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,0.15); }
+          50% { box-shadow: 0 0 40px rgba(124,58,237,0.25); }
         }
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
@@ -227,11 +227,12 @@ export default function LandingPage() {
           .two-cta-row { flex-direction: column !important; }
           .comparison-table { font-size: 12px !important; }
           .comparison-table td, .comparison-table th { padding: 10px 8px !important; }
-          .footer-inner { flex-direction: column !important; text-align: center !important; }
-          .footer-links { justify-content: center !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .footer-bottom { flex-direction: column !important; text-align: center !important; gap: 8px !important; }
           .extension-card-inner { flex-direction: column !important; text-align: center !important; }
           .pricing-toggle-row { flex-direction: column !important; align-items: center !important; gap: 16px !important; }
           .before-after-row { flex-direction: column !important; }
+          .hero-mockup { display: none !important; }
         }
         @media (min-width: 769px) {
           .mobile-nav-links { display: none !important; }
@@ -244,8 +245,9 @@ export default function LandingPage() {
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 51,
         padding: "6px 16px",
-        background: "#7e22ce", color: "#ffffff",
+        background: "#7c3aed", color: "#ffffff",
         textAlign: "center", fontSize: "13px", fontWeight: 500,
+        opacity: 0.95,
       }}>
         Launch offer: 50% off Pro forever — Use code <strong>LAUNCH50</strong> &middot;{" "}
         <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{ color: "#ffffff", fontWeight: 700, textDecoration: "underline" }}>
@@ -258,26 +260,30 @@ export default function LandingPage() {
         position: "fixed", top: "30px", left: 0, right: 0, zIndex: 50,
         height: "56px",
         display: "flex", alignItems: "center",
-        borderBottom: "1px solid #e5e7eb",
-        backdropFilter: "blur(16px) saturate(180%)",
-        background: "rgba(255,255,255,0.88)",
+        borderBottom: "1px solid #f3f4f6",
+        backdropFilter: "blur(8px) saturate(160%)",
+        background: "rgba(255,255,255,0.90)",
         animation: "fadeIn 0.3s ease forwards",
       }}>
         <div style={{
           maxWidth: "1140px", margin: "0 auto", padding: "0 24px",
           width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}>
-            <span style={{ fontSize: "19px", fontWeight: 800, color: "#3b0764", letterSpacing: "-0.5px", lineHeight: 1 }}>H.</span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#3b0764" }}>Humanize<span style={{ color: "#9333ea" }}>It</span></span>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
+            <span style={{
+              fontSize: "18px", fontWeight: 700, color: "#0a0a0a",
+              fontFamily: "var(--font-heading)", letterSpacing: "-0.5px",
+            }}>
+              Humanize<span style={{ color: "#7c3aed" }}>It</span>
+            </span>
           </Link>
 
           <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <a onClick={() => smoothScroll("demo")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
-            <a onClick={() => smoothScroll("how-it-works")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
-            <a onClick={() => smoothScroll("pricing")} style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Extension</a>
-            <Link href="/blog" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
+            <a onClick={() => smoothScroll("demo")} style={{ color: "#525252", fontSize: "14px", textDecoration: "none", cursor: "pointer" }} className="nav-link">Demo</a>
+            <a onClick={() => smoothScroll("how-it-works")} style={{ color: "#525252", fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
+            <a onClick={() => smoothScroll("pricing")} style={{ color: "#525252", fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
+            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#525252", fontSize: "14px", textDecoration: "none" }}>Extension</a>
+            <Link href="/blog" style={{ color: "#525252", fontSize: "14px", textDecoration: "none" }}>Blog</Link>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -285,7 +291,7 @@ export default function LandingPage() {
               <SignInButton mode="modal">
                 <button className="desktop-only" style={{
                   color: "#4b5563", fontSize: "13px",
-                  padding: "6px 14px", borderRadius: "6px",
+                  padding: "6px 14px", borderRadius: "8px",
                   border: "1px solid #e5e7eb",
                   background: "transparent", cursor: "pointer",
                 }}>
@@ -295,7 +301,7 @@ export default function LandingPage() {
               <SignUpButton mode="modal">
                 <button style={{
                   background: V.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
-                  padding: "6px 16px", borderRadius: "12px",
+                  padding: "6px 16px", borderRadius: "8px",
                   border: "none", cursor: "pointer",
                 }}>
                   Get Started Free
@@ -305,7 +311,7 @@ export default function LandingPage() {
             <SignedIn>
               <Link href="/dashboard/editor" style={{
                 background: V.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
-                padding: "6px 16px", borderRadius: "12px", textDecoration: "none",
+                padding: "6px 16px", borderRadius: "8px", textDecoration: "none",
               }}>
                 Dashboard &rarr;
               </Link>
@@ -329,9 +335,9 @@ export default function LandingPage() {
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="mobile-nav-links" style={{
-          position: "fixed", top: "56px", left: 0, right: 0, zIndex: 49,
-          background: "rgba(255,255,255,0.96)", backdropFilter: "blur(16px)",
-          borderBottom: "1px solid #e5e7eb",
+          position: "fixed", top: "86px", left: 0, right: 0, zIndex: 49,
+          background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)",
+          borderBottom: "1px solid #f3f4f6",
           flexDirection: "column", padding: "16px 24px", gap: "16px",
         }}>
           {[
@@ -340,22 +346,222 @@ export default function LandingPage() {
             { label: "Pricing", id: "pricing" },
           ].map(({ label, id }) => (
             <a key={id} onClick={() => { smoothScroll(id); setMobileMenuOpen(false); }} style={{
-              color: "#4b5563", fontSize: "14px", textDecoration: "none", cursor: "pointer",
+              color: "#374151", fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
           <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
-            color: "#4b5563", fontSize: "14px", textDecoration: "none",
+            color: "#374151", fontSize: "14px", textDecoration: "none",
           }}>Chrome Extension</a>
           <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
-            color: "#4b5563", fontSize: "14px", textDecoration: "none",
+            color: "#374151", fontSize: "14px", textDecoration: "none",
           }}>Blog</Link>
         </div>
       )}
 
+      {/* ── SECTION 1: HERO ── */}
+      <section style={{
+        minHeight: "auto",
+        padding: "140px 24px 80px",
+        display: "flex",
+        alignItems: "center",
+        position: "relative",
+        overflow: "hidden",
+        background: "#ffffff",
+      }}>
+        {/* Soft background orbs */}
+        <div style={{
+          position: "absolute", top: "20%", left: "25%",
+          width: "600px", height: "600px",
+          background: "radial-gradient(circle, rgba(124,58,237,0.04) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(80px)",
+          animation: "drift1 12s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+        <div style={{
+          position: "absolute", top: "40%", right: "15%",
+          width: "400px", height: "400px",
+          background: "radial-gradient(circle, rgba(124,58,237,0.03) 0%, transparent 70%)",
+          borderRadius: "50%", filter: "blur(60px)",
+          animation: "drift2 15s ease-in-out infinite",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ maxWidth: "800px", margin: "0 auto", width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
+
+          {/* Badge pill */}
+          <div className="fade-in" style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            border: "1px solid rgba(124,58,237,0.18)",
+            background: "#f5f3ff",
+            borderRadius: "100px", padding: "5px 16px", marginBottom: "32px",
+            fontSize: "13px", color: V.brand, fontWeight: 500,
+          }}>
+            <span>&#10022;</span>
+            <span>AI Humanization &middot; Now in Beta</span>
+          </div>
+
+          {/* H1 */}
+          <h1 className="fade-in hero-h1-custom" style={{
+            fontSize: "clamp(48px, 6vw, 72px)",
+            fontWeight: 900,
+            lineHeight: 1.1,
+            letterSpacing: "-0.03em",
+            margin: "0 0 24px",
+            color: "#0a0a0a",
+            fontFamily: "var(--font-heading)",
+            whiteSpace: "pre-line",
+          }}>
+            {"Your AI text,\nfinally sounds "}
+            <span style={{ color: "#7c3aed" }}>human.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="fade-in-delay" style={{
+            fontSize: "18px",
+            color: "#737373",
+            lineHeight: 1.65,
+            margin: "0 auto 40px",
+            maxWidth: "520px",
+          }}>
+            Paste your ChatGPT text and get an undetectable, natural-sounding version in seconds.
+          </p>
+
+          {/* Two CTAs */}
+          <div className="fade-in-delay2 two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "20px", flexWrap: "wrap" }}>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <button style={{
+                  background: "#7c3aed", color: "#ffffff", fontWeight: 700,
+                  padding: "14px 28px", borderRadius: "12px", border: "none",
+                  fontSize: "15px", cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(124,58,237,0.25)",
+                }}>
+                  Start for free
+                </button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard/editor" style={{
+                background: "#7c3aed", color: "#ffffff", fontWeight: 700,
+                padding: "14px 28px", borderRadius: "12px", textDecoration: "none",
+                fontSize: "15px",
+                boxShadow: "0 4px 16px rgba(124,58,237,0.25)",
+                display: "inline-flex", alignItems: "center",
+              }}>
+                Open Dashboard &rarr;
+              </Link>
+            </SignedIn>
+            <button onClick={() => smoothScroll("demo")} style={{
+              background: "transparent", color: "#374151", fontWeight: 600,
+              padding: "14px 28px", borderRadius: "12px",
+              border: "1px solid #e5e7eb",
+              fontSize: "15px", cursor: "pointer",
+            }}>
+              See how it works
+            </button>
+          </div>
+
+          {/* Single trust line */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              fontSize: "13px", color: "#737373",
+            }}>
+              <span style={{ color: "#22c55e", fontSize: "14px", fontWeight: 700 }}>{"\u2713"}</span>
+              No credit card required
+            </span>
+          </div>
+
+          {/* Product Mockup */}
+          <div className="hero-mockup fade-in-delay2" style={{
+            marginTop: "56px",
+            borderRadius: "16px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04)",
+            overflow: "hidden",
+            background: "#ffffff",
+            maxWidth: "680px",
+            margin: "56px auto 0",
+          }}>
+            {/* Browser chrome */}
+            <div style={{
+              background: "#f9fafb",
+              borderBottom: "1px solid #e5e7eb",
+              padding: "10px 16px",
+              display: "flex", alignItems: "center", gap: "8px",
+            }}>
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#fca5a5" }} />
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#fcd34d" }} />
+              <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#86efac" }} />
+              <div style={{
+                flex: 1, marginLeft: "12px",
+                background: "#f3f4f6", borderRadius: "6px",
+                padding: "4px 12px", fontSize: "11px", color: "#9ca3af",
+                textAlign: "center",
+              }}>
+                app.humanizeit.io/dashboard/editor
+              </div>
+            </div>
+            {/* Mock editor content */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "1fr 1fr",
+              gap: "0",
+            }}>
+              {/* Before panel */}
+              <div style={{
+                padding: "20px 24px",
+                borderRight: "1px solid #f3f4f6",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px" }}>Input</span>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px",
+                    background: "rgba(239,68,68,0.1)", color: "#dc2626",
+                  }}>87% AI</span>
+                </div>
+                <p style={{ fontSize: "12px", color: "#6b7280", lineHeight: 1.7, margin: 0 }}>
+                  In today&apos;s rapidly evolving digital landscape, it is important to note that businesses must leverage cutting-edge technologies to maintain competitive advantage and maximize stakeholder value...
+                </p>
+              </div>
+              {/* After panel */}
+              <div style={{ padding: "20px 24px", background: "#fafafa" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px" }}>Humanized</span>
+                  <span style={{
+                    fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px",
+                    background: "rgba(22,163,74,0.1)", color: "#16a34a",
+                  }}>4% AI</span>
+                </div>
+                <p style={{ fontSize: "12px", color: "#374151", lineHeight: 1.7, margin: 0 }}>
+                  Most businesses know they need better tech — the ones that actually grow aren&apos;t just buying tools, they&apos;re rethinking how teams work. Less buzzwords, more results...
+                </p>
+              </div>
+            </div>
+            {/* Mock toolbar */}
+            <div style={{
+              borderTop: "1px solid #f3f4f6",
+              padding: "10px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "#fafafa",
+            }}>
+              <span style={{ fontSize: "11px", color: "#9ca3af" }}>247 words</span>
+              <div style={{
+                background: "#7c3aed", color: "#ffffff",
+                fontSize: "11px", fontWeight: 600,
+                padding: "6px 14px", borderRadius: "6px",
+              }}>
+                Humanize &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── SECTION 2: LIVE DEMO ── */}
       <section id="demo" aria-label="Live AI detection demo" style={{
-        padding: "80px 24px", paddingTop: "100px",
-        background: "#ffffff",
+        padding: "80px 24px",
+        background: "#fafafa",
+        borderTop: "1px solid #f3f4f6",
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto", opacity: 0, animation: "fadeInUp 0.5s ease forwards" }}>
           <p style={{
@@ -368,34 +574,35 @@ export default function LandingPage() {
           <h2 style={{
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "12px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "12px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Try it now &mdash; no signup needed
           </h2>
-          <p style={{ textAlign: "center", fontSize: "15px", color: "#6b7280", marginBottom: "36px" }}>
+          <p style={{ textAlign: "center", fontSize: "15px", color: "#737373", marginBottom: "36px" }}>
             Paste any AI text and see the detection score instantly.
           </p>
 
           {/* Textarea card */}
           <div style={{
             background: "#ffffff",
-            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(126,34,206,0.15)"}`,
+            border: `1px solid ${result ? scoreColor(score) + "40" : "rgba(124,58,237,0.15)"}`,
             borderRadius: "16px",
             overflow: "hidden",
-            boxShadow: "0 4px 12px rgba(126,34,206,0.1)",
+            boxShadow: "0 4px 16px rgba(124,58,237,0.07)",
             transition: "border-color 0.3s",
           }}>
             {/* Editor toolbar */}
             <div style={{
               padding: "10px 16px",
-              borderBottom: "1px solid #e5e7eb",
+              borderBottom: "1px solid #f3f4f6",
               display: "flex", alignItems: "center", gap: "8px",
+              background: "#fafafa",
             }}>
-              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#ef4444", opacity: 0.6 }} />
-              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#9333ea", opacity: 0.6 }} />
-              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#22c55e", opacity: 0.6 }} />
+              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#fca5a5" }} />
+              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#fcd34d" }} />
+              <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#86efac" }} />
               <span style={{ fontSize: "11px", color: "#9ca3af", marginLeft: "8px", fontFamily: "var(--font-geist-mono), monospace" }}>
                 analyzeText()
               </span>
@@ -424,8 +631,9 @@ export default function LandingPage() {
             {/* Bottom toolbar */}
             <div style={{
               padding: "10px 16px",
-              borderTop: "1px solid #e5e7eb",
+              borderTop: "1px solid #f3f4f6",
               display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: "#fafafa",
             }}>
               <span style={{ fontSize: "11px", color: "#9ca3af" }}>
                 {wordCount} word{wordCount !== 1 ? "s" : ""}
@@ -434,10 +642,10 @@ export default function LandingPage() {
                 onClick={handleAnalyze}
                 disabled={!canAnalyze}
                 style={{
-                  background: canAnalyze ? V.brand : "rgba(126,34,206,0.2)",
+                  background: canAnalyze ? V.brand : "rgba(124,58,237,0.2)",
                   color: canAnalyze ? "#ffffff" : "#9ca3af",
                   fontSize: "13px", fontWeight: 700,
-                  padding: "8px 20px", borderRadius: "12px",
+                  padding: "8px 20px", borderRadius: "8px",
                   border: "none", cursor: canAnalyze ? "pointer" : "not-allowed",
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   transition: "all 0.15s",
@@ -522,7 +730,7 @@ export default function LandingPage() {
                   <button style={{
                     display: "block", width: "100%", textAlign: "center",
                     padding: "12px",
-                    background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                    background: "#7c3aed",
                     color: "#ffffff", borderRadius: "12px", border: "none",
                     fontSize: "14px", fontWeight: 700, cursor: "pointer",
                   }}>
@@ -539,7 +747,7 @@ export default function LandingPage() {
                   style={{
                     display: "block", width: "100%", textAlign: "center",
                     padding: "12px",
-                    background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                    background: "#7c3aed",
                     color: "#ffffff", borderRadius: "12px", border: "none",
                     fontSize: "14px", fontWeight: 700, cursor: "pointer",
                   }}
@@ -552,193 +760,83 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 1: HERO ── */}
-      <section style={{
-        minHeight: "auto",
-        padding: "60px 24px",
-        display: "flex",
-        alignItems: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Animated background orbs */}
-        <div style={{
-          position: "absolute", top: "20%", left: "30%",
-          width: "500px", height: "500px",
-          background: "radial-gradient(circle, rgba(126,34,206,0.05) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(80px)",
-          animation: "drift1 12s ease-in-out infinite",
-          pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", top: "40%", right: "20%",
-          width: "400px", height: "400px",
-          background: "radial-gradient(circle, rgba(126,34,206,0.04) 0%, transparent 70%)",
-          borderRadius: "50%", filter: "blur(60px)",
-          animation: "drift2 15s ease-in-out infinite",
-          pointerEvents: "none",
-        }} />
-
-        <div style={{ maxWidth: "760px", margin: "0 auto", padding: "60px 24px", width: "100%", textAlign: "center", position: "relative", zIndex: 1 }}>
-
-          {/* Badge */}
-          <div className="fade-in" style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            border: `1px solid ${V.brandBorder}`,
-            background: "#f3e8ff",
-            borderRadius: "100px", padding: "5px 14px", marginBottom: "28px",
-            fontSize: "12px", color: V.brand, fontWeight: 500, cursor: "pointer",
-          }} onClick={() => smoothScroll("extension")}>
-            <span>{"\u2728"}</span>
-            <span>New: Chrome Extension available</span>
-          </div>
-
-          {/* H1 */}
-          <h1 className="fade-in hero-h1-custom" style={{
-            fontSize: "clamp(38px, 5.5vw, 62px)",
-            fontWeight: 800,
-            lineHeight: 1.08,
-            letterSpacing: "-2.5px",
-            margin: "0 0 20px",
-            color: "#3b0764",
-            fontFamily: "var(--font-heading)",
-          }}>
-            Humanize AI Text.{" "}
-            <span style={{
-              background: "linear-gradient(135deg, #7e22ce 0%, #9333ea 50%, #a855f7 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-              backgroundSize: "200% 200%",
-              animation: "gradientShift 4s ease infinite",
-            }}>Beat Every Detector.</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="fade-in-delay" style={{
-            fontSize: "17px",
-            color: "#6b7280",
-            lineHeight: 1.7,
-            margin: "0 auto 36px",
-            maxWidth: "560px",
-          }}>
-            The most advanced AI text humanizer — paste any AI-generated text, get a detection score instantly, and rewrite it into undetectable AI writing with one click.
-          </p>
-
-          {/* Two CTAs */}
-          <div className="fade-in-delay2 two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", marginBottom: "24px", flexWrap: "wrap" }}>
-            <SignedOut>
-              <SignUpButton mode="modal">
-                <button style={{
-                  background: V.brand, color: "#ffffff", fontWeight: 700,
-                  padding: "14px 28px", borderRadius: "12px", border: "none",
-                  fontSize: "15px", cursor: "pointer",
-                  boxShadow: `0 4px 12px ${V.brandGlow}`,
-                }}>
-                  Start Free &mdash; No credit card
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#ffffff", fontWeight: 700,
-                padding: "14px 28px", borderRadius: "12px", textDecoration: "none",
-                fontSize: "15px",
-                boxShadow: `0 4px 12px ${V.brandGlow}`,
-                display: "inline-flex", alignItems: "center",
-              }}>
-                Open Dashboard &rarr;
-              </Link>
-            </SignedIn>
-            <button onClick={() => smoothScroll("demo")} style={{
-              background: "transparent", color: "#4b5563", fontWeight: 600,
-              padding: "14px 28px", borderRadius: "12px",
-              border: "1px solid #e5e7eb",
-              fontSize: "15px", cursor: "pointer",
-            }}>
-              See how it works &darr;
-            </button>
-          </div>
-
-          {/* Social proof */}
-          <div style={{
-            display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap",
-            alignItems: "center",
-          }}>
-            {[
-              "2,847 users",
-              "1.2M words humanized",
-              "No credit card required",
-            ].map((item) => (
-              <span key={item} style={{
-                display: "inline-flex", alignItems: "center", gap: "5px",
-                fontSize: "13px", color: "#6b7280",
-              }}>
-                <span style={{ color: "#22c55e", fontSize: "14px", fontWeight: 700 }}>{"\u2713"}</span>
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── BEFORE / AFTER SECTION ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
+        background: "#ffffff",
       }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-          <p style={{
-            textAlign: "center", fontSize: "11px", fontWeight: 700,
-            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
-            marginBottom: "14px",
-          }}>
-            REAL RESULTS
-          </p>
           <h2 style={{
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "48px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
-            See the Difference
+            See the difference
           </h2>
           <div className="before-after-row" style={{
-            display: "flex", gap: "24px", flexWrap: "wrap",
+            display: "flex", gap: "0", flexWrap: "wrap",
+            border: "1px solid #e5e7eb", borderRadius: "16px", overflow: "hidden",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
           }}>
             {/* Before — AI detected */}
             <div style={{
-              flex: "1 1 400px",
-              background: "#fef2f2", border: "1.5px solid #fecaca",
-              borderRadius: "16px", padding: "24px",
+              flex: "1 1 340px",
+              background: "#fff9f9",
+              padding: "32px",
+              borderRight: "1px solid #fecaca",
             }}>
-              <span style={{
-                display: "inline-block", fontSize: "11px", fontWeight: 700,
-                padding: "3px 10px", borderRadius: "6px",
-                background: "rgba(239,68,68,0.12)", color: "#dc2626",
-                marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.5px",
-              }}>
-                87% AI detected
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                <span style={{
+                  display: "inline-block", fontSize: "11px", fontWeight: 700,
+                  padding: "3px 10px", borderRadius: "6px",
+                  background: "rgba(239,68,68,0.1)", color: "#dc2626",
+                  textTransform: "uppercase", letterSpacing: "0.5px",
+                }}>
+                  87% AI detected
+                </span>
+              </div>
               <p style={{ fontSize: "14px", color: "#4b5563", lineHeight: 1.8, margin: 0 }}>
                 In today&apos;s rapidly evolving digital landscape, businesses must leverage cutting-edge technologies to maintain a competitive advantage. Furthermore, the implementation of robust strategies is paramount to achieving sustainable growth and maximizing stakeholder value in an increasingly interconnected global marketplace.
               </p>
             </div>
+
+            {/* Center arrow */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "0 20px",
+              background: "#ffffff",
+              borderRight: "1px solid #e5e7eb",
+            }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "50%",
+                background: "#f5f3ff",
+                border: "1px solid rgba(124,58,237,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#7c3aed", fontSize: "16px", flexShrink: 0,
+              }}>
+                &rarr;
+              </div>
+            </div>
+
             {/* After — Human */}
             <div style={{
-              flex: "1 1 400px",
-              background: "#f0fdf4", border: "1.5px solid #bbf7d0",
-              borderRadius: "16px", padding: "24px",
+              flex: "1 1 340px",
+              background: "#f0fdf4",
+              padding: "32px",
             }}>
-              <span style={{
-                display: "inline-block", fontSize: "11px", fontWeight: 700,
-                padding: "3px 10px", borderRadius: "6px",
-                background: "rgba(22,163,74,0.12)", color: "#16a34a",
-                marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.5px",
-              }}>
-                4% AI &mdash; Looks human
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                <span style={{
+                  display: "inline-block", fontSize: "11px", fontWeight: 700,
+                  padding: "3px 10px", borderRadius: "6px",
+                  background: "rgba(22,163,74,0.1)", color: "#16a34a",
+                  textTransform: "uppercase", letterSpacing: "0.5px",
+                }}>
+                  4% AI &mdash; Looks human
+                </span>
+              </div>
               <p style={{ fontSize: "14px", color: "#4b5563", lineHeight: 1.8, margin: 0 }}>
                 Most businesses know they need better tech — but few actually use it well. The ones that grow aren&apos;t just buying tools, they&apos;re rethinking how teams work together. It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics: clear communication, faster feedback loops, and actually listening to customers.
               </p>
@@ -750,25 +848,18 @@ export default function LandingPage() {
       {/* ── SECTION 3: HOW IT WORKS ── */}
       <section id="how-it-works" aria-label="How it works" style={{
         padding: "80px 24px",
-        borderTop: "1px solid #e5e7eb",
-        borderBottom: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
+        background: "#fafafa",
       }}>
-        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
-          <p style={{
-            textAlign: "center", fontSize: "11px", fontWeight: 700,
-            letterSpacing: "2px", color: V.brand, textTransform: "uppercase",
-            marginBottom: "14px",
-          }}>
-            How it works
-          </p>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <h2 style={{
             textAlign: "center",
-            fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "52px", color: "#3b0764",
+            fontSize: "40px",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "56px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
-            Three steps. Zero friction.
+            Everything you need to sound human
           </h2>
 
           <div className="three-col" style={{
@@ -777,21 +868,58 @@ export default function LandingPage() {
             gap: "20px",
           }}>
             {[
-              { icon: "\uD83D\uDCCB", title: "Paste", desc: "Any AI-generated text from ChatGPT, Claude, etc." },
-              { icon: "\uD83D\uDD0D", title: "Analyze", desc: "See your AI score and exactly which patterns were detected." },
-              { icon: "\u2705", title: "Humanize", desc: "One click rewrites it to sound natural and pass detectors." },
+              {
+                icon: (
+                  <svg width="24" height="24" fill="none" stroke="#7c3aed" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+                  </svg>
+                ),
+                title: "Paste",
+                desc: "Any AI-generated text from ChatGPT, Claude, Gemini, or any other model.",
+              },
+              {
+                icon: (
+                  <svg width="24" height="24" fill="none" stroke="#7c3aed" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                ),
+                title: "Analyze",
+                desc: "See your AI score and exactly which patterns were detected across 24 signals.",
+              },
+              {
+                icon: (
+                  <svg width="24" height="24" fill="none" stroke="#7c3aed" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                  </svg>
+                ),
+                title: "Humanize",
+                desc: "One click rewrites your text to sound natural and pass every major detector.",
+              },
             ].map(({ icon, title, desc }) => (
               <div key={title} style={{
                 background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "16px",
-                padding: "28px 24px",
-                textAlign: "center",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-              }}>
-                <div style={{ fontSize: "32px", marginBottom: "16px" }}>{icon}</div>
-                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#3b0764", fontFamily: "var(--font-heading)" }}>{title}</h3>
-                <p style={{ fontSize: "14px", color: "#6b7280", lineHeight: 1.6 }}>{desc}</p>
+                border: "1px solid #f3f4f6",
+                borderRadius: "20px",
+                padding: "32px 28px",
+                textAlign: "left",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                transition: "border-color 0.2s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(124,58,237,0.2)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "#f3f4f6"; }}
+              >
+                <div style={{
+                  width: "48px", height: "48px", borderRadius: "12px",
+                  background: "#f5f3ff",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: "20px",
+                }}>
+                  {icon}
+                </div>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "10px", color: "#0a0a0a", fontFamily: "var(--font-heading)" }}>{title}</h3>
+                <p style={{ fontSize: "14px", color: "#737373", lineHeight: 1.65, margin: 0 }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -799,48 +927,55 @@ export default function LandingPage() {
       </section>
 
       {/* ── SECTION 4: CHROME EXTENSION CTA ── */}
-      <section id="extension" style={{ padding: "80px 24px" }}>
+      <section id="extension" style={{ padding: "80px 24px", background: "#ffffff", borderTop: "1px solid #f3f4f6" }}>
         <div style={{
           maxWidth: "900px", margin: "0 auto",
-          background: "linear-gradient(135deg, rgba(126,34,206,0.06) 0%, rgba(126,34,206,0.02) 100%)",
-          border: `1px solid ${V.brandBorder}`,
-          borderRadius: "16px",
+          background: "linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(124,58,237,0.02) 100%)",
+          border: `1px solid rgba(124,58,237,0.12)`,
+          borderRadius: "20px",
           padding: "48px 40px",
         }}>
           <div className="extension-card-inner" style={{ display: "flex", alignItems: "center", gap: "40px" }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "32px", marginBottom: "16px" }}>{"\uD83E\uDDE9"}</div>
+              <div style={{
+                width: "52px", height: "52px", borderRadius: "14px",
+                background: "#f5f3ff", border: "1px solid rgba(124,58,237,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: "20px", fontSize: "26px",
+              }}>
+                {"\uD83E\uDDE9"}
+              </div>
               <h2 style={{
                 fontSize: "clamp(22px, 3vw, 30px)",
-                fontWeight: 700, letterSpacing: "-0.5px",
-                marginBottom: "12px", color: "#3b0764",
+                fontWeight: 700, letterSpacing: "-0.03em",
+                marginBottom: "12px", color: "#0a0a0a",
                 fontFamily: "var(--font-heading)",
               }}>
                 HumanizeIt is now a Chrome Extension
               </h2>
-              <p style={{ fontSize: "15px", color: "#6b7280", lineHeight: 1.7, marginBottom: "24px" }}>
+              <p style={{ fontSize: "15px", color: "#737373", lineHeight: 1.7, marginBottom: "24px" }}>
                 Analyze and humanize text directly in Gmail, Google Docs, LinkedIn, and Notion &mdash; without leaving the page.
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
                 <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   background: V.brand, color: "#ffffff", fontWeight: 700,
-                  padding: "12px 24px", borderRadius: "12px",
+                  padding: "12px 24px", borderRadius: "10px",
                   fontSize: "14px", textDecoration: "none",
                 }}>
                   Install Chrome Extension &rarr;
                 </a>
                 <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
                   display: "inline-flex", alignItems: "center",
-                  background: "transparent", color: "#4b5563",
-                  padding: "12px 24px", borderRadius: "12px",
+                  background: "transparent", color: "#374151",
+                  padding: "12px 24px", borderRadius: "10px",
                   border: "1px solid #e5e7eb",
                   fontSize: "14px", textDecoration: "none", fontWeight: 600,
                 }}>
                   Learn more
                 </a>
               </div>
-              <p style={{ fontSize: "12px", color: "#6b7280" }}>
+              <p style={{ fontSize: "12px", color: "#9ca3af" }}>
                 Works on: Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
               </p>
             </div>
@@ -851,7 +986,8 @@ export default function LandingPage() {
       {/* ── SECTION 6: COMPARISON TABLE ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
+        background: "#fafafa",
       }}>
         <div style={{ maxWidth: "700px", margin: "0 auto" }}>
           <p style={{
@@ -864,8 +1000,8 @@ export default function LandingPage() {
           <h2 style={{
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "48px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Beats every AI detector
@@ -883,8 +1019,8 @@ export default function LandingPage() {
               fontSize: "14px",
             }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                  <th style={{ padding: "14px 16px", textAlign: "left", color: "#6b7280", fontWeight: 600, fontSize: "12px" }}></th>
+                <tr style={{ borderBottom: "1px solid #f3f4f6", background: "#fafafa" }}>
+                  <th style={{ padding: "14px 16px", textAlign: "left", color: "#9ca3af", fontWeight: 600, fontSize: "12px" }}></th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: V.brand, fontWeight: 700, fontSize: "13px" }}>HumanizeIt</th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b7280", fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: "#6b7280", fontWeight: 600, fontSize: "13px" }}>Undetectable.ai</th>
@@ -892,7 +1028,7 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
-                  <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                  <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? "1px solid #f9fafb" : "none" }}>
                     <td style={{ padding: "12px 16px", color: "#4b5563", fontWeight: 500 }}>{row.label}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.us}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.quill}</td>
@@ -908,7 +1044,8 @@ export default function LandingPage() {
       {/* ── SECTION 7: PRICING ── */}
       <section id="pricing" aria-label="Pricing plans" style={{
         padding: "80px 24px",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
+        background: "#ffffff",
       }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <p style={{
@@ -921,8 +1058,8 @@ export default function LandingPage() {
           <h2 style={{
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "12px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "12px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Start free. Upgrade when ready.
@@ -933,7 +1070,7 @@ export default function LandingPage() {
             display: "flex", justifyContent: "center", alignItems: "center",
             gap: "12px", marginBottom: "48px",
           }}>
-            <span style={{ fontSize: "13px", color: !billingAnnual ? "#111827" : "#6b7280", fontWeight: 600 }}>Monthly</span>
+            <span style={{ fontSize: "13px", color: !billingAnnual ? "#111827" : "#9ca3af", fontWeight: 600 }}>Monthly</span>
             <button onClick={() => setBillingAnnual(!billingAnnual)} style={{
               width: "44px", height: "24px", borderRadius: "12px",
               background: billingAnnual ? V.brand : "#e5e7eb",
@@ -949,7 +1086,7 @@ export default function LandingPage() {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
               }} />
             </button>
-            <span style={{ fontSize: "13px", color: billingAnnual ? "#111827" : "#6b7280", fontWeight: 600 }}>
+            <span style={{ fontSize: "13px", color: billingAnnual ? "#111827" : "#9ca3af", fontWeight: 600 }}>
               Annual
             </span>
             {billingAnnual && (
@@ -969,25 +1106,27 @@ export default function LandingPage() {
               display: "inline-flex", alignItems: "center", gap: "6px",
               fontSize: "12px", fontWeight: 500,
               color: "#6b7280",
-              background: "#f3e8ff",
-              border: "1px solid rgba(126,34,206,0.15)",
+              background: "#f5f3ff",
+              border: "1px solid rgba(124,58,237,0.15)",
               padding: "5px 14px", borderRadius: "100px",
             }}>
               {"\uD83D\uDE80"} Currently in Beta — Paid plans coming soon
             </span>
           </div>
 
-          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", alignItems: "center" }}>
             {plans.map((plan, i) => (
               <div key={plan.name} style={{
-                background: plan.pro ? V.brand : "#ffffff",
-                border: plan.pro ? `1px solid ${V.brand}` : "1px solid #e5e7eb",
-                borderRadius: "16px",
-                padding: "28px 22px",
+                background: plan.pro ? "#7c3aed" : "#ffffff",
+                border: plan.pro ? "1px solid #7c3aed" : "1px solid #e5e7eb",
+                borderRadius: "20px",
+                padding: "32px 24px",
                 position: "relative",
-                boxShadow: plan.pro ? `0 4px 12px rgba(126,34,206,0.2)` : "0 1px 3px rgba(0,0,0,0.06)",
+                boxShadow: plan.pro ? "0 20px 40px rgba(124,58,237,0.25), 0 4px 12px rgba(124,58,237,0.15)" : "0 1px 3px rgba(0,0,0,0.06)",
+                transform: plan.pro ? "scale(1.03)" : "scale(1)",
                 opacity: 0,
                 animation: `fadeInUp 0.5s ease ${i * 0.1}s forwards`,
+                transition: "transform 0.2s",
               }}>
                 {plan.pro && (
                   <div style={{
@@ -996,18 +1135,18 @@ export default function LandingPage() {
                     fontSize: "11px", fontWeight: 700,
                     padding: "3px 14px", borderRadius: "100px",
                     whiteSpace: "nowrap",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
                   }}>
                     Most Popular
                   </div>
                 )}
 
-                <div style={{ fontSize: "12px", color: plan.pro ? "rgba(255,255,255,0.7)" : "#6b7280", marginBottom: "4px" }}>{plan.desc}</div>
+                <div style={{ fontSize: "12px", color: plan.pro ? "rgba(255,255,255,0.65)" : "#9ca3af", marginBottom: "4px" }}>{plan.desc}</div>
                 <div style={{ fontSize: "16px", fontWeight: 700, color: plan.pro ? "#ffffff" : "#111827", marginBottom: "16px" }}>{plan.name}</div>
 
                 <div style={{ display: "flex", alignItems: "baseline", gap: "2px", marginBottom: "20px" }}>
                   <span style={{ fontSize: "40px", fontWeight: 800, color: plan.pro ? "#ffffff" : "#111827", letterSpacing: "-2px" }}>{plan.price}</span>
-                  <span style={{ fontSize: "13px", color: plan.pro ? "rgba(255,255,255,0.7)" : "#6b7280" }}>{plan.period}</span>
+                  <span style={{ fontSize: "13px", color: plan.pro ? "rgba(255,255,255,0.65)" : "#9ca3af" }}>{plan.period}</span>
                 </div>
 
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1025,7 +1164,7 @@ export default function LandingPage() {
                       <SignUpButton mode="modal">
                         <button style={{
                           display: "block", width: "100%", textAlign: "center",
-                          padding: "10px", borderRadius: "12px",
+                          padding: "10px", borderRadius: "10px",
                           fontSize: "13px", fontWeight: 600,
                           background: "transparent",
                           color: "#4b5563",
@@ -1039,7 +1178,7 @@ export default function LandingPage() {
                     <SignedIn>
                       <Link href="/dashboard/editor" style={{
                         display: "block", textAlign: "center", textDecoration: "none",
-                        padding: "10px", borderRadius: "12px",
+                        padding: "10px", borderRadius: "10px",
                         fontSize: "13px", fontWeight: 600,
                         background: "transparent",
                         color: "#4b5563",
@@ -1066,31 +1205,39 @@ export default function LandingPage() {
       {/* ── SECTION 8: EXTENSION MINI ── */}
       <section style={{
         padding: "60px 24px",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
         textAlign: "center",
+        background: "#fafafa",
       }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <div style={{ fontSize: "32px", marginBottom: "16px" }}>{"\uD83D\uDCF1"}</div>
+          <div style={{
+            width: "52px", height: "52px", borderRadius: "14px",
+            background: "#f5f3ff", border: "1px solid rgba(124,58,237,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 20px", fontSize: "26px",
+          }}>
+            {"\uD83D\uDCF1"}
+          </div>
           <h2 style={{
             fontSize: "clamp(22px, 3vw, 30px)",
-            fontWeight: 700, letterSpacing: "-0.5px",
-            marginBottom: "12px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "12px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Use it anywhere you write
           </h2>
-          <p style={{ fontSize: "15px", color: "#6b7280", lineHeight: 1.7, marginBottom: "24px" }}>
+          <p style={{ fontSize: "15px", color: "#737373", lineHeight: 1.7, marginBottom: "24px" }}>
             The HumanizeIt extension works in any text field on any website.
           </p>
           <div style={{
-            display: "inline-flex", gap: "16px", flexWrap: "wrap", justifyContent: "center",
+            display: "inline-flex", gap: "10px", flexWrap: "wrap", justifyContent: "center",
           }}>
             {["Gmail", "Google Docs", "LinkedIn", "Notion", "Substack", "WordPress"].map((app) => (
               <span key={app} style={{
                 fontSize: "13px", color: "#4b5563",
-                background: "#faf5ff",
+                background: "#ffffff",
                 border: "1px solid #e5e7eb",
-                borderRadius: "8px", padding: "8px 16px",
+                borderRadius: "8px", padding: "7px 16px",
               }}>
                 {app}
               </span>
@@ -1102,7 +1249,8 @@ export default function LandingPage() {
       {/* ── FAQ SECTION ── */}
       <section id="faq" aria-label="Frequently asked questions" style={{
         padding: "80px 24px",
-        borderTop: "1px solid #e5e7eb",
+        borderTop: "1px solid #f3f4f6",
+        background: "#ffffff",
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
           <p style={{
@@ -1115,8 +1263,8 @@ export default function LandingPage() {
           <h2 style={{
             textAlign: "center",
             fontSize: "clamp(24px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-1px",
-            marginBottom: "48px", color: "#3b0764",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            marginBottom: "48px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Everything You Need to Know
@@ -1179,11 +1327,11 @@ export default function LandingPage() {
             ] as { q: string; a: string }[]).map((item, i) => (
               <div key={i} style={{
                 background: "#ffffff",
-                border: `1px solid ${openFaq === i ? V.brandBorder : "#e5e7eb"}`,
-                borderRadius: "16px",
+                border: `1px solid ${openFaq === i ? "rgba(124,58,237,0.2)" : "#f3f4f6"}`,
+                borderRadius: "14px",
                 overflow: "hidden",
                 transition: "border-color 0.3s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
               }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -1221,7 +1369,7 @@ export default function LandingPage() {
                     padding: "0 22px 18px",
                     margin: 0,
                     fontSize: "14px",
-                    color: "#6b7280",
+                    color: "#737373",
                     lineHeight: 1.7,
                   }}>
                     {item.a}
@@ -1236,35 +1384,36 @@ export default function LandingPage() {
       {/* ── SECTION 9: FINAL CTA ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(126,34,206,0.1)",
+        borderTop: "1px solid #f3f4f6",
+        background: "#fafafa",
       }}>
         <div style={{
-          maxWidth: "700px", margin: "0 auto",
-          background: "linear-gradient(135deg, rgba(126,34,206,0.06) 0%, rgba(126,34,206,0.02) 100%)",
-          border: `1px solid ${V.brandBorder}`,
-          borderRadius: "16px",
+          maxWidth: "680px", margin: "0 auto",
+          background: "linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(124,58,237,0.02) 100%)",
+          border: "1px solid rgba(124,58,237,0.12)",
+          borderRadius: "20px",
           padding: "56px 40px",
           textAlign: "center",
         }}>
           <h2 style={{
             fontSize: "clamp(26px, 4vw, 40px)",
-            fontWeight: 800, letterSpacing: "-1.5px",
-            lineHeight: 1.1, marginBottom: "14px", color: "#3b0764",
+            fontWeight: 800, letterSpacing: "-0.03em",
+            lineHeight: 1.1, marginBottom: "14px", color: "#0a0a0a",
             fontFamily: "var(--font-heading)",
           }}>
             Ready to make your writing sound human?
           </h2>
-          <p style={{ fontSize: "15px", color: "#6b7280", marginBottom: "32px" }}>
+          <p style={{ fontSize: "15px", color: "#737373", marginBottom: "32px" }}>
             Start free &mdash; 500 words/day, no credit card required.
           </p>
           <div className="two-cta-row" style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
             <SignedOut>
               <SignUpButton mode="modal">
                 <button style={{
-                  background: V.brand, color: "#ffffff", fontWeight: 700,
+                  background: "#7c3aed", color: "#ffffff", fontWeight: 700,
                   padding: "14px 28px", borderRadius: "12px", border: "none",
                   fontSize: "15px", cursor: "pointer",
-                  boxShadow: `0 4px 12px ${V.brandGlow}`,
+                  boxShadow: "0 4px 16px rgba(124,58,237,0.25)",
                 }}>
                   Start Writing Free &rarr;
                 </button>
@@ -1272,10 +1421,10 @@ export default function LandingPage() {
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard/editor" style={{
-                background: V.brand, color: "#ffffff", fontWeight: 700,
+                background: "#7c3aed", color: "#ffffff", fontWeight: 700,
                 padding: "14px 28px", borderRadius: "12px", textDecoration: "none",
                 fontSize: "15px",
-                boxShadow: `0 4px 12px ${V.brandGlow}`,
+                boxShadow: "0 4px 16px rgba(124,58,237,0.25)",
                 display: "inline-flex", alignItems: "center",
               }}>
                 Open Dashboard &rarr;
@@ -1283,7 +1432,7 @@ export default function LandingPage() {
             </SignedIn>
             <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-flex", alignItems: "center",
-              background: "transparent", color: "#4b5563", fontWeight: 600,
+              background: "transparent", color: "#374151", fontWeight: 600,
               padding: "14px 28px", borderRadius: "12px",
               border: "1px solid #e5e7eb",
               fontSize: "15px", textDecoration: "none",
@@ -1294,41 +1443,117 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 10: FOOTER ── */}
+      {/* ── SECTION 10: FOOTER (DARK) ── */}
       <footer style={{
-        borderTop: "1px solid #e5e7eb",
-        padding: "24px",
-        background: "#ffffff",
+        background: "#0a0a0a",
+        borderTop: "1px solid #1a1a1a",
+        padding: "56px 24px 0",
       }}>
-        <div className="footer-inner" style={{
-          maxWidth: "1140px", margin: "0 auto",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          flexWrap: "wrap", gap: "16px",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-            <span style={{ fontSize: "16px", fontWeight: 800, color: "#3b0764" }}>H.</span>
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "#6b7280" }}>HumanizeIt</span>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+          {/* 4-column grid */}
+          <div className="footer-grid" style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            gap: "40px",
+            paddingBottom: "48px",
+          }}>
+            {/* Col 1: Logo + description */}
+            <div>
+              <div style={{ marginBottom: "16px" }}>
+                <span style={{
+                  fontSize: "18px", fontWeight: 700,
+                  color: "#ffffff",
+                  fontFamily: "var(--font-heading)", letterSpacing: "-0.5px",
+                }}>
+                  Humanize<span style={{ color: "#7c3aed" }}>It</span>
+                </span>
+              </div>
+              <p style={{ fontSize: "14px", color: "#737373", lineHeight: 1.7, maxWidth: "240px", margin: 0 }}>
+                The AI humanizer that actually works. Make your AI text undetectable in seconds.
+              </p>
+            </div>
+
+            {/* Col 2: Product */}
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "16px" }}>
+                Product
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { label: "Dashboard", href: "/dashboard/editor" },
+                  { label: "Chrome Extension", href: EXTENSION_URL },
+                  { label: "Pricing", href: "#pricing" },
+                  { label: "Lifetime Deal", href: "/lifetime" },
+                ].map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontSize: "14px", color: "#737373", textDecoration: "none" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#ffffff"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#737373"; }}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Col 3: Resources */}
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "16px" }}>
+                Resources
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { label: "Blog", href: "/blog" },
+                  { label: "How it works", href: "#how-it-works" },
+                  { label: "Compare", href: "#" },
+                  { label: "Sign up", href: "/sign-up" },
+                ].map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontSize: "14px", color: "#737373", textDecoration: "none" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#ffffff"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#737373"; }}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Col 4: Legal */}
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "16px" }}>
+                Legal
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Terms of Service", href: "/terms" },
+                  { label: "Cookie Policy", href: "/cookies" },
+                  { label: "Refund Policy", href: "/refunds" },
+                ].map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontSize: "14px", color: "#737373", textDecoration: "none" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#ffffff"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = "#737373"; }}
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="footer-links" style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-            {[
-              { label: "Dashboard", href: "/dashboard/editor" },
-              { label: "Compare", href: "#" },
-              { label: "Extension", href: EXTENSION_URL },
-              { label: "Sign in", href: "/sign-in" },
-              { label: "Sign up", href: "/sign-up" },
-            ].map(({ label, href }) => (
-              <a key={label} href={href} style={{ fontSize: "12px", color: "#9ca3af", textDecoration: "none" }}>
-                {label}
-              </a>
-            ))}
+
+          {/* Bottom bar */}
+          <div className="footer-bottom" style={{
+            borderTop: "1px solid #1f1f1f",
+            padding: "20px 0",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: "16px",
+          }}>
+            <p style={{ fontSize: "13px", color: "#525252", margin: 0 }}>
+              &copy; 2026 HumanizeIt. All rights reserved.
+            </p>
+            <p style={{ fontSize: "13px", color: "#525252", margin: 0 }}>
+              Made with care for writers everywhere.
+            </p>
           </div>
-          <p style={{ fontSize: "12px", color: "#9ca3af" }}>
-            &copy; 2026 HumanizeIt &middot;{" "}
-            <a href="/privacy" style={{ color: "#6b7280", textDecoration: "none" }}>Privacy</a> &middot;{" "}
-            <a href="/terms" style={{ color: "#6b7280", textDecoration: "none" }}>Terms</a> &middot;{" "}
-            <a href="/cookies" style={{ color: "#6b7280", textDecoration: "none" }}>Cookies</a> &middot;{" "}
-            <a href="/refunds" style={{ color: "#6b7280", textDecoration: "none" }}>Refunds</a>
-          </p>
         </div>
       </footer>
 

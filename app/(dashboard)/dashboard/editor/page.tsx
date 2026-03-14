@@ -112,10 +112,10 @@ function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontSize: "36px", fontWeight: 900, color: "#3b0764", lineHeight: 1, letterSpacing: "-2px", fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ fontSize: "48px", fontWeight: 800, color: "#0a0a0a", lineHeight: 1, letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-heading)" }}>
           {displayed}
         </div>
-        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>/100</div>
+        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>Human Score</div>
       </div>
     </div>
   );
@@ -144,9 +144,9 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
     }}>
       <div style={{ position: "relative", width: "64px", height: "64px" }}>
         {[
-          { size: 32, top: "16px", left: "16px", delay: "0s", color: "rgba(126,34,206,0.9)" },
-          { size: 22, top: "4px", left: "6px", delay: "0.3s", color: "rgba(126,34,206,0.7)" },
-          { size: 18, top: "auto", left: "auto", delay: "0.6s", color: "rgba(126,34,206,0.5)" },
+          { size: 32, top: "16px", left: "16px", delay: "0s", color: "rgba(124,58,237,0.9)" },
+          { size: 22, top: "4px", left: "6px", delay: "0.3s", color: "rgba(124,58,237,0.7)" },
+          { size: 18, top: "auto", left: "auto", delay: "0.6s", color: "rgba(124,58,237,0.5)" },
         ].map((orb, i) => (
           <div key={i} style={{
             position: "absolute",
@@ -182,7 +182,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
           <div style={{ height: "6px", borderRadius: "3px", background: "#f3f4f6", overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: "3px",
-              background: "linear-gradient(90deg, #7e22ce, #9333ea)",
+              background: "linear-gradient(90deg, #7c3aed, #6d28d9)",
               width: `${(chunkProgress.current / chunkProgress.total) * 100}%`,
               transition: "width 0.4s ease",
             }} />
@@ -201,10 +201,10 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
             return (
               <div key={p} style={{
                 fontSize: "10px",
-                color: isDone ? "#16a34a" : isActive ? "#7e22ce" : "#9ca3af",
+                color: isDone ? "#16a34a" : isActive ? "#7c3aed" : "#9ca3af",
                 padding: "3px 8px", borderRadius: "4px",
                 background: isDone ? "#f0fdf4" : isActive ? "#f3e8ff" : "#faf5ff",
-                border: `1px solid ${isDone ? "rgba(22,163,74,0.25)" : isActive ? "rgba(126,34,206,0.3)" : "rgba(126,34,206,0.15)"}`,
+                border: `1px solid ${isDone ? "rgba(22,163,74,0.25)" : isActive ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.15)"}`,
                 fontWeight: isActive ? 700 : 400,
                 ...(isActive ? { animation: `passGlow 1.8s ease-in-out infinite` } : {}),
               }}>
@@ -245,7 +245,7 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
   return (
     <div style={{
       background: "#ffffff", borderRadius: "12px",
-      border: "1px solid #e5e7eb", overflow: "hidden",
+      border: "1px solid #f0f0f0", overflow: "hidden",
       animation: "fadeInUp 0.4s ease 0.15s both",
     }}>
       <button
@@ -258,7 +258,7 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12px", fontWeight: 600 }}>
-          <BookOpen size={13} color="#7e22ce" /> Readability Analysis
+          <BookOpen size={13} color="#7c3aed" /> Readability Analysis
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{
@@ -860,8 +860,8 @@ export default function EditorPage() {
         flexShrink: 0, gap: "12px", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Sparkles size={15} color="#7e22ce" />
-          <h1 style={{ fontSize: "14px", fontWeight: 700, color: "#3b0764", margin: 0, fontFamily: "var(--font-heading)" }}>Editor</h1>
+          <Sparkles size={15} color="#7c3aed" />
+          <h1 style={{ fontSize: "14px", fontWeight: 700, color: "#0a0a0a", margin: 0, fontFamily: "var(--font-heading)" }}>Editor</h1>
 
           {/* Mode toggle */}
           <div style={{ display: "flex", gap: "2px", background: "#f9fafb", borderRadius: "6px", padding: "2px" }}>
@@ -869,7 +869,7 @@ export default function EditorPage() {
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
               background: editorMode === "single" ? "#f3e8ff" : "transparent",
-              color: editorMode === "single" ? "#7e22ce" : "#6b7280",
+              color: editorMode === "single" ? "#7c3aed" : "#6b7280",
               transition: "all 0.15s",
             }}>Single</button>
             <button onClick={() => {
@@ -880,33 +880,51 @@ export default function EditorPage() {
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
               background: editorMode === "bulk" ? "#f3e8ff" : "transparent",
-              color: editorMode === "bulk" ? "#7e22ce" : "#6b7280",
+              color: editorMode === "bulk" ? "#7c3aed" : "#6b7280",
               display: "flex", alignItems: "center", gap: "4px",
               transition: "all 0.15s",
             }}>
               <Layers size={10} /> Bulk
-              {userPlan === "FREE" && <span style={{ fontSize: "8px", background: "#f3e8ff", color: "#7e22ce", padding: "1px 4px", borderRadius: "3px", fontWeight: 700 }}>PRO</span>}
+              {userPlan === "FREE" && <span style={{ fontSize: "8px", background: "#f3e8ff", color: "#7c3aed", padding: "1px 4px", borderRadius: "3px", fontWeight: 700 }}>PRO</span>}
             </button>
           </div>
 
           {/* Step breadcrumb (single mode only) */}
           {editorMode === "single" && (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0px" }}>
               {[
-                { label: "Write", done: !!result || analyzing },
+                { label: "Write", done: !!result || analyzing, active: !result && !analyzing && !isDone },
                 { label: "Analyze", done: !!result, active: analyzing },
                 { label: "Humanize", done: isDone, active: humanizing },
               ].map(({ label, done, active }, i) => (
-                <div key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  {i > 0 && <div style={{ width: "14px", height: "1px", background: done || active ? "rgba(126,34,206,0.4)" : "#e5e7eb" }} />}
-                  <span style={{
-                    fontSize: "11px", fontWeight: done || active ? 600 : 400,
-                    color: done ? "#16a34a" : active ? "#7e22ce" : "#9ca3af",
-                    display: "flex", alignItems: "center", gap: "3px",
-                  }}>
-                    {done && <CheckCircle2 size={9} />}
-                    {label}
-                  </span>
+                <div key={label} style={{ display: "flex", alignItems: "center" }}>
+                  {i > 0 && (
+                    <div style={{
+                      width: "28px", height: "2px",
+                      background: done ? "#059669" : active ? "#7c3aed" : "#e5e7eb",
+                      transition: "background 0.3s",
+                    }} />
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                    <div style={{
+                      width: "20px", height: "20px", borderRadius: "50%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "10px", fontWeight: 700, flexShrink: 0,
+                      background: done ? "#059669" : active ? "#7c3aed" : "transparent",
+                      color: done || active ? "#fff" : "#9ca3af",
+                      border: done || active ? "none" : "2px solid #e5e7eb",
+                      transition: "all 0.3s",
+                    }}>
+                      {done ? <CheckCircle2 size={11} /> : i + 1}
+                    </div>
+                    <span style={{
+                      fontSize: "11px", fontWeight: done || active ? 600 : 400,
+                      color: done ? "#059669" : active ? "#7c3aed" : "#9ca3af",
+                      transition: "color 0.3s",
+                    }}>
+                      {label}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -933,9 +951,9 @@ export default function EditorPage() {
             <button onClick={() => setLangOpen(o => !o)} style={{
               display: "flex", alignItems: "center", gap: "4px",
               padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
-              border: `1px solid ${language !== "English" ? "rgba(126,34,206,0.4)" : "#e5e7eb"}`,
+              border: `1px solid ${language !== "English" ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
               background: language !== "English" ? "#f3e8ff" : "transparent",
-              color: language !== "English" ? "#7e22ce" : "#6b7280",
+              color: language !== "English" ? "#7c3aed" : "#6b7280",
               transition: "all 0.15s",
             }}>
               <Globe size={10} /> {LANGUAGES.find(l => l.value === language)?.flag} {language}
@@ -951,7 +969,7 @@ export default function EditorPage() {
                     display: "flex", alignItems: "center", gap: "8px", width: "100%",
                     padding: "7px 10px", borderRadius: "5px", fontSize: "12px", cursor: "pointer",
                     background: language === value ? "#f3e8ff" : "transparent",
-                    color: language === value ? "#7e22ce" : "#6b7280",
+                    color: language === value ? "#7c3aed" : "#6b7280",
                     border: "none", textAlign: "left", fontWeight: language === value ? 600 : 400,
                   }}>
                     <span>{flag}</span> {label}
@@ -965,9 +983,9 @@ export default function EditorPage() {
             {TONES.map(({ value, label, icon }) => (
               <button key={value} onClick={() => setTone(value)} style={{
                 padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
-                border: `1px solid ${tone === value ? "rgba(126,34,206,0.4)" : "#e5e7eb"}`,
+                border: `1px solid ${tone === value ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
                 background: tone === value ? "#f3e8ff" : "transparent",
-                color: tone === value ? "#7e22ce" : "#6b7280",
+                color: tone === value ? "#7c3aed" : "#6b7280",
                 transition: "all 0.15s",
                 display: "flex", alignItems: "center", gap: "4px",
               }}><span style={{ fontSize: "12px" }}>{icon}</span>{label}</button>
@@ -1007,7 +1025,7 @@ export default function EditorPage() {
               {isPaidPlan && (
                 <div style={{
                   background: "#ffffff", borderRadius: "12px",
-                  border: `1px solid ${styleOpen ? "rgba(126,34,206,0.2)" : "#e5e7eb"}`,
+                  border: `1px solid ${styleOpen ? "rgba(124,58,237,0.2)" : "#f0f0f0"}`,
                   overflow: "hidden", transition: "border-color 0.3s",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}>
@@ -1017,7 +1035,7 @@ export default function EditorPage() {
                     background: "transparent", border: "none", cursor: "pointer", color: "#6b7280",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Fingerprint size={13} color="#7e22ce" />
+                      <Fingerprint size={13} color="#7c3aed" />
                       <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>Style Clone</span>
                       {styleFingerprint && (
                         <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(22,163,74,0.08)", color: "#16a34a", fontWeight: 600 }}>Active</span>
@@ -1055,14 +1073,14 @@ export default function EditorPage() {
                       ))}
                       {styleSamples.length < 3 && (
                         <button onClick={() => setStyleSamples([...styleSamples, ""])} style={{
-                          fontSize: "11px", color: "#7e22ce", background: "none", border: "none",
+                          fontSize: "11px", color: "#7c3aed", background: "none", border: "none",
                           cursor: "pointer", padding: "4px 0", marginBottom: "8px",
                         }}>+ Add sample 3</button>
                       )}
                       <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
                         <button onClick={() => void handleLearnStyle()} disabled={styleLoading} style={{
                           padding: "8px 16px", borderRadius: "6px", border: "none",
-                          background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                          background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
                           color: "#fff", fontSize: "12px", fontWeight: 600, cursor: styleLoading ? "not-allowed" : "pointer",
                           opacity: styleLoading ? 0.6 : 1,
                         }}>
@@ -1088,7 +1106,7 @@ export default function EditorPage() {
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
                     background: inputMode === "paste" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "paste" ? "#7e22ce" : "#6b7280",
+                    color: inputMode === "paste" ? "#7c3aed" : "#6b7280",
                     transition: "all 0.15s",
                   }}>
                     <span style={{ fontSize: "13px" }}>&#9998;</span> Paste text
@@ -1097,7 +1115,7 @@ export default function EditorPage() {
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
                     background: inputMode === "upload" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "upload" ? "#7e22ce" : "#6b7280",
+                    color: inputMode === "upload" ? "#7c3aed" : "#6b7280",
                     transition: "all 0.15s",
                   }}>
                     <FileUp size={12} /> Upload document
@@ -1118,11 +1136,11 @@ export default function EditorPage() {
               {uploadedFileName && inputMode === "paste" && !result && (
                 <div style={{
                   padding: "8px 14px", borderRadius: "8px",
-                  background: "#faf5ff", border: "1px solid rgba(126,34,206,0.15)",
+                  background: "#faf5ff", border: "1px solid rgba(124,58,237,0.15)",
                   display: "flex", alignItems: "center", gap: "8px",
                 }}>
-                  <FileUp size={12} color="#7e22ce" />
-                  <span style={{ fontSize: "12px", color: "#7e22ce", fontWeight: 500 }}>
+                  <FileUp size={12} color="#7c3aed" />
+                  <span style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 500 }}>
                     Loaded from {uploadedFileName} — {wordCount.toLocaleString()} words
                   </span>
                 </div>
@@ -1132,15 +1150,15 @@ export default function EditorPage() {
               {(inputMode === "paste" || result || analyzing) && (
               <div style={{
                 background: "#ffffff", borderRadius: "12px",
-                border: `1.5px solid ${analyzing ? "rgba(126,34,206,0.4)" : "#e5e7eb"}`,
+                border: `1.5px solid ${analyzing ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
                 overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
-                boxShadow: analyzing ? "0 4px 12px rgba(126,34,206,0.15)" : "0 1px 3px rgba(0,0,0,0.06)",
+                boxShadow: analyzing ? "0 4px 12px rgba(124,58,237,0.15)" : "0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 {/* Mac-style toolbar */}
                 <div style={{
                   padding: "10px 14px", borderBottom: "1px solid #e5e7eb",
                   display: "flex", alignItems: "center", gap: "6px",
-                  background: analyzing ? "rgba(126,34,206,0.04)" : "transparent",
+                  background: analyzing ? "rgba(124,58,237,0.04)" : "transparent",
                   transition: "background 0.3s",
                 }}>
                   {["#dc2626", "#d97706", "#16a34a"].map((c, i) => (
@@ -1153,9 +1171,9 @@ export default function EditorPage() {
                     <button onClick={() => setParagraphMode(p => !p)} style={{
                       marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px",
                       padding: "3px 8px", borderRadius: "4px", fontSize: "10px", cursor: "pointer",
-                      border: `1px solid ${paragraphMode ? "rgba(126,34,206,0.3)" : "#e5e7eb"}`,
+                      border: `1px solid ${paragraphMode ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
                       background: paragraphMode ? "#f3e8ff" : "transparent",
-                      color: paragraphMode ? "#7e22ce" : "#9ca3af",
+                      color: paragraphMode ? "#7c3aed" : "#9ca3af",
                       transition: "all 0.15s",
                     }}>
                       <Rows3 size={10} /> Paragraph Mode
@@ -1164,7 +1182,7 @@ export default function EditorPage() {
                   {analyzing && (
                     <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                       <div className="scan-pulse" />
-                      <span style={{ fontSize: "10px", color: "#7e22ce" }}>Analyzing</span>
+                      <span style={{ fontSize: "10px", color: "#7c3aed" }}>Analyzing</span>
                     </div>
                   )}
                 </div>
@@ -1172,7 +1190,7 @@ export default function EditorPage() {
                 {/* Scan progress bar */}
                 {analyzing && (
                   <div style={{ height: "2px", background: "#f3f4f6" }}>
-                    <div className="scan-bar" style={{ height: "100%", background: "linear-gradient(90deg, #7e22ce, #9333ea, #7e22ce)", backgroundSize: "200% 100%" }} />
+                    <div className="scan-bar" style={{ height: "100%", background: "linear-gradient(90deg, #7c3aed, #6d28d9, #7c3aed)", backgroundSize: "200% 100%" }} />
                   </div>
                 )}
 
@@ -1186,12 +1204,12 @@ export default function EditorPage() {
                   placeholder={"Paste or type AI-generated text here…\n\nTip: try text that starts with \"In today's rapidly evolving landscape\" or uses words like \"furthermore\", \"pivotal\", \"paradigm\""}
                   style={{
                     width: "100%", minHeight: "280px", padding: "16px",
-                    background: "#f9fafb", border: "none", outline: "none",
-                    resize: "vertical", color: "#111827", fontSize: "14px",
-                    lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
+                    background: "#ffffff", border: "none", outline: "none",
+                    resize: "vertical", color: "#111827", fontSize: "13px",
+                    lineHeight: 1.8, fontFamily: "var(--font-mono, ui-monospace, monospace)", boxSizing: "border-box",
                     display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
                     direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
-                    borderRadius: "12px",
+                    borderRadius: "0",
                   }}
                 />
 
@@ -1235,12 +1253,12 @@ export default function EditorPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
-                      background: canAnalyze ? "linear-gradient(135deg, #7e22ce, #9333ea)" : "rgba(126,34,206,0.12)",
+                      background: canAnalyze ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
                       color: canAnalyze ? "#fff" : "#9ca3af",
                       fontSize: "13px", fontWeight: 700,
                       cursor: canAnalyze ? "pointer" : "not-allowed",
                       transition: "all 0.2s", flexShrink: 0,
-                      boxShadow: canAnalyze ? "0 4px 12px rgba(126,34,206,0.15)" : "none",
+                      boxShadow: canAnalyze ? "0 4px 12px rgba(124,58,237,0.15)" : "none",
                     }}
                   >
                     {analyzing ? (
@@ -1257,7 +1275,7 @@ export default function EditorPage() {
               {paragraphMode && result && paragraphs.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", animation: "fadeInUp 0.3s ease" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                    <Rows3 size={12} color="#7e22ce" />
+                    <Rows3 size={12} color="#7c3aed" />
                     <span style={{ fontSize: "12px", fontWeight: 600, color: "#6b7280" }}>
                       {paragraphs.length} paragraph{paragraphs.length !== 1 ? "s" : ""}
                     </span>
@@ -1272,7 +1290,7 @@ export default function EditorPage() {
                     return (
                       <div key={idx} style={{
                         background: "#ffffff", borderRadius: "10px",
-                        border: "1px solid #e5e7eb",
+                        border: "1px solid #f0f0f0",
                         overflow: "hidden",
                         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                       }}>
@@ -1317,9 +1335,9 @@ export default function EditorPage() {
                             disabled={isHumanizing}
                             style={{
                               padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600,
-                              border: "1px solid rgba(126,34,206,0.2)",
+                              border: "1px solid rgba(124,58,237,0.2)",
                               background: isHumanizing ? "#faf5ff" : "#f3e8ff",
-                              color: isHumanizing ? "#9ca3af" : "#7e22ce",
+                              color: isHumanizing ? "#9ca3af" : "#7c3aed",
                               cursor: isHumanizing ? "not-allowed" : "pointer",
                               flexShrink: 0, transition: "all 0.15s",
                               display: "flex", alignItems: "center", gap: "4px",
@@ -1338,7 +1356,7 @@ export default function EditorPage() {
               {(humanizing || isDone) && (
                 <div style={{
                   background: "#ffffff", borderRadius: "12px",
-                  border: `1.5px solid ${isDone ? "rgba(22,163,74,0.25)" : "rgba(126,34,206,0.2)"}`,
+                  border: `1.5px solid ${isDone ? "rgba(22,163,74,0.25)" : "rgba(124,58,237,0.2)"}`,
                   overflow: "hidden", animation: "fadeInUp 0.35s ease",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}>
@@ -1388,9 +1406,9 @@ export default function EditorPage() {
                           <button onClick={() => setShowDiff(d => !d)} style={{
                             display: "flex", alignItems: "center", gap: "4px",
                             background: showDiff ? "#f3e8ff" : "#f9fafb",
-                            border: `1px solid ${showDiff ? "rgba(126,34,206,0.25)" : "#e5e7eb"}`,
+                            border: `1px solid ${showDiff ? "rgba(124,58,237,0.25)" : "#e5e7eb"}`,
                             borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                            color: showDiff ? "#7e22ce" : "#6b7280", fontSize: "11px",
+                            color: showDiff ? "#7c3aed" : "#6b7280", fontSize: "11px",
                             transition: "all 0.2s",
                           }}>
                             <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
@@ -1441,8 +1459,8 @@ export default function EditorPage() {
                           <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
                             padding: "4px 10px", borderRadius: "20px", fontSize: "11px",
                             background: tone === value ? "#f3e8ff" : "#f9fafb",
-                            border: `1px solid ${tone === value ? "rgba(126,34,206,0.3)" : "#e5e7eb"}`,
-                            color: tone === value ? "#7e22ce" : "#6b7280", cursor: "pointer",
+                            border: `1px solid ${tone === value ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
+                            color: tone === value ? "#7c3aed" : "#6b7280", cursor: "pointer",
                             transition: "all 0.15s",
                             display: "flex", alignItems: "center", gap: "3px",
                           }}><span style={{ fontSize: "11px" }}>{icon}</span>{label}</button>
@@ -1527,16 +1545,16 @@ export default function EditorPage() {
                 {result && !analyzing && (
                   <div style={{
                     background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid #e5e7eb", overflow: "hidden",
+                    border: "1px solid #f0f0f0", overflow: "hidden",
                     animation: "fadeInUp 0.4s ease 0.15s both",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}>
                     <div style={{
-                      padding: "12px 16px", borderBottom: "1px solid #e5e7eb",
+                      padding: "12px 16px", borderBottom: "1px solid #f0f0f0",
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        <Shield size={13} color="#7e22ce" />
+                        <Shield size={13} color="#7c3aed" />
                         <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>
                           {humanizedEngineScores ? "Updated scores" : "How you score across detectors"}
                         </span>
@@ -1585,8 +1603,8 @@ export default function EditorPage() {
                           GPTZero · Turnitin · Originality.ai · Copyleaks · Winston AI
                         </p>
                         <button onClick={() => setShowUpgradeModal(true)} style={{
-                          padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(126,34,206,0.3)",
-                          background: "#f3e8ff", color: "#7e22ce",
+                          padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(124,58,237,0.3)",
+                          background: "#f3e8ff", color: "#7c3aed",
                           fontSize: "12px", fontWeight: 600, cursor: "pointer",
                         }}>
                           Upgrade to Pro
@@ -1598,23 +1616,23 @@ export default function EditorPage() {
 
                 {/* Patterns */}
                 {analyzing ? (
-                  <div style={{ background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <div style={{ background: "#ffffff", border: "1px solid #f0f0f0", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
                     <Skeleton width="55%" height={11} />
                     {[0, 1, 2].map(i => <Skeleton key={i} height={36} radius={6} style={{ animationDelay: `${i * 0.15}s` }} />)}
                   </div>
                 ) : result && result.patterns.length > 0 && (
                   <div style={{
                     background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid #e5e7eb", overflow: "hidden",
+                    border: "1px solid #f0f0f0", overflow: "hidden",
                     animation: "fadeInUp 0.4s ease 0.1s both",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}>
                     <div style={{
-                      padding: "12px 16px", borderBottom: "1px solid #e5e7eb",
+                      padding: "12px 16px", borderBottom: "1px solid #f0f0f0",
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
                       <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>AI Patterns Detected</span>
-                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "#f3e8ff", color: "#7e22ce", fontWeight: 700 }}>
+                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "#f3e8ff", color: "#7c3aed", fontWeight: 700 }}>
                         {result.patterns.length}
                       </span>
                     </div>
@@ -1649,13 +1667,13 @@ export default function EditorPage() {
                 {result && !humanizing && !isDone && (
                   <div style={{
                     background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid rgba(126,34,206,0.15)", padding: "18px",
+                    border: "1px solid rgba(124,58,237,0.15)", padding: "18px",
                     animation: "fadeInUp 0.4s ease 0.2s both",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-                      <Sparkles size={13} color="#7e22ce" />
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#3b0764", fontFamily: "var(--font-heading)" }}>Humanize with AI</span>
+                      <Sparkles size={13} color="#7c3aed" />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#0a0a0a", fontFamily: "var(--font-heading)" }}>Humanize with AI</span>
                     </div>
                     <p style={{ fontSize: "11px", color: "#9ca3af", lineHeight: 1.6, marginBottom: "14px" }}>
                       Multi-pass rewrite · 3 attempts · picks the best result
@@ -1664,10 +1682,10 @@ export default function EditorPage() {
                       onClick={() => void handleHumanize()}
                       style={{
                         width: "100%", padding: "16px", borderRadius: "12px", border: "none",
-                        background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                        background: "#7c3aed",
                         color: "#fff", fontSize: "16px", fontWeight: 600, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                        boxShadow: "0 4px 12px rgba(126,34,206,0.15)", transition: "all 0.2s",
+                        boxShadow: "0 4px 12px rgba(124,58,237,0.25)", transition: "all 0.2s",
                       }}
                     >
                       <Sparkles size={14} /> {scoreConfig?.ctaLabel ?? "Humanize"} <ArrowRight size={12} />
@@ -1680,8 +1698,8 @@ export default function EditorPage() {
                   <button
                     onClick={() => void handleHumanize()}
                     style={{
-                      width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(126,34,206,0.2)",
-                      background: "#f3e8ff", color: "#7e22ce",
+                      width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(124,58,237,0.2)",
+                      background: "#f3e8ff", color: "#7c3aed",
                       fontSize: "13px", fontWeight: 600, cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                       animation: "fadeInUp 0.3s ease",
@@ -1702,14 +1720,14 @@ export default function EditorPage() {
             {bulkItems.length === 0 && (
               <div style={{
                 background: "#ffffff", borderRadius: "12px",
-                border: "1.5px solid #e5e7eb", overflow: "hidden",
+                border: "1.5px solid #f0f0f0", overflow: "hidden",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
               }}>
                 <div style={{
                   padding: "10px 14px", borderBottom: "1px solid #e5e7eb",
                   display: "flex", alignItems: "center", gap: "6px",
                 }}>
-                  <Layers size={12} color="#7e22ce" />
+                  <Layers size={12} color="#7c3aed" />
                   <span style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600 }}>Bulk Mode</span>
                   <span style={{ fontSize: "10px", color: "#9ca3af", marginLeft: "auto" }}>Separate texts with ---</span>
                 </div>
@@ -1738,11 +1756,11 @@ export default function EditorPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
-                      background: parseBulkTexts().length > 0 ? "linear-gradient(135deg, #7e22ce, #9333ea)" : "rgba(126,34,206,0.12)",
+                      background: parseBulkTexts().length > 0 ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
                       color: parseBulkTexts().length > 0 ? "#fff" : "#9ca3af",
                       fontSize: "13px", fontWeight: 700,
                       cursor: parseBulkTexts().length > 0 ? "pointer" : "not-allowed",
-                      boxShadow: parseBulkTexts().length > 0 ? "0 4px 12px rgba(126,34,206,0.15)" : "none",
+                      boxShadow: parseBulkTexts().length > 0 ? "0 4px 12px rgba(124,58,237,0.15)" : "none",
                     }}
                   >
                     <Zap size={13} /> Analyze All <ArrowRight size={11} />
@@ -1754,13 +1772,13 @@ export default function EditorPage() {
             {/* Bulk progress */}
             {bulkProcessing && (
               <div style={{
-                background: "#faf5ff", border: "1px solid rgba(126,34,206,0.2)",
+                background: "#faf5ff", border: "1px solid rgba(124,58,237,0.2)",
                 borderRadius: "10px", padding: "14px 18px", marginBottom: "16px",
                 display: "flex", alignItems: "center", gap: "12px",
                 animation: "fadeInUp 0.3s ease",
               }}>
                 <div className="spin-sm" />
-                <span style={{ fontSize: "13px", color: "#7e22ce", fontWeight: 600 }}>
+                <span style={{ fontSize: "13px", color: "#7c3aed", fontWeight: 600 }}>
                   Processing {bulkProgress.current}/{bulkProgress.total}...
                 </span>
                 <button onClick={() => { bulkAbortRef.current = true; }} style={{
@@ -1779,10 +1797,10 @@ export default function EditorPage() {
                   <div style={{ display: "flex", gap: "10px", marginBottom: "4px" }}>
                     <button onClick={() => void handleBulkHumanize()} style={{
                       flex: 1, padding: "13px", borderRadius: "12px", border: "none",
-                      background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+                      background: "#7c3aed",
                       color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                      boxShadow: "0 4px 12px rgba(126,34,206,0.15)",
+                      boxShadow: "0 4px 12px rgba(124,58,237,0.25)",
                     }}>
                       <Sparkles size={14} /> Humanize All <ArrowRight size={12} />
                     </button>
@@ -1826,7 +1844,7 @@ export default function EditorPage() {
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{
-                            fontSize: "11px", fontWeight: 700, color: "#7e22ce",
+                            fontSize: "11px", fontWeight: 700, color: "#7c3aed",
                             background: "#f3e8ff", padding: "2px 8px", borderRadius: "4px",
                           }}>#{item.id + 1}</span>
                           <span style={{ fontSize: "11px", color: "#9ca3af" }}>
@@ -1837,7 +1855,7 @@ export default function EditorPage() {
                           {item.status === "analyzing" || item.status === "humanizing" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                               <div className="spin-sm" />
-                              <span style={{ fontSize: "10px", color: "#7e22ce" }}>
+                              <span style={{ fontSize: "10px", color: "#7c3aed" }}>
                                 {item.status === "analyzing" ? "Analyzing" : "Humanizing"}
                               </span>
                             </div>
@@ -1918,14 +1936,14 @@ export default function EditorPage() {
         @keyframes orb1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(8px,-10px); } }
         @keyframes orb2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-10px,7px); } }
         @keyframes orb3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(7px,10px); } }
-        @keyframes passGlow { 0%,100% { opacity:0.3; } 50% { opacity:1; border-color: rgba(126,34,206,0.5); } }
+        @keyframes passGlow { 0%,100% { opacity:0.3; } 50% { opacity:1; border-color: rgba(124,58,237,0.5); } }
         @keyframes dotBlink { 0%,100% { opacity:0; } 50% { opacity:1; } }
         .dots span { animation: dotBlink 1.4s infinite; }
         .dots span:nth-child(2) { animation-delay: 0.2s; }
         .dots span:nth-child(3) { animation-delay: 0.4s; }
         .scan-bar { animation: scanAnim 1.8s linear infinite; }
-        .scan-pulse { width: 6px; height: 6px; border-radius: 50%; background: #7e22ce; animation: pulse 1s ease-in-out infinite; }
-        .spin-sm { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e5e7eb; border-top-color: #7e22ce; animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
+        .scan-pulse { width: 6px; height: 6px; border-radius: 50%; background: #7c3aed; animation: pulse 1s ease-in-out infinite; }
+        .spin-sm { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e5e7eb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
         @media (max-width: 900px) { .editor-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>
