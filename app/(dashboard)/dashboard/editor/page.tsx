@@ -413,6 +413,15 @@ export default function EditorPage() {
     fetch("/api/user-plan").then(r => r.json()).then(d => setUserPlan(d.plan ?? "FREE")).catch(() => setUserPlan("FREE"));
   }, []);
 
+  // Welcome toast for first-time visitors
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!localStorage.getItem("humanizeit_first_visit")) {
+      localStorage.setItem("humanizeit_first_visit", "true");
+      toast("Welcome! Paste your AI text below to get started \u2192", { duration: 5000 });
+    }
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") { setShowAuthModal(false); setShowUpgradeModal(false); }
