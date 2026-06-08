@@ -86,25 +86,31 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
   if (!uploadEnabled) {
     return (
       <div style={{
-        borderRadius: THEME.radius, border: `1.5px dashed ${THEME.border}`,
+        borderRadius: THEME.radiusLg, border: `1.5px dashed ${THEME.borderStrong}`,
         padding: "32px 24px", textAlign: "center",
-        background: THEME.surface2, position: "relative", overflow: "hidden",
+        background: THEME.surface1, position: "relative", overflow: "hidden",
       }}>
         <div style={{
           position: "absolute", inset: 0,
-          background: "rgba(10,11,14,0.72)", backdropFilter: "blur(2px)",
+          background: "rgba(255,255,255,0.82)", backdropFilter: "blur(2px)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           zIndex: 2,
         }}>
-          <Lock size={24} color={THEME.textDim} style={{ marginBottom: "10px" }} aria-hidden="true" />
-          <p style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "6px" }}>
+          <div style={{
+            display: "grid", placeItems: "center", width: 40, height: 40,
+            borderRadius: "50%", background: THEME.brandDim, marginBottom: "12px",
+          }}>
+            <Lock size={18} color={THEME.brand} aria-hidden="true" />
+          </div>
+          <p style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "8px" }}>
             Upload available on PRO &amp; TEAM plans
           </p>
           <a href="/dashboard/billing" style={{
-            padding: "8px 18px", borderRadius: "7px", border: `1px solid ${THEME.brand}`,
-            background: THEME.brandDim, color: THEME.brandHi,
+            padding: "8px 18px", borderRadius: "8px", border: "none",
+            background: THEME.brand, color: "#fff",
             fontSize: "12px", fontWeight: 600, cursor: "pointer", textDecoration: "none",
-            display: "inline-block", marginTop: "4px", fontFamily: THEME.fontMono,
+            display: "inline-block", marginTop: "4px",
+            boxShadow: glow(THEME.brand, 0.24),
           }}>
             Upgrade
           </a>
@@ -142,14 +148,14 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{
-              fontSize: "10px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,
+              fontSize: "10px", padding: "3px 8px", borderRadius: "999px", fontWeight: 700,
               background: THEME.brandDim, color: THEME.brandHi, textTransform: "uppercase",
-              fontFamily: THEME.fontMono, letterSpacing: "0.04em",
+              letterSpacing: "0.04em",
             }}>
               {result.fileType}
             </span>
             {result.pageCount && (
-              <span style={{ fontSize: "10px", color: THEME.textDim, fontFamily: THEME.fontMono }}>
+              <span style={{ fontSize: "11px", color: THEME.textDim }}>
                 {result.pageCount} page{result.pageCount !== 1 ? "s" : ""}
               </span>
             )}
@@ -163,8 +169,12 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
             <span style={{ fontSize: "12px", color: THEME.text, fontWeight: 500 }}>
               {result.fileName}
             </span>
-            <span style={{ fontSize: "11px", color: THEME.textDim, fontFamily: THEME.fontMono }}>
-              — {result.wordCount.toLocaleString()} words
+            <span style={{ fontSize: "11px", color: THEME.textDim }}>
+              —{" "}
+              <span style={{ fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
+                {result.wordCount.toLocaleString()}
+              </span>{" "}
+              words
             </span>
           </div>
 
@@ -192,8 +202,8 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
             maxHeight: "100px", overflow: "auto",
           }}>
             <p style={{
-              fontSize: "11px", color: THEME.textDim, lineHeight: 1.6,
-              fontFamily: THEME.fontMono, whiteSpace: "pre-wrap", margin: 0,
+              fontSize: "12px", color: THEME.textDim, lineHeight: 1.6,
+              whiteSpace: "pre-wrap", margin: 0,
             }}>
               {result.text.slice(0, 300)}{result.text.length > 300 ? "..." : ""}
             </p>
@@ -298,10 +308,11 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
         }
       }}
       style={{
-        borderRadius: THEME.radius,
-        border: `1.5px dashed ${isDragging ? THEME.brand : THEME.border}`,
-        padding: "28px 24px", textAlign: "center", cursor: "pointer",
-        background: isDragging ? THEME.brandDim : THEME.surface2,
+        borderRadius: THEME.radiusLg,
+        border: `1.5px dashed ${isDragging ? THEME.brand : THEME.borderStrong}`,
+        padding: "30px 24px", textAlign: "center", cursor: "pointer",
+        background: isDragging ? THEME.brandDim : THEME.surface1,
+        boxShadow: isDragging ? glow(THEME.brand, 0.2) : "none",
         transition: "all 0.2s ease",
       }}
     >
@@ -330,9 +341,9 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
       <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
         {["PDF", "DOCX", "TXT"].map((fmt) => (
           <span key={fmt} style={{
-            fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "4px",
-            background: THEME.surface3, border: `1px solid ${THEME.border}`,
-            color: THEME.textDim, letterSpacing: "0.5px", fontFamily: THEME.fontMono,
+            fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "999px",
+            background: THEME.surface1, border: `1px solid ${THEME.border}`,
+            color: THEME.textDim,
           }}>
             {fmt}
           </span>

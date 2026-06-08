@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { AuthModal } from "@/components/ui/auth-modal";
-import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
+import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 
 const COMPETITORS = [
   {
@@ -125,11 +125,11 @@ export default function ComparePage() {
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
           <div className="kicker" style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}>
-            Live comparison \u2014 powered by our real engine
+            Live comparison &mdash; powered by our real engine
           </div>
           <h1 style={{ fontFamily: THEME.fontHeading, fontSize: "clamp(28px,5vw,48px)", fontWeight: 800, letterSpacing: "-1.5px", margin: "0 0 16px", lineHeight: 1.1, color: THEME.text }}>
             See what others<br />
-            <span style={{ color: THEME.brand }}>don&apos;t show you</span>
+            <span className="text-gradient" style={{ borderBottom: `4px solid ${THEME.accent}`, paddingBottom: "2px" }}>don&apos;t show you</span>
           </h1>
           <p style={{ fontSize: "16px", color: THEME.textDim, maxWidth: "480px", margin: "0 auto", lineHeight: 1.6 }}>
             Paste any text. Our engine analyzes it in real time.<br />
@@ -137,10 +137,17 @@ export default function ComparePage() {
           </p>
 
           {/* Feature 5c: Social proof */}
-          <div style={{ display: "flex", gap: "24px", justifyContent: "center", marginTop: "16px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontMono }}>\u2B50 4.8/5 rating</span>
-            <span style={{ fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontMono }}>\uD83D\uDC65 12,000+ users</span>
-            <span style={{ fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontMono }}>\uD83D\uDCC4 2M+ documents analyzed</span>
+          <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px", flexWrap: "wrap" }}>
+            {[
+              { dot: THEME.warn, text: "4.8/5 rating" },
+              { dot: THEME.brand, text: "12,000+ users" },
+              { dot: THEME.accent, text: "2M+ documents analyzed" },
+            ].map((s) => (
+              <span key={s.text} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 500, color: THEME.textDim, background: THEME.surface1, border: `1px solid ${THEME.border}`, padding: "6px 14px", borderRadius: "999px" }}>
+                <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
+                {s.text}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -154,8 +161,8 @@ export default function ComparePage() {
             style={{
               width: "100%", minHeight: "140px", background: "transparent",
               border: "none", outline: "none", resize: "none",
-              fontSize: "14px", color: THEME.text, lineHeight: 1.7,
-              fontFamily: THEME.fontMono,
+              fontSize: "15px", color: THEME.text, lineHeight: 1.7,
+              fontFamily: THEME.fontSans,
             }}
           />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${THEME.border}` }}>
@@ -170,7 +177,7 @@ export default function ComparePage() {
                 color: text.trim().length >= 20 ? "#ffffff" : THEME.textMuted, border: "none", borderRadius: THEME.radius,
                 padding: "10px 24px", fontSize: "14px", fontWeight: 600,
                 cursor: text.trim().length >= 20 ? "pointer" : "not-allowed",
-                boxShadow: text.trim().length >= 20 ? "0 0 18px rgba(124,92,255,0.35)" : "none",
+                boxShadow: text.trim().length >= 20 ? glow(THEME.brand) : "none",
                 transition: "background 0.15s",
               }}
             >
@@ -186,20 +193,21 @@ export default function ComparePage() {
             <div style={{ marginBottom: "24px" }}>
               {/* HumanizeIt column (always visible) */}
               <div className={`compare-grid${showCompetitors ? " show-competitors" : ""}`} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "12px" }}>
-                <div className="compare-main-col" style={{ background: THEME.surface2, border: `1px solid ${THEME.brand}`, boxShadow: "0 0 0 1px rgba(124,92,255,0.25)", borderRadius: THEME.radiusLg, overflow: "hidden" }}>
+                <div className="compare-main-col" style={{ background: THEME.surface2, border: `1.5px solid ${THEME.brand}`, boxShadow: glow(THEME.brand, 0.22), borderRadius: THEME.radiusLg, overflow: "hidden" }}>
                   <div style={{ background: THEME.surface1, padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
                       <div>
                         <span style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>H. HumanizeIt</span>
-                        <span style={{ marginLeft: "8px", fontSize: "10px", background: THEME.brandDim, color: THEME.brandHi, padding: "2px 7px", borderRadius: "100px", fontWeight: 600, fontFamily: THEME.fontMono, letterSpacing: "0.04em" }}>YOU&apos;RE HERE</span>
+                        <span style={{ marginLeft: "8px", fontSize: "11px", background: THEME.brand, color: "#ffffff", padding: "3px 9px", borderRadius: "100px", fontWeight: 600 }}>You&apos;re here</span>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <div className="tnum" style={{ fontSize: "28px", fontWeight: 800, color: humanScoreColor(humanScore(result.score)), lineHeight: 1, textShadow: `0 0 18px ${humanScoreColor(humanScore(result.score))}55` }}>{humanScore(result.score)}</div>
-                        <div style={{ fontSize: "10px", color: THEME.textDim, fontFamily: THEME.fontMono, letterSpacing: "0.04em", textTransform: "uppercase" }}>Human Score</div>
+                        <div className="tnum" style={{ fontSize: "30px", fontWeight: 800, color: humanScoreColor(humanScore(result.score)), lineHeight: 1 }}>{humanScore(result.score)}</div>
+                        <div style={{ fontSize: "11px", color: THEME.textDim, fontWeight: 500 }}>Human score</div>
                       </div>
                     </div>
                     {conf && (
-                      <div style={{ fontSize: "11px", fontWeight: 600, color: conf.color, marginTop: "6px", fontFamily: THEME.fontMono }}>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, color: conf.color, marginTop: "6px" }}>
+                        <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: conf.color, flexShrink: 0 }} />
                         {conf.label}
                       </div>
                     )}
@@ -207,8 +215,8 @@ export default function ComparePage() {
 
                   <div style={{ padding: "16px 20px" }}>
                     {/* Pattern breakdown */}
-                    <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: THEME.textDim, marginBottom: "10px", fontFamily: THEME.fontMono }}>
-                      {result.patterns.length} Patterns Detected
+                    <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.text, marginBottom: "10px", fontFamily: THEME.fontHeading }}>
+                      {result.patterns.length} patterns detected
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "260px", overflow: "auto" }}>
                       {result.patterns.slice(0, 10).map(p => (
@@ -232,7 +240,7 @@ export default function ComparePage() {
 
                     {/* Stats */}
                     <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: `1px solid ${THEME.border}` }}>
-                      <div style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: THEME.textDim, marginBottom: "8px", fontFamily: THEME.fontMono }}>Statistical Analysis</div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.text, marginBottom: "8px", fontFamily: THEME.fontHeading }}>Statistical analysis</div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                         {[
                           { label: "Burstiness", val: result.stats.burstiness.toFixed(2) },
@@ -240,9 +248,9 @@ export default function ComparePage() {
                           { label: "Avg Sentence", val: `${result.stats.avgSentenceLength}w` },
                           { label: "Flesch", val: result.stats.fleschReadingEase.toFixed(0) },
                         ].map(s => (
-                          <div key={s.label} style={{ background: THEME.surface3, borderRadius: THEME.radius, padding: "8px" }}>
-                            <div style={{ fontSize: "10px", color: THEME.textDim, fontFamily: THEME.fontMono }}>{s.label}</div>
-                            <div className="tnum" style={{ fontSize: "14px", fontWeight: 700, color: THEME.text }}>{s.val}</div>
+                          <div key={s.label} style={{ background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius, padding: "8px 10px" }}>
+                            <div style={{ fontSize: "11px", color: THEME.textDim }}>{s.label}</div>
+                            <div className="tnum" style={{ fontSize: "15px", fontWeight: 700, color: THEME.text }}>{s.val}</div>
                           </div>
                         ))}
                       </div>
@@ -254,9 +262,9 @@ export default function ComparePage() {
                       style={{
                         display: "block", marginTop: "16px", textAlign: "center", width: "100%",
                         background: THEME.brand, color: "#ffffff",
-                        padding: "10px", borderRadius: THEME.radius, fontSize: "13px", fontWeight: 600,
+                        padding: "11px", borderRadius: THEME.radius, fontSize: "13px", fontWeight: 600,
                         border: "none", cursor: "pointer",
-                        boxShadow: "0 0 18px rgba(124,92,255,0.35)",
+                        boxShadow: glow(THEME.brand),
                       }}
                     >
                       Humanize this text &rarr;
@@ -277,7 +285,7 @@ export default function ComparePage() {
                         ) : (
                           <div className="tnum" style={{ fontSize: "28px", fontWeight: 800, color: THEME.textDim, lineHeight: 1 }}>{humanScore(simScore)}</div>
                         )}
-                        <div style={{ fontSize: "10px", color: THEME.textMuted, marginTop: "4px", fontFamily: THEME.fontMono, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                        <div style={{ fontSize: "11px", color: THEME.textMuted, marginTop: "4px", fontWeight: 500 }}>
                           {comp.shows === "none" ? "No detection shown" : "Score only"}
                         </div>
                       </div>
@@ -323,7 +331,7 @@ export default function ComparePage() {
                   cursor: "pointer", textAlign: "center",
                 }}
               >
-                {showCompetitors ? "Hide competitors \u2191" : "Compare with competitors \u2193"}
+                {showCompetitors ? "Hide competitors ↑" : "Compare with competitors ↓"}
               </button>
             </div>
 
@@ -333,16 +341,28 @@ export default function ComparePage() {
               marginBottom: "24px",
             }} className="how-we-compare-grid">
               {[
-                { icon: "\uD83D\uDD2C", title: "We show WHY", desc: "Competitors show a number. We show every pattern." },
-                { icon: "\uD83D\uDCCA", title: "37 patterns", desc: "Not just a score. We break down every signal." },
-                { icon: "\uD83C\uDFAF", title: "Real scores", desc: "We use the same neural patterns detectors use." },
+                {
+                  tint: THEME.brand, dim: THEME.brandDim, title: "We show WHY", desc: "Competitors show a number. We show every pattern.",
+                  path: "M3 12h4l3 8 4-16 3 8h4",
+                },
+                {
+                  tint: THEME.accent, dim: THEME.accentDim, title: "37 patterns", desc: "Not just a score. We break down every signal.",
+                  path: "M3 3v18h18 M7 16v-5 M12 16V8 M17 16v-9",
+                },
+                {
+                  tint: THEME.brand, dim: THEME.brandDim, title: "Real scores", desc: "We use the same neural patterns detectors use.",
+                  path: "M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4z",
+                },
               ].map((item) => (
                 <div key={item.title} style={{
                   background: THEME.surface2, border: `1px solid ${THEME.border}`,
-                  borderRadius: THEME.radius, padding: "20px", textAlign: "center",
+                  borderRadius: THEME.radiusLg, padding: "24px 20px", textAlign: "center",
+                  boxShadow: "0 1px 2px rgba(29,23,38,0.04), 0 8px 24px -16px rgba(124,58,237,0.18)",
                 }}>
-                  <div aria-hidden="true" style={{ fontSize: "24px", marginBottom: "8px" }}>{item.icon}</div>
-                  <div style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading }}>{item.title}</div>
+                  <div aria-hidden="true" style={{ width: "44px", height: "44px", borderRadius: "12px", background: item.dim, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={item.tint} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={item.path} /></svg>
+                  </div>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading }}>{item.title}</div>
                   <div style={{ fontSize: "12px", color: THEME.textDim, lineHeight: 1.5 }}>{item.desc}</div>
                 </div>
               ))}
@@ -357,10 +377,10 @@ export default function ComparePage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: THEME.surface1 }}>
-                      <th style={{ textAlign: "left", padding: "12px 24px", fontSize: "11px", color: THEME.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", width: "35%", fontFamily: THEME.fontMono }}>Feature</th>
-                      <th style={{ padding: "12px 16px", fontSize: "12px", color: THEME.brandHi, fontWeight: 700, textAlign: "center", fontFamily: THEME.fontMono }}>HumanizeIt</th>
+                      <th style={{ textAlign: "left", padding: "14px 24px", fontSize: "13px", color: THEME.textDim, fontWeight: 600, width: "35%" }}>Feature</th>
+                      <th style={{ padding: "14px 16px", fontSize: "13px", color: THEME.brandHi, fontWeight: 800, textAlign: "center", background: THEME.brandDim, borderBottom: `2px solid ${THEME.brand}`, fontFamily: THEME.fontHeading }}>HumanizeIt</th>
                       {COMPETITORS.map(c => (
-                        <th key={c.name} style={{ padding: "12px 16px", fontSize: "11px", color: THEME.textDim, fontWeight: 600, textAlign: "center", fontFamily: THEME.fontMono }}>{c.name}</th>
+                        <th key={c.name} style={{ padding: "14px 16px", fontSize: "12px", color: THEME.textDim, fontWeight: 600, textAlign: "center" }}>{c.name}</th>
                       ))}
                     </tr>
                   </thead>
@@ -378,19 +398,20 @@ export default function ComparePage() {
                       { label: "Free tier", vals: [true, true, true, true] },
                       { label: "Pro price", vals: ["$9/mo", "$9.99/mo", "$9.99/mo", "Free"] },
                     ].map((row, ri) => (
-                      <tr key={ri} style={{ borderTop: `1px solid ${THEME.border}`, background: vIsWinRow(row.vals) ? "rgba(62,224,143,0.04)" : "transparent" }}>
-                        <td style={{ padding: "11px 24px", fontSize: "13px", color: THEME.textDim }}>{row.label}</td>
+                      <tr key={ri} style={{ borderTop: `1px solid ${THEME.border}`, background: vIsWinRow(row.vals) ? THEME.humanDim : "transparent" }}>
+                        <td style={{ padding: "12px 24px", fontSize: "13px", color: THEME.text, fontWeight: 500 }}>{row.label}</td>
                         {row.vals.map((v, vi) => {
                           const isHumanizeItCol = vi === 0;
                           let cellColor: string = THEME.textMuted;
                           if (typeof v === "boolean") {
                             cellColor = v ? (isHumanizeItCol ? THEME.human : THEME.textDim) : THEME.ai;
                           } else {
-                            cellColor = isHumanizeItCol ? THEME.human : THEME.textDim;
+                            cellColor = isHumanizeItCol ? THEME.brandHi : THEME.textDim;
                           }
+                          const isNumeric = typeof v !== "boolean";
                           return (
-                            <td key={vi} style={{ padding: "11px 16px", textAlign: "center", fontSize: "13px", color: cellColor, fontWeight: isHumanizeItCol ? 700 : 400, fontFamily: THEME.fontMono }}>
-                              {typeof v === "boolean" ? (v ? "\u2713" : "\u2717") : v}
+                            <td key={vi} style={{ padding: "12px 16px", textAlign: "center", fontSize: "14px", color: cellColor, fontWeight: isHumanizeItCol ? 700 : 400, background: isHumanizeItCol ? THEME.brandDim : "transparent", fontFamily: isNumeric ? THEME.fontMono : THEME.fontSans }}>
+                              {typeof v === "boolean" ? (v ? "✓" : "✗") : v}
                             </td>
                           );
                         })}
@@ -402,17 +423,17 @@ export default function ComparePage() {
             </div>
 
             {/* CTA */}
-            <div style={{ textAlign: "center", padding: "40px 24px", background: THEME.surface2, border: `1px solid ${THEME.brand}`, boxShadow: "0 0 0 1px rgba(124,92,255,0.2), 0 8px 40px rgba(124,92,255,0.15)", borderRadius: THEME.radiusLg }}>
-              <h2 style={{ fontSize: "24px", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: THEME.text, fontFamily: THEME.fontHeading }}>Ready to actually fix your text?</h2>
-              <p style={{ fontSize: "14px", color: THEME.textDim, margin: "0 0 20px" }}>Free to start &mdash; no credit card needed.</p>
+            <div style={{ textAlign: "center", padding: "44px 24px", background: THEME.surface1, border: `1px solid ${THEME.border}`, boxShadow: glow(THEME.brand, 0.18), borderRadius: THEME.radiusXl }}>
+              <h2 style={{ fontSize: "26px", fontWeight: 800, margin: "0 0 8px", letterSpacing: "-0.02em", color: THEME.text, fontFamily: THEME.fontHeading }}>Ready to actually fix your text?</h2>
+              <p style={{ fontSize: "15px", color: THEME.textDim, margin: "0 0 24px" }}>Free to start &mdash; no credit card needed.</p>
               <button
                 onClick={handleHumanizeClick}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
-                  background: THEME.brand, color: "#ffffff",
-                  padding: "12px 28px", borderRadius: THEME.radius, fontSize: "15px", fontWeight: 700,
+                  background: THEME.gradient, color: "#ffffff",
+                  padding: "14px 32px", borderRadius: THEME.radius, fontSize: "15px", fontWeight: 700,
                   border: "none", cursor: "pointer",
-                  boxShadow: "0 0 22px rgba(124,92,255,0.4)",
+                  boxShadow: glow(THEME.brand, 0.36),
                 }}
               >
                 Start free &mdash; analyze your text &rarr;
@@ -424,7 +445,7 @@ export default function ComparePage() {
         {/* Empty state */}
         {!hasRun && (
           <div style={{ textAlign: "center", padding: "60px 24px", color: THEME.textMuted }}>
-            <p style={{ fontSize: "14px", fontFamily: THEME.fontMono }}>Paste text above to see the live comparison</p>
+            <p style={{ fontSize: "15px" }}>Paste text above to see the live comparison</p>
           </div>
         )}
       </div>

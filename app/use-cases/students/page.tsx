@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "HumanizeIt for Students — Bypass GPTZero and Turnitin | HumanizeIt",
@@ -59,6 +59,7 @@ export default function StudentsUseCasePage() {
         <span>Students</span>
       </nav>
 
+      <div className="kicker" style={{ marginBottom: "16px" }}>For students</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -67,9 +68,11 @@ export default function StudentsUseCasePage() {
           fontSize: "clamp(28px, 5vw, 38px)",
           letterSpacing: "-0.02em",
           marginBottom: "24px",
+          lineHeight: 1.15,
         }}
       >
-        HumanizeIt for Students: Make Your AI-Assisted Writing Undetectable
+        HumanizeIt for Students: Make Your AI-Assisted Writing{" "}
+        <span style={{ color: THEME.brand }}>Undetectable</span>
       </h1>
 
       {/* Disclaimer */}
@@ -180,9 +183,9 @@ export default function StudentsUseCasePage() {
         className="rounded-2xl p-8 text-center"
         style={{
           marginTop: "48px",
-          background: THEME.surface2,
-          border: `1px solid ${THEME.brand}`,
-          boxShadow: "0 0 0 1px rgba(124,92,255,0.25), 0 8px 40px rgba(124,92,255,0.18)",
+          background: THEME.surface1,
+          border: `1px solid ${THEME.border}`,
+          boxShadow: glow(THEME.brand, 0.18),
         }}
       >
         <h2 style={{ fontFamily: THEME.fontHeading, fontWeight: 700, fontSize: "24px", marginBottom: "12px", color: THEME.text, letterSpacing: "-0.02em" }}>
@@ -195,7 +198,7 @@ export default function StudentsUseCasePage() {
         <Link
           href="/sign-up"
           className="inline-block font-bold rounded-full px-8 py-3 transition"
-          style={{ background: THEME.brand, color: "#ffffff", boxShadow: "0 0 22px rgba(124,92,255,0.4)" }}
+          style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
           Sign Up Free &rarr;
         </Link>

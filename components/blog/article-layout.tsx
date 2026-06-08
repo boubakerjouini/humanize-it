@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { BlogPost } from "@/lib/blog";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export function ArticleLayout({
   post,
@@ -28,7 +28,7 @@ export function ArticleLayout({
           alignItems: "center",
           borderBottom: `1px solid ${THEME.border}`,
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(16,18,24,0.82)",
+          background: "rgba(255,255,255,0.82)",
           padding: "0 24px",
         }}
       >
@@ -46,12 +46,12 @@ export function ArticleLayout({
             href="/"
             style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}
           >
-            <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>H.</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>H<span style={{ color: THEME.accent }}>.</span></span>
             <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="/blog" style={{ color: THEME.textDim, fontSize: "13px", textDecoration: "none" }}>Blog</Link>
-            <Link href="/dashboard/editor" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: "8px", textDecoration: "none" }}>
+            <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 600 }}>Blog</Link>
+            <Link href="/dashboard/editor" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "7px 18px", borderRadius: "999px", textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}>
               Try Free &rarr;
             </Link>
           </div>
@@ -68,9 +68,9 @@ export function ArticleLayout({
             gap: "6px",
             color: THEME.textDim,
             fontSize: "13px",
+            fontWeight: 500,
             textDecoration: "none",
             marginBottom: "32px",
-            fontFamily: THEME.fontMono,
           }}
         >
           <ArrowLeft size={14} aria-hidden="true" /> Back to Blog
@@ -78,20 +78,7 @@ export function ArticleLayout({
 
         {/* Header */}
         <header style={{ marginBottom: "40px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: THEME.brandHi,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              marginBottom: "12px",
-              fontFamily: THEME.fontMono,
-            }}
-          >
-            {post.category}
-          </span>
+          <div className="kicker" style={{ marginBottom: "16px" }}>{post.category}</div>
           <h1
             style={{
               fontSize: "clamp(28px, 5vw, 40px)",
@@ -109,14 +96,13 @@ export function ArticleLayout({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "16px",
+              gap: "12px",
               fontSize: "13px",
-              color: THEME.textMuted,
-              fontFamily: THEME.fontMono,
+              color: THEME.textDim,
             }}
           >
             <span>{new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
-            <span>&middot;</span>
+            <span style={{ color: THEME.border }}>&middot;</span>
             <span>{post.readingTime} min read</span>
           </div>
         </header>
@@ -128,34 +114,56 @@ export function ArticleLayout({
         <div
           style={{
             marginTop: "56px",
-            border: `1px solid ${THEME.borderStrong}`,
+            border: `1px solid ${THEME.border}`,
             borderRadius: THEME.radiusLg,
-            background: THEME.surface2,
-            padding: "32px",
+            background: THEME.surface1,
+            padding: "36px 32px",
             textAlign: "center",
+            boxShadow: glow(THEME.brand, 0.16),
           }}
         >
-          <div style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "8px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>
-            Try HumanizeIt Free
+          <div style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>
+            <span style={{ color: THEME.text }}>Try </span>
+            <span className="text-gradient">HumanizeIt</span>
+            <span style={{ color: THEME.text }}> Free</span>
           </div>
-          <p style={{ fontSize: "15px", color: THEME.textDim, marginBottom: "20px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "15px", color: THEME.textDim, marginBottom: "24px", lineHeight: 1.5 }}>
             Paste your text, get an AI detection score, and humanize it in seconds.
           </p>
-          <Link
-            href="/"
-            style={{
-              display: "inline-block",
-              background: THEME.brand,
-              color: "#fff",
-              fontSize: "15px",
-              fontWeight: 600,
-              padding: "12px 28px",
-              borderRadius: THEME.radius,
-              textDecoration: "none",
-            }}
-          >
-            Get Started Free &rarr;
-          </Link>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+            <Link
+              href="/"
+              style={{
+                display: "inline-block",
+                background: THEME.brand,
+                color: "#fff",
+                fontSize: "15px",
+                fontWeight: 600,
+                padding: "12px 28px",
+                borderRadius: THEME.radius,
+                textDecoration: "none",
+                boxShadow: glow(THEME.brand, 0.32),
+              }}
+            >
+              Get Started Free &rarr;
+            </Link>
+            <Link
+              href="/blog"
+              style={{
+                display: "inline-block",
+                background: THEME.accentDim,
+                color: THEME.accentHi,
+                fontSize: "15px",
+                fontWeight: 600,
+                padding: "12px 28px",
+                borderRadius: THEME.radius,
+                textDecoration: "none",
+                border: `1px solid ${THEME.accent}33`,
+              }}
+            >
+              More guides
+            </Link>
+          </div>
         </div>
       </article>
     </div>

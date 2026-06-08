@@ -1,6 +1,7 @@
 "use client";
 
-import { THEME, humanScore } from "@/lib/theme";
+import { Sparkles } from "lucide-react";
+import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
 
 interface ShareScoreProps {
   /** Original AI-likelihood score (0 = human, 100 = AI). */
@@ -24,17 +25,30 @@ export function ShareScore({ score, humanizedScore }: ShareScoreProps) {
     `I just humanized my AI text from ${humanBefore}% human to ${humanAfter}% with HumanizeIt!`
   );
 
+  const humanColor = humanScoreColor(humanAfter);
+
   const linkStyle: React.CSSProperties = {
-    display: "inline-flex", alignItems: "center", gap: "4px",
-    padding: "5px 10px", borderRadius: THEME.radius,
-    background: THEME.surface3, border: `1px solid ${THEME.border}`,
-    color: THEME.textDim, fontSize: "11px", fontWeight: 500,
+    display: "inline-flex", alignItems: "center", gap: "5px",
+    padding: "6px 11px", borderRadius: THEME.radius,
+    background: THEME.surface2, border: `1px solid ${THEME.border}`,
+    color: THEME.brandHi, fontSize: "11px", fontWeight: 600,
     textDecoration: "none", cursor: "pointer",
     transition: "all 0.2s", fontFamily: THEME.fontSans,
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+      {/* Celebratory human-score chip */}
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: "5px",
+        padding: "6px 11px", borderRadius: "999px",
+        background: THEME.humanDim, border: `1px solid ${humanColor}33`,
+        fontSize: "11px", fontWeight: 700, color: humanColor,
+        fontFamily: THEME.fontSans,
+      }}>
+        <Sparkles size={12} color={humanColor} aria-hidden="true" />
+        <span className="tnum">{humanAfter}%</span> human
+      </span>
       <a
         href={`https://twitter.com/intent/tweet?text=${twitterText}`}
         target="_blank"

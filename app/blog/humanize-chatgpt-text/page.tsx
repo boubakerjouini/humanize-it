@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "How to Humanize ChatGPT Text in 2025 (Free) | HumanizeIt",
@@ -67,21 +67,23 @@ const exampleBlockStyle = {
 };
 
 const aiLabelStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
   fontWeight: 600,
-  fontSize: "14px",
+  fontSize: "13px",
   color: THEME.ai,
-  marginBottom: "8px",
-  fontFamily: THEME.fontMono,
-  letterSpacing: "0.02em",
+  marginBottom: "10px",
 };
 
 const humanLabelStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
   fontWeight: 600,
-  fontSize: "14px",
+  fontSize: "13px",
   color: THEME.human,
-  marginBottom: "8px",
-  fontFamily: THEME.fontMono,
-  letterSpacing: "0.02em",
+  marginBottom: "10px",
 };
 
 export default function HumanizeChatGPTTextPage() {
@@ -96,22 +98,22 @@ export default function HumanizeChatGPTTextPage() {
           fontSize: "13px",
           color: THEME.textMuted,
           marginBottom: "32px",
-          fontFamily: THEME.fontMono,
         }}
         aria-label="Breadcrumb"
       >
-        <Link href="/" className="hover:underline" style={{ color: THEME.textDim, textDecoration: "none" }}>
+        <Link href="/" className="hover:underline" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Home
         </Link>
-        {" > "}
-        <Link href="/blog" className="hover:underline" style={{ color: THEME.textDim, textDecoration: "none" }}>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <Link href="/blog" className="hover:underline" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Blog
         </Link>
-        {" > "}
-        <span>How to Humanize ChatGPT Text in 2025 (Free)</span>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <span style={{ color: THEME.textDim }}>How to Humanize ChatGPT Text in 2025 (Free)</span>
       </nav>
 
       {/* H1 */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Guide</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -128,11 +130,9 @@ export default function HumanizeChatGPTTextPage() {
 
       <p
         style={{
-          color: THEME.textMuted,
+          color: THEME.textDim,
           fontSize: "14px",
           marginBottom: "16px",
-          fontFamily: THEME.fontMono,
-          letterSpacing: "0.02em",
         }}
       >
         Updated March 2025 &middot; 6 min read
@@ -299,8 +299,9 @@ export default function HumanizeChatGPTTextPage() {
 
       <h3 style={h3Style}>Example 1: Marketing Copy</h3>
 
-      <div style={exampleBlockStyle}>
+      <div style={{ ...exampleBlockStyle, background: THEME.aiDim, border: `1px solid ${THEME.ai}33` }}>
         <p style={aiLabelStyle}>
+          <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai }} />
           ChatGPT Output (flagged by AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -314,8 +315,9 @@ export default function HumanizeChatGPTTextPage() {
         </p>
       </div>
 
-      <div style={exampleBlockStyle}>
+      <div style={{ ...exampleBlockStyle, background: THEME.humanDim, border: `1px solid ${THEME.human}33` }}>
         <p style={humanLabelStyle}>
+          <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.human }} />
           After HumanizeIt (passes AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -331,8 +333,9 @@ export default function HumanizeChatGPTTextPage() {
 
       <h3 style={h3Style}>Example 2: Academic Writing</h3>
 
-      <div style={exampleBlockStyle}>
+      <div style={{ ...exampleBlockStyle, background: THEME.aiDim, border: `1px solid ${THEME.ai}33` }}>
         <p style={aiLabelStyle}>
+          <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai }} />
           ChatGPT Output (flagged by AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -345,8 +348,9 @@ export default function HumanizeChatGPTTextPage() {
         </p>
       </div>
 
-      <div style={exampleBlockStyle}>
+      <div style={{ ...exampleBlockStyle, background: THEME.humanDim, border: `1px solid ${THEME.human}33` }}>
         <p style={humanLabelStyle}>
+          <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.human }} />
           After HumanizeIt (passes AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -433,13 +437,14 @@ export default function HumanizeChatGPTTextPage() {
       {/* CTA Box */}
       <div
         style={{
-          background: THEME.surface2,
-          border: `1px solid ${THEME.borderStrong}`,
+          background: THEME.surface1,
+          border: `1px solid ${THEME.border}`,
           color: THEME.text,
           borderRadius: THEME.radiusXl,
-          padding: "32px",
+          padding: "40px 32px",
           textAlign: "center",
           marginTop: "48px",
+          boxShadow: glow(THEME.brand, 0.16),
         }}
       >
         <h2
@@ -473,6 +478,7 @@ export default function HumanizeChatGPTTextPage() {
             color: "#ffffff",
             borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Get Started Free &rarr;

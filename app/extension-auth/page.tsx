@@ -3,7 +3,7 @@
 import { useUser, SignIn } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Zap, CheckCircle2, XCircle } from "lucide-react";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export default function ExtensionAuthPage() {
   const { isLoaded, isSignedIn } = useUser();
@@ -57,19 +57,20 @@ export default function ExtensionAuthPage() {
     maxWidth: "420px",
     width: "100%",
     textAlign: "center",
-    boxShadow: "0 0 40px rgba(124,92,255,0.10)",
+    boxShadow: glow(THEME.brand, 0.2),
   };
 
   return (
     <div style={containerStyle}>
       {/* Logo */}
-      <div style={{ marginBottom: "28px", textAlign: "center" }}>
+      <div style={{ marginBottom: "28px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div className="kicker" style={{ marginBottom: "14px" }}>Browser Extension</div>
         <div style={{ fontSize: "26px", fontWeight: 800, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>
-          <span style={{ color: THEME.brand }}>H.</span>
+          <span style={{ color: THEME.brand }}>H<span style={{ color: THEME.accent }}>.</span></span>
           <span style={{ color: THEME.text }}>HumanizeIt</span>
         </div>
-        <div style={{ color: THEME.textDim, fontSize: "13px", marginTop: "4px", fontFamily: THEME.fontMono }}>
-          Chrome Extension · Connect your account
+        <div style={{ color: THEME.textDim, fontSize: "13px", marginTop: "6px" }}>
+          Connect your account to Chrome
         </div>
       </div>
 
@@ -88,7 +89,24 @@ export default function ExtensionAuthPage() {
             <p style={{ color: THEME.textDim, fontSize: "13px", marginBottom: "24px" }}>
               Link your HumanizeIt account to the extension.
             </p>
-            <SignIn />
+            <SignIn
+              appearance={{
+                variables: {
+                  colorPrimary: THEME.brand,
+                  colorBackground: THEME.surface2,
+                  colorText: THEME.text,
+                  colorInputBackground: THEME.surface1,
+                  colorInputText: THEME.text,
+                  borderRadius: THEME.radius,
+                  fontFamily: THEME.fontSans,
+                },
+                elements: {
+                  card: { boxShadow: "none", border: "none", background: "transparent" },
+                  formButtonPrimary: { background: THEME.brand, "&:hover": { background: THEME.brandHi } },
+                  footerActionLink: { color: THEME.brandHi },
+                },
+              }}
+            />
           </div>
         )}
 
@@ -115,7 +133,7 @@ export default function ExtensionAuthPage() {
             <p style={{ color: THEME.textDim, fontSize: "13px", margin: "0 0 16px" }}>
               The extension is now linked to your account.
             </p>
-            <p style={{ color: THEME.brandHi, fontSize: "12px", margin: 0, fontFamily: THEME.fontMono }}>
+            <p style={{ color: THEME.brandHi, fontSize: "13px", fontWeight: 500, margin: 0 }}>
               You can close this tab.
             </p>
           </div>
@@ -142,6 +160,7 @@ export default function ExtensionAuthPage() {
                 cursor: "pointer",
                 fontWeight: 600,
                 fontSize: "13px",
+                boxShadow: glow(THEME.brand, 0.3),
               }}
             >
               Retry

@@ -59,7 +59,7 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, 
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={animate ? circumference : offset}
-            style={{ filter: `drop-shadow(0 0 6px ${color}66)`, transition: animate ? undefined : "none" }}
+            style={{ filter: `drop-shadow(0 2px 6px ${color}33)`, transition: animate ? undefined : "none" }}
           />
         </svg>
 
@@ -71,9 +71,8 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, 
               lineHeight: 1,
               color,
               letterSpacing: "-1px",
-              fontFamily: THEME.fontMono,
+              fontFamily: THEME.fontHeading,
               fontVariantNumeric: "tabular-nums",
-              textShadow: `0 0 18px ${color}55`,
             }}
           >
             {human}

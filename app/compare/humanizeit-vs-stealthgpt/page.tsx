@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "HumanizeIt vs StealthGPT 2025 — Which Is Better? | HumanizeIt",
@@ -44,20 +44,27 @@ const pStyle: React.CSSProperties = {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: "12px 16px",
+  padding: "14px 16px",
   textAlign: "left",
-  fontWeight: 700,
-  fontSize: "12px",
+  fontWeight: 600,
+  fontSize: "13px",
   color: THEME.textDim,
-  fontFamily: THEME.fontMono,
-  textTransform: "uppercase",
-  letterSpacing: "0.06em",
   borderBottom: `1px solid ${THEME.borderStrong}`,
   backgroundColor: THEME.surface1,
 };
 
+// HumanizeIt column header — purple highlight.
+const thBrandStyle: React.CSSProperties = {
+  ...thStyle,
+  fontWeight: 800,
+  color: THEME.brandHi,
+  backgroundColor: THEME.brandDim,
+  borderBottom: `2px solid ${THEME.brand}`,
+  fontFamily: THEME.fontHeading,
+};
+
 const tdStyle: React.CSSProperties = {
-  padding: "12px 16px",
+  padding: "13px 16px",
   fontSize: "14px",
   color: THEME.textDim,
   borderBottom: `1px solid ${THEME.border}`,
@@ -68,12 +75,17 @@ const tdAltStyle: React.CSSProperties = {
   backgroundColor: THEME.surface1,
 };
 
-// "Win" cell styling — green highlight for HumanizeIt advantages.
+// "Win" cell styling — green highlight on a soft purple HumanizeIt column.
 const winStyle: React.CSSProperties = {
   fontWeight: 700,
   color: THEME.human,
-  fontFamily: THEME.fontMono,
+  backgroundColor: THEME.brandDim,
+  textAlign: "center",
 };
+
+// Competitor value cells — centered to align with headers.
+const tdValStyle: React.CSSProperties = { ...tdStyle, textAlign: "center" };
+const tdValAltStyle: React.CSSProperties = { ...tdAltStyle, textAlign: "center" };
 
 export default function HumanizeItVsStealthGpt() {
   return (
@@ -92,6 +104,7 @@ export default function HumanizeItVsStealthGpt() {
       </nav>
 
       {/* H1 */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Head-to-head comparison</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -103,7 +116,8 @@ export default function HumanizeItVsStealthGpt() {
           marginBottom: "24px",
         }}
       >
-        HumanizeIt vs StealthGPT (2025): Which AI Humanizer Is Actually Worth It?
+        HumanizeIt vs StealthGPT (2025): Which AI Humanizer Is{" "}
+        <span style={{ color: THEME.brand }}>Actually Worth It?</span>
       </h1>
 
       <p style={pStyle}>
@@ -152,45 +166,45 @@ export default function HumanizeItVsStealthGpt() {
           <thead>
             <tr>
               <th style={thStyle}>Feature</th>
-              <th style={{ ...thStyle, color: THEME.brandHi }}>HumanizeIt</th>
-              <th style={thStyle}>StealthGPT</th>
+              <th style={{ ...thBrandStyle, textAlign: "center" }}>HumanizeIt</th>
+              <th style={{ ...thStyle, textAlign: "center" }}>StealthGPT</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td style={tdStyle}>Price</td>
               <td style={{ ...tdStyle, ...winStyle }}>$9/mo</td>
-              <td style={tdStyle}>$14.99/mo ($359 charges reported)</td>
+              <td style={tdValStyle}>$14.99/mo ($359 charges reported)</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>Free Tier</td>
               <td style={{ ...tdAltStyle, ...winStyle }}>Yes</td>
-              <td style={tdAltStyle}>Limited</td>
+              <td style={tdValAltStyle}>Limited</td>
             </tr>
             <tr>
               <td style={tdStyle}>Billing Transparency</td>
               <td style={{ ...tdStyle, ...winStyle }}>Full</td>
-              <td style={tdStyle}>Major issues reported</td>
+              <td style={tdValStyle}>Major issues reported</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>Output Quality</td>
               <td style={{ ...tdAltStyle, ...winStyle }}>Excellent</td>
-              <td style={tdAltStyle}>Good</td>
+              <td style={tdValAltStyle}>Good</td>
             </tr>
             <tr>
               <td style={tdStyle}>Detection Bypass Rate</td>
               <td style={{ ...tdStyle, ...winStyle }}>95%+</td>
-              <td style={tdStyle}>~90%</td>
+              <td style={tdValStyle}>~90%</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>API Access</td>
               <td style={{ ...tdAltStyle, ...winStyle }}>Yes</td>
-              <td style={tdAltStyle}>No</td>
+              <td style={tdValAltStyle}>No</td>
             </tr>
             <tr>
               <td style={tdStyle}>Bulk Processing</td>
               <td style={{ ...tdStyle, ...winStyle }}>Yes</td>
-              <td style={tdStyle}>Limited</td>
+              <td style={tdValStyle}>Limited</td>
             </tr>
           </tbody>
         </table>
@@ -298,12 +312,12 @@ export default function HumanizeItVsStealthGpt() {
       {/* CTA */}
       <div
         style={{
-          background: THEME.surface2,
-          border: `1px solid ${THEME.brand}`,
-          boxShadow: "0 0 0 1px rgba(124,92,255,0.25), 0 8px 40px rgba(124,92,255,0.18)",
+          background: THEME.surface1,
+          border: `1px solid ${THEME.border}`,
+          boxShadow: glow(THEME.brand, 0.18),
           color: THEME.text,
-          borderRadius: THEME.radiusLg,
-          padding: "32px",
+          borderRadius: THEME.radiusXl,
+          padding: "40px 32px",
           textAlign: "center",
           marginTop: "48px",
         }}
@@ -328,14 +342,14 @@ export default function HumanizeItVsStealthGpt() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            background: THEME.brand,
+            background: THEME.gradient,
             color: "#ffffff",
             fontWeight: 700,
             fontSize: "16px",
-            padding: "14px 36px",
+            padding: "15px 38px",
             borderRadius: THEME.radius,
             textDecoration: "none",
-            boxShadow: "0 0 22px rgba(124,92,255,0.4)",
+            boxShadow: glow(THEME.brand, 0.36),
           }}
         >
           Start Free Today &rarr;

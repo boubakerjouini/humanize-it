@@ -14,7 +14,7 @@ export default function TermsPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Terms of Service</h1>
-        <p style={{ color: THEME.textMuted, fontSize: '14px', fontFamily: THEME.fontMono }}>Effective date: March 5, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Effective date: March 5, 2026</p>
       </div>
 
       <Section title="1. Acceptance">

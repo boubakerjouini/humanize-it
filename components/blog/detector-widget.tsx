@@ -4,7 +4,7 @@ import { useState } from "react";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export function DetectorWidget() {
   const [text, setText] = useState("");
@@ -37,7 +37,7 @@ export function DetectorWidget() {
       }}
     >
       <div className="kicker" style={{ marginBottom: "12px" }}>
-        TRY IT — PASTE ANY TEXT
+        Try it — paste any text
       </div>
       <textarea
         value={text}
@@ -72,6 +72,7 @@ export function DetectorWidget() {
           fontWeight: 600,
           cursor: loading ? "wait" : "pointer",
           opacity: loading || text.trim().split(/\s+/).length < 30 ? 0.5 : 1,
+          boxShadow: glow(THEME.brand, 0.3),
         }}
       >
         {loading ? "Analyzing..." : "Analyze →"}
@@ -92,11 +93,11 @@ export function DetectorWidget() {
             <div style={{ minWidth: "180px" }}>
               <div
                 style={{
-                  fontSize: "12px",
-                  color: THEME.textDim,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  fontFamily: THEME.fontMono,
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  color: THEME.text,
+                  fontFamily: THEME.fontHeading,
+                  letterSpacing: "-0.01em",
                   marginBottom: "6px",
                 }}
               >
@@ -113,15 +114,13 @@ export function DetectorWidget() {
             <div>
               <div
                 style={{
-                  fontSize: "12px",
-                  color: THEME.textDim,
-                  marginBottom: "8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontFamily: THEME.fontMono,
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: THEME.text,
+                  marginBottom: "10px",
                 }}
               >
-                Top Triggered Patterns
+                Top triggered patterns
               </div>
               {topPatterns.map((p) => (
                 <div
@@ -138,10 +137,14 @@ export function DetectorWidget() {
                   <span style={{ color: THEME.text }}>{p.label}</span>
                   <span
                     style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
                       fontSize: "11px",
-                      padding: "2px 8px",
-                      borderRadius: "4px",
-                      fontFamily: THEME.fontMono,
+                      fontWeight: 600,
+                      padding: "3px 10px",
+                      borderRadius: "999px",
+                      textTransform: "capitalize",
                       background:
                         p.severity === "critical"
                           ? THEME.aiDim
@@ -156,6 +159,20 @@ export function DetectorWidget() {
                             : THEME.textDim,
                     }}
                   >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: "6px",
+                        height: "6px",
+                        borderRadius: "50%",
+                        background:
+                          p.severity === "critical"
+                            ? THEME.ai
+                            : p.severity === "high"
+                              ? THEME.warn
+                              : THEME.textMuted,
+                      }}
+                    />
                     {p.severity}
                   </span>
                 </div>

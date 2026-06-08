@@ -5,7 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Zap, ArrowRight, FileText, Clock, TrendingUp, Sparkles } from "lucide-react";
 import { OnboardingChecklist } from "@/components/ui/onboarding-checklist";
-import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
+import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 
 interface UsageData {
   plan: string;
@@ -98,8 +98,8 @@ export default function DashboardHomePage() {
         {/* Words used */}
         <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <TrendingUp size={14} color={THEME.brand} aria-hidden="true" />
-            <span className="mono" style={{ fontSize: "11px", color: THEME.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Words Used</span>
+            <TrendingUp size={15} color={THEME.brand} aria-hidden="true" />
+            <span style={{ fontSize: "12px", color: THEME.textDim, fontWeight: 600 }}>Words used</span>
           </div>
           {usage ? (
             <>
@@ -121,8 +121,8 @@ export default function DashboardHomePage() {
         {/* Rewrites */}
         <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <Sparkles size={14} color={THEME.brand} aria-hidden="true" />
-            <span className="mono" style={{ fontSize: "11px", color: THEME.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Rewrites</span>
+            <Sparkles size={15} color={THEME.brand} aria-hidden="true" />
+            <span style={{ fontSize: "12px", color: THEME.textDim, fontWeight: 600 }}>Rewrites</span>
           </div>
           {usage ? (
             <>
@@ -141,8 +141,8 @@ export default function DashboardHomePage() {
         {/* Quota reset */}
         <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <Clock size={14} color={THEME.brand} aria-hidden="true" />
-            <span className="mono" style={{ fontSize: "11px", color: THEME.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Quota Resets</span>
+            <Clock size={15} color={THEME.brand} aria-hidden="true" />
+            <span style={{ fontSize: "12px", color: THEME.textDim, fontWeight: 600 }}>Quota resets</span>
           </div>
           {usage ? (
             <>
@@ -161,16 +161,20 @@ export default function DashboardHomePage() {
         {/* Plan */}
         <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-            <Zap size={14} color={THEME.brand} aria-hidden="true" />
-            <span className="mono" style={{ fontSize: "11px", color: THEME.textDim, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>Plan</span>
+            <Zap size={15} color={THEME.accent} aria-hidden="true" />
+            <span style={{ fontSize: "12px", color: THEME.textDim, fontWeight: 600 }}>Plan</span>
           </div>
           {usage ? (
             <>
-              <div className="tnum" style={{ fontSize: "22px", fontWeight: 700, color: isFree ? THEME.textDim : THEME.text, lineHeight: 1, marginBottom: "8px" }}>
-                {usage.plan}
+              <div style={{ fontSize: "22px", fontWeight: 700, color: isFree ? THEME.textDim : THEME.text, lineHeight: 1, marginBottom: "8px", fontFamily: THEME.fontHeading, textTransform: "capitalize" }}>
+                {usage.plan.toLowerCase()}
               </div>
-              <Link href="/dashboard/settings" style={{ fontSize: "11px", color: THEME.brandHi, textDecoration: "none" }}>
-                {isFree ? "Upgrade →" : "Manage →"}
+              <Link href="/dashboard/settings" style={{
+                display: "inline-flex", alignItems: "center", gap: "4px",
+                fontSize: "12px", fontWeight: 600,
+                color: isFree ? THEME.accentHi : THEME.brandHi, textDecoration: "none",
+              }}>
+                {isFree ? "Upgrade" : "Manage"} <ArrowRight size={12} aria-hidden="true" />
               </Link>
             </>
           ) : (
@@ -183,25 +187,25 @@ export default function DashboardHomePage() {
       <Link href="/dashboard/editor" style={{ textDecoration: "none", display: "block", marginBottom: "28px" }}>
         <div style={{
           background: THEME.surface2,
-          border: `1px solid ${THEME.brand}44`, borderRadius: THEME.radiusXl,
+          border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl,
           padding: "28px 32px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
-          cursor: "pointer", transition: "border-color 0.2s, box-shadow 0.2s",
-          boxShadow: `0 0 30px ${THEME.brand}14`,
+          cursor: "pointer", transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
+          boxShadow: glow(THEME.brand, 0.16),
         }}>
           <div>
             <div style={{ fontSize: "18px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading }}>
-              Start humanizing →
+              Start humanizing
             </div>
             <div style={{ fontSize: "13px", color: THEME.textDim, lineHeight: 1.5 }}>
               Paste your AI-generated text and get an instant score + humanization
             </div>
           </div>
           <div style={{
-            width: "48px", height: "48px", borderRadius: "12px", flexShrink: 0,
-            background: `linear-gradient(135deg, ${THEME.brand}, ${THEME.brandHi})`,
+            width: "48px", height: "48px", borderRadius: "14px", flexShrink: 0,
+            background: THEME.gradient,
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: `0 0 18px ${THEME.brand}55`,
+            boxShadow: glow(THEME.brand, 0.32),
           }}>
             <ArrowRight size={22} color="#ffffff" aria-hidden="true" />
           </div>
@@ -212,13 +216,22 @@ export default function DashboardHomePage() {
       {usage && isFree && (
         <div style={{
           background: THEME.surface2,
-          border: `1px solid ${THEME.brand}44`, borderRadius: THEME.radiusXl,
+          border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl,
           padding: "20px 24px", marginBottom: "28px",
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
+          boxShadow: glow(THEME.accent, 0.14),
         }}>
           <div>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, marginBottom: "4px", fontFamily: THEME.fontHeading }}>
-              Unlock Pro — $9/month
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <span style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>
+                Unlock Pro
+              </span>
+              <span style={{
+                fontSize: "11px", fontWeight: 700, color: THEME.accentHi,
+                background: THEME.accentDim, padding: "2px 8px", borderRadius: "100px",
+              }}>
+                $9/month
+              </span>
             </div>
             <div style={{ fontSize: "13px", color: THEME.textDim }}>
               50k words/month · Unlimited rewrites · History · All tones
@@ -228,15 +241,16 @@ export default function DashboardHomePage() {
             onClick={() => void handleUpgrade()}
             disabled={checkoutLoading}
             style={{
-              padding: "10px 24px", borderRadius: "12px", border: "none",
-              background: THEME.brand,
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              padding: "11px 22px", borderRadius: "12px", border: "none",
+              background: THEME.accent,
               color: "#ffffff", fontSize: "13px", fontWeight: 700,
               cursor: checkoutLoading ? "not-allowed" : "pointer",
               flexShrink: 0,
-              boxShadow: `0 0 18px ${THEME.brand}55`,
+              boxShadow: glow(THEME.accent, 0.34),
             }}
           >
-            {checkoutLoading ? "Loading..." : "Upgrade Now →"}
+            {checkoutLoading ? "Loading…" : <>Upgrade now <ArrowRight size={15} aria-hidden="true" /></>}
           </button>
         </div>
       )}
@@ -245,8 +259,8 @@ export default function DashboardHomePage() {
       {!isFree && (
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-            <h2 className="mono" style={{ fontSize: "12px", fontWeight: 600, color: THEME.textDim, textTransform: "uppercase", letterSpacing: "0.08em" }}>Recent Documents</h2>
-            <Link href="/dashboard/history" style={{ fontSize: "12px", color: THEME.brandHi, textDecoration: "none" }}>View all →</Link>
+            <h2 style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>Recent documents</h2>
+            <Link href="/dashboard/history" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, color: THEME.brandHi, textDecoration: "none" }}>View all <ArrowRight size={12} aria-hidden="true" /></Link>
           </div>
           {docs.length === 0 ? (
             <div style={{
@@ -284,10 +298,19 @@ export default function DashboardHomePage() {
                       }}>
                         {doc.originalText}
                       </p>
-                      <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-                        <span className="mono" style={{ fontSize: "11px", color: THEME.textMuted }}>{doc.wordCount} words</span>
-                        <span className="mono" style={{ fontSize: "11px", color: THEME.textMuted }}>{timeAgo(doc.createdAt)}</span>
-                        {doc.rewrittenText && <span className="mono" style={{ fontSize: "11px", color: THEME.human, fontWeight: 600 }}>Humanized</span>}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "5px" }}>
+                        <span style={{ fontSize: "11px", color: THEME.textMuted }}>{doc.wordCount} words</span>
+                        <span style={{ fontSize: "11px", color: THEME.textMuted }}>{timeAgo(doc.createdAt)}</span>
+                        {doc.rewrittenText && (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", gap: "4px",
+                            fontSize: "10px", fontWeight: 600, color: THEME.human,
+                            background: THEME.humanDim, padding: "2px 8px", borderRadius: "100px",
+                          }}>
+                            <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: THEME.human }} aria-hidden="true" />
+                            Humanized
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span className="tnum" style={{

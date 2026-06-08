@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
-
-const V = {
-  brand: THEME.brand,
-  brandHover: THEME.brandHi,
-  brandBorder: "rgba(124,92,255,0.25)",
-  brandGlow: "rgba(124,92,255,0.18)",
-};
+import { THEME, glow } from "@/lib/theme";
 
 const PLANS = [
   {
@@ -17,6 +10,7 @@ const PLANS = [
     desc: "For individual writers",
     features: ["10,000 words / month", "Unlimited rewrites", "Standard tone", "Email support"],
     popular: false,
+    badge: null as string | null,
   },
   {
     name: "Pro",
@@ -24,6 +18,7 @@ const PLANS = [
     desc: "For power users",
     features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "Priority support", "30-day history"],
     popular: true,
+    badge: "Most popular",
   },
   {
     name: "Agency",
@@ -31,6 +26,7 @@ const PLANS = [
     desc: "For teams & agencies",
     features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Dedicated support"],
     popular: false,
+    badge: "Best value",
   },
 ];
 
@@ -79,12 +75,12 @@ export default function LifetimePage() {
       <section style={{ padding: "80px 24px 20px", textAlign: "center" }}>
         <div style={{ maxWidth: "700px", margin: "0 auto" }}>
           <div style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            background: THEME.aiDim, border: `1px solid ${THEME.ai}`,
-            borderRadius: "100px", padding: "5px 14px", marginBottom: "24px",
-            fontSize: "12px", color: THEME.ai, fontWeight: 600,
-            fontFamily: THEME.fontMono, letterSpacing: "0.04em", textTransform: "uppercase",
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: THEME.aiDim, border: `1px solid ${THEME.ai}33`,
+            borderRadius: "100px", padding: "6px 16px", marginBottom: "24px",
+            fontSize: "13px", color: THEME.ai, fontWeight: 600,
           }}>
+            <span className="pulse-dot" aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai, flexShrink: 0 }} />
             Limited to 150 users
           </div>
           <h1 style={{
@@ -94,7 +90,7 @@ export default function LifetimePage() {
             fontFamily: THEME.fontHeading,
             lineHeight: 1.1,
           }}>
-            Lifetime Deal
+            Lifetime <span className="text-gradient">Deal</span>
           </h1>
           <p style={{
             fontSize: "17px", color: THEME.textDim, lineHeight: 1.7,
@@ -114,27 +110,26 @@ export default function LifetimePage() {
           {PLANS.map((plan, i) => (
             <div key={plan.name} style={{
               background: THEME.surface2,
-              border: plan.popular ? `1px solid ${THEME.brand}` : `1px solid ${THEME.border}`,
+              border: plan.popular ? `1.5px solid ${THEME.brand}` : `1px solid ${THEME.border}`,
               borderRadius: "16px",
               padding: "32px 24px",
               position: "relative",
               boxShadow: plan.popular
-                ? "0 0 0 1px rgba(124,92,255,0.3), 0 8px 40px rgba(124,92,255,0.2)"
-                : "0 1px 3px rgba(0,0,0,0.4)",
+                ? glow(THEME.brand, 0.28)
+                : "0 1px 2px rgba(29,23,38,0.04), 0 8px 24px -16px rgba(124,58,237,0.16)",
               opacity: 0,
               animation: `fadeInUp 0.5s ease ${i * 0.1}s forwards`,
             }}>
-              {plan.popular && (
+              {plan.badge && (
                 <div style={{
                   position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
-                  background: THEME.brand, color: "#ffffff",
-                  fontSize: "11px", fontWeight: 700,
-                  padding: "3px 14px", borderRadius: "100px",
+                  background: plan.popular ? THEME.brand : THEME.accent, color: "#ffffff",
+                  fontSize: "12px", fontWeight: 700,
+                  padding: "4px 14px", borderRadius: "100px",
                   whiteSpace: "nowrap",
-                  fontFamily: THEME.fontMono, letterSpacing: "0.04em", textTransform: "uppercase",
-                  boxShadow: "0 0 18px rgba(124,92,255,0.45)",
+                  boxShadow: glow(plan.popular ? THEME.brand : THEME.accent, 0.34),
                 }}>
-                  Most Popular
+                  {plan.badge}
                 </div>
               )}
 
@@ -146,7 +141,7 @@ export default function LifetimePage() {
               </div>
 
               <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "4px" }}>
-                <span style={{ fontSize: "44px", fontWeight: 800, color: THEME.text, letterSpacing: "-2px", fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
+                <span className="tnum" style={{ fontSize: "44px", fontWeight: 800, color: THEME.text, letterSpacing: "-2px", fontFamily: THEME.fontHeading }}>
                   {plan.price}
                 </span>
               </div>
@@ -157,7 +152,7 @@ export default function LifetimePage() {
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: "10px" }}>
                 {plan.features.map((f) => (
                   <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: THEME.textDim }}>
-                    <span style={{ color: THEME.human, fontSize: "12px", flexShrink: 0 }}>{"\u2713"}</span>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={THEME.human} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M20 6 9 17l-5-5" /></svg>
                     {f}
                   </li>
                 ))}
@@ -167,15 +162,15 @@ export default function LifetimePage() {
                 href={`mailto:boubakerseddik.jouini@gmail.com?subject=LTD - ${plan.name.toUpperCase()}`}
                 style={{
                   display: "block", width: "100%", textAlign: "center",
-                  padding: "12px", borderRadius: THEME.radius,
-                  fontSize: "13px", fontWeight: 700,
-                  background: plan.popular ? THEME.brand : "transparent",
-                  color: plan.popular ? "#ffffff" : THEME.text,
+                  padding: "13px", borderRadius: THEME.radius,
+                  fontSize: "14px", fontWeight: 700,
+                  background: plan.popular ? THEME.gradient : "transparent",
+                  color: plan.popular ? "#ffffff" : THEME.brand,
                   border: plan.popular ? "none" : `1px solid ${THEME.borderStrong}`,
                   textDecoration: "none",
                   boxSizing: "border-box",
                   cursor: "pointer",
-                  boxShadow: plan.popular ? "0 0 22px rgba(124,92,255,0.4)" : "none",
+                  boxShadow: plan.popular ? glow(THEME.brand, 0.34) : "none",
                 }}
               >
                 Get {plan.name} Lifetime

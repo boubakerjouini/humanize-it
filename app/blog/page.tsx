@@ -43,7 +43,15 @@ export default function BlogPage() {
             fontFamily: THEME.fontHeading,
           }}
         >
-          The HumanizeIt Blog
+          The HumanizeIt{" "}
+          <span
+            style={{
+              backgroundImage: `linear-gradient(transparent 70%, ${THEME.accentDim} 70%)`,
+              boxShadow: `inset 0 -2px 0 ${THEME.accent}`,
+            }}
+          >
+            Blog
+          </span>
         </h1>
         <p style={{ fontSize: "16px", color: THEME.textDim, lineHeight: 1.6, maxWidth: "520px", margin: "0 auto" }}>
           Expert guides on AI detection, humanizing AI text, and writing that passes every detector.
@@ -84,16 +92,15 @@ export default function BlogPage() {
                       fontWeight: 600,
                       color: cat.text,
                       textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                      padding: "3px 10px",
-                      borderRadius: "6px",
+                      letterSpacing: "0.06em",
+                      padding: "4px 11px",
+                      borderRadius: "999px",
                       background: cat.bg,
-                      fontFamily: THEME.fontMono,
                     }}
                   >
                     {post.category}
                   </span>
-                  <span style={{ fontSize: "12px", color: THEME.textMuted, fontFamily: THEME.fontMono }}>
+                  <span style={{ fontSize: "12px", color: THEME.textMuted }}>
                     {post.readingTime} min read
                   </span>
                 </div>
@@ -121,8 +128,8 @@ export default function BlogPage() {
                 >
                   {post.excerpt}
                 </p>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "12px", color: THEME.textMuted, fontFamily: THEME.fontMono }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "14px", borderTop: `1px solid ${THEME.border}` }}>
+                  <span style={{ fontSize: "12px", color: THEME.textMuted }}>
                     {new Date(post.date).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",

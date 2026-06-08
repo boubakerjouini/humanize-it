@@ -6,7 +6,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-[var(--brand-hi)] transition-colors font-[family-name:var(--font-heading)]">
             <span className="text-[var(--brand)]">H</span>umanizeIt
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--surface-3)] text-muted-foreground border border-border font-mono">Docs</span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--brand-dim)] text-[var(--brand-hi)] border border-[var(--border)]">Docs</span>
           </a>
           <div className="flex items-center gap-4">
             <a href="/dashboard/api" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>

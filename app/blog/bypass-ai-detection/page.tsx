@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "How to Bypass AI Detection in 2025 — Complete Guide | HumanizeIt",
@@ -31,8 +31,9 @@ export const metadata: Metadata = {
 };
 
 const crumbLinkStyle: React.CSSProperties = {
-  color: THEME.textDim,
+  color: THEME.brandHi,
   textDecoration: "none",
+  fontWeight: 500,
 };
 
 export default function BypassAiDetectionPage() {
@@ -44,21 +45,21 @@ export default function BypassAiDetectionPage() {
           fontSize: "13px",
           color: THEME.textMuted,
           marginBottom: "32px",
-          fontFamily: THEME.fontMono,
         }}
       >
         <Link href="/" style={crumbLinkStyle}>
           Home
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
         <Link href="/blog" style={crumbLinkStyle}>
           Blog
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
-        <span style={{ color: THEME.text }}>How to Bypass AI Detection in 2025</span>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <span style={{ color: THEME.textDim }}>How to Bypass AI Detection in 2025</span>
       </nav>
 
       {/* H1 */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Guide</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -75,16 +76,15 @@ export default function BypassAiDetectionPage() {
 
       <p
         style={{
-          color: THEME.textMuted,
+          color: THEME.textDim,
           fontSize: "13px",
           marginBottom: "32px",
-          fontFamily: THEME.fontMono,
         }}
       >
         Last updated: January 2025 &middot; 8 min read
       </p>
 
-      {/* Article body — shared dark prose styling */}
+      {/* Article body — shared light prose styling */}
       <div className="blog-prose">
         {/* Intro */}
         <p>
@@ -183,11 +183,12 @@ export default function BypassAiDetectionPage() {
       <div
         style={{
           marginTop: "56px",
-          border: `1px solid ${THEME.borderStrong}`,
+          border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusLg,
-          background: THEME.surface2,
-          padding: "32px",
+          background: THEME.surface1,
+          padding: "40px 32px",
           textAlign: "center",
+          boxShadow: glow(THEME.brand, 0.16),
         }}
       >
         <h2
@@ -224,6 +225,7 @@ export default function BypassAiDetectionPage() {
             padding: "12px 32px",
             borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Get Started Free &rarr;

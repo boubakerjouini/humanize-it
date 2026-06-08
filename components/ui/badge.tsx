@@ -12,6 +12,12 @@ const badgeVariants = cva(
         default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary:
           "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+        // Orange highlight — for "Popular" / "New" / "Save 20%" badges.
+        accent:
+          "bg-[var(--accent2)] text-white [a&]:hover:bg-[var(--accent2-hi)]",
+        // Soft orange tint chip on white.
+        accentSoft:
+          "bg-[var(--accent2-dim)] text-[var(--accent2-hi)] [a&]:hover:bg-[var(--accent2-dim)]/80",
         destructive:
           "bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20",
         outline:

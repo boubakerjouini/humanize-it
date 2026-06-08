@@ -19,7 +19,7 @@ export default function UseCasesLayout({ children }: { children: React.ReactNode
           alignItems: "center",
           borderBottom: `1px solid ${THEME.border}`,
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(16,18,24,0.82)",
+          background: "rgba(255,255,255,0.82)",
           padding: "0 24px",
         }}
       >

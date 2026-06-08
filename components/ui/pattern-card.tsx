@@ -44,7 +44,7 @@ const PATTERN_EXPLANATIONS: Record<string, string> = {
   "low-perplexity": "Most sentences start with common, predictable words.",
 };
 
-// Severity → Midnight Terminal accent. critical/high = AI red, medium = warn amber, low = human green.
+// Severity → semantic accent on white. critical/high = AI red, medium = warn amber, low = human green.
 function severityStyles(severity: string): { borderColor: string; badgeBg: string; badgeColor: string } {
   switch (severity) {
     case "critical":
@@ -68,6 +68,7 @@ export function PatternCard({ pattern }: PatternCardProps) {
       borderLeft: `4px solid ${styles.borderColor}`,
       borderRadius: THEME.radius,
       overflow: "hidden",
+      boxShadow: "0 1px 2px rgba(29,23,38,0.04)",
       transition: "box-shadow 0.15s",
     }}>
       <button
@@ -94,19 +95,25 @@ export function PatternCard({ pattern }: PatternCardProps) {
             {pattern.label}
           </span>
 
-          {/* Severity badge */}
+          {/* Severity chip */}
           <span style={{
-            fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "100px",
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            fontSize: "11px", fontWeight: 600, padding: "3px 9px", borderRadius: "999px",
             background: styles.badgeBg, color: styles.badgeColor,
-            textTransform: "uppercase", letterSpacing: "0.5px", flexShrink: 0,
-            fontFamily: THEME.fontMono,
+            flexShrink: 0, textTransform: "capitalize",
           }}>
+            <span aria-hidden="true" style={{
+              width: 6, height: 6, borderRadius: "50%", background: styles.badgeColor,
+            }} />
             {pattern.severity}
           </span>
 
           {/* Hit count */}
-          <span style={{ fontSize: "11px", color: THEME.textDim, flexShrink: 0, fontFamily: THEME.fontMono }}>
-            {pattern.hits} hit{pattern.hits !== 1 ? "s" : ""}
+          <span style={{ fontSize: "11px", color: THEME.textDim, flexShrink: 0 }}>
+            <span style={{ fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
+              {pattern.hits}
+            </span>{" "}
+            hit{pattern.hits !== 1 ? "s" : ""}
           </span>
         </div>
 

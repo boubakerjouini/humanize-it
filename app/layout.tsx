@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
-import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Sora, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { PostHogPageview } from "@/components/posthog-pageview";
 import { Analytics } from "@vercel/analytics/react";
@@ -11,11 +11,11 @@ import Script from "next/script";
 import "./globals.css";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 
-// Midnight Terminal type system — self-hosted via next/font (no render-blocking @import)
-const spaceGrotesk = Space_Grotesk({
+// Aurora type system — self-hosted via next/font (no render-blocking @import)
+const sora = Sora({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-space-grotesk",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sora",
   display: "swap",
 });
 const inter = Inter({
@@ -86,7 +86,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+        className={`${sora.variable} ${inter.variable} ${jetbrainsMono.variable}`}
       >
         <head>
           <script

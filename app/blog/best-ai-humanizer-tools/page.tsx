@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "7 Best AI Humanizer Tools in 2025 (Tested) | HumanizeIt",
@@ -61,42 +61,41 @@ const h3Style: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   borderBottom: `1px solid ${THEME.borderStrong}`,
-  padding: "10px 14px",
+  padding: "11px 14px",
   textAlign: "left",
   fontWeight: 600,
   fontSize: "12px",
   textTransform: "uppercase",
   letterSpacing: "0.04em",
   color: THEME.text,
-  background: THEME.surface3,
-  fontFamily: THEME.fontMono,
+  background: THEME.surface1,
 };
 
 const tdStyle: React.CSSProperties = {
   borderBottom: `1px solid ${THEME.border}`,
-  padding: "10px 14px",
+  padding: "11px 14px",
   fontSize: "14px",
   color: THEME.textDim,
-  fontFamily: THEME.fontMono,
 };
 
 export default function BestAiHumanizerToolsPage() {
   return (
     <article style={{ maxWidth: "48rem", margin: "0 auto", padding: "48px 16px", color: THEME.text }}>
       {/* Breadcrumb */}
-      <nav style={{ marginBottom: "32px", fontSize: "13px", color: THEME.textMuted, fontFamily: THEME.fontMono }}>
-        <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>
+      <nav style={{ marginBottom: "32px", fontSize: "13px", color: THEME.textMuted }}>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Home
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
-        <Link href="/blog" style={{ color: THEME.textDim, textDecoration: "none" }}>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <Link href="/blog" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Blog
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
-        <span style={{ color: THEME.textMuted }}>7 Best AI Humanizer Tools in 2025</span>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <span style={{ color: THEME.textDim }}>7 Best AI Humanizer Tools in 2025</span>
       </nav>
 
       {/* H1 */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Comparison</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -111,7 +110,7 @@ export default function BestAiHumanizerToolsPage() {
         7 Best AI Humanizer Tools in 2025 (Tested &amp; Compared)
       </h1>
 
-      <p style={{ ...pStyle, color: THEME.textMuted, fontSize: "13px", fontFamily: THEME.fontMono }}>
+      <p style={{ ...pStyle, color: THEME.textDim, fontSize: "13px" }}>
         Last updated: January 15, 2025 &middot; 8 min read
       </p>
 
@@ -175,7 +174,23 @@ export default function BestAiHumanizerToolsPage() {
               <td style={tdStyle}>Yes (500 words/day)</td>
               <td style={{ ...tdStyle, color: THEME.human, fontWeight: 700 }}>96%</td>
               <td style={{ ...tdStyle, color: THEME.human, fontWeight: 700 }}>9.4/10</td>
-              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.human }}>Best Overall</td>
+              <td style={tdStyle}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: THEME.accentHi,
+                    background: THEME.accentDim,
+                    border: `1px solid ${THEME.accent}33`,
+                    padding: "3px 10px",
+                    borderRadius: "999px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Best Overall
+                </span>
+              </td>
             </tr>
             <tr>
               <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>Undetectable.ai</td>
@@ -489,11 +504,12 @@ export default function BestAiHumanizerToolsPage() {
       <div
         style={{
           marginTop: "48px",
-          border: `1px solid ${THEME.borderStrong}`,
+          border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusXl,
-          background: THEME.surface2,
-          padding: "32px",
+          background: THEME.surface1,
+          padding: "40px 32px",
           textAlign: "center",
+          boxShadow: glow(THEME.brand, 0.16),
         }}
       >
         <h2
@@ -523,6 +539,7 @@ export default function BestAiHumanizerToolsPage() {
             padding: "14px 32px",
             borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Start Free &rarr;

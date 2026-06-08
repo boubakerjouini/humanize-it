@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
@@ -19,7 +19,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
           alignItems: "center",
           borderBottom: `1px solid ${THEME.border}`,
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(16,18,24,0.82)",
+          background: "rgba(255,255,255,0.82)",
           padding: "0 24px",
         }}
       >
@@ -37,11 +37,11 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
             href="/"
             style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}
           >
-            <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>H.</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>H<span style={{ color: THEME.accent }}>.</span></span>
             <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
+            <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 600 }}>Blog</Link>
             <Link
               href="/dashboard/editor"
               style={{
@@ -49,9 +49,10 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
                 color: "#ffffff",
                 fontSize: "13px",
                 fontWeight: 600,
-                padding: "6px 16px",
-                borderRadius: "8px",
+                padding: "7px 18px",
+                borderRadius: "999px",
                 textDecoration: "none",
+                boxShadow: glow(THEME.brand, 0.32),
               }}
             >
               Try Free &rarr;

@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Copy, Plus, Trash2, Lock, CheckCircle2, Terminal,
+  Copy, Plus, Trash2, Lock, CheckCircle2, Code2,
   ExternalLink, AlertTriangle, X, Loader2, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ function UsageArc({ used, limit }: { used: number; limit: number }) {
         strokeDashoffset={offset}
         strokeLinecap="round"
         transform="rotate(135 70 70)"
-        style={{ transition: "stroke-dashoffset 0.8s ease, stroke 0.5s ease", filter: `drop-shadow(0 0 6px ${color}66)` }}
+        style={{ transition: "stroke-dashoffset 0.8s ease, stroke 0.5s ease" }}
       />
       {/* Center text */}
       <text x="70" y="65" textAnchor="middle" fill={THEME.text} fontSize="22" fontWeight="700" fontFamily={THEME.fontMono} style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -267,10 +267,10 @@ export default function ApiPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <Terminal size={16} className="text-[var(--brand-hi)]" aria-hidden="true" />
-              <h1 className="text-lg font-bold text-[var(--text)]" style={{ fontFamily: THEME.fontHeading }}>API Access</h1>
-              <span className="mono text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--brand-dim)] text-[var(--brand-hi)] border border-[var(--brand)]/40">
-                {state.plan}
+              <Code2 size={18} className="text-[var(--brand-hi)]" aria-hidden="true" />
+              <h1 className="text-lg font-bold text-[var(--text)]" style={{ fontFamily: THEME.fontHeading }}>API access</h1>
+              <span className="text-[11px] font-semibold capitalize px-2.5 py-0.5 rounded-full bg-[var(--brand-dim)] text-[var(--brand-hi)] border border-[var(--brand)]/40">
+                {state.plan.toLowerCase()}
               </span>
             </div>
             <p className="text-sm text-[var(--text-dim)]">Integrate HumanizeIt into your apps</p>
@@ -288,8 +288,8 @@ export default function ApiPage() {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h2 className="mono text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider mb-1">
-                API Usage &mdash; {currentMonth()}
+              <h2 className="text-sm font-semibold text-[var(--text-dim)] mb-1">
+                API usage &middot; {currentMonth()}
               </h2>
               <div className="tnum text-2xl font-bold text-[var(--text)]">
                 {totalUsage.toLocaleString()} <span className="text-sm font-normal text-[var(--text-dim)]">/ {state.apiRequestsLimit.toLocaleString()} requests</span>
@@ -307,7 +307,7 @@ export default function ApiPage() {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]">
           <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
             <div>
-              <h2 className="mono text-xs font-semibold text-[var(--text-dim)] uppercase tracking-wider">API Keys</h2>
+              <h2 className="text-sm font-bold text-[var(--text)]" style={{ fontFamily: THEME.fontHeading }}>API keys</h2>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">Your secret API keys. Treat them like passwords.</p>
             </div>
             <button
@@ -350,7 +350,7 @@ export default function ApiPage() {
 
             {revokedKeys.length > 0 && (
               <div className="px-5 py-3">
-                <p className="mono text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Revoked</p>
+                <p className="text-[11px] font-semibold text-[var(--text-muted)] mb-2">Revoked</p>
                 {revokedKeys.map((k) => (
                   <KeyRow key={k.id} data={k} onCopy={() => {}} onRevoke={() => {}} isNew={false} />
                 ))}
@@ -369,7 +369,7 @@ export default function ApiPage() {
 
         {/* ── D) Create Key Modal ───────────────────────── */}
         {showCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => !revealedKey && closeReveal()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1d1726]/40 backdrop-blur-sm" onClick={() => !revealedKey && closeReveal()}>
             <div
               role="dialog"
               aria-modal="true"
@@ -393,7 +393,7 @@ export default function ApiPage() {
                     onChange={(e) => setCreateName(e.target.value)}
                     placeholder="e.g. Production, My App, Testing"
                     maxLength={50}
-                    className="mono w-full px-3 py-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--brand)]/60 focus:ring-1 focus:ring-[var(--brand)]/30 transition-all"
+                    className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--brand)]/60 focus:ring-1 focus:ring-[var(--brand)]/30 transition-all"
                     autoFocus
                     onKeyDown={(e) => e.key === "Enter" && !creating && handleCreate()}
                   />
@@ -461,7 +461,7 @@ export default function ApiPage() {
 
         {/* ── E) Revoke Confirmation Modal ──────────────── */}
         {revokeTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => { setRevokeTarget(null); setRevokeConfirm(""); }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1d1726]/40 backdrop-blur-sm" onClick={() => { setRevokeTarget(null); setRevokeConfirm(""); }}>
             <div
               role="dialog"
               aria-modal="true"
@@ -512,8 +512,8 @@ export default function ApiPage() {
       {/* ── Pulse border animation (inline style) ───────── */}
       <style>{`
         @keyframes pulse-border {
-          0%, 100% { border-color: ${THEME.brand}; box-shadow: 0 0 12px ${THEME.brand}40; }
-          50% { border-color: ${THEME.brand}66; box-shadow: 0 0 4px ${THEME.brand}1a; }
+          0%, 100% { border-color: ${THEME.brand}; box-shadow: ${glow(THEME.brand, 0.22)}; }
+          50% { border-color: ${THEME.brand}66; box-shadow: ${glow(THEME.brand, 0.1)}; }
         }
       `}</style>
     </div>
@@ -545,7 +545,7 @@ function KeyRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-sm font-medium text-[var(--text)] truncate">{data.name}</span>
-          {isNew && <span className="mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--brand-dim)] text-[var(--brand-hi)] uppercase">New</span>}
+          {isNew && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent2-dim)] text-[var(--accent2-hi)]">New</span>}
         </div>
         <div className="flex items-center gap-2">
           <code className="text-xs font-mono text-[var(--text-dim)] truncate">{masked}</code>
@@ -564,7 +564,7 @@ function KeyRow({
           <div className="text-[10px] text-[var(--text-muted)]">requests</div>
         </div>
         <div className="text-right">
-          <div className="mono text-xs text-[var(--text-dim)]">{timeAgo(data.lastUsedAt)}</div>
+          <div className="text-xs text-[var(--text-dim)]">{timeAgo(data.lastUsedAt)}</div>
           <div className="text-[10px] text-[var(--text-muted)]">last used</div>
         </div>
       </div>

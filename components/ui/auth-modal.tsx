@@ -51,7 +51,7 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.66)", backdropFilter: "blur(6px)",
+        background: "rgba(29,23,38,0.36)", backdropFilter: "blur(6px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "16px",
       }}
@@ -65,9 +65,9 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: "440px",
-          background: THEME.surface1, border: `1px solid ${THEME.border}`,
+          background: THEME.surface2, border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusXl, padding: "32px", position: "relative",
-          boxShadow: "0 24px 70px rgba(0,0,0,0.6)",
+          boxShadow: "0 24px 60px -16px rgba(124,58,237,0.28), 0 8px 24px -12px rgba(29,23,38,0.12)",
           outline: "none",
         }}
       >
@@ -93,7 +93,13 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
           id="auth-modal-title"
           style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading, letterSpacing: "-0.02em" }}
         >
-          Fix your AI score — free
+          Fix your AI score —{" "}
+          <span style={{
+            color: THEME.accent,
+            boxShadow: `inset 0 -0.32em 0 ${THEME.accentDim}`,
+          }}>
+            free
+          </span>
         </h2>
         <p style={{ fontSize: "14px", color: THEME.textDim, marginBottom: "24px", fontFamily: THEME.fontSans }}>
           Join 12,000+ writers using HumanizeIt
@@ -141,13 +147,13 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
         {/* Divider */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
           <div style={{ flex: 1, height: "1px", background: THEME.border }} />
-          <span className="mono" style={{ fontSize: "11px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.1em" }}>or</span>
+          <span style={{ fontSize: "12px", color: THEME.textMuted, fontFamily: THEME.fontSans }}>or</span>
           <div style={{ flex: 1, height: "1px", background: THEME.border }} />
         </div>
 
         {/* Free plan features */}
-        <div className="mono" style={{ fontSize: "11px", fontWeight: 600, color: THEME.textDim, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px" }}>
-          FREE plan includes:
+        <div style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "12px", fontFamily: THEME.fontSans }}>
+          Your free plan includes
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
@@ -156,8 +162,14 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
             "Text heatmap",
             "No credit card needed",
           ].map((f) => (
-            <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
-              <Check size={14} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0 }} />
+            <div key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: "18px", height: "18px", borderRadius: "50%",
+                background: THEME.humanDim, flexShrink: 0,
+              }}>
+                <Check size={12} color={THEME.human} aria-hidden="true" strokeWidth={3} />
+              </span>
               {f}
             </div>
           ))}

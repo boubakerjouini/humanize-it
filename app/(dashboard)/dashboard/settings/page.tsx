@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { ExternalLink, Zap } from "lucide-react";
+import { ExternalLink, Zap, ArrowRight, AlertTriangle, Check, Sparkles, Gift } from "lucide-react";
 import { toast } from "sonner";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 interface UsageData {
   plan: string;
@@ -28,7 +28,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       borderRadius: THEME.radius, overflow: "hidden",
     }}>
       <div style={{ padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
-        <h2 className="mono" style={{ fontSize: "12px", fontWeight: 600, color: THEME.textDim, textTransform: "uppercase", letterSpacing: "0.08em" }}>{title}</h2>
+        <h2 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>{title}</h2>
       </div>
       <div style={{ padding: "20px" }}>
         {children}
@@ -49,17 +49,18 @@ function UsageBar({ label, used, limit, warning }: { label: string; used: number
           {used.toLocaleString()} / {limit === -1 ? "∞" : limit.toLocaleString()}
         </span>
       </div>
-      <div style={{ height: "3px", background: THEME.surface3, borderRadius: "3px" }}>
+      <div style={{ height: "6px", background: THEME.surface3, borderRadius: "100px" }}>
         <div style={{
-          height: "3px", borderRadius: "3px",
+          height: "6px", borderRadius: "100px",
           width: `${pct}%`,
           background: barColor,
-          boxShadow: `0 0 6px ${barColor}60`,
           transition: "width 0.5s ease",
         }} />
       </div>
       {warning && pct > 80 && (
-        <p style={{ fontSize: "11px", color: THEME.ai, marginTop: "5px" }}>⚠ {pct}% used — consider upgrading</p>
+        <p style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", color: THEME.ai, marginTop: "6px" }}>
+          <AlertTriangle size={11} aria-hidden="true" /> {pct}% used — consider upgrading
+        </p>
       )}
     </div>
   );
@@ -151,8 +152,8 @@ export default function SettingsPage() {
             display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
           }}>
             <div>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: THEME.ai, marginBottom: "3px" }}>
-                ⚠ Payment failed
+              <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.ai, marginBottom: "3px" }}>
+                <AlertTriangle size={14} aria-hidden="true" /> Payment failed
               </p>
               <p style={{ fontSize: "12px", color: THEME.textDim }}>
                 Your last payment couldn&apos;t be processed. Update your payment method to keep your plan.
@@ -162,14 +163,15 @@ export default function SettingsPage() {
               onClick={() => void handleBillingPortal()}
               disabled={loadingPortal}
               style={{
-                padding: "8px 14px", flexShrink: 0,
-                background: THEME.ai, border: "none", borderRadius: "6px",
+                display: "inline-flex", alignItems: "center", gap: "5px",
+                padding: "9px 16px", flexShrink: 0,
+                background: THEME.ai, border: "none", borderRadius: "10px",
                 fontSize: "12px", fontWeight: 700, color: "#fff",
                 cursor: loadingPortal ? "not-allowed" : "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              Fix now →
+              Fix now <ArrowRight size={13} aria-hidden="true" />
             </button>
           </div>
         )}
@@ -178,14 +180,16 @@ export default function SettingsPage() {
         <Section title="Current Plan">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <span style={{ fontSize: "14px", color: THEME.textDim }}>Your plan</span>
-            <span className="mono" style={{
-              fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "100px",
-              letterSpacing: "0.08em",
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: "5px",
+              fontSize: "12px", fontWeight: 700, padding: "4px 12px", borderRadius: "100px",
+              textTransform: "capitalize",
               background: isFree ? THEME.surface3 : THEME.brandDim,
               color: isFree ? THEME.textDim : THEME.brandHi,
               border: isFree ? `1px solid ${THEME.border}` : `1px solid ${THEME.brand}55`,
             }}>
-              {usage?.plan ?? "FREE"}
+              {!isFree && <Sparkles size={12} aria-hidden="true" />}
+              {(usage?.plan ?? "FREE").toLowerCase()}
             </span>
           </div>
 
@@ -205,16 +209,16 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ fontSize: "12px", color: THEME.textDim }}>Quota resets</span>
-                <span className="tnum" style={{ fontSize: "12px", color: THEME.text }}>
+                <span style={{ fontSize: "12px", fontWeight: 500, color: THEME.text }}>
                   {formatDate(usage.quotaResetAt)}
                 </span>
               </div>
               {usage.stripeCurrentPeriodEnd && (
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <span style={{ fontSize: "12px", color: THEME.textDim }}>Renews on</span>
-                  <span className="tnum" style={{ fontSize: "12px", color: isPastDue ? THEME.ai : THEME.text }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12px", fontWeight: 500, color: isPastDue ? THEME.ai : THEME.text }}>
                     {formatDate(usage.stripeCurrentPeriodEnd)}
-                    {isPastDue && " ⚠"}
+                    {isPastDue && <AlertTriangle size={12} aria-hidden="true" />}
                   </span>
                 </div>
               )}
@@ -228,26 +232,35 @@ export default function SettingsPage() {
         {isFree && (
           <div style={{
             background: THEME.surface2,
-            border: `1px solid ${THEME.brand}44`,
+            border: `1px solid ${THEME.border}`,
             borderRadius: THEME.radius, padding: "24px",
-            boxShadow: `0 0 40px ${THEME.brand}14`,
+            boxShadow: glow(THEME.brand, 0.16),
           }}>
             <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
               <div style={{
-                width: "40px", height: "40px", borderRadius: "50%",
-                background: THEME.brandDim, display: "flex",
+                width: "40px", height: "40px", borderRadius: "12px",
+                background: THEME.gradient, display: "flex",
                 alignItems: "center", justifyContent: "center", flexShrink: 0,
+                boxShadow: glow(THEME.brand, 0.3),
               }}>
-                <Zap size={18} style={{ color: THEME.brandHi }} aria-hidden="true" />
+                <Zap size={18} color="#ffffff" aria-hidden="true" />
               </div>
               <div>
-                <h3 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, marginBottom: "8px", fontFamily: THEME.fontHeading }}>
-                  Upgrade to Pro — $9 / month
-                </h3>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "7px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>
+                    Upgrade to Pro
+                  </h3>
+                  <span style={{
+                    fontSize: "11px", fontWeight: 700, color: THEME.accentHi,
+                    background: THEME.accentDim, padding: "2px 8px", borderRadius: "100px",
+                  }}>
+                    $9 / month
+                  </span>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
                   {["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day document history", "No watermark"].map(f => (
                     <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: THEME.textDim }}>
-                      <span style={{ color: THEME.human, fontWeight: 700 }} aria-hidden="true">✓</span>
+                      <Check size={14} color={THEME.human} strokeWidth={2.5} aria-hidden="true" />
                       {f}
                     </li>
                   ))}
@@ -260,30 +273,30 @@ export default function SettingsPage() {
                 onClick={() => void handleUpgrade("PRO")}
                 disabled={loadingCheckout}
                 style={{
-                  flex: 1, padding: "11px",
-                  border: "none", borderRadius: "6px",
+                  flex: 1, padding: "12px",
+                  border: "none", borderRadius: "10px",
                   fontSize: "13px", fontWeight: 700, color: "#ffffff",
                   background: THEME.brand,
-                  boxShadow: `0 0 18px ${THEME.brand}55`,
+                  boxShadow: glow(THEME.brand, 0.3),
                   cursor: loadingCheckout ? "not-allowed" : "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                 }}
               >
                 <Zap size={14} aria-hidden="true" />
-                Upgrade to Pro →
+                Upgrade to Pro
               </button>
               <button
                 onClick={() => void handleUpgrade("TEAM")}
                 disabled={loadingCheckout}
                 style={{
-                  padding: "11px 16px",
-                  background: "transparent", border: `1px solid ${THEME.border}`,
-                  borderRadius: "6px", fontSize: "12px", fontWeight: 500, color: THEME.textDim,
+                  padding: "12px 18px",
+                  background: THEME.accentDim, border: `1px solid ${THEME.accent}55`,
+                  borderRadius: "10px", fontSize: "12px", fontWeight: 700, color: THEME.accentHi,
                   cursor: loadingCheckout ? "not-allowed" : "pointer",
                   flexShrink: 0,
                 }}
               >
-                Team $29/mo
+                Team · $29/mo
               </button>
             </div>
           </div>
@@ -296,14 +309,14 @@ export default function SettingsPage() {
               onClick={() => void handleBillingPortal()}
               disabled={loadingPortal}
               style={{
-                display: "flex", alignItems: "center", gap: "6px",
-                background: "transparent", border: `1px solid ${THEME.border}`,
-                color: THEME.textDim, fontSize: "12px", fontWeight: 500,
-                padding: "8px 14px", borderRadius: "5px", cursor: loadingPortal ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", gap: "7px",
+                background: THEME.surface1, border: `1px solid ${THEME.border}`,
+                color: THEME.text, fontSize: "13px", fontWeight: 600,
+                padding: "9px 16px", borderRadius: "10px", cursor: loadingPortal ? "not-allowed" : "pointer",
               }}
             >
-              <ExternalLink size={13} aria-hidden="true" />
-              Manage Billing →
+              <ExternalLink size={14} color={THEME.brand} aria-hidden="true" />
+              Manage billing
             </button>
           </Section>
         )}
@@ -313,8 +326,9 @@ export default function SettingsPage() {
           background: THEME.surface2, border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radius, overflow: "hidden",
         }}>
-          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
-            <h2 className="mono" style={{ fontSize: "12px", fontWeight: 600, color: THEME.textDim, textTransform: "uppercase", letterSpacing: "0.08em" }}>Have a discount code?</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
+            <Gift size={15} color={THEME.accent} aria-hidden="true" />
+            <h2 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>Have a discount code?</h2>
           </div>
           <div style={{ padding: "20px" }}>
             <p style={{ fontSize: "12px", color: THEME.textDim, marginBottom: "14px" }}>
@@ -329,10 +343,10 @@ export default function SettingsPage() {
                 onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === "Enter") void handleRedeem(); }}
                 style={{
-                  flex: "1 1 200px", padding: "9px 12px",
+                  flex: "1 1 200px", padding: "10px 14px",
                   background: THEME.surface1,
                   border: `1px solid ${THEME.border}`,
-                  borderRadius: "6px", color: THEME.text,
+                  borderRadius: "10px", color: THEME.text,
                   fontSize: "13px", fontFamily: THEME.fontMono,
                   outline: "none",
                   letterSpacing: "0.04em",
@@ -343,16 +357,16 @@ export default function SettingsPage() {
                 onClick={() => void handleRedeem()}
                 disabled={loadingRedeem || !redeemCode.trim()}
                 style={{
-                  padding: "9px 18px",
+                  padding: "10px 20px",
                   background: loadingRedeem || !redeemCode.trim() ? `${THEME.brand}55` : THEME.brand,
-                  border: "none", borderRadius: "6px",
+                  border: "none", borderRadius: "10px",
                   fontSize: "13px", fontWeight: 700, color: "#fff",
                   cursor: loadingRedeem || !redeemCode.trim() ? "not-allowed" : "pointer",
                   transition: "background 0.15s",
                   whiteSpace: "nowrap",
                 }}
               >
-                {loadingRedeem ? "..." : "Redeem"}
+                {loadingRedeem ? "…" : "Redeem"}
               </button>
             </div>
           </div>
@@ -368,7 +382,7 @@ export default function SettingsPage() {
               <p style={{ fontSize: "14px", fontWeight: 500, color: THEME.text, marginBottom: "3px" }}>
                 {user?.fullName ?? "—"}
               </p>
-              <p className="mono" style={{ fontSize: "12px", color: THEME.textDim }}>
+              <p style={{ fontSize: "13px", color: THEME.textDim }}>
                 {user?.primaryEmailAddress?.emailAddress ?? "—"}
               </p>
             </div>
@@ -381,13 +395,15 @@ export default function SettingsPage() {
         {/* Plan features reference */}
         {(isPro || isTeam) && (
           <div style={{
-            padding: "14px 16px", borderRadius: "6px",
+            display: "flex", alignItems: "center", gap: "8px",
+            padding: "14px 16px", borderRadius: "10px",
             background: THEME.brandDim, border: `1px solid ${THEME.brand}33`,
           }}>
+            <Sparkles size={14} color={THEME.brandHi} aria-hidden="true" />
             <p style={{ fontSize: "12px", color: THEME.brandHi, fontWeight: 600 }}>
               {isTeam
-                ? "✦ Team plan active — you have access to all features + team collaboration"
-                : "✦ Pro plan active — you have access to all features"}
+                ? "Team plan active — you have access to all features + team collaboration"
+                : "Pro plan active — you have access to all features"}
             </p>
           </div>
         )}

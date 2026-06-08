@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "How AI Detection Works in 2025 — And How to Beat It | HumanizeIt",
@@ -47,23 +47,23 @@ export default function AiDetectionHowItWorksPage() {
         style={{
           fontSize: "13px",
           color: THEME.textMuted,
-          fontFamily: THEME.fontMono,
         }}
       >
-        <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Home
         </Link>
-        <span className="mx-2">&gt;</span>
-        <Link href="/blog" style={{ color: THEME.textDim, textDecoration: "none" }}>
+        <span className="mx-2" style={{ color: THEME.border }}>/</span>
+        <Link href="/blog" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Blog
         </Link>
-        <span className="mx-2">&gt;</span>
-        <span style={{ color: THEME.text }}>
+        <span className="mx-2" style={{ color: THEME.border }}>/</span>
+        <span style={{ color: THEME.textDim }}>
           How AI Detection Works in 2025 — And How to Beat It
         </span>
       </nav>
 
       {/* Title */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Deep Dive</div>
       <h1
         style={{
           fontFamily: THEME.fontHeading,
@@ -80,10 +80,9 @@ export default function AiDetectionHowItWorksPage() {
 
       <p
         style={{
-          color: THEME.textMuted,
+          color: THEME.textDim,
           fontSize: "13px",
           marginBottom: "40px",
-          fontFamily: THEME.fontMono,
         }}
       >
         Published June 10, 2025 &middot; 7 min read
@@ -316,11 +315,12 @@ export default function AiDetectionHowItWorksPage() {
       <div
         style={{
           marginTop: "48px",
-          border: `1px solid ${THEME.borderStrong}`,
+          border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusLg,
-          background: THEME.surface2,
-          padding: "32px",
+          background: THEME.surface1,
+          padding: "36px 32px",
           textAlign: "center",
+          boxShadow: glow(THEME.brand, 0.16),
         }}
       >
         <h2
@@ -357,6 +357,7 @@ export default function AiDetectionHowItWorksPage() {
             padding: "12px 28px",
             fontSize: "15px",
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Get Started Free &rarr;

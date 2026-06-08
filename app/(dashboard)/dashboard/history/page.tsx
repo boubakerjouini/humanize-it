@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, Plus, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, RotateCcw, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
+import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 
 interface Document {
   id: string;
@@ -131,11 +131,11 @@ export default function HistoryPage() {
         <Link href="/dashboard/editor" style={{
           display: "flex", alignItems: "center", gap: "6px",
           background: THEME.brand, color: "#ffffff", fontWeight: 600,
-          padding: "8px 14px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
-          boxShadow: `0 0 18px ${THEME.brand}44`,
+          padding: "9px 16px", borderRadius: "10px", textDecoration: "none", fontSize: "13px",
+          boxShadow: glow(THEME.brand, 0.26),
         }}>
-          <Plus size={13} aria-hidden="true" />
-          New Doc
+          <Plus size={14} aria-hidden="true" />
+          New document
         </Link>
       </div>
 
@@ -143,13 +143,14 @@ export default function HistoryPage() {
       {isFree && totalAll > 5 && (
         <div style={{
           background: THEME.surface2,
-          border: `1px solid ${THEME.brand}44`,
-          borderRadius: THEME.radius, padding: "16px 20px",
+          border: `1px solid ${THEME.border}`,
+          borderRadius: THEME.radiusLg, padding: "16px 20px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           gap: "16px", marginBottom: "20px",
+          boxShadow: glow(THEME.accent, 0.12),
         }}>
           <div>
-            <p style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "3px" }}>
+            <p style={{ fontSize: "13px", fontWeight: 700, color: THEME.text, marginBottom: "3px" }}>
               {totalAll - 5} more document{totalAll - 5 > 1 ? "s" : ""} hidden
             </p>
             <p style={{ fontSize: "12px", color: THEME.textDim }}>
@@ -157,11 +158,12 @@ export default function HistoryPage() {
             </p>
           </div>
           <Link href="/dashboard/settings" style={{
-            background: THEME.brand, color: "#ffffff", fontWeight: 700,
-            padding: "8px 16px", borderRadius: "6px", textDecoration: "none", fontSize: "12px",
-            flexShrink: 0,
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            background: THEME.accent, color: "#ffffff", fontWeight: 700,
+            padding: "9px 18px", borderRadius: "10px", textDecoration: "none", fontSize: "13px",
+            flexShrink: 0, boxShadow: glow(THEME.accent, 0.28),
           }}>
-            Upgrade
+            Upgrade <ArrowRight size={13} aria-hidden="true" />
           </Link>
         </div>
       )}
@@ -189,10 +191,12 @@ export default function HistoryPage() {
             Head to the editor and analyze your first text.
           </p>
           <Link href="/dashboard/editor" style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
             background: THEME.brand, color: "#ffffff", fontWeight: 700,
-            padding: "8px 20px", borderRadius: "6px", textDecoration: "none", fontSize: "13px",
+            padding: "10px 22px", borderRadius: "10px", textDecoration: "none", fontSize: "13px",
+            boxShadow: glow(THEME.brand, 0.26),
           }}>
-            Open Editor
+            Open editor <ArrowRight size={14} aria-hidden="true" />
           </Link>
         </div>
       ) : (
@@ -231,19 +235,29 @@ export default function HistoryPage() {
                     }}>
                       {doc.title || doc.originalText}
                     </p>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
-                      <span className="mono" style={{ fontSize: "11px", color: THEME.textMuted }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "7px" }}>
+                      <span style={{ fontSize: "11px", color: THEME.textMuted }}>
                         {doc.wordCount} words
                       </span>
                       {doc.rewrittenText && (
-                        <span className="mono" style={{ fontSize: "11px", color: THEME.human, fontWeight: 600 }}>Humanized</span>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: "4px",
+                          fontSize: "10px", fontWeight: 600, color: THEME.human,
+                          background: THEME.humanDim, padding: "2px 8px", borderRadius: "100px",
+                        }}>
+                          <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: THEME.human }} aria-hidden="true" />
+                          Humanized
+                        </span>
                       )}
                       {doc.tone && doc.tone !== "standard" && (
-                        <span className="mono" style={{ fontSize: "10px", color: THEME.brandHi, padding: "1px 6px", borderRadius: "3px", background: THEME.brandDim }}>
+                        <span style={{
+                          fontSize: "10px", fontWeight: 600, textTransform: "capitalize",
+                          color: THEME.brandHi, padding: "2px 8px", borderRadius: "100px", background: THEME.brandDim,
+                        }}>
                           {doc.tone}
                         </span>
                       )}
-                      <span className="mono" style={{ fontSize: "11px", color: THEME.textMuted }}>
+                      <span style={{ fontSize: "11px", color: THEME.textMuted }}>
                         {timeAgo(doc.createdAt)}
                       </span>
                     </div>
@@ -294,11 +308,11 @@ export default function HistoryPage() {
                     ) : expandedDoc && (
                       <>
                         <div style={{ marginBottom: "12px" }}>
-                          <label className="mono" style={{ fontSize: "10px", color: THEME.textDim, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "6px" }}>
-                            Original Text
+                          <label style={{ fontSize: "11px", fontWeight: 600, color: THEME.textDim, display: "block", marginBottom: "6px" }}>
+                            Original text
                           </label>
                           <div style={{
-                            padding: "12px", borderRadius: "6px",
+                            padding: "12px 14px", borderRadius: "10px",
                             background: THEME.surface2, border: `1px solid ${THEME.border}`,
                             fontSize: "13px", color: THEME.textDim, lineHeight: 1.7,
                             maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
@@ -308,11 +322,12 @@ export default function HistoryPage() {
                         </div>
                         {expandedDoc.rewrittenText && (
                           <div style={{ marginBottom: "12px" }}>
-                            <label className="mono" style={{ fontSize: "10px", color: THEME.human, textTransform: "uppercase", letterSpacing: "0.08em", display: "block", marginBottom: "6px" }}>
-                              Humanized Text
+                            <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", fontWeight: 600, color: THEME.human, marginBottom: "6px" }}>
+                              <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: THEME.human }} aria-hidden="true" />
+                              Humanized text
                             </label>
                             <div style={{
-                              padding: "12px", borderRadius: "6px",
+                              padding: "12px 14px", borderRadius: "10px",
                               background: THEME.humanDim, border: `1px solid ${THEME.human}33`,
                               fontSize: "13px", color: THEME.text, lineHeight: 1.7,
                               maxHeight: "200px", overflow: "auto", whiteSpace: "pre-wrap",
@@ -325,26 +340,26 @@ export default function HistoryPage() {
                           <button
                             onClick={() => handleReHumanize(doc)}
                             style={{
-                              display: "flex", alignItems: "center", gap: "5px",
-                              padding: "7px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600,
+                              display: "flex", alignItems: "center", gap: "6px",
+                              padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600,
                               background: THEME.brandDim, border: `1px solid ${THEME.brand}44`,
                               color: THEME.brandHi, cursor: "pointer",
                             }}
                           >
-                            <RotateCcw size={11} aria-hidden="true" /> Re-humanize
+                            <RotateCcw size={12} aria-hidden="true" /> Re-humanize
                           </button>
                           <button
                             onClick={() => void handleDelete(doc.id)}
                             disabled={deleting === doc.id}
                             style={{
-                              display: "flex", alignItems: "center", gap: "5px",
-                              padding: "7px 14px", borderRadius: "6px", fontSize: "12px",
+                              display: "flex", alignItems: "center", gap: "6px",
+                              padding: "8px 16px", borderRadius: "10px", fontSize: "12px", fontWeight: 600,
                               background: THEME.aiDim, border: `1px solid ${THEME.ai}33`,
                               color: THEME.ai, cursor: deleting === doc.id ? "not-allowed" : "pointer",
                               opacity: deleting === doc.id ? 0.5 : 1,
                             }}
                           >
-                            <Trash2 size={11} aria-hidden="true" /> {deleting === doc.id ? "Deleting..." : "Delete"}
+                            <Trash2 size={12} aria-hidden="true" /> {deleting === doc.id ? "Deleting…" : "Delete"}
                           </button>
                         </div>
                       </>
@@ -365,13 +380,13 @@ export default function HistoryPage() {
             disabled={pagination.page <= 1 || loading}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              background: "transparent", border: `1px solid ${THEME.border}`,
-              color: THEME.textDim, fontSize: "12px", fontWeight: 500,
-              padding: "7px 14px", borderRadius: "5px", cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
+              background: THEME.surface2, border: `1px solid ${THEME.border}`,
+              color: THEME.textDim, fontSize: "12px", fontWeight: 600,
+              padding: "8px 16px", borderRadius: "10px", cursor: pagination.page <= 1 ? "not-allowed" : "pointer",
               opacity: pagination.page <= 1 ? 0.4 : 1,
             }}
           >
-            <ChevronLeft size={13} aria-hidden="true" /> Prev
+            <ChevronLeft size={14} aria-hidden="true" /> Prev
           </button>
           <span className="tnum" style={{ fontSize: "12px", color: THEME.textDim }}>
             {pagination.page} / {pagination.totalPages}
@@ -381,13 +396,13 @@ export default function HistoryPage() {
             disabled={pagination.page >= pagination.totalPages || loading}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              background: "transparent", border: `1px solid ${THEME.border}`,
-              color: THEME.textDim, fontSize: "12px", fontWeight: 500,
-              padding: "7px 14px", borderRadius: "5px", cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
+              background: THEME.surface2, border: `1px solid ${THEME.border}`,
+              color: THEME.textDim, fontSize: "12px", fontWeight: 600,
+              padding: "8px 16px", borderRadius: "10px", cursor: pagination.page >= pagination.totalPages ? "not-allowed" : "pointer",
               opacity: pagination.page >= pagination.totalPages ? 0.4 : 1,
             }}
           >
-            Next <ChevronRight size={13} aria-hidden="true" />
+            Next <ChevronRight size={14} aria-hidden="true" />
           </button>
         </div>
       )}
@@ -395,7 +410,7 @@ export default function HistoryPage() {
       <style>{`
         .history-row:hover {
           border-color: ${THEME.brand}55 !important;
-          box-shadow: inset 3px 0 0 ${THEME.brand};
+          box-shadow: ${glow(THEME.brand, 0.16)};
         }
         @keyframes pulse {
           0%, 100% { opacity: 0.5; }

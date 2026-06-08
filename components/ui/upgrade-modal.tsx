@@ -107,7 +107,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.66)", backdropFilter: "blur(6px)",
+        background: "rgba(29,23,38,0.36)", backdropFilter: "blur(6px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "16px",
       }}
@@ -121,15 +121,15 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: "520px",
-          background: THEME.surface1, border: `1px solid ${THEME.border}`,
+          background: THEME.surface2, border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusXl, overflow: "hidden", position: "relative",
-          boxShadow: "0 24px 70px rgba(0,0,0,0.6)",
+          boxShadow: "0 28px 70px -18px rgba(124,58,237,0.32), 0 10px 30px -14px rgba(29,23,38,0.14)",
           outline: "none",
         }}
       >
-        {/* Brand-glow header strip — the "win moment" */}
+        {/* Aurora header strip — the "win moment" */}
         <div style={{
-          background: `linear-gradient(135deg, ${THEME.brandDim}, ${THEME.surface2})`,
+          background: `linear-gradient(135deg, ${THEME.brandDim} 0%, ${THEME.accentDim} 100%)`,
           borderBottom: `1px solid ${THEME.border}`,
           padding: "24px 32px",
           position: "relative",
@@ -148,12 +148,13 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
             <X size={18} aria-hidden="true" />
           </button>
 
-          <div className="kicker" style={{ marginBottom: "10px" }}>UNLOCK MORE</div>
+          <div className="kicker" style={{ marginBottom: "10px" }}>Nice work</div>
           <h2
             id="upgrade-modal-title"
             style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading, letterSpacing: "-0.02em" }}
           >
-            Keep that human score climbing
+            Keep that human score{" "}
+            <span style={{ color: THEME.accent }}>climbing</span>
           </h2>
           <p style={{ fontSize: "14px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
             Upgrade for unlimited passes, every tone, and saved history.
@@ -180,16 +181,17 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                   }}
                 >
                   {plan.popular && (
-                    <div className="mono" style={{
-                      position: "absolute", top: "-8px", left: "50%", transform: "translateX(-50%)",
-                      background: THEME.brand, color: "#ffffff", fontSize: "9px", fontWeight: 700,
-                      padding: "2px 8px", borderRadius: "100px", textTransform: "uppercase",
-                      letterSpacing: "0.08em", whiteSpace: "nowrap",
+                    <div style={{
+                      position: "absolute", top: "-9px", left: "50%", transform: "translateX(-50%)",
+                      background: THEME.accent, color: "#ffffff", fontSize: "10px", fontWeight: 700,
+                      padding: "3px 10px", borderRadius: "100px", whiteSpace: "nowrap",
+                      fontFamily: THEME.fontSans, letterSpacing: "0.01em",
+                      boxShadow: glow(THEME.accent, 0.35),
                     }}>
-                      Popular
+                      Most popular
                     </div>
                   )}
-                  <div className="mono" style={{ fontSize: "11px", fontWeight: 600, color: THEME.textDim, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, marginBottom: "6px", fontFamily: THEME.fontSans }}>
                     {plan.name}
                   </div>
                   <div className="tnum" style={{ fontSize: "28px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1 }}>
@@ -200,26 +202,26 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                     {plan.words}
                   </div>
                   {isCurrent ? (
-                    <div className="mono" style={{
-                      padding: "8px", borderRadius: THEME.radius, fontSize: "11px", fontWeight: 600,
+                    <div style={{
+                      padding: "8px", borderRadius: THEME.radius, fontSize: "12px", fontWeight: 600,
                       background: THEME.surface3, color: THEME.textDim,
-                      textTransform: "uppercase", letterSpacing: "0.06em",
+                      fontFamily: THEME.fontSans,
                     }}>
-                      Current
+                      Current plan
                     </div>
                   ) : plan.id !== "FREE" ? (
                     <button
                       onClick={() => handleUpgrade(plan.id)}
                       disabled={checkingOut !== null}
                       style={{
-                        display: "block", width: "100%", padding: "8px", borderRadius: THEME.radius,
-                        fontSize: "12px", fontWeight: 600, border: "none",
-                        background: isPro ? THEME.brand : THEME.surface3,
+                        display: "block", width: "100%", padding: "9px", borderRadius: THEME.radius,
+                        fontSize: "12px", fontWeight: 700, border: "none",
+                        background: isPro ? THEME.gradient : THEME.surface3,
                         color: isPro ? "#ffffff" : THEME.text,
                         textAlign: "center",
                         cursor: checkingOut ? "wait" : "pointer",
                         opacity: checkingOut && checkingOut !== plan.id ? 0.6 : 1,
-                        boxShadow: isPro ? glow(THEME.brand, 0.3) : "none",
+                        boxShadow: isPro ? glow(THEME.brand, 0.34) : "none",
                         fontFamily: THEME.fontSans,
                       }}
                     >
@@ -232,27 +234,42 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
           </div>
 
           {/* Annual savings hint */}
-          <div className="mono" style={{ fontSize: "11px", color: THEME.human, marginBottom: "24px", textAlign: "center", letterSpacing: "0.04em" }}>
-            Save ~20% with annual billing
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              fontSize: "12px", fontWeight: 600, fontFamily: THEME.fontSans,
+              color: THEME.accentHi, background: THEME.accentDim,
+              border: `1px solid ${THEME.accent}33`,
+              padding: "5px 12px", borderRadius: "999px",
+            }}>
+              <span aria-hidden="true" style={{ width: "6px", height: "6px", borderRadius: "50%", background: THEME.accent }} />
+              Save ~20% with annual billing
+            </span>
           </div>
 
           {/* What you unlock */}
           <div style={{ marginBottom: "20px" }}>
-            <div className="mono" style={{
-              fontSize: "11px", fontWeight: 600, color: THEME.textDim,
-              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px",
+            <div style={{
+              fontSize: "13px", fontWeight: 600, color: THEME.text,
+              marginBottom: "12px", fontFamily: THEME.fontSans,
             }}>
-              What you unlock:
+              Everything you unlock
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
               {[
                 "Unlimited humanizations (within plan)",
                 "4 tone modes",
                 "History & saved documents",
                 "Priority processing",
               ].map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
-                  <Check size={14} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0 }} />
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: "18px", height: "18px", borderRadius: "50%",
+                    background: THEME.humanDim, flexShrink: 0,
+                  }}>
+                    <Check size={12} color={THEME.human} aria-hidden="true" strokeWidth={3} />
+                  </span>
                   {f}
                 </div>
               ))}
@@ -261,9 +278,9 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
 
           {/* Discount code */}
           <div className="redeem-row" style={{ marginBottom: "20px" }}>
-            <div className="mono" style={{
-              fontSize: "11px", fontWeight: 600, color: THEME.textDim,
-              textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px",
+            <div style={{
+              fontSize: "13px", fontWeight: 600, color: THEME.text,
+              marginBottom: "8px", fontFamily: THEME.fontSans,
             }}>
               Have a discount code?
             </div>
@@ -272,13 +289,13 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter code..."
+                placeholder="Enter code"
                 aria-label="Discount code"
                 className="mono"
                 style={{
                   flex: 1, padding: "10px 12px", borderRadius: THEME.radius,
-                  background: THEME.surface2, border: `1px solid ${THEME.border}`,
-                  color: THEME.text, fontSize: "13px", outline: "none",
+                  background: THEME.surface1, border: `1px solid ${THEME.border}`,
+                  color: THEME.text, fontSize: "13px", outline: "none", letterSpacing: "0.04em",
                 }}
               />
               <button
@@ -299,7 +316,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
               <div
                 aria-live="polite"
                 style={{
-                  marginTop: "6px", fontSize: "12px", fontFamily: THEME.fontMono,
+                  marginTop: "8px", fontSize: "12px", fontWeight: 500, fontFamily: THEME.fontSans,
                   color: codeStatus.type === "success" ? THEME.human : THEME.ai,
                 }}
               >

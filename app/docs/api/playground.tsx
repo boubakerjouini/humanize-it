@@ -81,7 +81,7 @@ export default function Playground() {
       {/* ── Left: Inputs ──────────────────────────────── */}
       <div className="space-y-4">
         <div>
-          <label htmlFor="pg-api-key" className="block text-xs text-muted-foreground mb-1.5 font-medium font-mono">API Key</label>
+          <label htmlFor="pg-api-key" className="block text-xs text-muted-foreground mb-1.5 font-semibold">API Key</label>
           <input
             id="pg-api-key"
             type="password"
@@ -94,7 +94,7 @@ export default function Playground() {
         </div>
 
         <div>
-          <label className="block text-xs text-muted-foreground mb-1.5 font-medium font-mono">Endpoint</label>
+          <label className="block text-xs text-muted-foreground mb-1.5 font-semibold">Endpoint</label>
           <div className="flex gap-2">
             {(["analyze", "humanize"] as const).map((ep) => (
               <button
@@ -113,7 +113,7 @@ export default function Playground() {
         </div>
 
         <div>
-          <label htmlFor="pg-text" className="block text-xs text-muted-foreground mb-1.5 font-medium font-mono">Text</label>
+          <label htmlFor="pg-text" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Text</label>
           <textarea
             id="pg-text"
             value={text}
@@ -128,7 +128,7 @@ export default function Playground() {
         {endpoint === "humanize" && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pg-tone" className="block text-xs text-muted-foreground mb-1.5 font-medium font-mono">Tone</label>
+              <label htmlFor="pg-tone" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Tone</label>
               <select
                 id="pg-tone"
                 value={tone}
@@ -139,7 +139,7 @@ export default function Playground() {
               </select>
             </div>
             <div>
-              <label htmlFor="pg-intensity" className="block text-xs text-muted-foreground mb-1.5 font-medium font-mono">Intensity</label>
+              <label htmlFor="pg-intensity" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Intensity</label>
               <select
                 id="pg-intensity"
                 value={intensity}
@@ -155,7 +155,7 @@ export default function Playground() {
         <button
           onClick={() => void handleRun()}
           disabled={status === "loading"}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary hover:bg-[var(--brand-hi)] disabled:bg-[var(--surface-3)] disabled:text-muted-foreground text-white text-sm font-semibold transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary hover:bg-[var(--brand-hi)] disabled:bg-[var(--surface-3)] disabled:text-muted-foreground text-white text-sm font-semibold shadow-[0_8px_24px_-8px_rgba(124,58,237,0.45)] transition-all"
         >
           {status === "loading" ? (
             <><Loader2 size={14} className="animate-spin" aria-hidden="true" /> Running...</>
@@ -169,7 +169,7 @@ export default function Playground() {
       <div className="space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-muted-foreground font-medium font-mono">Response</label>
+            <label className="text-xs text-muted-foreground font-semibold">Response</label>
             {response && (
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono ${
                 status === "success" ? "bg-[var(--human-dim)] text-[var(--human)]" : status === "error" ? "bg-[var(--ai-dim)] text-[var(--ai)]" : "bg-[var(--surface-3)] text-muted-foreground"
@@ -181,7 +181,7 @@ export default function Playground() {
           <div className="relative rounded-lg bg-[var(--surface-1)] border border-border min-h-[260px] overflow-hidden" aria-live="polite">
             {status === "loading" ? (
               <div className="flex items-center justify-center h-[260px]">
-                <span className="text-[var(--human)] text-sm font-mono animate-pulse" aria-hidden="true">▌</span>
+                <Loader2 size={22} className="text-[var(--brand)] animate-spin" aria-hidden="true" />
               </div>
             ) : response ? (
               <>
@@ -207,7 +207,7 @@ export default function Playground() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-muted-foreground font-medium font-mono">cURL command</label>
+            <label className="text-xs text-muted-foreground font-semibold">cURL command</label>
           </div>
           <div className="relative rounded-lg bg-[var(--surface-1)] border border-border overflow-hidden">
             <pre className="p-4 text-xs font-mono text-muted-foreground overflow-auto max-h-[200px] leading-relaxed whitespace-pre-wrap">{buildCurl()}</pre>
@@ -227,7 +227,7 @@ export default function Playground() {
 // ── Simple JSON syntax highlighting ─────────────────────────
 
 function JsonHighlight({ json }: { json: string }) {
-  // Map JSON token types to Midnight Terminal palette tokens.
+  // Map JSON token types to the Aurora palette (purple keys, green strings, amber numbers).
   const highlighted = json
     .replace(/"([^"]+)":/g, `<span style="color:${THEME.brandHi}">"$1"</span>:`)
     .replace(/: "([^"]*)"/g, `: <span style="color:${THEME.human}">"$1"</span>`)

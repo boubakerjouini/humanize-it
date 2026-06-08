@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { THEME } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Best Undetectable AI Alternative in 2025 | HumanizeIt",
@@ -75,29 +75,29 @@ export default function UndetectableAiAlternativePage() {
             margin: 0,
             fontSize: "14px",
             color: THEME.textMuted,
-            fontFamily: THEME.fontMono,
           }}
         >
           <li>
-            <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>
+            <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
               Home
             </Link>
           </li>
-          <li style={{ color: THEME.textMuted }}>&gt;</li>
+          <li style={{ color: THEME.border }}>/</li>
           <li>
-            <Link href="/blog" style={{ color: THEME.textDim, textDecoration: "none" }}>
+            <Link href="/blog" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
               Blog
             </Link>
           </li>
-          <li style={{ color: THEME.textMuted }}>&gt;</li>
-          <li style={{ color: THEME.text, fontWeight: 500 }}>
+          <li style={{ color: THEME.border }}>/</li>
+          <li style={{ color: THEME.textDim, fontWeight: 500 }}>
             Best Undetectable AI Alternative in 2025
           </li>
         </ol>
       </nav>
 
-      {/* Published date */}
-      <p style={{ fontSize: "14px", color: THEME.textMuted, marginBottom: "16px", fontFamily: THEME.fontMono }}>
+      {/* Eyebrow + published date */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Comparison</div>
+      <p style={{ fontSize: "14px", color: THEME.textDim, marginBottom: "16px" }}>
         Updated January 12, 2025 &middot; 8 min read
       </p>
 
@@ -241,7 +241,6 @@ export default function UndetectableAiAlternativePage() {
                   fontSize: "12px",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
-                  fontFamily: THEME.fontMono,
                 }}
               >
                 Feature
@@ -250,12 +249,11 @@ export default function UndetectableAiAlternativePage() {
                 style={{
                   textAlign: "center",
                   padding: "12px 16px",
-                  fontWeight: 600,
-                  color: THEME.human,
+                  fontWeight: 700,
+                  color: THEME.brandHi,
                   fontSize: "12px",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
-                  fontFamily: THEME.fontMono,
                 }}
               >
                 HumanizeIt
@@ -269,7 +267,6 @@ export default function UndetectableAiAlternativePage() {
                   fontSize: "12px",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
-                  fontFamily: THEME.fontMono,
                 }}
               >
                 Undetectable.ai
@@ -306,7 +303,6 @@ export default function UndetectableAiAlternativePage() {
                     textAlign: "center",
                     color: THEME.human,
                     fontWeight: 600,
-                    fontFamily: THEME.fontMono,
                   }}
                 >
                   {humanize}
@@ -316,7 +312,6 @@ export default function UndetectableAiAlternativePage() {
                     padding: "10px 16px",
                     textAlign: "center",
                     color: THEME.textDim,
-                    fontFamily: THEME.fontMono,
                   }}
                 >
                   {undetectable}
@@ -522,11 +517,12 @@ export default function UndetectableAiAlternativePage() {
       <div
         style={{
           marginTop: "48px",
-          background: THEME.surface2,
-          border: `1px solid ${THEME.borderStrong}`,
+          background: THEME.surface1,
+          border: `1px solid ${THEME.border}`,
           borderRadius: THEME.radiusXl,
-          padding: "32px",
+          padding: "40px 32px",
           textAlign: "center",
+          boxShadow: glow(THEME.brand, 0.16),
         }}
       >
         <h2
@@ -566,6 +562,7 @@ export default function UndetectableAiAlternativePage() {
             padding: "12px 32px",
             borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Get Started Free &rarr;

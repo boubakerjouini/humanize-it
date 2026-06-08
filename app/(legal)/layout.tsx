@@ -4,10 +4,11 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
   return (
     <div style={{ minHeight: '100vh', color: THEME.text, fontFamily: THEME.fontSans }}>
       <header style={{ borderBottom: `1px solid ${THEME.border}`, padding: '16px 24px' }}>
-        <a href="/" style={{ textDecoration: 'none' }}>
+        <a href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'baseline', gap: '1px' }}>
           <span style={{ fontSize: '20px', fontWeight: 700, color: THEME.brand, fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>
             HumanizeIt
           </span>
+          <span aria-hidden="true" style={{ fontSize: '20px', fontWeight: 800, color: THEME.accent, fontFamily: THEME.fontHeading }}>.</span>
         </a>
       </header>
       <main style={{ maxWidth: '768px', margin: '0 auto', padding: '64px 24px' }}>

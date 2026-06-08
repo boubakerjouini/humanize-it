@@ -48,7 +48,7 @@ export function ExitIntent() {
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,0.66)", backdropFilter: "blur(6px)",
+        background: "rgba(29,23,38,0.36)", backdropFilter: "blur(6px)",
         padding: "16px",
       }}
       onClick={() => setShow(false)}
@@ -62,9 +62,9 @@ export function ExitIntent() {
         onClick={(e) => e.stopPropagation()}
         className="animate-fade-up"
         style={{
-          background: THEME.surface1, borderRadius: THEME.radiusXl,
+          background: THEME.surface2, borderRadius: THEME.radiusXl,
           border: `1px solid ${THEME.border}`,
-          boxShadow: "0 24px 70px rgba(0,0,0,0.6)",
+          boxShadow: "0 28px 70px -18px rgba(124,58,237,0.32), 0 10px 30px -14px rgba(29,23,38,0.14)",
           maxWidth: "420px", width: "90%",
           padding: "40px 32px", textAlign: "center",
           position: "relative",
@@ -89,9 +89,9 @@ export function ExitIntent() {
         <div style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           width: "56px", height: "56px", borderRadius: "50%",
-          background: THEME.brandDim, marginBottom: "16px",
+          background: THEME.accentDim, marginBottom: "16px",
         }}>
-          <Hand size={28} color={THEME.brandHi} aria-hidden="true" />
+          <Hand size={28} color={THEME.accent} aria-hidden="true" />
         </div>
 
         <h3
@@ -102,7 +102,9 @@ export function ExitIntent() {
             fontFamily: THEME.fontHeading,
           }}
         >
-          Wait — Get 500 free words before you go
+          Wait — get{" "}
+          <span style={{ color: THEME.accent }}>500 free words</span>{" "}
+          before you go
         </h3>
 
         <p style={{
@@ -116,7 +118,7 @@ export function ExitIntent() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            background: THEME.brand,
+            background: THEME.gradient,
             color: "#ffffff", fontWeight: 700,
             padding: "14px 32px", borderRadius: THEME.radius,
             fontSize: "15px", textDecoration: "none",
@@ -124,7 +126,7 @@ export function ExitIntent() {
             fontFamily: THEME.fontSans,
           }}
         >
-          Claim 500 Free Words →
+          Claim 500 free words →
         </Link>
       </div>
     </div>

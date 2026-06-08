@@ -71,15 +71,15 @@ export default function SignUpPage() {
       <div style={{
         position: "absolute", bottom: "10%", left: "30%",
         width: "400px", height: "400px",
-        background: `radial-gradient(circle, ${THEME.brand}14 0%, transparent 70%)`,
+        background: `radial-gradient(circle, ${THEME.accent}14 0%, transparent 70%)`,
         filter: "blur(80px)", pointerEvents: "none", zIndex: 0,
       }} />
       <div style={{ marginBottom: "20px", textAlign: "center", position: "relative", zIndex: 1 }}>
-        <div className="kicker" style={{ marginBottom: "14px" }}>START FREE</div>
+        <div className="kicker" style={{ marginBottom: "14px" }}>Start free</div>
         <span style={{
           fontSize: "24px", fontWeight: 800, color: THEME.brand,
           fontFamily: THEME.fontHeading, letterSpacing: "-0.02em",
-        }}>H.</span>
+        }}>H<span style={{ color: THEME.accent }}>.</span></span>
         <span style={{
           fontSize: "16px", fontWeight: 600, color: THEME.text, marginLeft: "6px",
           fontFamily: THEME.fontHeading, letterSpacing: "-0.01em",
@@ -89,8 +89,8 @@ export default function SignUpPage() {
         <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" afterSignUpUrl="/dashboard/editor" redirectUrl="/dashboard/editor" />
       </div>
       <Link href="/" style={{
-        fontSize: "12px", color: THEME.textMuted, textDecoration: "none", marginTop: "20px",
-        position: "relative", zIndex: 1, fontFamily: THEME.fontMono, letterSpacing: "0.04em",
+        fontSize: "13px", color: THEME.textDim, textDecoration: "none", marginTop: "20px",
+        position: "relative", zIndex: 1, fontWeight: 500,
       }}>
         ← Back to home
       </Link>
