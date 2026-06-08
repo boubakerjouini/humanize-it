@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Play, Copy, CheckCircle2 } from "lucide-react";
+import { THEME } from "@/lib/theme";
 
 type Endpoint = "analyze" | "humanize";
 
@@ -80,28 +81,29 @@ export default function Playground() {
       {/* ── Left: Inputs ──────────────────────────────── */}
       <div className="space-y-4">
         <div>
-          <label className="block text-xs text-zinc-500 mb-1.5 font-medium">API Key</label>
+          <label htmlFor="pg-api-key" className="block text-xs text-muted-foreground mb-1.5 font-semibold">API Key</label>
           <input
+            id="pg-api-key"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="sk_live_..."
-            className="w-full px-3 py-2.5 rounded-lg bg-[#0d1117] border border-zinc-800 text-sm font-mono text-zinc-300 placeholder:text-zinc-700 outline-none focus:border-blue-500/50 transition-all"
+            className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface-1)] border border-border text-sm font-mono text-foreground placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--brand)] transition-all"
           />
-          <p className="text-[10px] text-zinc-600 mt-1">Not stored — only used in-memory for this request</p>
+          <p className="text-[10px] text-[var(--text-muted)] mt-1">Not stored — only used in-memory for this request</p>
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-500 mb-1.5 font-medium">Endpoint</label>
+          <label className="block text-xs text-muted-foreground mb-1.5 font-semibold">Endpoint</label>
           <div className="flex gap-2">
             {(["analyze", "humanize"] as const).map((ep) => (
               <button
                 key={ep}
                 onClick={() => setEndpoint(ep)}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all border font-mono ${
                   endpoint === ep
-                    ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
-                    : "bg-zinc-800/30 border-zinc-800 text-zinc-500 hover:text-zinc-300"
+                    ? "bg-[var(--brand-dim)] border-[var(--brand)]/40 text-[var(--brand-hi)]"
+                    : "bg-[var(--surface-3)] border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
                 POST /api/v1/{ep}
@@ -111,34 +113,38 @@ export default function Playground() {
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-500 mb-1.5 font-medium">Text</label>
+          <label htmlFor="pg-text" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Text</label>
           <textarea
+            id="pg-text"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Enter text to analyze or humanize..."
+            aria-label="Text to send to the API"
             rows={6}
-            className="w-full px-3 py-2.5 rounded-lg bg-[#0d1117] border border-zinc-800 text-sm text-zinc-300 placeholder:text-zinc-700 outline-none focus:border-blue-500/50 resize-y transition-all"
+            className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface-1)] border border-border text-sm text-foreground placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--brand)] resize-y transition-all"
           />
         </div>
 
         {endpoint === "humanize" && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-zinc-500 mb-1.5 font-medium">Tone</label>
+              <label htmlFor="pg-tone" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Tone</label>
               <select
+                id="pg-tone"
                 value={tone}
                 onChange={(e) => setTone(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-zinc-800 text-sm text-zinc-300 outline-none focus:border-blue-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-[var(--surface-1)] border border-border text-sm text-foreground outline-none focus:border-[var(--brand)]"
               >
                 {TONES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-zinc-500 mb-1.5 font-medium">Intensity</label>
+              <label htmlFor="pg-intensity" className="block text-xs text-muted-foreground mb-1.5 font-semibold">Intensity</label>
               <select
+                id="pg-intensity"
                 value={intensity}
                 onChange={(e) => setIntensity(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-[#0d1117] border border-zinc-800 text-sm text-zinc-300 outline-none focus:border-blue-500/50"
+                className="w-full px-3 py-2 rounded-lg bg-[var(--surface-1)] border border-border text-sm text-foreground outline-none focus:border-[var(--brand)]"
               >
                 {INTENSITIES.map((i) => <option key={i} value={i}>{i}</option>)}
               </select>
@@ -149,12 +155,12 @@ export default function Playground() {
         <button
           onClick={() => void handleRun()}
           disabled={status === "loading"}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-500 text-white text-sm font-semibold transition-all"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-primary hover:bg-[var(--brand-hi)] disabled:bg-[var(--surface-3)] disabled:text-muted-foreground text-white text-sm font-semibold shadow-[0_8px_24px_-8px_rgba(124,58,237,0.45)] transition-all"
         >
           {status === "loading" ? (
-            <><Loader2 size={14} className="animate-spin" /> Running...</>
+            <><Loader2 size={14} className="animate-spin" aria-hidden="true" /> Running...</>
           ) : (
-            <><Play size={14} /> Run request</>
+            <><Play size={14} aria-hidden="true" /> Run request</>
           )}
         </button>
       </div>
@@ -163,36 +169,36 @@ export default function Playground() {
       <div className="space-y-3">
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-zinc-500 font-medium">Response</label>
+            <label className="text-xs text-muted-foreground font-semibold">Response</label>
             {response && (
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
-                status === "success" ? "bg-green-500/10 text-green-400" : status === "error" ? "bg-red-500/10 text-red-400" : "bg-zinc-800 text-zinc-500"
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono ${
+                status === "success" ? "bg-[var(--human-dim)] text-[var(--human)]" : status === "error" ? "bg-[var(--ai-dim)] text-[var(--ai)]" : "bg-[var(--surface-3)] text-muted-foreground"
               }`}>
                 {status === "success" ? "200 OK" : status === "error" ? "Error" : ""}
               </span>
             )}
           </div>
-          <div className="relative rounded-lg bg-[#0d1117] border border-zinc-800 min-h-[260px] overflow-hidden">
+          <div className="relative rounded-lg bg-[var(--surface-1)] border border-border min-h-[260px] overflow-hidden" aria-live="polite">
             {status === "loading" ? (
               <div className="flex items-center justify-center h-[260px]">
-                <span className="text-zinc-600 text-sm font-mono animate-pulse">▌</span>
+                <Loader2 size={22} className="text-[var(--brand)] animate-spin" aria-hidden="true" />
               </div>
             ) : response ? (
               <>
-                <pre className="p-4 text-xs font-mono text-zinc-400 overflow-auto max-h-[400px] leading-relaxed whitespace-pre-wrap">
+                <pre className="p-4 text-xs font-mono text-muted-foreground overflow-auto max-h-[400px] leading-relaxed whitespace-pre-wrap">
                   <JsonHighlight json={response} />
                 </pre>
                 <button
                   onClick={() => void handleCopy(response)}
                   className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-all ${
-                    copied ? "bg-green-500/10 text-green-400" : "bg-zinc-800/80 text-zinc-500 hover:text-zinc-300"
+                    copied ? "bg-[var(--human-dim)] text-[var(--human)]" : "bg-[var(--surface-3)] text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {copied ? <><CheckCircle2 size={9} /> Copied</> : <><Copy size={9} /> Copy</>}
+                  {copied ? <><CheckCircle2 size={9} aria-hidden="true" /> Copied</> : <><Copy size={9} aria-hidden="true" /> Copy</>}
                 </button>
               </>
             ) : (
-              <div className="flex items-center justify-center h-[260px] text-xs text-zinc-700">
+              <div className="flex items-center justify-center h-[260px] text-xs text-[var(--text-muted)]">
                 Response will appear here
               </div>
             )}
@@ -201,15 +207,15 @@ export default function Playground() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-zinc-500 font-medium">cURL command</label>
+            <label className="text-xs text-muted-foreground font-semibold">cURL command</label>
           </div>
-          <div className="relative rounded-lg bg-[#0d1117] border border-zinc-800 overflow-hidden">
-            <pre className="p-4 text-xs font-mono text-zinc-500 overflow-auto max-h-[200px] leading-relaxed whitespace-pre-wrap">{buildCurl()}</pre>
+          <div className="relative rounded-lg bg-[var(--surface-1)] border border-border overflow-hidden">
+            <pre className="p-4 text-xs font-mono text-muted-foreground overflow-auto max-h-[200px] leading-relaxed whitespace-pre-wrap">{buildCurl()}</pre>
             <button
               onClick={() => void handleCopy(buildCurl())}
-              className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-zinc-800/80 text-zinc-500 hover:text-zinc-300 transition-all"
+              className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-[var(--surface-3)] text-muted-foreground hover:text-foreground transition-all"
             >
-              <Copy size={9} /> Copy
+              <Copy size={9} aria-hidden="true" /> Copy
             </button>
           </div>
         </div>
@@ -221,11 +227,12 @@ export default function Playground() {
 // ── Simple JSON syntax highlighting ─────────────────────────
 
 function JsonHighlight({ json }: { json: string }) {
+  // Map JSON token types to the Aurora palette (purple keys, green strings, amber numbers).
   const highlighted = json
-    .replace(/"([^"]+)":/g, '<span style="color:#7dd3fc">"$1"</span>:')
-    .replace(/: "([^"]*)"/g, ': <span style="color:#86efac">"$1"</span>')
-    .replace(/: (\d+\.?\d*)/g, ': <span style="color:#fbbf24">$1</span>')
-    .replace(/: (true|false|null)/g, ': <span style="color:#c084fc">$1</span>');
+    .replace(/"([^"]+)":/g, `<span style="color:${THEME.brandHi}">"$1"</span>:`)
+    .replace(/: "([^"]*)"/g, `: <span style="color:${THEME.human}">"$1"</span>`)
+    .replace(/: (\d+\.?\d*)/g, `: <span style="color:${THEME.warn}">$1</span>`)
+    .replace(/: (true|false|null)/g, `: <span style="color:${THEME.brand}">$1</span>`);
 
   return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
 }

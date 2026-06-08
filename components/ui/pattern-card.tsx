@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { THEME } from "@/lib/theme";
 
 interface PatternHit {
   id: string;
@@ -42,12 +44,13 @@ const PATTERN_EXPLANATIONS: Record<string, string> = {
   "low-perplexity": "Most sentences start with common, predictable words.",
 };
 
+// Severity → semantic accent on white. critical/high = AI red, medium = warn amber, low = human green.
 function severityStyles(severity: string): { borderColor: string; badgeBg: string; badgeColor: string } {
   switch (severity) {
     case "critical":
-    case "high":     return { borderColor: "#dc2626", badgeBg: "#fef2f2", badgeColor: "#dc2626" };
-    case "medium":   return { borderColor: "#d97706", badgeBg: "#fffbeb", badgeColor: "#d97706" };
-    default:         return { borderColor: "#16a34a", badgeBg: "#f0fdf4", badgeColor: "#16a34a" };
+    case "high":     return { borderColor: THEME.ai, badgeBg: THEME.aiDim, badgeColor: THEME.ai };
+    case "medium":   return { borderColor: THEME.warn, badgeBg: THEME.warnDim, badgeColor: THEME.warn };
+    default:         return { borderColor: THEME.human, badgeBg: THEME.humanDim, badgeColor: THEME.human };
   }
 }
 
@@ -55,18 +58,24 @@ export function PatternCard({ pattern }: PatternCardProps) {
   const [open, setOpen] = useState(false);
   const styles = severityStyles(pattern.severity);
   const explanation = PATTERN_EXPLANATIONS[pattern.id] ?? "AI-generated text pattern detected.";
+  const panelId = useId();
+  const buttonId = useId();
 
   return (
     <div style={{
-      background: "#ffffff",
-      border: "1px solid #e5e7eb",
+      background: THEME.surface2,
+      border: `1px solid ${THEME.border}`,
       borderLeft: `4px solid ${styles.borderColor}`,
-      borderRadius: "12px",
+      borderRadius: THEME.radius,
       overflow: "hidden",
+      boxShadow: "0 1px 2px rgba(29,23,38,0.04)",
       transition: "box-shadow 0.15s",
     }}>
       <button
+        id={buttonId}
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
         style={{
           width: "100%",
           display: "flex",
@@ -82,43 +91,57 @@ export function PatternCard({ pattern }: PatternCardProps) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
           {/* Label */}
-          <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827", minWidth: 0 }}>
+          <span style={{ fontSize: "13px", fontWeight: 500, color: THEME.text, minWidth: 0 }}>
             {pattern.label}
           </span>
 
-          {/* Severity badge */}
+          {/* Severity chip */}
           <span style={{
-            fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "100px",
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            fontSize: "11px", fontWeight: 600, padding: "3px 9px", borderRadius: "999px",
             background: styles.badgeBg, color: styles.badgeColor,
-            textTransform: "uppercase", letterSpacing: "0.5px", flexShrink: 0,
+            flexShrink: 0, textTransform: "capitalize",
           }}>
+            <span aria-hidden="true" style={{
+              width: 6, height: 6, borderRadius: "50%", background: styles.badgeColor,
+            }} />
             {pattern.severity}
           </span>
 
           {/* Hit count */}
-          <span style={{ fontSize: "11px", color: "#4b5563", flexShrink: 0 }}>
-            {pattern.hits} hit{pattern.hits !== 1 ? "s" : ""}
+          <span style={{ fontSize: "11px", color: THEME.textDim, flexShrink: 0 }}>
+            <span style={{ fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
+              {pattern.hits}
+            </span>{" "}
+            hit{pattern.hits !== 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Chevron */}
-        <span style={{
-          color: "#4b5563", fontSize: "12px", flexShrink: 0,
-          transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          transition: "transform 0.2s",
-          display: "inline-block",
-        }}>
-          &#9662;
-        </span>
+        <ChevronDown
+          size={14}
+          color={THEME.textDim}
+          aria-hidden="true"
+          style={{
+            flexShrink: 0,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s",
+          }}
+        />
       </button>
 
       {open && (
-        <div style={{
-          padding: "0 14px 14px 18px",
-          borderTop: "1px solid #f3f4f6",
-          background: "#f9fafb",
-        }}>
-          <p style={{ fontSize: "12px", color: "#374151", lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
+        <div
+          id={panelId}
+          role="region"
+          aria-labelledby={buttonId}
+          style={{
+            padding: "0 14px 14px 18px",
+            borderTop: `1px solid ${THEME.border}`,
+            background: THEME.surface1,
+          }}
+        >
+          <p style={{ fontSize: "12px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "10px", paddingTop: "10px" }}>
             {explanation}
           </p>
           {pattern.examples.length > 0 && (
@@ -126,10 +149,10 @@ export function PatternCard({ pattern }: PatternCardProps) {
               {pattern.examples.map((ex, i) => (
                 <code key={i} style={{
                   fontSize: "11px", padding: "3px 8px",
-                  background: "#f3e8ff",
-                  border: "1px solid #e9d5ff",
-                  borderRadius: "6px", color: "#7e22ce",
-                  fontFamily: "var(--font-mono), monospace",
+                  background: THEME.brandDim,
+                  border: `1px solid ${THEME.brand}40`,
+                  borderRadius: "6px", color: THEME.brandHi,
+                  fontFamily: THEME.fontMono,
                 }}>
                   {ex}
                 </code>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "7 Best AI Humanizer Tools in 2025 (Tested) | HumanizeIt",
@@ -32,75 +33,84 @@ export const metadata: Metadata = {
 
 const h2Style: React.CSSProperties = {
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
-  marginTop: "40px",
+  marginTop: "44px",
   marginBottom: "16px",
+  fontFamily: THEME.fontHeading,
+  letterSpacing: "-0.01em",
 };
 
 const pStyle: React.CSSProperties = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
+  fontFamily: THEME.fontSans,
 };
 
 const h3Style: React.CSSProperties = {
   fontWeight: 700,
-  color: "#3b0764",
+  color: THEME.text,
   fontSize: "20px",
   marginTop: "32px",
   marginBottom: "12px",
+  fontFamily: THEME.fontHeading,
+  letterSpacing: "-0.01em",
 };
 
 const thStyle: React.CSSProperties = {
-  border: "1px solid #d1d5db",
-  padding: "10px 14px",
+  borderBottom: `1px solid ${THEME.borderStrong}`,
+  padding: "11px 14px",
   textAlign: "left",
-  fontWeight: 700,
-  fontSize: "14px",
-  color: "#1f2937",
-  background: "#f3f4f6",
+  fontWeight: 600,
+  fontSize: "12px",
+  textTransform: "uppercase",
+  letterSpacing: "0.04em",
+  color: THEME.text,
+  background: THEME.surface1,
 };
 
 const tdStyle: React.CSSProperties = {
-  border: "1px solid #e5e7eb",
-  padding: "10px 14px",
+  borderBottom: `1px solid ${THEME.border}`,
+  padding: "11px 14px",
   fontSize: "14px",
-  color: "#374151",
+  color: THEME.textDim,
 };
 
 export default function BestAiHumanizerToolsPage() {
   return (
-    <article style={{ maxWidth: "48rem", margin: "0 auto", padding: "48px 16px" }}>
+    <article style={{ maxWidth: "48rem", margin: "0 auto", padding: "48px 16px", color: THEME.text }}>
       {/* Breadcrumb */}
-      <nav style={{ marginBottom: "32px", fontSize: "14px", color: "#6b7280" }}>
-        <Link href="/" style={{ color: "#6b7280", textDecoration: "none" }}>
+      <nav style={{ marginBottom: "32px", fontSize: "13px", color: THEME.textMuted }}>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Home
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
-        <Link href="/blog" style={{ color: "#6b7280", textDecoration: "none" }}>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <Link href="/blog" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Blog
         </Link>
-        <span style={{ margin: "0 8px" }}>&gt;</span>
-        <span style={{ color: "#9ca3af" }}>7 Best AI Humanizer Tools in 2025</span>
+        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
+        <span style={{ color: THEME.textDim }}>7 Best AI Humanizer Tools in 2025</span>
       </nav>
 
       {/* H1 */}
+      <div className="kicker" style={{ marginBottom: "16px" }}>Comparison</div>
       <h1
         style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          color: "#3b0764",
+          fontFamily: THEME.fontHeading,
+          fontWeight: 700,
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
           lineHeight: 1.2,
+          letterSpacing: "-0.02em",
           marginBottom: "16px",
         }}
       >
         7 Best AI Humanizer Tools in 2025 (Tested &amp; Compared)
       </h1>
 
-      <p style={{ ...pStyle, color: "#6b7280", fontSize: "14px" }}>
+      <p style={{ ...pStyle, color: THEME.textDim, fontSize: "13px" }}>
         Last updated: January 15, 2025 &middot; 8 min read
       </p>
 
@@ -131,12 +141,19 @@ export default function BestAiHumanizerToolsPage() {
       {/* Comparison Table */}
       <h2 style={h2Style}>Quick Comparison Table</h2>
 
-      <div style={{ overflowX: "auto", marginBottom: "24px" }}>
+      <div
+        style={{
+          overflowX: "auto",
+          marginBottom: "24px",
+          border: `1px solid ${THEME.border}`,
+          borderRadius: THEME.radiusLg,
+          background: THEME.surface2,
+        }}
+      >
         <table
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            border: "1px solid #d1d5db",
             fontSize: "14px",
           }}
         >
@@ -151,16 +168,32 @@ export default function BestAiHumanizerToolsPage() {
             </tr>
           </thead>
           <tbody>
-            <tr style={{ background: "#faf5ff" }}>
-              <td style={{ ...tdStyle, fontWeight: 700, color: "#7e22ce" }}>HumanizeIt</td>
+            <tr style={{ background: THEME.brandDim }}>
+              <td style={{ ...tdStyle, fontWeight: 700, color: THEME.brandHi }}>HumanizeIt</td>
               <td style={tdStyle}>$9/mo</td>
               <td style={tdStyle}>Yes (500 words/day)</td>
-              <td style={tdStyle}>96%</td>
-              <td style={tdStyle}>9.4/10</td>
-              <td style={{ ...tdStyle, fontWeight: 600, color: "#16a34a" }}>Best Overall</td>
+              <td style={{ ...tdStyle, color: THEME.human, fontWeight: 700 }}>96%</td>
+              <td style={{ ...tdStyle, color: THEME.human, fontWeight: 700 }}>9.4/10</td>
+              <td style={tdStyle}>
+                <span
+                  style={{
+                    display: "inline-block",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    color: THEME.accentHi,
+                    background: THEME.accentDim,
+                    border: `1px solid ${THEME.accent}33`,
+                    padding: "3px 10px",
+                    borderRadius: "999px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Best Overall
+                </span>
+              </td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>Undetectable.ai</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>Undetectable.ai</td>
               <td style={tdStyle}>$14.99/mo</td>
               <td style={tdStyle}>Limited</td>
               <td style={tdStyle}>91%</td>
@@ -168,7 +201,7 @@ export default function BestAiHumanizerToolsPage() {
               <td style={tdStyle}>Good, but overpriced</td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>WriteHuman</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>WriteHuman</td>
               <td style={tdStyle}>$9.99/mo</td>
               <td style={tdStyle}>Yes (limited)</td>
               <td style={tdStyle}>82%</td>
@@ -176,7 +209,7 @@ export default function BestAiHumanizerToolsPage() {
               <td style={tdStyle}>Basic rewriting</td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>StealthGPT</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>StealthGPT</td>
               <td style={tdStyle}>$14.99/mo</td>
               <td style={tdStyle}>No</td>
               <td style={tdStyle}>88%</td>
@@ -184,15 +217,15 @@ export default function BestAiHumanizerToolsPage() {
               <td style={tdStyle}>Billing concerns</td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>Quillbot</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>Quillbot</td>
               <td style={tdStyle}>Free / $9.95/mo</td>
               <td style={tdStyle}>Yes</td>
-              <td style={tdStyle}>54%</td>
+              <td style={{ ...tdStyle, color: THEME.ai, fontWeight: 700 }}>54%</td>
               <td style={tdStyle}>6.5/10</td>
               <td style={tdStyle}>Not built for AI bypass</td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>HIX Bypass</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>HIX Bypass</td>
               <td style={tdStyle}>$12.99/mo</td>
               <td style={tdStyle}>Yes (limited)</td>
               <td style={tdStyle}>85%</td>
@@ -200,7 +233,7 @@ export default function BestAiHumanizerToolsPage() {
               <td style={tdStyle}>Decent but slow</td>
             </tr>
             <tr>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>Humbot</td>
+              <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>Humbot</td>
               <td style={tdStyle}>$9.99/mo</td>
               <td style={tdStyle}>Yes (300 words)</td>
               <td style={tdStyle}>80%</td>
@@ -235,7 +268,7 @@ export default function BestAiHumanizerToolsPage() {
         more than enough to test the tool thoroughly before committing. There are no hidden upsells,
         no surprise charges, and no confusing credit systems. You pay $9, you get full access.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>
         Pros:
       </p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
@@ -245,7 +278,7 @@ export default function BestAiHumanizerToolsPage() {
         <li>Generous free tier (500 words/day)</li>
         <li>Transparent billing with no hidden fees</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>
         Cons:
       </p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
@@ -268,13 +301,13 @@ export default function BestAiHumanizerToolsPage() {
         reviews mention difficulty cancelling subscriptions. The product itself is good, but the
         value proposition is harder to justify when cheaper alternatives outperform it.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Strong 91% bypass rate</li>
         <li>Built-in detection checker</li>
         <li>Clean, intuitive interface</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Expensive at $14.99/mo for limited words</li>
         <li>Dark billing patterns reported by users</li>
@@ -295,13 +328,13 @@ export default function BestAiHumanizerToolsPage() {
         detectors like Originality.ai. If you only need to pass basic checks, it works fine. For
         high-stakes content, you will want something more robust.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Simple, easy-to-use interface</li>
         <li>Fast processing times</li>
         <li>Good meaning preservation</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>82% bypass rate is below average</li>
         <li>Struggles with Originality.ai specifically</li>
@@ -324,13 +357,13 @@ export default function BestAiHumanizerToolsPage() {
         reportedly requires contacting support directly. The product works, but the billing
         experience is a significant red flag.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>88% bypass rate across detectors</li>
         <li>Multiple humanization modes</li>
         <li>Good output quality overall</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Reports of unexpected charges up to $359</li>
         <li>Confusing pricing tiers</li>
@@ -353,14 +386,14 @@ export default function BestAiHumanizerToolsPage() {
         Quillbot is excellent. If you specifically need to make AI-generated text undetectable,
         look elsewhere.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Generous free tier</li>
         <li>Excellent general paraphrasing</li>
         <li>Well-established, trustworthy brand</li>
         <li>Grammar checker included</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>54% bypass rate &mdash; not effective against AI detectors</li>
         <li>Not designed for AI humanization</li>
@@ -382,13 +415,13 @@ export default function BestAiHumanizerToolsPage() {
         quickly. At $12.99 per month, the pricing is mid-range, but the slower processing and
         slightly lower bypass rates make it hard to choose over the top-ranked options.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>85% bypass rate</li>
         <li>Part of a larger writing tools suite</li>
         <li>Built-in detection scoring</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Noticeably slow processing times</li>
         <li>Mid-range pricing without standout features</li>
@@ -410,13 +443,13 @@ export default function BestAiHumanizerToolsPage() {
         others had odd phrasing that could raise suspicion. As the tool matures, this will likely
         improve, but right now it is hard to recommend over more reliable options.
       </p>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Pros:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Pros:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>Clean, modern interface</li>
         <li>Competitive pricing at $9.99/month</li>
         <li>Free tier available</li>
       </ul>
-      <p style={{ ...pStyle, fontWeight: 600 }}>Cons:</p>
+      <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
         <li>80% bypass rate is below the leaders</li>
         <li>Inconsistent output quality</li>
@@ -469,20 +502,29 @@ export default function BestAiHumanizerToolsPage() {
 
       {/* CTA Box */}
       <div
-        className="bg-purple-700 text-white rounded-2xl p-8 text-center"
-        style={{ marginTop: "48px" }}
+        style={{
+          marginTop: "48px",
+          border: `1px solid ${THEME.border}`,
+          borderRadius: THEME.radiusXl,
+          background: THEME.surface1,
+          padding: "40px 32px",
+          textAlign: "center",
+          boxShadow: glow(THEME.brand, 0.16),
+        }}
       >
         <h2
           style={{
             fontSize: "24px",
-            fontWeight: 800,
+            fontWeight: 700,
             marginBottom: "12px",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            color: THEME.text,
+            fontFamily: THEME.fontHeading,
+            letterSpacing: "-0.01em",
           }}
         >
           Ready to Humanize Your AI Text?
         </h2>
-        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", opacity: 0.9 }}>
+        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
           Try HumanizeIt free &mdash; no credit card required. Get 500 words per day on the free
           tier, or unlock unlimited humanization for just $9/month.
         </p>
@@ -490,13 +532,14 @@ export default function BestAiHumanizerToolsPage() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            background: "#ffffff",
-            color: "#7e22ce",
-            fontWeight: 700,
+            background: THEME.brand,
+            color: "#fff",
+            fontWeight: 600,
             fontSize: "16px",
             padding: "14px 32px",
-            borderRadius: "10px",
+            borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: glow(THEME.brand, 0.32),
           }}
         >
           Start Free &rarr;

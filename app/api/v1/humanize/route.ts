@@ -6,8 +6,15 @@ import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption } from "@/lib/algorithms/humanizeText";
 import { authenticateApiKey } from "@/lib/api-key-auth";
+import { PLANS } from "@/lib/plans";
+import { consumeWordQuota, refundWordQuota } from "@/lib/quota";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
+
+function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
 
 function rateLimitHeaders(auth: { monthlyRequestCount: number; apiRequestsLimit: number; monthlyResetAt: Date }) {
   return {
@@ -28,11 +35,21 @@ export async function POST(req: Request) {
     }
 
     const headers = rateLimitHeaders(authResult);
+    const plan = PLANS[authResult.plan];
 
     if (authResult.monthlyRequestCount > authResult.apiRequestsLimit) {
       return NextResponse.json(
         { error: { code: "QUOTA_EXCEEDED", message: "Monthly API request quota exceeded." } },
         { status: 429, headers: { ...headers, "Retry-After": String(Math.floor((authResult.monthlyResetAt.getTime() - Date.now()) / 1000)) } }
+      );
+    }
+
+    // Per-minute burst limit on this Anthropic-backed endpoint
+    const rl = await checkRateLimit(`v1:${authResult.apiKeyId}`, plan.rateLimit);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests per minute. Slow down." } },
+        { status: 429, headers: { ...headers, "Retry-After": String(rl.retryAfterSeconds) } }
       );
     }
 
@@ -73,6 +90,16 @@ export async function POST(req: Request) {
     const maxPasses = typeof passes === "number" && passes >= 1 && passes <= 3 ? Math.floor(passes) : 1;
     const SCORE_THRESHOLD = 45;
 
+    // Enforce the plan WORD quota (the real cost gate), not just request count.
+    const words = countWords(text);
+    const reserved = await consumeWordQuota(authResult.userId, words, plan);
+    if (!reserved) {
+      return NextResponse.json(
+        { error: { code: "QUOTA_EXCEEDED", message: "Monthly word allowance exceeded for your plan." } },
+        { status: 429, headers }
+      );
+    }
+
     const analysisResult = analyzeText(text);
     let currentText = text;
     let currentAnalysis = analysisResult;
@@ -80,25 +107,43 @@ export async function POST(req: Request) {
     const scoreHistory: number[] = [];
     let passesRun = 0;
 
-    for (let p = 0; p < maxPasses; p++) {
-      const passIntensity = p === 0 ? intensityValue : "heavy";
-      const aggressiveHint = p >= 2
-        ? "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style."
-        : undefined;
+    try {
+      for (let p = 0; p < maxPasses; p++) {
+        const passIntensity = p === 0 ? intensityValue : "heavy";
+        const aggressiveHint = p >= 2
+          ? "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style."
+          : undefined;
 
-      const { humanizedText: passText, tokensUsed: passTokens } = await humanizeText(
-        currentText, toneValue, currentAnalysis, passIntensity, undefined, undefined, aggressiveHint
+        const { humanizedText: passText, tokensUsed: passTokens } = await humanizeText(
+          currentText, toneValue, currentAnalysis, passIntensity, undefined, undefined, aggressiveHint
+        );
+        totalTokens += passTokens;
+        passesRun++;
+
+        const passAnalysis = analyzeText(passText);
+        scoreHistory.push(Math.round(passAnalysis.score));
+        currentText = passText;
+        currentAnalysis = passAnalysis;
+
+        // Stop early if score is good enough
+        if (passAnalysis.score < SCORE_THRESHOLD) break;
+      }
+    } catch (modelErr) {
+      await refundWordQuota(authResult.userId, words);
+      console.error("[v1/humanize] model call failed:", modelErr);
+      return NextResponse.json(
+        { error: { code: "REWRITE_FAILED", message: "The rewrite could not be completed. Please try again." } },
+        { status: 502, headers }
       );
-      totalTokens += passTokens;
-      passesRun++;
+    }
 
-      const passAnalysis = analyzeText(passText);
-      scoreHistory.push(Math.round(passAnalysis.score));
-      currentText = passText;
-      currentAnalysis = passAnalysis;
-
-      // Stop early if score is good enough
-      if (passAnalysis.score < SCORE_THRESHOLD) break;
+    // Never return an empty rewrite as success.
+    if (!currentText || currentText.trim().length === 0) {
+      await refundWordQuota(authResult.userId, words);
+      return NextResponse.json(
+        { error: { code: "EMPTY_RESULT", message: "The rewrite returned no usable text." } },
+        { status: 502, headers }
+      );
     }
 
     return NextResponse.json({

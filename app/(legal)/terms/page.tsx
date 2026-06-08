@@ -1,9 +1,11 @@
+import { THEME } from "@/lib/theme";
+
 export const metadata = { title: 'Terms of Service — HumanizeIt' }
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>
-    <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#111827', marginBottom: '12px', borderBottom: '1px solid rgba(139,92,246,0.2)', paddingBottom: '8px' }}>{title}</h2>
-    <div style={{ color: '#4b5563', lineHeight: 1.8, fontSize: '15px' }}>{children}</div>
+    <h2 style={{ fontSize: '20px', fontWeight: 600, color: THEME.text, marginBottom: '12px', borderBottom: `1px solid ${THEME.border}`, paddingBottom: '8px', fontFamily: THEME.fontHeading }}>{title}</h2>
+    <div style={{ color: THEME.textDim, lineHeight: 1.8, fontSize: '15px' }}>{children}</div>
   </section>
 )
 
@@ -11,8 +13,8 @@ export default function TermsPage() {
   return (
     <>
       <div style={{ marginBottom: '48px' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: 700, color: '#111827', marginBottom: '8px' }}>Terms of Service</h1>
-        <p style={{ color: '#6b7280', fontSize: '14px' }}>Effective date: March 5, 2026</p>
+        <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Terms of Service</h1>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Effective date: March 5, 2026</p>
       </div>
 
       <Section title="1. Acceptance">
@@ -25,9 +27,9 @@ export default function TermsPage() {
 
       <Section title="3. Plans & Limits">
         <ul style={{ paddingLeft: '20px' }}>
-          <li style={{ marginBottom: '8px' }}><strong style={{ color: '#111827' }}>Free:</strong> $0 — 500 words/day, 1 humanization/day</li>
-          <li style={{ marginBottom: '8px' }}><strong style={{ color: '#111827' }}>Pro:</strong> $9/month or $79/year — 50,000 words/month, unlimited humanizations</li>
-          <li style={{ marginBottom: '8px' }}><strong style={{ color: '#111827' }}>Team:</strong> $29/month or $249/year — 200,000 words/month, unlimited humanizations</li>
+          <li style={{ marginBottom: '8px' }}><strong style={{ color: THEME.text }}>Free:</strong> $0 — 500 words/day, 1 humanization/day</li>
+          <li style={{ marginBottom: '8px' }}><strong style={{ color: THEME.text }}>Pro:</strong> $9/month or $79/year — 50,000 words/month, unlimited humanizations</li>
+          <li style={{ marginBottom: '8px' }}><strong style={{ color: THEME.text }}>Team:</strong> $29/month or $249/year — 200,000 words/month, unlimited humanizations</li>
         </ul>
         <p style={{ marginTop: '12px' }}>Quotas reset daily (Free) or monthly (Pro/Team) based on your billing cycle.</p>
       </Section>
@@ -69,7 +71,7 @@ export default function TermsPage() {
       </Section>
 
       <Section title="11. Contact">
-        <p>For questions about these Terms: <strong style={{ color: '#111827' }}>support@humanizeit.app</strong></p>
+        <p>For questions about these Terms: <strong style={{ color: THEME.text }}>support@humanizeit.app</strong></p>
       </Section>
     </>
   )

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "HumanizeIt for Agencies — Bulk AI Humanization | HumanizeIt",
@@ -28,15 +29,17 @@ export const metadata: Metadata = {
 };
 
 const h2Style = {
+  fontFamily: THEME.fontHeading,
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
   marginTop: "40px",
   marginBottom: "16px",
+  letterSpacing: "-0.01em",
 };
 
 const pStyle = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
@@ -46,7 +49,7 @@ export default function AgenciesUseCasePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-8">
+      <nav className="text-sm mb-8" style={{ color: THEME.textDim }}>
         <Link href="/" className="hover:underline">
           Home
         </Link>
@@ -56,16 +59,20 @@ export default function AgenciesUseCasePage() {
         <span>Agencies</span>
       </nav>
 
+      <div className="kicker" style={{ marginBottom: "16px" }}>For agencies</div>
       <h1
         style={{
-          fontFamily: "Plus Jakarta Sans",
+          fontFamily: THEME.fontHeading,
           fontWeight: 800,
-          color: "#3b0764",
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
+          letterSpacing: "-0.02em",
           marginBottom: "24px",
+          lineHeight: 1.15,
         }}
       >
-        HumanizeIt for Agencies: AI Humanization at Scale
+        HumanizeIt for Agencies: AI Humanization{" "}
+        <span style={{ color: THEME.brand }}>at Scale</span>
       </h1>
 
       <p style={pStyle}>
@@ -168,19 +175,28 @@ export default function AgenciesUseCasePage() {
       </p>
 
       {/* CTA Box */}
-      <div className="bg-purple-700 text-white rounded-2xl p-8 text-center" style={{ marginTop: "48px" }}>
-        <h2 style={{ fontWeight: 700, fontSize: "24px", marginBottom: "12px" }}>
+      <div
+        className="rounded-2xl p-8 text-center"
+        style={{
+          marginTop: "48px",
+          background: THEME.surface1,
+          border: `1px solid ${THEME.border}`,
+          boxShadow: glow(THEME.brand, 0.18),
+        }}
+      >
+        <h2 style={{ fontFamily: THEME.fontHeading, fontWeight: 700, fontSize: "24px", marginBottom: "12px", color: THEME.text, letterSpacing: "-0.02em" }}>
           Scale Your Agency&apos;s Content Production
         </h2>
-        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", opacity: 0.9 }}>
+        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", color: THEME.textDim }}>
           The TEAM plan at $29/mo gives your entire agency unlimited team members, bulk processing, and full API access.
           It pays for itself before lunch on day one.
         </p>
         <Link
           href="/sign-up"
-          className="inline-block bg-white text-purple-700 font-bold rounded-full px-8 py-3 hover:bg-gray-100 transition"
+          className="inline-block font-bold rounded-full px-8 py-3 transition"
+          style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
-          Get TEAM for $29/mo
+          Get TEAM for $29/mo &rarr;
         </Link>
       </div>
     </div>

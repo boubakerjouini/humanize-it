@@ -5,6 +5,16 @@ export const alt = "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Tur
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Aurora palette (Satori can't read CSS vars, so literal hex mirrors lib/theme.ts)
+const BG = "#ffffff";
+const SURFACE = "#faf8fe";
+const TEXT = "#1d1726";
+const TEXT_DIM = "#5b5470";
+const TEXT_MUTED = "#8b8399";
+const ACCENT = "#f97316";
+const HUMAN = "#16a34a";
+const BORDER = "#e9e3f3";
+
 export default function OGImage() {
   return new ImageResponse(
     (
@@ -15,21 +25,32 @@ export default function OGImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#0a0a0a",
+          backgroundColor: BG,
           padding: "64px 72px",
           fontFamily: "system-ui, sans-serif",
           position: "relative",
         }}
       >
-        {/* Purple glow background */}
+        {/* Purple aurora glow top-left */}
         <div style={{
           position: "absolute",
-          top: "-100px",
-          right: "-100px",
+          top: "-140px",
+          left: "-120px",
           width: "600px",
           height: "600px",
           borderRadius: "300px",
-          background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(124,58,237,0.16) 0%, transparent 70%)",
+          display: "flex",
+        }} />
+        {/* Orange aurora glow top-right */}
+        <div style={{
+          position: "absolute",
+          top: "-120px",
+          right: "-120px",
+          width: "540px",
+          height: "540px",
+          borderRadius: "270px",
+          background: "radial-gradient(circle, rgba(249,115,22,0.14) 0%, transparent 70%)",
           display: "flex",
         }} />
 
@@ -37,17 +58,17 @@ export default function OGImage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{
-              width: "40px", height: "40px", borderRadius: "10px",
-              background: "linear-gradient(135deg, #7c3aed, #4c1d95)",
+              width: "44px", height: "44px", borderRadius: "12px",
+              background: "linear-gradient(135deg, #7c3aed 0%, #a855f7 55%, #f97316 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "22px", fontWeight: 800, color: "#ffffff",
+              fontSize: "24px", fontWeight: 800, color: "#ffffff",
             }}>H</div>
-            <span style={{ fontSize: "20px", fontWeight: 700, color: "#e4e4e7" }}>HumanizeIt</span>
+            <span style={{ fontSize: "21px", fontWeight: 700, color: TEXT }}>HumanizeIt</span>
           </div>
           <span style={{
-            fontSize: "14px", fontWeight: 600, color: "#a78bfa",
-            background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.4)",
-            padding: "6px 16px", borderRadius: "100px",
+            fontSize: "15px", fontWeight: 600, color: ACCENT,
+            background: "#fff2e6", border: "1px solid #ffd9b3",
+            padding: "7px 18px", borderRadius: "100px",
           }}>
             Free Plan Available
           </span>
@@ -56,14 +77,22 @@ export default function OGImage() {
         {/* Center: Main headline */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <h1 style={{
-            fontSize: "72px", fontWeight: 900, color: "#ffffff",
+            fontSize: "72px", fontWeight: 800, color: TEXT,
             lineHeight: 1.05, margin: 0, letterSpacing: "-0.03em",
+            display: "flex", flexDirection: "column",
           }}>
-            Your AI text,<br />
-            <span style={{ color: "#8b5cf6" }}>finally sounds human.</span>
+            <span style={{ display: "flex" }}>Your AI text,</span>
+            <span style={{ display: "flex" }}>
+              <span style={{
+                backgroundImage: "linear-gradient(100deg, #7c3aed 0%, #a855f7 45%, #f97316 100%)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}>finally sounds human.</span>
+            </span>
           </h1>
           <p style={{
-            fontSize: "24px", color: "#a1a1aa", margin: 0, lineHeight: 1.4, maxWidth: "700px",
+            fontSize: "24px", color: TEXT_DIM, margin: 0, lineHeight: 1.4, maxWidth: "720px",
           }}>
             Beat GPTZero, Turnitin &amp; Originality.ai in seconds. 24 detection patterns. Free to start.
           </p>
@@ -74,9 +103,9 @@ export default function OGImage() {
           {/* CTA Button */}
           <div style={{
             display: "flex", alignItems: "center", gap: "12px",
-            background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
-            padding: "16px 36px", borderRadius: "14px",
-            fontSize: "20px", fontWeight: 700, color: "#ffffff",
+            background: "linear-gradient(100deg, #7c3aed 0%, #a855f7 45%, #f97316 100%)",
+            padding: "18px 38px", borderRadius: "14px",
+            fontSize: "21px", fontWeight: 700, color: "#ffffff",
           }}>
             Try Free — No Credit Card
           </div>
@@ -84,15 +113,16 @@ export default function OGImage() {
           {/* Score pill */}
           <div style={{
             display: "flex", alignItems: "center", gap: "16px",
-            background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)",
-            padding: "12px 24px", borderRadius: "100px",
+            background: SURFACE, border: `1px solid ${BORDER}`,
+            padding: "14px 26px", borderRadius: "100px",
           }}>
             <div style={{
-              fontSize: "32px", fontWeight: 800, color: "#22c55e",
+              fontSize: "34px", fontWeight: 800, color: HUMAN,
+              fontFamily: "monospace",
             }}>94%</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "#22c55e" }}>Human Score</span>
-              <span style={{ fontSize: "12px", color: "#71717a" }}>humanizeit.app</span>
+              <span style={{ fontSize: "15px", fontWeight: 600, color: HUMAN }}>Human Score</span>
+              <span style={{ fontSize: "13px", color: TEXT_MUTED }}>humanizeit.app</span>
             </div>
           </div>
         </div>

@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, X } from "lucide-react";
+import { THEME } from "@/lib/theme";
 
 const STORAGE_KEY = "humanizeit_onboarded";
-
-const V = {
-  brand: "#7e22ce",
-};
 
 export function OnboardingChecklist() {
   const [visible, setVisible] = useState(false);
@@ -28,15 +25,20 @@ export function OnboardingChecklist() {
 
   const steps = [
     { label: "Create your account", done: true, href: undefined },
-    { label: "Analyze a text", done: false, href: "/dashboard/editor", cta: "Analyze Now" },
+    { label: "Analyze a text", done: false, href: "/dashboard/editor", cta: "Analyze now" },
     { label: "Humanize the result", done: false, href: "/dashboard/editor" },
   ];
 
+  const completed = steps.filter((s) => s.done).length;
+  const progress = Math.round((completed / steps.length) * 100);
+  // Index of the next actionable step (first not-done) — gets the orange accent.
+  const nextIndex = steps.findIndex((s) => !s.done);
+
   return (
     <div style={{
-      background: "#ffffff",
-      border: "1px solid #e9d5ff",
-      borderRadius: "16px",
+      background: THEME.surface2,
+      border: `1px solid ${THEME.border}`,
+      borderRadius: THEME.radiusLg,
       padding: "24px",
       marginBottom: "28px",
       position: "relative",
@@ -46,57 +48,80 @@ export function OnboardingChecklist() {
         style={{
           position: "absolute", top: "16px", right: "16px",
           background: "transparent", border: "none", cursor: "pointer",
-          color: "#9ca3af", padding: "4px",
+          color: THEME.textDim, padding: "4px",
+          display: "flex", alignItems: "center", justifyContent: "center",
         }}
         aria-label="Dismiss onboarding"
       >
-        <X size={16} />
+        <X size={16} aria-hidden="true" />
       </button>
 
+      <div className="kicker" style={{ marginBottom: "8px" }}>GET STARTED</div>
+
       <h3 style={{
-        fontSize: "16px", fontWeight: 700, color: "#3b0764",
-        marginBottom: "4px", fontFamily: "var(--font-heading)",
+        fontSize: "16px", fontWeight: 700, color: THEME.text,
+        marginBottom: "4px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em",
       }}>
         Get started with HumanizeIt
       </h3>
-      <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "20px" }}>
+      <p style={{ fontSize: "13px", color: THEME.textDim, marginBottom: "16px", fontFamily: THEME.fontSans }}>
         Complete these steps to get the most out of the platform.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {steps.map((step, i) => (
-          <div key={i} style={{
-            display: "flex", alignItems: "center", gap: "12px",
-            padding: "12px 16px",
-            background: step.done ? "rgba(126,34,206,0.04)" : "#faf5ff",
-            borderRadius: "12px",
-            border: "1px solid #f3e8ff",
-          }}>
-            {step.done ? (
-              <CheckCircle2 size={20} color={V.brand} />
-            ) : (
-              <Circle size={20} color="#d1d5db" />
-            )}
-            <span style={{
-              flex: 1,
-              fontSize: "14px",
-              fontWeight: step.done ? 500 : 600,
-              color: step.done ? "#6b7280" : "#111827",
-              textDecoration: step.done ? "line-through" : "none",
+      {/* Progress (purple) */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+        <div style={{ flex: 1, height: "6px", borderRadius: "999px", background: THEME.surface3, overflow: "hidden" }}>
+          <div
+            style={{
+              width: `${progress}%`, height: "100%", borderRadius: "999px",
+              background: THEME.gradient, transition: "width 0.4s ease",
+            }}
+          />
+        </div>
+        <span className="tnum" style={{ fontSize: "12px", fontWeight: 600, color: THEME.brandHi, whiteSpace: "nowrap" }}>
+          {completed}/{steps.length}
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {steps.map((step, i) => {
+          const isNext = i === nextIndex;
+          return (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: "12px",
+              padding: "12px 16px",
+              background: step.done ? THEME.humanDim : isNext ? THEME.accentDim : THEME.surface1,
+              borderRadius: THEME.radius,
+              border: `1px solid ${step.done ? THEME.humanDim : isNext ? `${THEME.accent}40` : THEME.border}`,
             }}>
-              {step.label}
-            </span>
-            {step.cta && step.href && (
-              <Link href={step.href} style={{
-                fontSize: "12px", fontWeight: 700, color: "#ffffff",
-                background: V.brand, padding: "6px 14px", borderRadius: "8px",
-                textDecoration: "none", whiteSpace: "nowrap",
+              {step.done ? (
+                <CheckCircle2 size={20} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0 }} />
+              ) : (
+                <Circle size={20} color={isNext ? THEME.accent : THEME.textMuted} aria-hidden="true" style={{ flexShrink: 0 }} />
+              )}
+              <span style={{
+                flex: 1,
+                fontSize: "13px",
+                fontFamily: THEME.fontSans,
+                fontWeight: step.done ? 500 : 600,
+                color: step.done ? THEME.textDim : THEME.text,
+                textDecoration: step.done ? "line-through" : "none",
               }}>
-                {step.cta}
-              </Link>
-            )}
-          </div>
-        ))}
+                {step.label}
+              </span>
+              {step.cta && step.href && (
+                <Link href={step.href} style={{
+                  fontSize: "12px", fontWeight: 700, color: "#ffffff",
+                  background: THEME.brand, padding: "6px 14px", borderRadius: THEME.radius,
+                  textDecoration: "none", whiteSpace: "nowrap",
+                  fontFamily: THEME.fontSans,
+                }}>
+                  {step.cta} →
+                </Link>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { AlertCircle, Lightbulb, Info } from "lucide-react";
+import { THEME } from "@/lib/theme";
 
 const icons = {
   tip: Lightbulb,
@@ -7,9 +8,9 @@ const icons = {
 };
 
 const colors = {
-  tip: { border: "rgba(22,163,74,0.3)", bg: "rgba(22,163,74,0.06)", icon: "#16a34a" },
-  warning: { border: "rgba(249,115,22,0.3)", bg: "rgba(249,115,22,0.06)", icon: "#f97316" },
-  info: { border: "rgba(126,34,206,0.3)", bg: "rgba(126,34,206,0.06)", icon: "#7e22ce" },
+  tip: { border: THEME.human, bg: THEME.humanDim, icon: THEME.human },
+  warning: { border: THEME.warn, bg: THEME.warnDim, icon: THEME.warn },
+  info: { border: THEME.brand, bg: THEME.brandDim, icon: THEME.brandHi },
 };
 
 export function Callout({
@@ -26,7 +27,7 @@ export function Callout({
       style={{
         border: `1px solid ${c.border}`,
         background: c.bg,
-        borderRadius: "8px",
+        borderRadius: THEME.radius,
         padding: "16px 20px",
         margin: "24px 0",
         display: "flex",
@@ -34,8 +35,8 @@ export function Callout({
         alignItems: "flex-start",
       }}
     >
-      <Icon size={20} style={{ color: c.icon, flexShrink: 0, marginTop: "2px" }} />
-      <div style={{ fontSize: "15px", lineHeight: 1.65, color: "#374151" }}>
+      <Icon size={20} aria-hidden="true" style={{ color: c.icon, flexShrink: 0, marginTop: "2px" }} />
+      <div style={{ fontSize: "15px", lineHeight: 1.65, color: THEME.text }}>
         {children}
       </div>
     </div>
