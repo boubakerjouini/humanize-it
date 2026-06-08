@@ -360,12 +360,6 @@ export default function EditorPage() {
     // Load language preference
     const savedLang = localStorage.getItem("language-preference") as LanguageOption | null;
     if (savedLang && LANGUAGES.some(l => l.value === savedLang)) setLanguage(savedLang);
-    // Fetch user plan for style clone gating
-    fetch("/api/user-plan").then(r => r.json()).then(d => setUserPlan(d.plan ?? "FREE")).catch(() => setUserPlan("FREE"));
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/user-plan").then(r => r.json()).then(d => setUserPlan(d.plan ?? "FREE")).catch(() => setUserPlan("FREE"));
   }, []);
 
   // Welcome toast for first-time visitors

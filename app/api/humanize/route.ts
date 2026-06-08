@@ -139,6 +139,7 @@ export async function POST(req: Request) {
 
     let humanizedText: string;
     let tokensUsed: number;
+    let modelUsed = "";
     try {
       const result = await humanizeText(
         document.originalText,
@@ -151,6 +152,7 @@ export async function POST(req: Request) {
       );
       humanizedText = result.humanizedText;
       tokensUsed = result.tokensUsed;
+      modelUsed = result.model;
     } catch (modelErr) {
       await refundWordQuota(freshUser.id, words);
       console.error("[humanize] model call failed:", modelErr);
@@ -176,7 +178,7 @@ export async function POST(req: Request) {
         where: { id: document.id },
         data: {
           rewrittenText: humanizedText,
-          rewriteModel: "claude-sonnet-4-5",
+          rewriteModel: modelUsed || "unknown",
           tone: toneValue,
           humanizedScore: humanizedAnalysis.score,
         },

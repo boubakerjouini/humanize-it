@@ -46,12 +46,14 @@ export async function POST(req: Request) {
       return new Response("No email found", { status: 400 });
     }
 
-    await db.user.create({
-      data: {
-        clerkId: id,
-        email,
-        name: [first_name, last_name].filter(Boolean).join(" ") || null,
-      },
+    const name = [first_name, last_name].filter(Boolean).join(" ") || null;
+    // Upsert (not create): an API route may have already upserted this user with
+    // a placeholder email before this webhook fired. Backfill the real email so
+    // the admin allowlist and invite-email matching work reliably.
+    await db.user.upsert({
+      where: { clerkId: id },
+      update: { email, name },
+      create: { clerkId: id, email, name },
     });
   }
 
@@ -72,7 +74,8 @@ export async function POST(req: Request) {
     const { id } = evt.data;
 
     if (id) {
-      await db.user.delete({
+      // deleteMany is idempotent — won't throw if the row is already gone.
+      await db.user.deleteMany({
         where: { clerkId: id },
       });
     }

@@ -2,14 +2,24 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
-import { PenLine, History, Settings, Zap, Crown, Sparkles, LayoutDashboard, Code2 } from "lucide-react";
+import { PenLine, History, Settings, Zap, Crown, Sparkles, LayoutDashboard, Code2, FileText, Building2, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { THEME, glow } from "@/lib/theme";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard, desc: "Overview", exact: true },
-  { href: "/dashboard/editor", label: "Editor", icon: PenLine, desc: "Analyze & humanize" },
-  { href: "/dashboard/history", label: "History", icon: History, desc: "Past documents" },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  desc: string;
+  exact?: boolean;
+  mobile?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard, desc: "Overview", exact: true, mobile: true },
+  { href: "/dashboard/editor", label: "Editor", icon: PenLine, desc: "Analyze & humanize", mobile: true },
+  { href: "/dashboard/documents", label: "Documents", icon: FileText, desc: "Review PDFs & docs", mobile: true },
+  { href: "/dashboard/history", label: "History", icon: History, desc: "Past documents", mobile: true },
   { href: "/dashboard/api", label: "API", icon: Code2, desc: "Developer access" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, desc: "Account & usage" },
 ];
@@ -59,14 +69,30 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useUser();
   const [plan, setPlan] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [org, setOrg] = useState<{ id: string; name: string; role: string } | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/user-plan")
       .then(r => r.json())
-      .then(d => setPlan(d.plan ?? "FREE"))
+      .then(d => {
+        setPlan(d.plan ?? "FREE");
+        setIsAdmin(!!d.isAdmin);
+        setOrg(d.organization ?? null);
+      })
       .catch(() => setPlan("FREE"));
   }, []);
+
+  // Org tab shows for Team-plan users (so they can create one) and any member;
+  // Admin tab only for platform admins.
+  const navItems: NavItem[] = [...NAV_ITEMS];
+  if (plan === "TEAM" || org) {
+    navItems.splice(4, 0, { href: "/dashboard/organization", label: "Organization", icon: Building2, desc: org ? org.name : "Team & seats" });
+  }
+  if (isAdmin) {
+    navItems.push({ href: "/admin", label: "Admin", icon: ShieldCheck, desc: "Control panel" });
+  }
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -123,7 +149,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
           <div className="kicker" style={{ padding: "0 10px 8px" }}>
             Workspace
           </div>
-          {NAV_ITEMS.map(({ href, label, icon: Icon, desc, exact }) => {
+          {navItems.map(({ href, label, icon: Icon, desc, exact }) => {
             const active = isActive(href, exact);
             return (
               <Link key={href} href={href}
@@ -239,7 +265,7 @@ export function DashboardNav({ children }: { children: React.ReactNode }) {
         borderTop: `1px solid ${THEME.border}`,
         alignItems: "center", justifyContent: "space-around",
       }}>
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+        {navItems.filter(i => i.mobile).map(({ href, label, icon: Icon, exact }) => {
           const active = isActive(href, exact);
           return (
             <Link key={href} href={href}

@@ -6,7 +6,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/extension-auth(.*)",
+  "/invite(.*)",
   "/api/webhooks(.*)",
+  "/api/invitations(.*)",
   "/api/extension-token(.*)",
   // Extension uses custom HMAC JWT — auth handled inside route handler
   "/api/analyze(.*)",
@@ -33,7 +35,10 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Skip Next internals, static files, AND the Workflow DevKit's internal
+    // routes (`/.well-known/workflow/*`) — Clerk must never intercept those or
+    // the durable document pipeline can't enqueue/resume steps.
+    "/((?!_next|\\.well-known/workflow|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

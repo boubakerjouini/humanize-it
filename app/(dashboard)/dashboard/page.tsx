@@ -212,6 +212,28 @@ export default function DashboardHomePage() {
         </div>
       </Link>
 
+      {/* Document review quick-action */}
+      <Link href="/dashboard/documents" style={{ textDecoration: "none", display: "block", marginBottom: "28px" }}>
+        <div style={{
+          background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl,
+          padding: "18px 24px", display: "flex", alignItems: "center", gap: "14px",
+          cursor: "pointer", transition: "border-color 0.2s, box-shadow 0.2s",
+        }}>
+          <div style={{ width: "40px", height: "40px", borderRadius: "12px", flexShrink: 0, background: THEME.accentDim, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <FileText size={18} color={THEME.accent} aria-hidden="true" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>
+              Review a document
+            </div>
+            <div style={{ fontSize: "13px", color: THEME.textDim }}>
+              Upload a PDF or Word doc — we detect AI and humanize the whole thing
+            </div>
+          </div>
+          <ArrowRight size={18} color={THEME.accentHi} aria-hidden="true" />
+        </div>
+      </Link>
+
       {/* Upgrade banner — FREE only */}
       {usage && isFree && (
         <div style={{

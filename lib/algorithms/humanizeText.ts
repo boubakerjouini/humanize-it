@@ -3,7 +3,7 @@
 // Multi-pass feedback loop + post-processing to beat detectors
 // ===========================================================
 
-import { anthropic } from "@/lib/anthropic";
+import { complete } from "@/lib/llm";
 import type { AnalysisResult } from "./analyzeText";
 import { analyzeText } from "./analyzeText";
 import { AI_VOCABULARY_TIER_1, SYCOPHANTIC_PHRASES } from "./patterns";
@@ -469,26 +469,20 @@ function postProcess(text: string): string {
   return result.trim();
 }
 
-// ---- Single Claude pass ----
+// ---- Single model pass (provider-flexible: Anthropic or OpenAI) ----
 
-async function runClaudePass(
+async function runModelPass(
   systemPrompt: string,
   userPrompt: string,
   maxTokens: number
-): Promise<{ text: string; tokens: number }> {
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: maxTokens,
-    temperature: 1.0,
+): Promise<{ text: string; tokens: number; model: string }> {
+  const result = await complete({
     system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }],
+    prompt: userPrompt,
+    maxTokens,
+    temperature: 1.0,
   });
-
-  const text =
-    response.content[0].type === "text" ? response.content[0].text.trim() : "";
-  const tokens = response.usage.input_tokens + response.usage.output_tokens;
-
-  return { text, tokens };
+  return { text: result.text, tokens: result.tokensUsed, model: result.model };
 }
 
 // ---- Main entry point ----
@@ -504,21 +498,23 @@ export async function humanizeText(
   styleFingerprint?: Record<string, string>,
   language?: string,
   aggressiveHint?: string
-): Promise<{ humanizedText: string; tokensUsed: number }> {
+): Promise<{ humanizedText: string; tokensUsed: number; model: string }> {
   const maxTokens = Math.max(512, analysisResult.wordCount * 3);
   let systemPrompt = buildSystemPrompt(intensity);
   if (aggressiveHint) {
     systemPrompt += `\n\n${aggressiveHint}`;
   }
   let totalTokens = 0;
+  let modelUsed = "";
 
   // Protect URLs and technical terms before processing
   const { protected: protectedText, tokens: protectedTokenMap } = protectTokens(text);
 
   // --- Pass 1 ---
   const userPrompt = buildUserPrompt(protectedText, tone, analysisResult, styleFingerprint, language);
-  const pass1 = await runClaudePass(systemPrompt, userPrompt, maxTokens);
+  const pass1 = await runModelPass(systemPrompt, userPrompt, maxTokens);
   totalTokens += pass1.tokens;
+  modelUsed = pass1.model;
 
   let bestText = pass1.text;
   let bestScore = Infinity;
@@ -536,7 +532,7 @@ export async function humanizeText(
       .join(", ");
 
     const retryPrompt = buildRetryPrompt(pass1.text, tone, Math.round(analysis1.score), topPatterns);
-    const pass2 = await runClaudePass(systemPrompt, retryPrompt, maxTokens);
+    const pass2 = await runModelPass(systemPrompt, retryPrompt, maxTokens);
     totalTokens += pass2.tokens;
 
     const analysis2 = analyzeText(pass2.text);
@@ -553,7 +549,7 @@ export async function humanizeText(
         .join(", ");
 
       const retryPrompt3 = buildRetryPrompt(pass2.text, tone, Math.round(analysis2.score), topPatterns3);
-      const pass3 = await runClaudePass(systemPrompt, retryPrompt3, maxTokens);
+      const pass3 = await runModelPass(systemPrompt, retryPrompt3, maxTokens);
       totalTokens += pass3.tokens;
 
       const analysis3 = analyzeText(pass3.text);
@@ -570,5 +566,5 @@ export async function humanizeText(
   // Restore protected URLs and technical terms
   humanizedText = restoreTokens(humanizedText, protectedTokenMap);
 
-  return { humanizedText, tokensUsed: totalTokens };
+  return { humanizedText, tokensUsed: totalTokens, model: modelUsed };
 }

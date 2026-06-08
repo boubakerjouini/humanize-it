@@ -13,12 +13,35 @@ enum Plan {
   TEAM
 }
 
+/// Platform-level role. ADMIN unlocks the /admin control panel.
+enum UserRole {
+  USER
+  ADMIN
+}
+
+/// A member's role inside an Organization.
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+/// Lifecycle of a seat invitation.
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
 model User {
   id           String   @id @default(cuid())
   clerkId      String   @unique
   email        String   @unique
   name         String?
   plan         Plan      @default(FREE)
+  /** Platform role — ADMIN can access /admin. Email allowlist also grants admin. */
+  role         UserRole  @default(USER)
   /** When a non-FREE plan granted via redeem code expires; null = no expiry (paid subscription or lifetime). */
   planExpiresAt DateTime?
   wordsUsed    Int       @default(0)
@@ -31,6 +54,88 @@ model User {
   subscription Subscription?
   redemptions  Redemption[]
   apiKeys      ApiKey[]
+
+  // Organizations (per-seat program)
+  memberships        Membership[]
+  ownedOrganizations Organization[] @relation("OrgOwner")
+  sentInvitations    Invitation[]   @relation("InvitedBy")
+}
+
+/// A team/company workspace that owns a pool of seats. The owner pays for
+/// `seatsTotal` seats; each occupied seat entitles a member to paid features
+/// drawn from the org's pooled monthly word quota.
+model Organization {
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  ownerId          String
+  plan             Plan      @default(TEAM)
+  /** Number of seats purchased (>= number of active members). */
+  seatsTotal       Int       @default(1)
+
+  // Pooled usage metering (mirrors User.wordsUsed but shared across members)
+  wordsUsed        Int       @default(0)
+  quotaResetAt     DateTime  @default(now())
+
+  // Org-level billing (Lemon Squeezy, quantity = seats)
+  lsCustomerId     String?
+  lsSubscriptionId String?   @unique
+  lsVariantId      String?
+  currentPeriodEnd DateTime?
+  status           String    @default("active")
+  billingEmail     String?
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  owner       User         @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  invitations Invitation[]
+
+  @@index([ownerId])
+}
+
+/// Join row linking a User to an Organization with a role. An active seat
+/// (`seatActive`) counts against the org's `seatsTotal`.
+model Membership {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrgRole  @default(MEMBER)
+  seatActive     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  /** Snapshot of the member's personal plan/expiry before the seat was granted,
+   *  so vacating the seat restores their original entitlement instead of FREE. */
+  priorPlan          Plan?
+  priorPlanExpiresAt DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+/// A pending seat invitation, redeemable via a one-time token link.
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrgRole      @default(MEMBER)
+  token          String       @unique
+  status         InviteStatus @default(PENDING)
+  invitedById    String?
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([token])
 }
 
 model ApiKey {
@@ -64,9 +169,26 @@ model Document {
   wordCount       Int
   createdAt       DateTime @default(now())
 
+  // ── Durable document pipeline (Workflow DevKit) ──
+  /** "complete" | "processing" | "error" — drives the async review UI. */
+  status          String   @default("complete")
+  /** Current pipeline stage for progress display (extract/detect/humanize/score). */
+  stage           String?
+  /** Workflow run id, so the UI can attach to the live progress stream. */
+  runId           String?
+  /** Where the text came from: paste | pdf | docx | txt. */
+  sourceType      String?
+  /** PDF/DOCX page count when known. */
+  pageCount       Int?
+  /** Human-readable failure reason when status = "error". */
+  errorMessage    String?
+  /** When processed against an org's pooled quota. */
+  organizationId  String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([runId])
 }
 
 model Subscription {
