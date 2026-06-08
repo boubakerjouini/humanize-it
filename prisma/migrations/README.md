@@ -1,35 +1,45 @@
 # Database migrations
 
-The production build now runs `prisma migrate deploy` (see `package.json` → `build`)
-instead of `prisma db push --accept-data-loss`. Schema changes are versioned,
-reviewable, and never silently drop columns or tables.
+A versioned baseline migration (`0_init`) is committed here so the project can
+move off `prisma db push` onto a reviewable migration history. The cutover is a
+deliberate, supervised one-time step against production — see below.
 
-## One-time cutover for the EXISTING production database
+## Current state (important)
 
-The current production database was created with `prisma db push`, so its tables
-already exist but it has **no `_prisma_migrations` history table**. Running
-`migrate deploy` against it as-is would try to re-create existing tables and fail.
+`package.json` → `build` currently runs **`prisma db push`** (NOT `migrate deploy`),
+and crucially WITHOUT `--accept-data-loss` — so it only applies additive,
+non-destructive schema changes and **errors instead of dropping data**. This is
+safe and is what unblocks Vercel deploys today.
 
-Baseline it **once** (against the production `DATABASE_URL`) so Prisma records
-`0_init` as already applied without re-running it:
+Why not `migrate deploy` yet: production was originally created with `db push`,
+so it has no `_prisma_migrations` history. Running `migrate deploy` there makes
+`0_init` try to `CREATE TABLE` objects that already exist → build fails. You must
+**baseline** production first.
 
-```bash
-# point at the prod DB for this one command
-DATABASE_URL="<prod-connection-string>" npm run db:baseline
-```
+## One-time cutover to migrations (do this when ready)
 
-This is equivalent to `prisma migrate resolve --applied 0_init`. After it succeeds,
-every deploy will apply only *new* migrations.
+1. **Snapshot first.** Enable and rehearse a Neon point-in-time restore / create a
+   branch. Do not skip this.
+2. **Make prod match `0_init`.** Deploy once on the current `db push` build so the
+   new objects (`RateLimit`, `WebhookEvent`, `User.planExpiresAt`,
+   `DiscountCode.grantDays`) exist in production. (This is already the case after a
+   successful `db push` deploy.)
+3. **Baseline.** Mark `0_init` as already applied without re-running it, against the
+   production connection string:
+   ```bash
+   DATABASE_URL="<prod-connection-string>" npm run db:baseline
+   ```
+   (= `prisma migrate resolve --applied 0_init`.)
+4. **Flip the build.** In `package.json`, set `build` to the value of `build:migrate`
+   (`prisma generate && prisma migrate deploy && next build`). From now on, only NEW
+   migrations are applied on deploy.
 
-> Before the first cutover, enable and rehearse a Neon point-in-time restore so a
-> bad migration is recoverable. Take a snapshot/branch immediately before baselining.
-
-## Day-to-day workflow
+## Day-to-day workflow (once on migrations)
 
 1. Edit `prisma/schema.prisma`.
-2. Create a migration locally: `npm run db:migrate -- --name <change>`
-   (this runs `prisma migrate dev`, which generates SQL and applies it to your dev DB).
-3. Review the generated SQL under `prisma/migrations/<timestamp>_<change>/`.
-4. Commit the migration folder. Vercel applies it on deploy via `migrate deploy`.
+2. `npm run db:migrate -- --name <change>` (generates + applies SQL locally).
+3. Review the generated `prisma/migrations/<timestamp>_<change>/migration.sql`.
+4. Commit the migration folder. Deploy applies it via `migrate deploy`.
 
-Never run `prisma db push` against production again.
+Never run `prisma db push` against production once you are on migrations, and never
+add `--accept-data-loss` to any production build command.
