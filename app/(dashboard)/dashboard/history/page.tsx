@@ -17,6 +17,7 @@ interface Document {
   rewrittenText: string | null;
   tone: string | null;
   createdAt: string;
+  status?: string;
 }
 
 interface DocumentsResponse {
@@ -265,25 +266,37 @@ export default function HistoryPage() {
 
                   {/* Score badges — HUMAN score (higher = greener = more human) */}
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                    <span className="tnum" style={{
-                      fontSize: "13px", fontWeight: 700, color: humanScoreColor(humanOriginal),
-                      background: THEME.surface3,
-                      padding: "3px 8px", borderRadius: "5px",
-                    }}
-                    title="Human score before humanizing">
-                      {humanOriginal}
-                    </span>
-                    {humanRewritten !== null && (
+                    {doc.status === "processing" ? (
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: THEME.brandHi, background: THEME.brandDim, padding: "3px 9px", borderRadius: "100px" }}>
+                        Processing…
+                      </span>
+                    ) : doc.status === "error" ? (
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: THEME.ai, background: THEME.aiDim, padding: "3px 9px", borderRadius: "100px" }}>
+                        Failed
+                      </span>
+                    ) : (
                       <>
-                        <ArrowRight size={10} color={THEME.textMuted} aria-hidden="true" />
                         <span className="tnum" style={{
-                          fontSize: "13px", fontWeight: 700, color: humanScoreColor(humanRewritten),
+                          fontSize: "13px", fontWeight: 700, color: humanScoreColor(humanOriginal),
                           background: THEME.surface3,
                           padding: "3px 8px", borderRadius: "5px",
                         }}
-                        title="Human score after humanizing">
-                          {humanRewritten}
+                        title="Human score before humanizing">
+                          {humanOriginal}
                         </span>
+                        {humanRewritten !== null && (
+                          <>
+                            <ArrowRight size={10} color={THEME.textMuted} aria-hidden="true" />
+                            <span className="tnum" style={{
+                              fontSize: "13px", fontWeight: 700, color: humanScoreColor(humanRewritten),
+                              background: THEME.surface3,
+                              padding: "3px 8px", borderRadius: "5px",
+                            }}
+                            title="Human score after humanizing">
+                              {humanRewritten}
+                            </span>
+                          </>
+                        )}
                       </>
                     )}
                     {isExpanded ? <ChevronUp size={14} color={THEME.textMuted} aria-hidden="true" /> : <ChevronDown size={14} color={THEME.textMuted} aria-hidden="true" />}

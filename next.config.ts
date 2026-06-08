@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
+import { withWorkflow } from "workflow/next";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
@@ -20,4 +21,7 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({});
 
-export default withMDX(nextConfig);
+// withWorkflow enables the "use workflow" / "use step" directives used by the
+// document-processing pipeline (extract → detect → humanize → score). It wraps
+// the MDX-augmented config so both transforms run.
+export default withWorkflow(withMDX(nextConfig));

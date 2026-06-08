@@ -40,13 +40,23 @@ export async function GET(_req: Request, context: RouteContext) {
 
     return NextResponse.json({
       id: document.id,
+      title: document.title,
       originalText: document.originalText,
       analysisResult: document.analysisResult,
       overallScore: document.overallScore,
       rewrittenText: document.rewrittenText,
       rewriteModel: document.rewriteModel,
+      humanizedScore: document.humanizedScore,
+      tone: document.tone,
       wordCount: document.wordCount,
       createdAt: document.createdAt,
+      // Durable pipeline status (for the review UI to poll)
+      status: document.status,
+      stage: document.stage,
+      runId: document.runId,
+      sourceType: document.sourceType,
+      pageCount: document.pageCount,
+      errorMessage: document.errorMessage,
     });
   } catch (err) {
     console.error("[documents/id GET] error:", err);

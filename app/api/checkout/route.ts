@@ -92,7 +92,11 @@ export async function POST(req: Request) {
       },
       expiresAt: null,
       preview: false,
-      testMode: process.env.NODE_ENV !== "production",
+      // Explicit override (LEMONSQUEEZY_TEST_MODE=true) so preview/sandbox deploys
+      // use test mode even though Vercel runs them with NODE_ENV=production.
+      testMode:
+        process.env.LEMONSQUEEZY_TEST_MODE === "true" ||
+        process.env.NODE_ENV !== "production",
     });
 
     if (error || !data?.data.attributes.url) {

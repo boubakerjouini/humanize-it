@@ -105,7 +105,7 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
           <p style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "8px" }}>
             Upload available on PRO &amp; TEAM plans
           </p>
-          <a href="/dashboard/billing" style={{
+          <a href="/dashboard/settings" style={{
             padding: "8px 18px", borderRadius: "8px", border: "none",
             background: THEME.brand, color: "#fff",
             fontSize: "12px", fontWeight: 600, cursor: "pointer", textDecoration: "none",

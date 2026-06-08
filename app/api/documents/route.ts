@@ -56,6 +56,7 @@ export async function GET(req: Request) {
             rewrittenText: true,
             tone: true,
             createdAt: true,
+            status: true,
           },
         }),
         db.document.count({ where: { userId: user.id } }),

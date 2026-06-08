@@ -114,3 +114,38 @@ export function getPlanByVariantId(variantId: string): PlanConfig | null {
     ) ?? null
   );
 }
+
+// ===========================================================
+// Organizations — per-seat program
+// An Organization buys N seats. Each seat grants a member TEAM-tier features
+// and contributes `wordsPerSeat` to the org's pooled monthly word allowance.
+// ===========================================================
+
+export const ORG_SEAT = {
+  /** Monthly price per seat (USD). */
+  pricePerSeatMonthly: 12,
+  /** Annual price per seat (USD, billed yearly — ~2 months free). */
+  pricePerSeatAnnual: 120,
+  /** Pooled monthly words granted per purchased seat. */
+  wordsPerSeat: 100_000,
+  /** A new org must start with at least this many seats. */
+  minSeats: 2,
+  /** Safety cap on a single self-serve org. */
+  maxSeats: 500,
+  /** Lemon Squeezy variant for the per-seat subscription (quantity = seats). */
+  lsVariantId: process.env.LEMONSQUEEZY_SEAT_VARIANT_ID ?? null,
+  lsVariantIdAnnual: process.env.LEMONSQUEEZY_SEAT_ANNUAL_VARIANT_ID ?? null,
+} as const;
+
+/** Members of an org inherit TEAM-tier feature flags. */
+export const ORG_MEMBER_PLAN: PlanConfig = PLANS.TEAM;
+
+/** Total pooled monthly word allowance for an org with `seats` seats. */
+export function orgWordsLimit(seats: number): number {
+  return Math.max(0, seats) * ORG_SEAT.wordsPerSeat;
+}
+
+/** Monthly list price for `seats` seats (before any discount). */
+export function orgMonthlyPrice(seats: number): number {
+  return Math.max(0, seats) * ORG_SEAT.pricePerSeatMonthly;
+}

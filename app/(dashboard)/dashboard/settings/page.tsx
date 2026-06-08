@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { ExternalLink, Zap, ArrowRight, AlertTriangle, Check, Sparkles, Gift } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Zap, ArrowRight, AlertTriangle, Check, Sparkles, Gift, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { THEME, glow } from "@/lib/theme";
 
@@ -319,6 +320,26 @@ export default function SettingsPage() {
               Manage billing
             </button>
           </Section>
+        )}
+
+        {/* Organization — Team plan */}
+        {isTeam && (
+          <Link href="/dashboard/organization" style={{ textDecoration: "none" }}>
+            <div style={{
+              background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius,
+              padding: "16px 20px", display: "flex", alignItems: "center", gap: "12px",
+              boxShadow: glow(THEME.brand, 0.1),
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: THEME.brandDim, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <Building2 size={17} color={THEME.brand} aria-hidden="true" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>Organization &amp; seats</div>
+                <div style={{ fontSize: "12px", color: THEME.textDim }}>Create a team workspace and invite members per seat.</div>
+              </div>
+              <ArrowRight size={16} color={THEME.brandHi} aria-hidden="true" />
+            </div>
+          </Link>
         )}
 
         {/* Redeem Discount Code */}
