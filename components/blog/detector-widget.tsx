@@ -3,20 +3,8 @@
 import { useState } from "react";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
-
-function scoreColor(s: number): string {
-  if (s >= 75) return "#dc2626";
-  if (s >= 50) return "#f97316";
-  if (s >= 25) return "#eab308";
-  return "#16a34a";
-}
-
-function scoreLabel(s: number): string {
-  if (s >= 75) return "Likely AI";
-  if (s >= 50) return "Possibly AI";
-  if (s >= 25) return "Borderline";
-  return "Looks Human";
-}
+import { ScoreRing } from "@/components/ui/score-ring";
+import { THEME } from "@/lib/theme";
 
 export function DetectorWidget() {
   const [text, setText] = useState("");
@@ -41,32 +29,33 @@ export function DetectorWidget() {
   return (
     <div
       style={{
-        border: "1px solid rgba(126,34,206,0.25)",
-        borderRadius: "12px",
-        background: "#faf5ff",
+        border: `1px solid ${THEME.border}`,
+        borderRadius: THEME.radiusLg,
+        background: THEME.surface1,
         padding: "24px",
         margin: "32px 0",
       }}
     >
-      <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827", marginBottom: "12px" }}>
-        Try It — Paste Any Text
+      <div className="kicker" style={{ marginBottom: "12px" }}>
+        TRY IT — PASTE ANY TEXT
       </div>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Paste your text here (minimum 30 words)..."
+        aria-label="Text to analyze for AI detection"
         style={{
           width: "100%",
           minHeight: "120px",
-          background: "#ffffff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "8px",
+          background: THEME.bg,
+          border: `1px solid ${THEME.border}`,
+          borderRadius: THEME.radius,
           padding: "12px 14px",
-          color: "#111827",
+          color: THEME.text,
           fontSize: "14px",
           lineHeight: 1.6,
           resize: "vertical",
-          fontFamily: "inherit",
+          fontFamily: THEME.fontSans,
         }}
       />
       <button
@@ -74,46 +63,64 @@ export function DetectorWidget() {
         disabled={loading || text.trim().split(/\s+/).length < 30}
         style={{
           marginTop: "12px",
-          background: loading ? "#6d28d9" : "#7e22ce",
+          background: THEME.brand,
           color: "#fff",
           border: "none",
-          borderRadius: "8px",
+          borderRadius: THEME.radius,
           padding: "10px 24px",
           fontSize: "14px",
           fontWeight: 600,
           cursor: loading ? "wait" : "pointer",
-          opacity: text.trim().split(/\s+/).length < 30 ? 0.5 : 1,
+          opacity: loading || text.trim().split(/\s+/).length < 30 ? 0.5 : 1,
         }}
       >
-        {loading ? "Analyzing..." : "Analyze"}
+        {loading ? "Analyzing..." : "Analyze →"}
       </button>
 
       {result && (
-        <div style={{ marginTop: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-            <div
-              style={{
-                fontSize: "32px",
-                fontWeight: 700,
-                color: scoreColor(result.score),
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {result.score}
-            </div>
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: 600, color: scoreColor(result.score) }}>
-                {scoreLabel(result.score)}
+        <div style={{ marginTop: "24px" }} aria-live="polite">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "20px",
+              marginBottom: "20px",
+              flexWrap: "wrap",
+            }}
+          >
+            <ScoreRing score={result.score} size={120} />
+            <div style={{ minWidth: "180px" }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: THEME.textDim,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontFamily: THEME.fontMono,
+                  marginBottom: "6px",
+                }}
+              >
+                Human Score
               </div>
-              <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                AI Detection Score
+              <div style={{ fontSize: "13px", color: THEME.textDim, lineHeight: 1.6 }}>
+                Higher is more human. We humanize text to push this score up and the
+                AI-detection score down.
               </div>
             </div>
           </div>
 
           {topPatterns.length > 0 && (
             <div>
-              <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: THEME.textDim,
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontFamily: THEME.fontMono,
+                }}
+              >
                 Top Triggered Patterns
               </div>
               {topPatterns.map((p) => (
@@ -124,28 +131,29 @@ export function DetectorWidget() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "8px 0",
-                    borderBottom: "1px solid #e5e7eb",
+                    borderBottom: `1px solid ${THEME.border}`,
                     fontSize: "13px",
                   }}
                 >
-                  <span style={{ color: "#374151" }}>{p.label}</span>
+                  <span style={{ color: THEME.text }}>{p.label}</span>
                   <span
                     style={{
                       fontSize: "11px",
                       padding: "2px 8px",
                       borderRadius: "4px",
+                      fontFamily: THEME.fontMono,
                       background:
                         p.severity === "critical"
-                          ? "rgba(220,38,38,0.1)"
+                          ? THEME.aiDim
                           : p.severity === "high"
-                            ? "rgba(249,115,22,0.1)"
-                            : "rgba(234,179,8,0.1)",
+                            ? THEME.warnDim
+                            : THEME.surface3,
                       color:
                         p.severity === "critical"
-                          ? "#dc2626"
+                          ? THEME.ai
                           : p.severity === "high"
-                            ? "#f97316"
-                            : "#eab308",
+                            ? THEME.warn
+                            : THEME.textDim,
                     }}
                   >
                     {p.severity}
@@ -161,13 +169,13 @@ export function DetectorWidget() {
         style={{
           marginTop: "16px",
           paddingTop: "12px",
-          borderTop: "1px solid #e5e7eb",
+          borderTop: `1px solid ${THEME.border}`,
           fontSize: "13px",
-          color: "#9ca3af",
+          color: THEME.textMuted,
         }}
       >
         Get full analysis + humanization at{" "}
-        <a href="/" style={{ color: "#7e22ce", textDecoration: "none" }}>
+        <a href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>
           humanizeit.app &rarr;
         </a>
       </div>

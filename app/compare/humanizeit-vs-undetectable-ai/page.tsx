@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { THEME } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "HumanizeIt vs Undetectable.ai 2025 — Honest Comparison | HumanizeIt",
@@ -26,15 +27,17 @@ export const metadata: Metadata = {
 };
 
 const h2Style: React.CSSProperties = {
+  fontFamily: THEME.fontHeading,
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
   marginTop: "40px",
   marginBottom: "16px",
+  letterSpacing: "-0.01em",
 };
 
 const pStyle: React.CSSProperties = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
@@ -44,48 +47,59 @@ const thStyle: React.CSSProperties = {
   padding: "12px 16px",
   textAlign: "left",
   fontWeight: 700,
-  fontSize: "14px",
-  color: "#1f2937",
-  borderBottom: "2px solid #e5e7eb",
-  backgroundColor: "#f9fafb",
+  fontSize: "12px",
+  color: THEME.textDim,
+  fontFamily: THEME.fontMono,
+  textTransform: "uppercase",
+  letterSpacing: "0.06em",
+  borderBottom: `1px solid ${THEME.borderStrong}`,
+  backgroundColor: THEME.surface1,
 };
 
 const tdStyle: React.CSSProperties = {
   padding: "12px 16px",
   fontSize: "14px",
-  color: "#374151",
-  borderBottom: "1px solid #e5e7eb",
+  color: THEME.textDim,
+  borderBottom: `1px solid ${THEME.border}`,
 };
 
 const tdAltStyle: React.CSSProperties = {
   ...tdStyle,
-  backgroundColor: "#f9fafb",
+  backgroundColor: THEME.surface1,
+};
+
+// "Win" cell styling — green highlight for HumanizeIt advantages.
+const winStyle: React.CSSProperties = {
+  fontWeight: 700,
+  color: THEME.human,
+  fontFamily: THEME.fontMono,
 };
 
 export default function HumanizeItVsUndetectableAi() {
   return (
     <main style={{ maxWidth: "768px", margin: "0 auto", padding: "48px 16px" }}>
       {/* Breadcrumb */}
-      <nav style={{ fontSize: "14px", color: "#6b7280", marginBottom: "32px" }}>
-        <Link href="/" style={{ color: "#6b7280", textDecoration: "none" }}>
+      <nav style={{ fontSize: "14px", color: THEME.textDim, marginBottom: "32px" }}>
+        <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>
           Home
         </Link>
         <span style={{ margin: "0 8px" }}>&gt;</span>
-        <Link href="/compare" style={{ color: "#6b7280", textDecoration: "none" }}>
+        <Link href="/compare" style={{ color: THEME.textDim, textDecoration: "none" }}>
           Compare
         </Link>
         <span style={{ margin: "0 8px" }}>&gt;</span>
-        <span style={{ color: "#374151" }}>HumanizeIt vs Undetectable.ai</span>
+        <span style={{ color: THEME.text }}>HumanizeIt vs Undetectable.ai</span>
       </nav>
 
       {/* H1 */}
       <h1
         style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: THEME.fontHeading,
           fontWeight: 800,
-          color: "#3b0764",
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
           lineHeight: 1.2,
+          letterSpacing: "-0.02em",
           marginBottom: "24px",
         }}
       >
@@ -131,52 +145,53 @@ export default function HumanizeItVsUndetectableAi() {
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
+            border: `1px solid ${THEME.border}`,
+            borderRadius: THEME.radius,
             overflow: "hidden",
+            background: THEME.surface2,
           }}
         >
           <thead>
             <tr>
               <th style={thStyle}>Feature</th>
-              <th style={{ ...thStyle, color: "#7e22ce" }}>HumanizeIt</th>
+              <th style={{ ...thStyle, color: THEME.brandHi }}>HumanizeIt</th>
               <th style={thStyle}>Undetectable.ai</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td style={tdStyle}>Price</td>
-              <td style={{ ...tdStyle, fontWeight: 700, color: "#16a34a" }}>$9/mo</td>
+              <td style={{ ...tdStyle, ...winStyle }}>$9/mo</td>
               <td style={tdStyle}>$14.99/mo</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>Free Tier</td>
-              <td style={{ ...tdAltStyle, fontWeight: 700, color: "#16a34a" }}>Yes</td>
+              <td style={{ ...tdAltStyle, ...winStyle }}>Yes</td>
               <td style={tdAltStyle}>Limited</td>
             </tr>
             <tr>
               <td style={tdStyle}>Billing Transparency</td>
-              <td style={{ ...tdStyle, fontWeight: 700, color: "#16a34a" }}>Full</td>
+              <td style={{ ...tdStyle, ...winStyle }}>Full</td>
               <td style={tdStyle}>Dark patterns reported</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>Output Quality</td>
-              <td style={{ ...tdAltStyle, fontWeight: 700, color: "#16a34a" }}>Excellent</td>
+              <td style={{ ...tdAltStyle, ...winStyle }}>Excellent</td>
               <td style={tdAltStyle}>Good</td>
             </tr>
             <tr>
               <td style={tdStyle}>Detection Bypass Rate</td>
-              <td style={{ ...tdStyle, fontWeight: 700, color: "#16a34a" }}>95%+</td>
+              <td style={{ ...tdStyle, ...winStyle }}>95%+</td>
               <td style={tdStyle}>~90%</td>
             </tr>
             <tr>
               <td style={tdAltStyle}>API Access</td>
-              <td style={{ ...tdAltStyle, fontWeight: 700, color: "#16a34a" }}>Yes</td>
+              <td style={{ ...tdAltStyle, ...winStyle }}>Yes</td>
               <td style={tdAltStyle}>No</td>
             </tr>
             <tr>
               <td style={tdStyle}>Bulk Processing</td>
-              <td style={{ ...tdStyle, fontWeight: 700, color: "#16a34a" }}>Yes</td>
+              <td style={{ ...tdStyle, ...winStyle }}>Yes</td>
               <td style={tdStyle}>Limited</td>
             </tr>
           </tbody>
@@ -265,9 +280,11 @@ export default function HumanizeItVsUndetectableAi() {
       {/* CTA */}
       <div
         style={{
-          backgroundColor: "#7e22ce",
-          color: "#ffffff",
-          borderRadius: "16px",
+          background: THEME.surface2,
+          border: `1px solid ${THEME.brand}`,
+          boxShadow: "0 0 0 1px rgba(124,92,255,0.25), 0 8px 40px rgba(124,92,255,0.18)",
+          color: THEME.text,
+          borderRadius: THEME.radiusLg,
           padding: "32px",
           textAlign: "center",
           marginTop: "48px",
@@ -278,13 +295,14 @@ export default function HumanizeItVsUndetectableAi() {
             fontSize: "24px",
             fontWeight: 800,
             marginBottom: "12px",
-            color: "#ffffff",
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            color: THEME.text,
+            letterSpacing: "-0.02em",
+            fontFamily: THEME.fontHeading,
           }}
         >
           Ready to Switch?
         </h2>
-        <p style={{ fontSize: "16px", lineHeight: 1.6, marginBottom: "24px", color: "#e9d5ff" }}>
+        <p style={{ fontSize: "16px", lineHeight: 1.6, marginBottom: "24px", color: THEME.textDim }}>
           Try HumanizeIt free — no credit card required. See why thousands of writers are making the
           switch from Undetectable.ai.
         </p>
@@ -292,16 +310,17 @@ export default function HumanizeItVsUndetectableAi() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            backgroundColor: "#ffffff",
-            color: "#7e22ce",
+            background: THEME.brand,
+            color: "#ffffff",
             fontWeight: 700,
             fontSize: "16px",
             padding: "14px 36px",
-            borderRadius: "10px",
+            borderRadius: THEME.radius,
             textDecoration: "none",
+            boxShadow: "0 0 22px rgba(124,92,255,0.4)",
           }}
         >
-          Start Free Today
+          Start Free Today &rarr;
         </Link>
       </div>
     </main>

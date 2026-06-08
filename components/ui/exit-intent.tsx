@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { Hand, X } from "lucide-react";
+import { THEME, glow } from "@/lib/theme";
 
 export function ExitIntent() {
   const [show, setShow] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -22,6 +26,21 @@ export function ExitIntent() {
     return () => document.removeEventListener("mouseout", handler);
   }, []);
 
+  // Focus management + ESC when shown
+  useEffect(() => {
+    if (!show) return;
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+    requestAnimationFrame(() => panelRef.current?.focus());
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShow(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      previouslyFocused.current?.focus?.();
+    };
+  }, [show]);
+
   if (!show) return null;
 
   return (
@@ -29,20 +48,27 @@ export function ExitIntent() {
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
         display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(0,0,0,0.5)",
-        animation: "fadeIn 0.2s ease",
+        background: "rgba(0,0,0,0.66)", backdropFilter: "blur(6px)",
+        padding: "16px",
       }}
       onClick={() => setShow(false)}
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exit-intent-title"
         onClick={(e) => e.stopPropagation()}
+        className="animate-fade-up"
         style={{
-          background: "#ffffff", borderRadius: "24px",
-          boxShadow: "0 25px 50px rgba(0,0,0,0.25)",
+          background: THEME.surface1, borderRadius: THEME.radiusXl,
+          border: `1px solid ${THEME.border}`,
+          boxShadow: "0 24px 70px rgba(0,0,0,0.6)",
           maxWidth: "420px", width: "90%",
           padding: "40px 32px", textAlign: "center",
           position: "relative",
-          animation: "fadeInUp 0.3s ease",
+          outline: "none",
         }}
       >
         <button
@@ -50,33 +76,38 @@ export function ExitIntent() {
           style={{
             position: "absolute", top: "14px", right: "14px",
             background: "transparent", border: "none",
-            fontSize: "20px", color: "#9ca3af", cursor: "pointer",
+            color: THEME.textDim, cursor: "pointer",
             width: "32px", height: "32px", display: "flex",
             alignItems: "center", justifyContent: "center",
-            borderRadius: "8px",
+            borderRadius: THEME.radius,
           }}
           aria-label="Close"
         >
-          &times;
+          <X size={18} aria-hidden="true" />
         </button>
 
         <div style={{
-          fontSize: "40px", marginBottom: "16px",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: "56px", height: "56px", borderRadius: "50%",
+          background: THEME.brandDim, marginBottom: "16px",
         }}>
-          {"\u270B"}
+          <Hand size={28} color={THEME.brandHi} aria-hidden="true" />
         </div>
 
-        <h3 style={{
-          fontSize: "22px", fontWeight: 800, color: "#3b0764",
-          marginBottom: "10px", letterSpacing: "-0.5px",
-          fontFamily: "var(--font-heading)",
-        }}>
+        <h3
+          id="exit-intent-title"
+          style={{
+            fontSize: "22px", fontWeight: 700, color: THEME.text,
+            marginBottom: "10px", letterSpacing: "-0.02em",
+            fontFamily: THEME.fontHeading,
+          }}
+        >
           Wait — Get 500 free words before you go
         </h3>
 
         <p style={{
-          fontSize: "14px", color: "#6b7280", lineHeight: 1.6,
-          marginBottom: "24px",
+          fontSize: "14px", color: THEME.textDim, lineHeight: 1.6,
+          marginBottom: "24px", fontFamily: THEME.fontSans,
         }}>
           Paste any AI text, get a detection score, and humanize it — completely free. No credit card required.
         </p>
@@ -85,14 +116,15 @@ export function ExitIntent() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            background: "linear-gradient(135deg, #7e22ce, #9333ea)",
+            background: THEME.brand,
             color: "#ffffff", fontWeight: 700,
-            padding: "14px 32px", borderRadius: "12px",
+            padding: "14px 32px", borderRadius: THEME.radius,
             fontSize: "15px", textDecoration: "none",
-            boxShadow: "0 4px 12px rgba(126,34,206,0.3)",
+            boxShadow: glow(THEME.brand, 0.4),
+            fontFamily: THEME.fontSans,
           }}
         >
-          Claim 500 Free Words
+          Claim 500 Free Words →
         </Link>
       </div>
     </div>

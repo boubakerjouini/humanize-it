@@ -6,10 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 import { track } from "@vercel/analytics";
 import posthog from "posthog-js";
-
-const V = {
-  brand: "#7e22ce",
-};
+import { THEME, glow } from "@/lib/theme";
 
 interface PricingButtonProps {
   plan: "PRO" | "TEAM";
@@ -64,17 +61,19 @@ export function PricingButton({ plan, annual, isPro, label }: PricingButtonProps
         width: "100%",
         textAlign: "center",
         padding: "10px",
-        borderRadius: "12px",
+        borderRadius: THEME.radius,
         fontSize: "13px",
         fontWeight: 600,
-        background: isPro ? "#ffffff" : "transparent",
-        color: isPro ? V.brand : "#4b5563",
-        border: isPro ? "none" : "1px solid #e5e7eb",
+        fontFamily: THEME.fontSans,
+        background: isPro ? THEME.brand : "transparent",
+        color: isPro ? "#ffffff" : THEME.textDim,
+        border: isPro ? "none" : `1px solid ${THEME.border}`,
+        boxShadow: isPro ? glow(THEME.brand, 0.3) : "none",
         cursor: loading ? "wait" : "pointer",
         opacity: loading ? 0.7 : 1,
       }}
     >
-      {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+      {loading && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} aria-hidden="true" />}
       {loading ? "Redirecting…" : label}
     </button>
   );

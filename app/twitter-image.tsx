@@ -17,7 +17,7 @@ export default function TwitterImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          backgroundColor: "#0a0a0a",
+          backgroundColor: "#0a0b0e",
           padding: "60px",
           fontFamily: "system-ui, sans-serif",
         }}
@@ -42,15 +42,16 @@ export default function TwitterImage() {
               width: "160px",
               height: "160px",
               borderRadius: "80px",
-              border: "6px solid #22c55e",
-              backgroundColor: "rgba(34, 197, 94, 0.08)",
+              border: "6px solid #3ee08f",
+              backgroundColor: "rgba(62, 224, 143, 0.08)",
             }}
           >
             <span
               style={{
                 fontSize: "56px",
                 fontWeight: 800,
-                color: "#22c55e",
+                color: "#3ee08f",
+                fontFamily: "monospace",
               }}
             >
               94
@@ -59,7 +60,7 @@ export default function TwitterImage() {
           <span
             style={{
               fontSize: "16px",
-              color: "#22c55e",
+              color: "#3ee08f",
               fontWeight: 600,
               letterSpacing: "0.05em",
               textTransform: "uppercase" as const,
@@ -90,7 +91,7 @@ export default function TwitterImage() {
                 <span
                   style={{
                     fontSize: "13px",
-                    color: "#a1a1aa",
+                    color: "#9aa1ad",
                     width: "60px",
                     textAlign: "right",
                   }}
@@ -103,7 +104,7 @@ export default function TwitterImage() {
                     flex: 1,
                     height: "10px",
                     borderRadius: "5px",
-                    backgroundColor: "#1a1a2e",
+                    backgroundColor: "#15181f",
                     overflow: "hidden",
                   }}
                 >
@@ -114,18 +115,19 @@ export default function TwitterImage() {
                       borderRadius: "5px",
                       background:
                         score >= 90
-                          ? "linear-gradient(90deg, #22c55e, #4ade80)"
+                          ? "linear-gradient(90deg, #3ee08f, #6df0ad)"
                           : score >= 80
-                            ? "linear-gradient(90deg, #eab308, #facc15)"
-                            : "linear-gradient(90deg, #8b5cf6, #a78bfa)",
+                            ? "linear-gradient(90deg, #f5b13d, #ffce6e)"
+                            : "linear-gradient(90deg, #7c5cff, #9a80ff)",
                     }}
                   />
                 </div>
                 <span
                   style={{
                     fontSize: "13px",
-                    color: "#d4d4d8",
+                    color: "#e8eaef",
                     width: "32px",
+                    fontFamily: "monospace",
                   }}
                 >
                   {score}%
@@ -153,7 +155,7 @@ export default function TwitterImage() {
                 width: "44px",
                 height: "44px",
                 borderRadius: "10px",
-                background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
+                background: "linear-gradient(135deg, #7c5cff, #6d28d9)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -168,7 +170,7 @@ export default function TwitterImage() {
               style={{
                 fontSize: "22px",
                 fontWeight: 700,
-                color: "#e4e4e7",
+                color: "#e8eaef",
               }}
             >
               HumanizeIt
@@ -180,21 +182,21 @@ export default function TwitterImage() {
             style={{
               fontSize: "56px",
               fontWeight: 800,
-              color: "#ffffff",
+              color: "#e8eaef",
               lineHeight: 1.1,
               margin: 0,
             }}
           >
             Humanize
             <br />
-            <span style={{ color: "#8b5cf6" }}>AI Text</span>
+            <span style={{ color: "#7c5cff" }}>AI Text</span>
           </h1>
 
           {/* Subtitle */}
           <p
             style={{
               fontSize: "22px",
-              color: "#a1a1aa",
+              color: "#9aa1ad",
               margin: 0,
               lineHeight: 1.4,
             }}
@@ -206,7 +208,7 @@ export default function TwitterImage() {
           <span
             style={{
               fontSize: "16px",
-              color: "#71717a",
+              color: "#767e8b",
               marginTop: "8px",
             }}
           >

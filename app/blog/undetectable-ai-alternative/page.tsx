@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { THEME } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "Best Undetectable AI Alternative in 2025 | HumanizeIt",
@@ -32,27 +33,31 @@ export const metadata: Metadata = {
 
 const h2Style: React.CSSProperties = {
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
   marginTop: "40px",
   marginBottom: "16px",
   lineHeight: 1.3,
+  letterSpacing: "-0.01em",
+  fontFamily: THEME.fontHeading,
 };
 
 const h3Style: React.CSSProperties = {
   fontWeight: 600,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "20px",
   marginTop: "28px",
   marginBottom: "12px",
   lineHeight: 1.4,
+  fontFamily: THEME.fontHeading,
 };
 
 const pStyle: React.CSSProperties = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
+  fontFamily: THEME.fontSans,
 };
 
 export default function UndetectableAiAlternativePage() {
@@ -69,38 +74,39 @@ export default function UndetectableAiAlternativePage() {
             padding: 0,
             margin: 0,
             fontSize: "14px",
-            color: "#6b7280",
+            color: THEME.textMuted,
+            fontFamily: THEME.fontMono,
           }}
         >
           <li>
-            <Link href="/" style={{ color: "#6b7280", textDecoration: "none" }}>
+            <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>
               Home
             </Link>
           </li>
-          <li style={{ color: "#9ca3af" }}>&gt;</li>
+          <li style={{ color: THEME.textMuted }}>&gt;</li>
           <li>
-            <Link href="/blog" style={{ color: "#6b7280", textDecoration: "none" }}>
+            <Link href="/blog" style={{ color: THEME.textDim, textDecoration: "none" }}>
               Blog
             </Link>
           </li>
-          <li style={{ color: "#9ca3af" }}>&gt;</li>
-          <li style={{ color: "#374151", fontWeight: 500 }}>
+          <li style={{ color: THEME.textMuted }}>&gt;</li>
+          <li style={{ color: THEME.text, fontWeight: 500 }}>
             Best Undetectable AI Alternative in 2025
           </li>
         </ol>
       </nav>
 
       {/* Published date */}
-      <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "16px" }}>
+      <p style={{ fontSize: "14px", color: THEME.textMuted, marginBottom: "16px", fontFamily: THEME.fontMono }}>
         Updated January 12, 2025 &middot; 8 min read
       </p>
 
       {/* H1 */}
       <h1
         style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: THEME.fontHeading,
           fontWeight: 800,
-          color: "#3b0764",
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
           lineHeight: 1.15,
           letterSpacing: "-0.02em",
@@ -110,14 +116,14 @@ export default function UndetectableAiAlternativePage() {
         Best Undetectable AI Alternative in 2025: Why HumanizeIt Is the Clear Winner
       </h1>
 
-      <p style={{ ...pStyle, fontSize: "18px", color: "#6b7280", marginBottom: "32px" }}>
+      <p style={{ ...pStyle, fontSize: "18px", color: THEME.textDim, marginBottom: "32px" }}>
         Undetectable.ai was once the go-to tool for humanizing AI-generated text. But mounting
         complaints about dark billing practices, declining output quality, and overpriced plans have
         driven thousands of users to look elsewhere. Here is why HumanizeIt is the best
         Undetectable AI alternative available today.
       </p>
 
-      <hr style={{ border: "none", borderTop: "1px solid #e5e7eb", margin: "32px 0" }} />
+      <hr style={{ border: "none", borderTop: `1px solid ${THEME.border}`, margin: "32px 0" }} />
 
       {/* Section 1 */}
       <h2 style={h2Style}>What Is Undetectable.ai?</h2>
@@ -219,16 +225,23 @@ export default function UndetectableAiAlternativePage() {
             borderCollapse: "collapse",
             fontSize: "15px",
             lineHeight: 1.6,
+            border: `1px solid ${THEME.border}`,
+            borderRadius: THEME.radius,
+            overflow: "hidden",
           }}
         >
           <thead>
-            <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+            <tr style={{ borderBottom: `1px solid ${THEME.borderStrong}`, background: THEME.surface1 }}>
               <th
                 style={{
                   textAlign: "left",
                   padding: "12px 16px",
-                  fontWeight: 700,
-                  color: "#1f2937",
+                  fontWeight: 600,
+                  color: THEME.text,
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  fontFamily: THEME.fontMono,
                 }}
               >
                 Feature
@@ -237,8 +250,12 @@ export default function UndetectableAiAlternativePage() {
                 style={{
                   textAlign: "center",
                   padding: "12px 16px",
-                  fontWeight: 700,
-                  color: "#7e22ce",
+                  fontWeight: 600,
+                  color: THEME.human,
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  fontFamily: THEME.fontMono,
                 }}
               >
                 HumanizeIt
@@ -247,8 +264,12 @@ export default function UndetectableAiAlternativePage() {
                 style={{
                   textAlign: "center",
                   padding: "12px 16px",
-                  fontWeight: 700,
-                  color: "#6b7280",
+                  fontWeight: 600,
+                  color: THEME.textMuted,
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  fontFamily: THEME.fontMono,
                 }}
               >
                 Undetectable.ai
@@ -272,24 +293,32 @@ export default function UndetectableAiAlternativePage() {
               <tr
                 key={i}
                 style={{
-                  borderBottom: "1px solid #f3f4f6",
-                  background: i % 2 === 0 ? "#faf5ff" : "#ffffff",
+                  borderBottom: `1px solid ${THEME.border}`,
+                  background: i % 2 === 0 ? THEME.surface2 : THEME.bg,
                 }}
               >
-                <td style={{ padding: "10px 16px", color: "#374151", fontWeight: 500 }}>
+                <td style={{ padding: "10px 16px", color: THEME.text, fontWeight: 500 }}>
                   {feature}
                 </td>
                 <td
                   style={{
                     padding: "10px 16px",
                     textAlign: "center",
-                    color: "#7e22ce",
+                    color: THEME.human,
                     fontWeight: 600,
+                    fontFamily: THEME.fontMono,
                   }}
                 >
                   {humanize}
                 </td>
-                <td style={{ padding: "10px 16px", textAlign: "center", color: "#6b7280" }}>
+                <td
+                  style={{
+                    padding: "10px 16px",
+                    textAlign: "center",
+                    color: THEME.textDim,
+                    fontFamily: THEME.fontMono,
+                  }}
+                >
                   {undetectable}
                 </td>
               </tr>
@@ -308,14 +337,14 @@ export default function UndetectableAiAlternativePage() {
       <h3 style={h3Style}>Original AI Text (ChatGPT output)</h3>
       <div
         style={{
-          background: "#f9fafb",
-          border: "1px solid #e5e7eb",
+          background: THEME.surface2,
+          border: `1px solid ${THEME.border}`,
           borderRadius: "12px",
           padding: "20px",
           marginBottom: "20px",
           fontSize: "15px",
           lineHeight: 1.7,
-          color: "#374151",
+          color: THEME.textDim,
           fontStyle: "italic",
         }}
       >
@@ -329,14 +358,14 @@ export default function UndetectableAiAlternativePage() {
       <h3 style={h3Style}>After Undetectable.ai</h3>
       <div
         style={{
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
+          background: THEME.aiDim,
+          border: `1px solid ${THEME.ai}33`,
           borderRadius: "12px",
           padding: "20px",
           marginBottom: "20px",
           fontSize: "15px",
           lineHeight: 1.7,
-          color: "#374151",
+          color: THEME.textDim,
         }}
       >
         AI has fundamentally changed the way that businesses are operating in today&apos;s modern
@@ -345,22 +374,22 @@ export default function UndetectableAiAlternativePage() {
         unprecedented levels of accuracy. This revolution in technology has led to improvements
         that are significant in efficiency and productivity and also decision-making in almost
         every industry.
-        <span style={{ display: "block", marginTop: "12px", fontSize: "13px", color: "#dc2626", fontWeight: 600 }}>
-          GPTZero score: 78% likely AI &middot; Awkward phrasing throughout
+        <span style={{ display: "block", marginTop: "12px", fontSize: "13px", color: THEME.ai, fontWeight: 600, fontFamily: THEME.fontMono }}>
+          GPTZero: 22% human &middot; Awkward phrasing throughout
         </span>
       </div>
 
       <h3 style={h3Style}>After HumanizeIt</h3>
       <div
         style={{
-          background: "#f0fdf4",
-          border: "1px solid #bbf7d0",
+          background: THEME.humanDim,
+          border: `1px solid ${THEME.human}33`,
           borderRadius: "12px",
           padding: "20px",
           marginBottom: "20px",
           fontSize: "15px",
           lineHeight: 1.7,
-          color: "#374151",
+          color: THEME.textDim,
         }}
       >
         It is hard to overstate how much AI has reshaped the business landscape. Machine learning
@@ -368,8 +397,8 @@ export default function UndetectableAiAlternativePage() {
         forecast outcomes with a level of accuracy that would have seemed impossible a decade
         ago. The ripple effects touch nearly every sector — from healthcare and finance to retail
         and logistics — driving real gains in how organizations operate and make decisions.
-        <span style={{ display: "block", marginTop: "12px", fontSize: "13px", color: "#16a34a", fontWeight: 600 }}>
-          GPTZero score: 8% likely AI &middot; Natural, readable prose
+        <span style={{ display: "block", marginTop: "12px", fontSize: "13px", color: THEME.human, fontWeight: 600, fontFamily: THEME.fontMono }}>
+          GPTZero: 92% human &middot; Natural, readable prose
         </span>
       </div>
 
@@ -383,26 +412,27 @@ export default function UndetectableAiAlternativePage() {
         style={{
           paddingLeft: "24px",
           marginBottom: "16px",
-          color: "#374151",
+          color: THEME.textDim,
           lineHeight: 1.75,
           fontSize: "16px",
+          fontFamily: THEME.fontSans,
         }}
       >
         <li style={{ marginBottom: "8px" }}>
-          <strong>Students</strong> who use ChatGPT or Claude as a study aid and need to submit
+          <strong style={{ color: THEME.text }}>Students</strong> who use ChatGPT or Claude as a study aid and need to submit
           work that will not be flagged by Turnitin or their university&apos;s AI detection
           system.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Content marketers and SEO professionals</strong> who produce high volumes of
+          <strong style={{ color: THEME.text }}>Content marketers and SEO professionals</strong> who produce high volumes of
           articles and need every piece to read naturally and pass publisher guidelines.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Freelance writers</strong> who use AI to accelerate their workflow but need to
+          <strong style={{ color: THEME.text }}>Freelance writers</strong> who use AI to accelerate their workflow but need to
           deliver work that clients will accept without question.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Bloggers and creators</strong> who want to maintain an authentic voice while
+          <strong style={{ color: THEME.text }}>Bloggers and creators</strong> who want to maintain an authentic voice while
           using AI to draft and brainstorm.
         </li>
       </ul>
@@ -416,30 +446,31 @@ export default function UndetectableAiAlternativePage() {
         style={{
           paddingLeft: "24px",
           marginBottom: "16px",
-          color: "#374151",
+          color: THEME.textDim,
           lineHeight: 1.75,
           fontSize: "16px",
+          fontFamily: THEME.fontSans,
         }}
       >
         <li style={{ marginBottom: "8px" }}>
-          <strong>Cancel your Undetectable.ai subscription.</strong> Go to your account settings
+          <strong style={{ color: THEME.text }}>Cancel your Undetectable.ai subscription.</strong> Go to your account settings
           and look for the billing or subscription section. If you cannot find it, email their
           support — and consider disputing future unauthorized charges with your bank.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Sign up for HumanizeIt.</strong> Head to{" "}
-          <Link href="/sign-up" style={{ color: "#7e22ce", textDecoration: "underline" }}>
+          <strong style={{ color: THEME.text }}>Sign up for HumanizeIt.</strong> Head to{" "}
+          <Link href="/sign-up" style={{ color: THEME.brandHi, textDecoration: "underline" }}>
             humanizeit.app/sign-up
           </Link>{" "}
           and create a free account. No credit card required.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Test with your own content.</strong> Paste in a piece of AI-generated text and
+          <strong style={{ color: THEME.text }}>Test with your own content.</strong> Paste in a piece of AI-generated text and
           see the difference for yourself. The free tier gives you enough words to run a proper
           evaluation.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Upgrade when ready.</strong> If you like what you see, upgrade to the Pro plan
+          <strong style={{ color: THEME.text }}>Upgrade when ready.</strong> If you like what you see, upgrade to the Pro plan
           at $9 per month — no contracts, cancel anytime, and billing is completely transparent.
         </li>
       </ol>
@@ -489,15 +520,23 @@ export default function UndetectableAiAlternativePage() {
 
       {/* CTA Box */}
       <div
-        className="bg-purple-700 text-white rounded-2xl p-8 text-center"
-        style={{ marginTop: "48px" }}
+        style={{
+          marginTop: "48px",
+          background: THEME.surface2,
+          border: `1px solid ${THEME.borderStrong}`,
+          borderRadius: THEME.radiusXl,
+          padding: "32px",
+          textAlign: "center",
+        }}
       >
         <h2
           style={{
             fontSize: "24px",
             fontWeight: 700,
             marginBottom: "12px",
-            color: "#ffffff",
+            color: THEME.text,
+            fontFamily: THEME.fontHeading,
+            letterSpacing: "-0.01em",
           }}
         >
           Ready to Switch to a Better AI Humanizer?
@@ -507,9 +546,10 @@ export default function UndetectableAiAlternativePage() {
             fontSize: "16px",
             lineHeight: 1.6,
             marginBottom: "24px",
-            color: "rgba(255,255,255,0.9)",
+            color: THEME.textDim,
             maxWidth: "480px",
             margin: "0 auto 24px",
+            fontFamily: THEME.fontSans,
           }}
         >
           Join thousands of users who left Undetectable.ai for HumanizeIt. Start free — no
@@ -519,12 +559,12 @@ export default function UndetectableAiAlternativePage() {
           href="/sign-up"
           style={{
             display: "inline-block",
-            background: "#ffffff",
-            color: "#7e22ce",
+            background: THEME.brand,
+            color: "#ffffff",
             fontWeight: 700,
             fontSize: "16px",
             padding: "12px 32px",
-            borderRadius: "8px",
+            borderRadius: THEME.radius,
             textDecoration: "none",
           }}
         >

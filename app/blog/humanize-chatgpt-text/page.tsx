@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import { THEME } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "How to Humanize ChatGPT Text in 2025 (Free) | HumanizeIt",
@@ -32,37 +33,78 @@ export const metadata: Metadata = {
 
 const h2Style = {
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
   marginTop: "40px",
   marginBottom: "16px",
+  fontFamily: THEME.fontHeading,
+  letterSpacing: "-0.01em",
+};
+
+const h3Style = {
+  fontWeight: 600,
+  color: THEME.text,
+  fontSize: "18px",
+  marginTop: "24px",
+  marginBottom: "12px",
+  fontFamily: THEME.fontHeading,
 };
 
 const pStyle = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
+  fontFamily: THEME.fontSans,
 };
 
 const exampleBlockStyle = {
-  backgroundColor: "#f9fafb",
+  backgroundColor: THEME.surface2,
   padding: "16px",
-  borderRadius: "8px",
-  border: "1px solid #e5e7eb",
+  borderRadius: THEME.radius,
+  border: `1px solid ${THEME.border}`,
   marginBottom: "16px",
+};
+
+const aiLabelStyle = {
+  fontWeight: 600,
+  fontSize: "14px",
+  color: THEME.ai,
+  marginBottom: "8px",
+  fontFamily: THEME.fontMono,
+  letterSpacing: "0.02em",
+};
+
+const humanLabelStyle = {
+  fontWeight: 600,
+  fontSize: "14px",
+  color: THEME.human,
+  marginBottom: "8px",
+  fontFamily: THEME.fontMono,
+  letterSpacing: "0.02em",
 };
 
 export default function HumanizeChatGPTTextPage() {
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
+    <main
+      className="max-w-3xl mx-auto px-4 py-12"
+      style={{ color: THEME.text }}
+    >
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-8" aria-label="Breadcrumb">
-        <Link href="/" className="hover:underline">
+      <nav
+        style={{
+          fontSize: "13px",
+          color: THEME.textMuted,
+          marginBottom: "32px",
+          fontFamily: THEME.fontMono,
+        }}
+        aria-label="Breadcrumb"
+      >
+        <Link href="/" className="hover:underline" style={{ color: THEME.textDim, textDecoration: "none" }}>
           Home
         </Link>
         {" > "}
-        <Link href="/blog" className="hover:underline">
+        <Link href="/blog" className="hover:underline" style={{ color: THEME.textDim, textDecoration: "none" }}>
           Blog
         </Link>
         {" > "}
@@ -72,17 +114,27 @@ export default function HumanizeChatGPTTextPage() {
       {/* H1 */}
       <h1
         style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: THEME.fontHeading,
           fontWeight: 800,
-          color: "#3b0764",
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
           marginBottom: "24px",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.15,
         }}
       >
         How to Humanize ChatGPT Text in 2025 (Free)
       </h1>
 
-      <p style={{ ...pStyle, color: "#6b7280", fontSize: "14px" }}>
+      <p
+        style={{
+          color: THEME.textMuted,
+          fontSize: "14px",
+          marginBottom: "16px",
+          fontFamily: THEME.fontMono,
+          letterSpacing: "0.02em",
+        }}
+      >
         Updated March 2025 &middot; 6 min read
       </p>
 
@@ -115,29 +167,29 @@ export default function HumanizeChatGPTTextPage() {
 
       <ul style={{ ...pStyle, paddingLeft: "24px", listStyleType: "disc" }}>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Low perplexity:</strong> ChatGPT tends to choose the most
+          <strong style={{ color: THEME.text }}>Low perplexity:</strong> ChatGPT tends to choose the most
           statistically probable next word. Humans are far more unpredictable.
           Detectors measure this predictability (called perplexity) and flag text
           that scores too low.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Uniform sentence structure:</strong> AI output often follows
+          <strong style={{ color: THEME.text }}>Uniform sentence structure:</strong> AI output often follows
           repetitive patterns. Sentences tend to be similar in length, and
           paragraphs follow a predictable setup-explanation-conclusion rhythm.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Overuse of filler phrases:</strong> Words like
+          <strong style={{ color: THEME.text }}>Overuse of filler phrases:</strong> Words like
           &ldquo;Furthermore,&rdquo; &ldquo;It is important to note
           that,&rdquo; and &ldquo;In today&apos;s digital landscape&rdquo;
           appear far more frequently in AI text than in typical human writing.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Lack of personal voice:</strong> ChatGPT writes in a polished,
+          <strong style={{ color: THEME.text }}>Lack of personal voice:</strong> ChatGPT writes in a polished,
           neutral tone that rarely includes personal anecdotes, imperfect
           grammar, or colloquial expressions that real people naturally use.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Burstiness deficit:</strong> Human writing alternates between
+          <strong style={{ color: THEME.text }}>Burstiness deficit:</strong> Human writing alternates between
           short, punchy sentences and longer, more complex ones. AI text tends to
           stay in a narrow range, making it feel monotonous.
         </li>
@@ -171,7 +223,11 @@ export default function HumanizeChatGPTTextPage() {
 
       <p style={pStyle}>
         Head over to{" "}
-        <Link href="/" className="text-purple-700 underline font-medium">
+        <Link
+          href="/"
+          className="underline font-medium"
+          style={{ color: THEME.brandHi, textUnderlineOffset: "2px" }}
+        >
           HumanizeIt
         </Link>{" "}
         and paste your ChatGPT-generated text into the input box. The tool
@@ -194,17 +250,17 @@ export default function HumanizeChatGPTTextPage() {
 
       <ul style={{ ...pStyle, paddingLeft: "24px", listStyleType: "disc" }}>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Light:</strong> Subtle adjustments to word choice and sentence
+          <strong style={{ color: THEME.text }}>Light:</strong> Subtle adjustments to word choice and sentence
           flow. Best when your original text is already decent and you just need
           to reduce the AI detection score.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Medium:</strong> Restructures sentences, varies paragraph
+          <strong style={{ color: THEME.text }}>Medium:</strong> Restructures sentences, varies paragraph
           length, and swaps out common AI phrases. This is the sweet spot for
           most use cases.
         </li>
         <li style={{ marginBottom: "8px" }}>
-          <strong>Aggressive:</strong> Deep rewriting that significantly alters
+          <strong style={{ color: THEME.text }}>Aggressive:</strong> Deep rewriting that significantly alters
           sentence structure and vocabulary while preserving your original
           meaning. Use this when you need to pass the strictest detectors.
         </li>
@@ -241,27 +297,10 @@ export default function HumanizeChatGPTTextPage() {
         writing becomes more natural.
       </p>
 
-      <h3
-        style={{
-          fontWeight: 600,
-          color: "#1f2937",
-          fontSize: "18px",
-          marginTop: "24px",
-          marginBottom: "12px",
-        }}
-      >
-        Example 1: Marketing Copy
-      </h3>
+      <h3 style={h3Style}>Example 1: Marketing Copy</h3>
 
       <div style={exampleBlockStyle}>
-        <p
-          style={{
-            fontWeight: 600,
-            fontSize: "14px",
-            color: "#dc2626",
-            marginBottom: "8px",
-          }}
-        >
+        <p style={aiLabelStyle}>
           ChatGPT Output (flagged by AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -276,14 +315,7 @@ export default function HumanizeChatGPTTextPage() {
       </div>
 
       <div style={exampleBlockStyle}>
-        <p
-          style={{
-            fontWeight: 600,
-            fontSize: "14px",
-            color: "#16a34a",
-            marginBottom: "8px",
-          }}
-        >
+        <p style={humanLabelStyle}>
           After HumanizeIt (passes AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -297,27 +329,10 @@ export default function HumanizeChatGPTTextPage() {
         </p>
       </div>
 
-      <h3
-        style={{
-          fontWeight: 600,
-          color: "#1f2937",
-          fontSize: "18px",
-          marginTop: "24px",
-          marginBottom: "12px",
-        }}
-      >
-        Example 2: Academic Writing
-      </h3>
+      <h3 style={h3Style}>Example 2: Academic Writing</h3>
 
       <div style={exampleBlockStyle}>
-        <p
-          style={{
-            fontWeight: 600,
-            fontSize: "14px",
-            color: "#dc2626",
-            marginBottom: "8px",
-          }}
-        >
+        <p style={aiLabelStyle}>
           ChatGPT Output (flagged by AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -331,14 +346,7 @@ export default function HumanizeChatGPTTextPage() {
       </div>
 
       <div style={exampleBlockStyle}>
-        <p
-          style={{
-            fontWeight: 600,
-            fontSize: "14px",
-            color: "#16a34a",
-            marginBottom: "8px",
-          }}
-        >
+        <p style={humanLabelStyle}>
           After HumanizeIt (passes AI detectors):
         </p>
         <p style={{ ...pStyle, fontStyle: "italic", marginBottom: 0 }}>
@@ -361,35 +369,35 @@ export default function HumanizeChatGPTTextPage() {
 
       <ol style={{ ...pStyle, paddingLeft: "24px", listStyleType: "decimal" }}>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Start with good ChatGPT prompts.</strong> The clearer your
+          <strong style={{ color: THEME.text }}>Start with good ChatGPT prompts.</strong> The clearer your
           instructions to ChatGPT, the better the raw material. Specify your
           target audience, tone, and any points you want covered. Garbage in,
           garbage out still applies.
         </li>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Break long pieces into sections.</strong> If you are working
+          <strong style={{ color: THEME.text }}>Break long pieces into sections.</strong> If you are working
           with a 3,000-word article, humanize it section by section rather than
           all at once. This gives you more control and produces more natural
           transitions.
         </li>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Add personal touches after humanizing.</strong> Drop in a
+          <strong style={{ color: THEME.text }}>Add personal touches after humanizing.</strong> Drop in a
           personal experience, a specific example from your work, or an opinion.
           These details are almost impossible for AI to generate and make your
           content feel authentic.
         </li>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Match the humanization level to your context.</strong> A casual
+          <strong style={{ color: THEME.text }}>Match the humanization level to your context.</strong> A casual
           blog post might only need the Light setting, while a formal report
           submitted to a strict institution may require Aggressive.
         </li>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Always proofread the final version.</strong> HumanizeIt
+          <strong style={{ color: THEME.text }}>Always proofread the final version.</strong> HumanizeIt
           preserves your meaning, but a quick review ensures nothing was lost in
           translation, especially for technical or data-heavy content.
         </li>
         <li style={{ marginBottom: "12px" }}>
-          <strong>Use the built-in AI detection score.</strong> HumanizeIt shows
+          <strong style={{ color: THEME.text }}>Use the built-in AI detection score.</strong> HumanizeIt shows
           you a detection probability score before and after humanization so you
           can verify that your text will pass.
         </li>
@@ -423,25 +431,51 @@ export default function HumanizeChatGPTTextPage() {
       </p>
 
       {/* CTA Box */}
-      <div className="bg-purple-700 text-white rounded-2xl p-8 text-center mt-12">
+      <div
+        style={{
+          background: THEME.surface2,
+          border: `1px solid ${THEME.borderStrong}`,
+          color: THEME.text,
+          borderRadius: THEME.radiusXl,
+          padding: "32px",
+          textAlign: "center",
+          marginTop: "48px",
+        }}
+      >
         <h2
           style={{
             fontWeight: 700,
             fontSize: "24px",
             marginBottom: "12px",
+            color: THEME.text,
+            fontFamily: THEME.fontHeading,
+            letterSpacing: "-0.01em",
           }}
         >
           Ready to Humanize Your AI Text?
         </h2>
-        <p style={{ marginBottom: "24px", fontSize: "16px", opacity: 0.9 }}>
+        <p
+          style={{
+            marginBottom: "24px",
+            fontSize: "16px",
+            color: THEME.textDim,
+            lineHeight: 1.6,
+          }}
+        >
           Join thousands of writers who use HumanizeIt to transform ChatGPT
           output into natural, undetectable content. Start for free today.
         </p>
         <Link
           href="/sign-up"
-          className="inline-block bg-white text-purple-700 font-semibold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors"
+          className="inline-block font-semibold px-8 py-3 transition-colors"
+          style={{
+            background: THEME.brand,
+            color: "#ffffff",
+            borderRadius: THEME.radius,
+            textDecoration: "none",
+          }}
         >
-          Get Started Free
+          Get Started Free &rarr;
         </Link>
       </div>
     </main>

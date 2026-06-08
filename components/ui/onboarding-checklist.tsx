@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, X } from "lucide-react";
+import { THEME } from "@/lib/theme";
 
 const STORAGE_KEY = "humanizeit_onboarded";
-
-const V = {
-  brand: "#7e22ce",
-};
 
 export function OnboardingChecklist() {
   const [visible, setVisible] = useState(false);
@@ -34,9 +31,9 @@ export function OnboardingChecklist() {
 
   return (
     <div style={{
-      background: "#ffffff",
-      border: "1px solid #e9d5ff",
-      borderRadius: "16px",
+      background: THEME.surface2,
+      border: `1px solid ${THEME.border}`,
+      borderRadius: THEME.radiusLg,
       padding: "24px",
       marginBottom: "28px",
       position: "relative",
@@ -46,20 +43,23 @@ export function OnboardingChecklist() {
         style={{
           position: "absolute", top: "16px", right: "16px",
           background: "transparent", border: "none", cursor: "pointer",
-          color: "#9ca3af", padding: "4px",
+          color: THEME.textDim, padding: "4px",
+          display: "flex", alignItems: "center", justifyContent: "center",
         }}
         aria-label="Dismiss onboarding"
       >
-        <X size={16} />
+        <X size={16} aria-hidden="true" />
       </button>
 
+      <div className="kicker" style={{ marginBottom: "8px" }}>GET STARTED</div>
+
       <h3 style={{
-        fontSize: "16px", fontWeight: 700, color: "#3b0764",
-        marginBottom: "4px", fontFamily: "var(--font-heading)",
+        fontSize: "16px", fontWeight: 700, color: THEME.text,
+        marginBottom: "4px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em",
       }}>
         Get started with HumanizeIt
       </h3>
-      <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "20px" }}>
+      <p style={{ fontSize: "13px", color: THEME.textDim, marginBottom: "20px", fontFamily: THEME.fontSans }}>
         Complete these steps to get the most out of the platform.
       </p>
 
@@ -68,29 +68,31 @@ export function OnboardingChecklist() {
           <div key={i} style={{
             display: "flex", alignItems: "center", gap: "12px",
             padding: "12px 16px",
-            background: step.done ? "rgba(126,34,206,0.04)" : "#faf5ff",
-            borderRadius: "12px",
-            border: "1px solid #f3e8ff",
+            background: step.done ? THEME.humanDim : THEME.surface1,
+            borderRadius: THEME.radius,
+            border: `1px solid ${step.done ? THEME.border : THEME.border}`,
           }}>
             {step.done ? (
-              <CheckCircle2 size={20} color={V.brand} />
+              <CheckCircle2 size={20} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0 }} />
             ) : (
-              <Circle size={20} color="#d1d5db" />
+              <Circle size={20} color={THEME.textMuted} aria-hidden="true" style={{ flexShrink: 0 }} />
             )}
-            <span style={{
+            <span className="mono" style={{
               flex: 1,
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: step.done ? 500 : 600,
-              color: step.done ? "#6b7280" : "#111827",
+              color: step.done ? THEME.textDim : THEME.text,
               textDecoration: step.done ? "line-through" : "none",
+              letterSpacing: "0.01em",
             }}>
               {step.label}
             </span>
             {step.cta && step.href && (
               <Link href={step.href} style={{
                 fontSize: "12px", fontWeight: 700, color: "#ffffff",
-                background: V.brand, padding: "6px 14px", borderRadius: "8px",
+                background: THEME.brand, padding: "6px 14px", borderRadius: THEME.radius,
                 textDecoration: "none", whiteSpace: "nowrap",
+                fontFamily: THEME.fontSans,
               }}>
                 {step.cta}
               </Link>

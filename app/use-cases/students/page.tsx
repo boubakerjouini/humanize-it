@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { THEME } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: "HumanizeIt for Students — Bypass GPTZero and Turnitin | HumanizeIt",
@@ -28,15 +29,17 @@ export const metadata: Metadata = {
 };
 
 const h2Style = {
+  fontFamily: THEME.fontHeading,
   fontWeight: 700,
-  color: "#1f2937",
+  color: THEME.text,
   fontSize: "24px",
   marginTop: "40px",
   marginBottom: "16px",
+  letterSpacing: "-0.01em",
 };
 
 const pStyle = {
-  color: "#374151",
+  color: THEME.textDim,
   lineHeight: 1.75,
   marginBottom: "16px",
   fontSize: "16px",
@@ -46,7 +49,7 @@ export default function StudentsUseCasePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       {/* Breadcrumb */}
-      <nav className="text-sm text-gray-500 mb-8">
+      <nav className="text-sm mb-8" style={{ color: THEME.textDim }}>
         <Link href="/" className="hover:underline">
           Home
         </Link>
@@ -58,10 +61,11 @@ export default function StudentsUseCasePage() {
 
       <h1
         style={{
-          fontFamily: "Plus Jakarta Sans",
+          fontFamily: THEME.fontHeading,
           fontWeight: 800,
-          color: "#3b0764",
+          color: THEME.text,
           fontSize: "clamp(28px, 5vw, 38px)",
+          letterSpacing: "-0.02em",
           marginBottom: "24px",
         }}
       >
@@ -69,9 +73,16 @@ export default function StudentsUseCasePage() {
       </h1>
 
       {/* Disclaimer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4" style={{ marginBottom: "24px" }}>
-        <p style={{ ...pStyle, marginBottom: 0, fontWeight: 500 }}>
-          <strong>Disclaimer:</strong> HumanizeIt is designed to help students improve their writing skills and learn to
+      <div
+        className="rounded-lg p-4"
+        style={{
+          marginBottom: "24px",
+          background: THEME.warnDim,
+          border: `1px solid ${THEME.warn}`,
+        }}
+      >
+        <p style={{ ...pStyle, marginBottom: 0, fontWeight: 500, color: THEME.text }}>
+          <strong style={{ color: THEME.warn }}>Disclaimer:</strong> HumanizeIt is designed to help students improve their writing skills and learn to
           write more naturally. Always follow your institution&apos;s academic integrity policies. Use responsibly.
         </p>
       </div>
@@ -165,19 +176,28 @@ export default function StudentsUseCasePage() {
       </p>
 
       {/* CTA Box */}
-      <div className="bg-purple-700 text-white rounded-2xl p-8 text-center" style={{ marginTop: "48px" }}>
-        <h2 style={{ fontWeight: 700, fontSize: "24px", marginBottom: "12px" }}>
+      <div
+        className="rounded-2xl p-8 text-center"
+        style={{
+          marginTop: "48px",
+          background: THEME.surface2,
+          border: `1px solid ${THEME.brand}`,
+          boxShadow: "0 0 0 1px rgba(124,92,255,0.25), 0 8px 40px rgba(124,92,255,0.18)",
+        }}
+      >
+        <h2 style={{ fontFamily: THEME.fontHeading, fontWeight: 700, fontSize: "24px", marginBottom: "12px", color: THEME.text, letterSpacing: "-0.02em" }}>
           Start Humanizing Your Writing for Free
         </h2>
-        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", opacity: 0.9 }}>
+        <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", color: THEME.textDim }}>
           Our Free plan gives you 3 documents per day — no credit card required. Perfect for students who need reliable
           AI-detection-proof writing without spending a dime.
         </p>
         <Link
           href="/sign-up"
-          className="inline-block bg-white text-purple-700 font-bold rounded-full px-8 py-3 hover:bg-gray-100 transition"
+          className="inline-block font-bold rounded-full px-8 py-3 transition"
+          style={{ background: THEME.brand, color: "#ffffff", boxShadow: "0 0 22px rgba(124,92,255,0.4)" }}
         >
-          Sign Up Free
+          Sign Up Free &rarr;
         </Link>
       </div>
     </div>

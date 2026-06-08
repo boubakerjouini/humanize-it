@@ -10,7 +10,8 @@
       "Bash(sed 's/.*\\\\.//')",
       "Bash(npx prisma *)",
       "Bash(npx tsc *)",
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "Bash(npx next *)"
     ]
   },
   "enableAllProjectMcpServers": true,

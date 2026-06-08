@@ -1,47 +1,58 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
+import { THEME, glow } from "@/lib/theme";
 
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#7e22ce",
-    colorBackground: "#ffffff",
-    colorInputBackground: "#f9fafb",
-    colorInputText: "#111827",
-    colorText: "#111827",
-    colorTextSecondary: "#6b7280",
-    colorDanger: "#dc2626",
-    colorSuccess: "#16a34a",
-    borderRadius: "8px",
-    fontFamily: "system-ui, -apple-system, sans-serif",
+    colorPrimary: THEME.brand,
+    colorBackground: THEME.surface2,
+    colorInputBackground: THEME.surface1,
+    colorInputText: THEME.text,
+    colorText: THEME.text,
+    colorTextSecondary: THEME.textDim,
+    colorDanger: THEME.ai,
+    colorSuccess: THEME.human,
+    borderRadius: THEME.radius,
+    fontFamily: THEME.fontSans,
   },
   elements: {
     card: {
-      background: "#ffffff",
-      border: "1px solid rgba(126,34,206,0.2)",
-      boxShadow: "0 0 40px rgba(126,34,206,0.08)",
-      borderRadius: "16px",
+      background: THEME.surface2,
+      border: `1px solid ${THEME.border}`,
+      boxShadow: glow(THEME.brand, 0.18),
+      borderRadius: THEME.radiusLg,
     },
-    headerTitle: { color: "#111827", fontSize: "20px", fontWeight: "700" },
-    headerSubtitle: { color: "#6b7280" },
+    headerTitle: {
+      color: THEME.text,
+      fontSize: "20px",
+      fontWeight: "700",
+      fontFamily: THEME.fontHeading,
+      letterSpacing: "-0.02em",
+    },
+    headerSubtitle: { color: THEME.textDim },
     socialButtonsBlockButton: {
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-      color: "#111827",
-      "&:hover": { background: "#f3f4f6" },
+      background: THEME.surface1,
+      border: `1px solid ${THEME.border}`,
+      color: THEME.text,
+      "&:hover": { background: THEME.surface3 },
     },
+    formFieldLabel: { color: THEME.textDim },
     formFieldInput: {
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-      color: "#111827",
-      "&:focus": { borderColor: "#7e22ce" },
+      background: THEME.surface1,
+      border: `1px solid ${THEME.border}`,
+      color: THEME.text,
+      "&:focus": { borderColor: THEME.brand },
     },
     formButtonPrimary: {
-      background: "#7e22ce",
-      "&:hover": { background: "#9333ea" },
+      background: THEME.brand,
+      "&:hover": { background: THEME.brandHi },
     },
-    footerActionLink: { color: "#7e22ce" },
-    dividerLine: { background: "#e5e7eb" },
-    dividerText: { color: "#9ca3af" },
+    footerActionLink: { color: THEME.brandHi },
+    footerActionText: { color: THEME.textDim },
+    dividerLine: { background: THEME.border },
+    dividerText: { color: THEME.textMuted },
+    identityPreviewText: { color: THEME.text },
+    identityPreviewEditButton: { color: THEME.brandHi },
   },
 };
 
@@ -49,28 +60,38 @@ export default function SignUpPage() {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      minHeight: "100vh", background: "#ffffff", position: "relative", overflow: "hidden",
+      minHeight: "100vh", background: THEME.bg, position: "relative", overflow: "hidden",
     }}>
       <div style={{
         position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)",
         width: "600px", height: "600px",
-        background: "radial-gradient(circle, rgba(126,34,206,0.08) 0%, transparent 70%)",
+        background: `radial-gradient(circle, ${THEME.brand}1f 0%, transparent 70%)`,
         filter: "blur(60px)", pointerEvents: "none", zIndex: 0,
       }} />
       <div style={{
         position: "absolute", bottom: "10%", left: "30%",
         width: "400px", height: "400px",
-        background: "radial-gradient(circle, rgba(126,34,206,0.05) 0%, transparent 70%)",
+        background: `radial-gradient(circle, ${THEME.brand}14 0%, transparent 70%)`,
         filter: "blur(80px)", pointerEvents: "none", zIndex: 0,
       }} />
-      <div style={{ marginBottom: "24px", textAlign: "center", position: "relative", zIndex: 1 }}>
-        <span style={{ fontSize: "24px", fontWeight: 800, color: "#7e22ce" }}>H.</span>
-        <span style={{ fontSize: "16px", fontWeight: 600, color: "#111827", marginLeft: "6px" }}>HumanizeIt</span>
+      <div style={{ marginBottom: "20px", textAlign: "center", position: "relative", zIndex: 1 }}>
+        <div className="kicker" style={{ marginBottom: "14px" }}>START FREE</div>
+        <span style={{
+          fontSize: "24px", fontWeight: 800, color: THEME.brand,
+          fontFamily: THEME.fontHeading, letterSpacing: "-0.02em",
+        }}>H.</span>
+        <span style={{
+          fontSize: "16px", fontWeight: 600, color: THEME.text, marginLeft: "6px",
+          fontFamily: THEME.fontHeading, letterSpacing: "-0.01em",
+        }}>HumanizeIt</span>
       </div>
       <div style={{ position: "relative", zIndex: 1 }}>
         <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" afterSignUpUrl="/dashboard/editor" redirectUrl="/dashboard/editor" />
       </div>
-      <Link href="/" style={{ fontSize: "12px", color: "#9ca3af", textDecoration: "none", marginTop: "20px", position: "relative", zIndex: 1 }}>
+      <Link href="/" style={{
+        fontSize: "12px", color: THEME.textMuted, textDecoration: "none", marginTop: "20px",
+        position: "relative", zIndex: 1, fontFamily: THEME.fontMono, letterSpacing: "0.04em",
+      }}>
         ← Back to home
       </Link>
     </div>

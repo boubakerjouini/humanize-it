@@ -11,6 +11,8 @@ import type { PatternHit } from "@/lib/algorithms/analyzeText";
 import { computeReadability, type ReadabilityMetrics } from "@/lib/readability";
 import { simulateEngineScores, type EngineScore } from "@/lib/engines";
 import { Copy, RotateCcw, Zap, CheckCircle2, Sparkles, ArrowRight, ChevronDown, ChevronUp, SlidersHorizontal, GitCompareArrows, Rows3, Layers, BookOpen, Lock, Shield, Globe, X, Fingerprint, Upload, FileUp, Download } from "lucide-react";
+import { ScoreRing } from "@/components/ui/score-ring";
+import { THEME } from "@/lib/theme";
 import { ShareScore } from "@/components/ui/share-score";
 import { toast } from "sonner";
 import { computeWordDiff, type DiffSegment } from "@/lib/utils/wordDiff";
@@ -67,58 +69,10 @@ const TONES: { value: ToneOption; label: string; icon: string }[] = [
 ];
 
 function getScoreConfig(score: number) {
-  if (score >= 75) return { label: "FLAGGED AS AI", desc: "Will be caught by GPTZero, Turnitin & Originality.ai", color: "#dc2626", dimColor: "rgba(220,38,38,0.06)", border: "rgba(220,38,38,0.2)", ctaLabel: "Fix it — Humanize now" };
-  if (score >= 50) return { label: "LIKELY AI", desc: "Most detectors will flag this text", color: "#f97316", dimColor: "rgba(249,115,22,0.06)", border: "rgba(249,115,22,0.2)", ctaLabel: "Humanize to reduce risk" };
-  if (score >= 30) return { label: "BORDERLINE", desc: "Some detectors may flag this", color: "#d97706", dimColor: "rgba(217,119,6,0.06)", border: "rgba(217,119,6,0.18)", ctaLabel: "Polish to pass safely" };
-  return { label: "LOOKS HUMAN", desc: "Should pass most AI detectors", color: "#16a34a", dimColor: "rgba(22,163,74,0.06)", border: "rgba(22,163,74,0.18)", ctaLabel: "Polish it further" };
-}
-
-// Animated score ring with count-up
-function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
-  const [displayed, setDisplayed] = useState(0);
-  const [drawn, setDrawn] = useState(false);
-  const cfg = getScoreConfig(score);
-  const strokeWidth = 9;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setDrawn(true), 80);
-    let start = 0;
-    const target = Math.round(score);
-    const duration = 900;
-    const step = 16;
-    const increment = (target / duration) * step;
-    const t2 = setInterval(() => {
-      start = Math.min(start + increment, target);
-      setDisplayed(Math.round(start));
-      if (start >= target) clearInterval(t2);
-    }, step);
-    return () => { clearTimeout(t1); clearInterval(t2); };
-  }, [score]);
-
-  return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e5e7eb" strokeWidth={strokeWidth} />
-        <circle
-          cx={size / 2} cy={size / 2} r={radius} fill="none"
-          stroke={cfg.color} strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={drawn ? offset : circumference}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1), stroke 0.4s ease" }}
-        />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontSize: "48px", fontWeight: 800, color: "#0a0a0a", lineHeight: 1, letterSpacing: "-2px", fontVariantNumeric: "tabular-nums", fontFamily: "var(--font-heading)" }}>
-          {displayed}
-        </div>
-        <div style={{ fontSize: "11px", color: "#4b5563", marginTop: "2px" }}>Human Score</div>
-      </div>
-    </div>
-  );
+  if (score >= 75) return { label: "FLAGGED AS AI", desc: "Will be caught by GPTZero, Turnitin & Originality.ai", color: THEME.ai, dimColor: THEME.aiDim, border: "rgba(255,93,93,0.3)", ctaLabel: "Fix it — Humanize now" };
+  if (score >= 50) return { label: "LIKELY AI", desc: "Most detectors will flag this text", color: THEME.ai, dimColor: THEME.aiDim, border: "rgba(255,93,93,0.3)", ctaLabel: "Humanize to reduce risk" };
+  if (score >= 30) return { label: "BORDERLINE", desc: "Some detectors may flag this", color: THEME.warn, dimColor: THEME.warnDim, border: "rgba(245,177,61,0.3)", ctaLabel: "Polish to pass safely" };
+  return { label: "LOOKS HUMAN", desc: "Should pass most AI detectors", color: THEME.human, dimColor: THEME.humanDim, border: "rgba(62,224,143,0.3)", ctaLabel: "Polish it further" };
 }
 
 // Skeleton shimmer block
@@ -126,7 +80,7 @@ function Skeleton({ width = "100%", height = 16, radius = 6, style = {} }: { wid
   return (
     <div style={{
       width, height, borderRadius: radius,
-      background: "linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.04) 100%)",
+      background: "linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 100%)",
       backgroundSize: "200% 100%",
       animation: "shimmer 1.5s infinite",
       ...style,
@@ -142,11 +96,11 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
       padding: "40px 24px", gap: "20px",
       animation: "fadeInUp 0.3s ease",
     }}>
-      <div style={{ position: "relative", width: "64px", height: "64px" }}>
+      <div style={{ position: "relative", width: "64px", height: "64px" }} aria-hidden="true">
         {[
-          { size: 32, top: "16px", left: "16px", delay: "0s", color: "rgba(124,58,237,0.9)" },
-          { size: 22, top: "4px", left: "6px", delay: "0.3s", color: "rgba(124,58,237,0.7)" },
-          { size: 18, top: "auto", left: "auto", delay: "0.6s", color: "rgba(124,58,237,0.5)" },
+          { size: 32, top: "16px", left: "16px", delay: "0s", color: "rgba(124,92,255,0.9)" },
+          { size: 22, top: "4px", left: "6px", delay: "0.3s", color: "rgba(124,92,255,0.7)" },
+          { size: 18, top: "auto", left: "auto", delay: "0.6s", color: "rgba(124,92,255,0.5)" },
         ].map((orb, i) => (
           <div key={i} style={{
             position: "absolute",
@@ -162,7 +116,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
         ))}
       </div>
       <div>
-        <p style={{ fontSize: "14px", fontWeight: 600, color: "#111827", textAlign: "center", marginBottom: "6px" }}>
+        <p style={{ fontSize: "14px", fontWeight: 600, color: THEME.text, textAlign: "center", marginBottom: "6px", fontFamily: THEME.fontMono }}>
           {chunkProgress && chunkProgress.total > 1
             ? `Humanizing chunk ${chunkProgress.current} of ${chunkProgress.total}`
             : passInfo && passInfo.current > 1
@@ -170,7 +124,7 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
               : <>AI is rewriting your text<span className="dots"><span>.</span><span>.</span><span>.</span></span></>
           }
         </p>
-        <p style={{ fontSize: "12px", color: "#4b5563", textAlign: "center" }}>
+        <p style={{ fontSize: "12px", color: THEME.textDim, textAlign: "center" }}>
           {chunkProgress && chunkProgress.total > 1
             ? "Processing large document in sections"
             : "Multi-pass engine · up to 3 attempts · picking the best"
@@ -179,15 +133,15 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
       </div>
       {chunkProgress && chunkProgress.total > 1 ? (
         <div style={{ width: "200px" }}>
-          <div style={{ height: "6px", borderRadius: "3px", background: "#f3f4f6", overflow: "hidden" }}>
+          <div style={{ height: "6px", borderRadius: "3px", background: THEME.surface3, overflow: "hidden" }}>
             <div style={{
               height: "100%", borderRadius: "3px",
-              background: "linear-gradient(90deg, #7c3aed, #6d28d9)",
+              background: `linear-gradient(90deg, ${THEME.brand}, ${THEME.brandHi})`,
               width: `${(chunkProgress.current / chunkProgress.total) * 100}%`,
               transition: "width 0.4s ease",
             }} />
           </div>
-          <p style={{ fontSize: "10px", color: "#4b5563", textAlign: "center", marginTop: "6px" }}>
+          <p style={{ fontSize: "10px", color: THEME.textDim, textAlign: "center", marginTop: "6px", fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
             {Math.round((chunkProgress.current / chunkProgress.total) * 100)}%
           </p>
         </div>
@@ -200,11 +154,11 @@ function HumanizingState({ chunkProgress, passInfo }: { chunkProgress?: { curren
             const isDone = passNum < currentPass;
             return (
               <div key={p} style={{
-                fontSize: "10px",
-                color: isDone ? "#16a34a" : isActive ? "#7c3aed" : "#4b5563",
+                fontSize: "10px", fontFamily: THEME.fontMono,
+                color: isDone ? THEME.human : isActive ? THEME.brandHi : THEME.textDim,
                 padding: "3px 8px", borderRadius: "4px",
-                background: isDone ? "#f0fdf4" : isActive ? "#f3e8ff" : "#faf5ff",
-                border: `1px solid ${isDone ? "rgba(22,163,74,0.25)" : isActive ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.15)"}`,
+                background: isDone ? THEME.humanDim : isActive ? THEME.brandDim : THEME.surface3,
+                border: `1px solid ${isDone ? "rgba(62,224,143,0.25)" : isActive ? "rgba(124,92,255,0.35)" : THEME.border}`,
                 fontWeight: isActive ? 700 : 400,
                 ...(isActive ? { animation: `passGlow 1.8s ease-in-out infinite` } : {}),
               }}>
@@ -228,14 +182,14 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
   const MetricRow = ({ label, originalVal, originalColor, humanizedVal, humanizedColor }: {
     label: string; originalVal: string; originalColor: string; humanizedVal?: string; humanizedColor?: string;
   }) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f3f4f6" }}>
-      <span style={{ fontSize: "11px", color: "#374151", flex: 1 }}>{label}</span>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${THEME.border}` }}>
+      <span style={{ fontSize: "11px", color: THEME.textDim, flex: 1 }}>{label}</span>
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <span style={{ fontSize: "12px", fontWeight: 700, color: originalColor, minWidth: "50px", textAlign: "right" }}>{originalVal}</span>
+        <span style={{ fontSize: "12px", fontWeight: 700, color: originalColor, minWidth: "50px", textAlign: "right", fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>{originalVal}</span>
         {humanizedVal !== undefined && (
           <>
-            <ArrowRight size={9} color="#d1d5db" />
-            <span style={{ fontSize: "12px", fontWeight: 700, color: humanizedColor ?? originalColor, minWidth: "50px", textAlign: "right" }}>{humanizedVal}</span>
+            <ArrowRight size={9} color={THEME.textMuted} aria-hidden="true" />
+            <span style={{ fontSize: "12px", fontWeight: 700, color: humanizedColor ?? originalColor, minWidth: "50px", textAlign: "right", fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>{humanizedVal}</span>
           </>
         )}
       </div>
@@ -244,8 +198,8 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
 
   return (
     <div style={{
-      background: "#ffffff", borderRadius: "12px",
-      border: "1px solid #f0f0f0", overflow: "hidden",
+      background: THEME.surface2, borderRadius: THEME.radiusLg,
+      border: `1px solid ${THEME.border}`, overflow: "hidden",
       animation: "fadeInUp 0.4s ease 0.15s both",
     }}>
       <button
@@ -254,29 +208,29 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
           width: "100%", padding: "12px 16px",
           background: "transparent", border: "none",
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          cursor: "pointer", color: "#4b5563",
+          cursor: "pointer", color: THEME.textDim,
         }}
       >
-        <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12px", fontWeight: 600 }}>
-          <BookOpen size={13} color="#7c3aed" /> Readability Analysis
+        <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12px", fontWeight: 600, color: THEME.text }}>
+          <BookOpen size={13} color={THEME.brand} aria-hidden="true" /> Readability Analysis
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{
             fontSize: "11px", padding: "2px 8px", borderRadius: "4px",
-            background: `${original.fleschColor}15`, color: original.fleschColor,
-            fontWeight: 700,
+            background: `${original.fleschColor}22`, color: original.fleschColor,
+            fontWeight: 700, fontFamily: THEME.fontMono,
           }}>
             {original.fleschLabel}
           </span>
-          {expanded ? <ChevronUp size={13} color="#4b5563" /> : <ChevronDown size={13} color="#4b5563" />}
+          {expanded ? <ChevronUp size={13} color={THEME.textDim} aria-hidden="true" /> : <ChevronDown size={13} color={THEME.textDim} aria-hidden="true" />}
         </div>
       </button>
       {expanded && (
         <div style={{ padding: "4px 16px 14px", animation: "fadeInUp 0.2s ease" }}>
           {humanized && (
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "24px", marginBottom: "4px", paddingBottom: "6px", borderBottom: "1px solid #e5e7eb" }}>
-              <span style={{ fontSize: "9px", color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.5px" }}>Original</span>
-              <span style={{ fontSize: "9px", color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px" }}>Humanized</span>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "24px", marginBottom: "4px", paddingBottom: "6px", borderBottom: `1px solid ${THEME.border}` }}>
+              <span style={{ fontSize: "9px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", fontFamily: THEME.fontMono }}>Original</span>
+              <span style={{ fontSize: "9px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.5px", marginRight: "4px", fontFamily: THEME.fontMono }}>Humanized</span>
             </div>
           )}
           <MetricRow
@@ -289,37 +243,37 @@ function ReadabilityPanel({ originalText, humanizedText }: { originalText: strin
           <MetricRow
             label="Reading Time"
             originalVal={`${original.readingTimeMinutes} min`}
-            originalColor="#4b5563"
+            originalColor={THEME.textDim}
             humanizedVal={humanized ? `${humanized.readingTimeMinutes} min` : undefined}
-            humanizedColor="#4b5563"
+            humanizedColor={THEME.textDim}
           />
           <MetricRow
             label="Avg Sentence Length"
             originalVal={`${original.avgSentenceLength}w`}
-            originalColor={original.avgSentenceLength >= 18 && original.avgSentenceLength <= 25 ? "#f97316" : "#16a34a"}
+            originalColor={original.avgSentenceLength >= 18 && original.avgSentenceLength <= 25 ? THEME.warn : THEME.human}
             humanizedVal={humanized ? `${humanized.avgSentenceLength}w` : undefined}
-            humanizedColor={humanized ? (humanized.avgSentenceLength >= 18 && humanized.avgSentenceLength <= 25 ? "#f97316" : "#16a34a") : undefined}
+            humanizedColor={humanized ? (humanized.avgSentenceLength >= 18 && humanized.avgSentenceLength <= 25 ? THEME.warn : THEME.human) : undefined}
           />
           <MetricRow
             label="Vocabulary Richness"
             originalVal={`${original.vocabularyRichness}%`}
-            originalColor={original.vocabularyRichness < 40 ? "#f97316" : "#16a34a"}
+            originalColor={original.vocabularyRichness < 40 ? THEME.warn : THEME.human}
             humanizedVal={humanized ? `${humanized.vocabularyRichness}%` : undefined}
-            humanizedColor={humanized ? (humanized.vocabularyRichness < 40 ? "#f97316" : "#16a34a") : undefined}
+            humanizedColor={humanized ? (humanized.vocabularyRichness < 40 ? THEME.warn : THEME.human) : undefined}
           />
           <MetricRow
             label="Grade Level"
             originalVal={`${original.gradeLevel}`}
-            originalColor={original.gradeLevel > 12 ? "#f97316" : "#16a34a"}
+            originalColor={original.gradeLevel > 12 ? THEME.warn : THEME.human}
             humanizedVal={humanized ? `${humanized.gradeLevel}` : undefined}
-            humanizedColor={humanized ? (humanized.gradeLevel > 12 ? "#f97316" : "#16a34a") : undefined}
+            humanizedColor={humanized ? (humanized.gradeLevel > 12 ? THEME.warn : THEME.human) : undefined}
           />
           <div style={{ marginTop: "6px", display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontSize: "10px", color: "#4b5563" }}>
+            <span style={{ fontSize: "10px", color: THEME.textDim }}>
               Grade: {original.gradeLevelLabel}
             </span>
             {humanized && (
-              <span style={{ fontSize: "10px", color: "#4b5563" }}>
+              <span style={{ fontSize: "10px", color: THEME.textDim }}>
                 Grade: {humanized.gradeLevelLabel}
               </span>
             )}
@@ -856,34 +810,34 @@ export default function EditorPage() {
   const isPaidPlan = userPlan === "PRO" || userPlan === "TEAM";
 
   // Word count color
-  const wordCountColor = wordCount === 0 ? "#4b5563"
-    : wordCount > 1800 ? "#dc2626"
-    : wordCount > 1500 ? "#d97706"
-    : "#16a34a";
+  const wordCountColor = wordCount === 0 ? THEME.textDim
+    : wordCount > 1800 ? THEME.ai
+    : wordCount > 1500 ? THEME.warn
+    : THEME.human;
 
   const showRightPanel = result || analyzing;
 
   return (
-    <div style={{ minHeight: "100%", background: "#ffffff", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100%", background: THEME.bg, display: "flex", flexDirection: "column" }}>
 
       {/* ── Header ── */}
       <div style={{
         padding: "12px 24px",
-        borderBottom: "1px solid #e5e7eb",
+        borderBottom: `1px solid ${THEME.border}`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         flexShrink: 0, gap: "12px", flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <Sparkles size={15} color="#7c3aed" />
-          <h1 style={{ fontSize: "14px", fontWeight: 700, color: "#0a0a0a", margin: 0, fontFamily: "var(--font-heading)" }}>Editor</h1>
+          <Sparkles size={15} color={THEME.brand} aria-hidden="true" />
+          <h1 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.fontHeading }}>Editor</h1>
 
           {/* Mode toggle */}
-          <div style={{ display: "flex", gap: "2px", background: "#f9fafb", borderRadius: "6px", padding: "2px" }}>
+          <div style={{ display: "flex", gap: "2px", background: THEME.surface2, borderRadius: "6px", padding: "2px", border: `1px solid ${THEME.border}` }}>
             <button onClick={() => setEditorMode("single")} style={{
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
-              background: editorMode === "single" ? "#f3e8ff" : "transparent",
-              color: editorMode === "single" ? "#7c3aed" : "#374151",
+              background: editorMode === "single" ? THEME.brandDim : "transparent",
+              color: editorMode === "single" ? THEME.brandHi : THEME.textDim,
               transition: "all 0.15s",
             }}>Single</button>
             <button onClick={() => {
@@ -893,13 +847,13 @@ export default function EditorPage() {
             }} style={{
               padding: "4px 10px", borderRadius: "4px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
               border: "none",
-              background: editorMode === "bulk" ? "#f3e8ff" : "transparent",
-              color: editorMode === "bulk" ? "#7c3aed" : "#374151",
+              background: editorMode === "bulk" ? THEME.brandDim : "transparent",
+              color: editorMode === "bulk" ? THEME.brandHi : THEME.textDim,
               display: "flex", alignItems: "center", gap: "4px",
               transition: "all 0.15s",
             }}>
-              <Layers size={10} /> Bulk
-              {userPlan === "FREE" && <span style={{ fontSize: "8px", background: "#f3e8ff", color: "#7c3aed", padding: "1px 4px", borderRadius: "3px", fontWeight: 700 }}>PRO</span>}
+              <Layers size={10} aria-hidden="true" /> Bulk
+              {userPlan === "FREE" && <span style={{ fontSize: "8px", background: THEME.brandDim, color: THEME.brandHi, padding: "1px 4px", borderRadius: "3px", fontWeight: 700, fontFamily: THEME.fontMono }}>PRO</span>}
             </button>
           </div>
 
@@ -915,7 +869,7 @@ export default function EditorPage() {
                   {i > 0 && (
                     <div style={{
                       width: "28px", height: "2px",
-                      background: done ? "#059669" : active ? "#7c3aed" : "#e5e7eb",
+                      background: done ? THEME.human : active ? THEME.brand : THEME.border,
                       transition: "background 0.3s",
                     }} />
                   )}
@@ -923,17 +877,17 @@ export default function EditorPage() {
                     <div style={{
                       width: "20px", height: "20px", borderRadius: "50%",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "10px", fontWeight: 700, flexShrink: 0,
-                      background: done ? "#059669" : active ? "#7c3aed" : "transparent",
-                      color: done || active ? "#fff" : "#4b5563",
-                      border: done || active ? "none" : "2px solid #e5e7eb",
+                      fontSize: "10px", fontWeight: 700, flexShrink: 0, fontFamily: THEME.fontMono,
+                      background: done ? THEME.human : active ? THEME.brand : "transparent",
+                      color: done ? THEME.bg : active ? "#fff" : THEME.textDim,
+                      border: done || active ? "none" : `2px solid ${THEME.border}`,
                       transition: "all 0.3s",
                     }}>
                       {done ? <CheckCircle2 size={11} /> : i + 1}
                     </div>
                     <span style={{
                       fontSize: "11px", fontWeight: done || active ? 600 : 400,
-                      color: done ? "#059669" : active ? "#7c3aed" : "#4b5563",
+                      color: done ? THEME.human : active ? THEME.brandHi : THEME.textDim,
                       transition: "color 0.3s",
                     }}>
                       {label}
@@ -951,39 +905,39 @@ export default function EditorPage() {
             <div style={{
               display: "flex", alignItems: "center", gap: "4px",
               padding: "4px 8px", borderRadius: "5px", fontSize: "10px", fontWeight: 600,
-              background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.25)",
-              color: "#16a34a",
+              background: THEME.humanDim, border: "1px solid rgba(62,224,143,0.25)",
+              color: THEME.human, fontFamily: THEME.fontMono,
             }}>
-              <Fingerprint size={10} /> Style Clone Active
-              <button onClick={handleClearStyle} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 0 2px", color: "#16a34a", display: "flex" }}>
-                <X size={9} />
+              <Fingerprint size={10} aria-hidden="true" /> Style Clone Active
+              <button onClick={handleClearStyle} aria-label="Clear style clone" style={{ background: "none", border: "none", cursor: "pointer", padding: "0 0 0 2px", color: THEME.human, display: "flex" }}>
+                <X size={9} aria-hidden="true" />
               </button>
             </div>
           )}
           {/* Language selector */}
           <div style={{ position: "relative" }}>
-            <button onClick={() => setLangOpen(o => !o)} style={{
+            <button onClick={() => setLangOpen(o => !o)} aria-label="Select language" style={{
               display: "flex", alignItems: "center", gap: "4px",
               padding: "4px 9px", borderRadius: "5px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
-              border: `1px solid ${language !== "English" ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
-              background: language !== "English" ? "#f3e8ff" : "transparent",
-              color: language !== "English" ? "#7c3aed" : "#374151",
+              border: `1px solid ${language !== "English" ? "rgba(124,92,255,0.4)" : THEME.border}`,
+              background: language !== "English" ? THEME.brandDim : THEME.surface2,
+              color: language !== "English" ? THEME.brandHi : THEME.textDim,
               transition: "all 0.15s",
             }}>
-              <Globe size={10} /> {LANGUAGES.find(l => l.value === language)?.flag} {language}
+              <Globe size={10} aria-hidden="true" /> {LANGUAGES.find(l => l.value === language)?.flag} {language}
             </button>
             {langOpen && (
               <div style={{
                 position: "absolute", top: "100%", right: 0, marginTop: "4px", zIndex: 50,
-                background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "8px",
-                padding: "4px", minWidth: "140px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: "8px",
+                padding: "4px", minWidth: "140px", boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
               }}>
                 {LANGUAGES.map(({ value, label, flag }) => (
                   <button key={value} onClick={() => handleLanguageChange(value)} style={{
                     display: "flex", alignItems: "center", gap: "8px", width: "100%",
                     padding: "7px 10px", borderRadius: "5px", fontSize: "12px", cursor: "pointer",
-                    background: language === value ? "#f3e8ff" : "transparent",
-                    color: language === value ? "#7c3aed" : "#374151",
+                    background: language === value ? THEME.brandDim : "transparent",
+                    color: language === value ? THEME.brandHi : THEME.textDim,
                     border: "none", textAlign: "left", fontWeight: language === value ? 600 : 400,
                   }}>
                     <span>{flag}</span> {label}
@@ -997,22 +951,22 @@ export default function EditorPage() {
             {TONES.map(({ value, label, icon }) => (
               <button key={value} onClick={() => setTone(value)} style={{
                 padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 500, cursor: "pointer",
-                border: `1px solid ${tone === value ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
-                background: tone === value ? "#f3e8ff" : "transparent",
-                color: tone === value ? "#7c3aed" : "#374151",
+                border: `1px solid ${tone === value ? "rgba(124,92,255,0.4)" : THEME.border}`,
+                background: tone === value ? THEME.brandDim : THEME.surface2,
+                color: tone === value ? THEME.brandHi : THEME.textDim,
                 transition: "all 0.15s",
                 display: "flex", alignItems: "center", gap: "4px",
-              }}><span style={{ fontSize: "12px" }}>{icon}</span>{label}</button>
+              }}><span style={{ fontSize: "12px" }} aria-hidden="true">{icon}</span>{label}</button>
             ))}
           </div>
           {editorMode === "single" && (result || humanizedText) && (
             <button onClick={handleReset} style={{
               display: "flex", alignItems: "center", gap: "4px",
-              background: "#f9fafb", border: "1px solid #e5e7eb",
-              borderRadius: "6px", padding: "4px 10px", color: "#374151",
+              background: THEME.surface2, border: `1px solid ${THEME.border}`,
+              borderRadius: "6px", padding: "4px 10px", color: THEME.textDim,
               cursor: "pointer", fontSize: "11px",
             }}>
-              <RotateCcw size={10} /> New
+              <RotateCcw size={10} aria-hidden="true" /> New
             </button>
           )}
         </div>
@@ -1038,33 +992,32 @@ export default function EditorPage() {
               {/* Style Clone panel */}
               {isPaidPlan && (
                 <div style={{
-                  background: "#ffffff", borderRadius: "12px",
-                  border: `1px solid ${styleOpen ? "rgba(124,58,237,0.2)" : "#f0f0f0"}`,
+                  background: THEME.surface2, borderRadius: THEME.radiusLg,
+                  border: `1px solid ${styleOpen ? "rgba(124,92,255,0.3)" : THEME.border}`,
                   overflow: "hidden", transition: "border-color 0.3s",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}>
                   <button onClick={() => setStyleOpen(o => !o)} style={{
                     width: "100%", padding: "10px 14px",
                     display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "transparent", border: "none", cursor: "pointer", color: "#374151",
+                    background: "transparent", border: "none", cursor: "pointer", color: THEME.textDim,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Fingerprint size={13} color="#7c3aed" />
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>Style Clone</span>
+                      <Fingerprint size={13} color={THEME.brand} aria-hidden="true" />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: THEME.text }}>Style Clone</span>
                       {styleFingerprint && (
-                        <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(22,163,74,0.08)", color: "#16a34a", fontWeight: 600 }}>Active</span>
+                        <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: THEME.humanDim, color: THEME.human, fontWeight: 600, fontFamily: THEME.fontMono }}>Active</span>
                       )}
                     </div>
-                    {styleOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    {styleOpen ? <ChevronUp size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}
                   </button>
                   {styleOpen && (
                     <div style={{ padding: "0 14px 14px", animation: "fadeInUp 0.2s ease" }}>
-                      <p style={{ fontSize: "11px", color: "#4b5563", marginBottom: "10px", lineHeight: 1.5 }}>
+                      <p style={{ fontSize: "11px", color: THEME.textDim, marginBottom: "10px", lineHeight: 1.5 }}>
                         Paste 2-3 samples of your writing. We&apos;ll extract your style and apply it to humanizations.
                       </p>
                       {styleSamples.map((sample, i) => (
                         <div key={i} style={{ marginBottom: "8px" }}>
-                          <label style={{ fontSize: "10px", color: "#4b5563", marginBottom: "3px", display: "block" }}>
+                          <label style={{ fontSize: "10px", color: THEME.textDim, marginBottom: "3px", display: "block" }}>
                             Sample {i + 1} {i < 2 ? "(required)" : "(optional)"}
                           </label>
                           <textarea
@@ -1075,11 +1028,12 @@ export default function EditorPage() {
                               setStyleSamples(next);
                             }}
                             placeholder="Paste a paragraph of your own writing..."
+                            aria-label={`Style sample ${i + 1}`}
                             style={{
                               width: "100%", minHeight: "70px", padding: "8px 10px",
-                              background: "#f9fafb", border: "1px solid #e5e7eb",
-                              borderRadius: "6px", color: "#111827", fontSize: "12px",
-                              lineHeight: 1.6, fontFamily: "inherit", resize: "vertical",
+                              background: THEME.surface1, border: `1px solid ${THEME.border}`,
+                              borderRadius: "6px", color: THEME.text, fontSize: "12px",
+                              lineHeight: 1.6, fontFamily: THEME.fontMono, resize: "vertical",
                               outline: "none", boxSizing: "border-box", display: "block",
                             }}
                           />
@@ -1087,14 +1041,14 @@ export default function EditorPage() {
                       ))}
                       {styleSamples.length < 3 && (
                         <button onClick={() => setStyleSamples([...styleSamples, ""])} style={{
-                          fontSize: "11px", color: "#7c3aed", background: "none", border: "none",
+                          fontSize: "11px", color: THEME.brandHi, background: "none", border: "none",
                           cursor: "pointer", padding: "4px 0", marginBottom: "8px",
                         }}>+ Add sample 3</button>
                       )}
                       <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
                         <button onClick={() => void handleLearnStyle()} disabled={styleLoading} style={{
                           padding: "8px 16px", borderRadius: "6px", border: "none",
-                          background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                          background: THEME.brand,
                           color: "#fff", fontSize: "12px", fontWeight: 600, cursor: styleLoading ? "not-allowed" : "pointer",
                           opacity: styleLoading ? 0.6 : 1,
                         }}>
@@ -1103,8 +1057,8 @@ export default function EditorPage() {
                         {styleFingerprint && (
                           <button onClick={handleClearStyle} style={{
                             padding: "8px 16px", borderRadius: "6px",
-                            background: "#f9fafb", border: "1px solid #e5e7eb",
-                            color: "#374151", fontSize: "12px", cursor: "pointer",
+                            background: THEME.surface3, border: `1px solid ${THEME.border}`,
+                            color: THEME.textDim, fontSize: "12px", cursor: "pointer",
                           }}>Clear Style</button>
                         )}
                       </div>
@@ -1115,24 +1069,24 @@ export default function EditorPage() {
 
               {/* Input mode toggle */}
               {!result && !analyzing && (
-                <div style={{ display: "flex", gap: "2px", background: "#f9fafb", borderRadius: "8px", padding: "3px", alignSelf: "flex-start" }}>
+                <div style={{ display: "flex", gap: "2px", background: THEME.surface2, borderRadius: "8px", padding: "3px", alignSelf: "flex-start", border: `1px solid ${THEME.border}` }}>
                   <button onClick={() => setInputMode("paste")} style={{
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
-                    background: inputMode === "paste" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "paste" ? "#7c3aed" : "#374151",
+                    background: inputMode === "paste" ? THEME.brandDim : "transparent",
+                    color: inputMode === "paste" ? THEME.brandHi : THEME.textDim,
                     transition: "all 0.15s",
                   }}>
-                    <span style={{ fontSize: "13px" }}>&#9998;</span> Paste text
+                    <span style={{ fontSize: "13px" }} aria-hidden="true">&#9998;</span> Paste text
                   </button>
                   <button onClick={() => setInputMode("upload")} style={{
                     padding: "6px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer",
                     border: "none", display: "flex", alignItems: "center", gap: "5px",
-                    background: inputMode === "upload" ? "#f3e8ff" : "transparent",
-                    color: inputMode === "upload" ? "#7c3aed" : "#374151",
+                    background: inputMode === "upload" ? THEME.brandDim : "transparent",
+                    color: inputMode === "upload" ? THEME.brandHi : THEME.textDim,
                     transition: "all 0.15s",
                   }}>
-                    <FileUp size={12} /> Upload document
+                    <FileUp size={12} aria-hidden="true" /> Upload document
                   </button>
                 </div>
               )}
@@ -1150,11 +1104,11 @@ export default function EditorPage() {
               {uploadedFileName && inputMode === "paste" && !result && (
                 <div style={{
                   padding: "8px 14px", borderRadius: "8px",
-                  background: "#faf5ff", border: "1px solid rgba(124,58,237,0.15)",
+                  background: THEME.brandDim, border: "1px solid rgba(124,92,255,0.2)",
                   display: "flex", alignItems: "center", gap: "8px",
                 }}>
-                  <FileUp size={12} color="#7c3aed" />
-                  <span style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 500 }}>
+                  <FileUp size={12} color={THEME.brandHi} aria-hidden="true" />
+                  <span style={{ fontSize: "12px", color: THEME.brandHi, fontWeight: 500 }}>
                     Loaded from {uploadedFileName} — {wordCount.toLocaleString()} words
                   </span>
                 </div>
@@ -1163,48 +1117,48 @@ export default function EditorPage() {
               {/* Textarea card */}
               {(inputMode === "paste" || result || analyzing) && (
               <div style={{
-                background: "#ffffff", borderRadius: "12px",
-                border: `1.5px solid ${analyzing ? "rgba(124,58,237,0.4)" : "#e5e7eb"}`,
+                background: THEME.surface2, borderRadius: THEME.radiusLg,
+                border: `1.5px solid ${analyzing ? "rgba(124,92,255,0.4)" : THEME.border}`,
                 overflow: "hidden", transition: "border-color 0.3s, box-shadow 0.3s",
-                boxShadow: analyzing ? "0 4px 12px rgba(124,58,237,0.15)" : "0 1px 3px rgba(0,0,0,0.06)",
+                boxShadow: analyzing ? "0 4px 18px rgba(124,92,255,0.18)" : "none",
               }}>
                 {/* Mac-style toolbar */}
                 <div style={{
-                  padding: "10px 14px", borderBottom: "1px solid #e5e7eb",
+                  padding: "10px 14px", borderBottom: `1px solid ${THEME.border}`,
                   display: "flex", alignItems: "center", gap: "6px",
-                  background: analyzing ? "rgba(124,58,237,0.04)" : "transparent",
+                  background: analyzing ? "rgba(124,92,255,0.06)" : THEME.surface1,
                   transition: "background 0.3s",
                 }}>
-                  {["#dc2626", "#d97706", "#16a34a"].map((c, i) => (
-                    <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.8 : 0.4 }} />
+                  {[THEME.ai, THEME.warn, THEME.human].map((c, i) => (
+                    <div key={i} aria-hidden="true" style={{ width: "8px", height: "8px", borderRadius: "50%", background: c, opacity: analyzing ? 0.9 : 0.55 }} />
                   ))}
-                  <span style={{ fontSize: "10px", color: "#d1d5db", marginLeft: "8px", fontFamily: "var(--font-mono)" }}>
+                  <span style={{ fontSize: "10px", color: THEME.textMuted, marginLeft: "8px", fontFamily: THEME.fontMono }}>
                     {analyzing ? "scanning..." : "your text"}
                   </span>
                   {result && !analyzing && (
                     <button onClick={() => setParagraphMode(p => !p)} style={{
                       marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px",
                       padding: "3px 8px", borderRadius: "4px", fontSize: "10px", cursor: "pointer",
-                      border: `1px solid ${paragraphMode ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
-                      background: paragraphMode ? "#f3e8ff" : "transparent",
-                      color: paragraphMode ? "#7c3aed" : "#4b5563",
+                      border: `1px solid ${paragraphMode ? "rgba(124,92,255,0.35)" : THEME.border}`,
+                      background: paragraphMode ? THEME.brandDim : "transparent",
+                      color: paragraphMode ? THEME.brandHi : THEME.textDim,
                       transition: "all 0.15s",
                     }}>
-                      <Rows3 size={10} /> Paragraph Mode
+                      <Rows3 size={10} aria-hidden="true" /> Paragraph Mode
                     </button>
                   )}
                   {analyzing && (
                     <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px" }}>
                       <div className="scan-pulse" />
-                      <span style={{ fontSize: "10px", color: "#7c3aed" }}>Analyzing</span>
+                      <span style={{ fontSize: "10px", color: THEME.brandHi, fontFamily: THEME.fontMono }}>Analyzing</span>
                     </div>
                   )}
                 </div>
 
                 {/* Scan progress bar */}
                 {analyzing && (
-                  <div style={{ height: "2px", background: "#f3f4f6" }}>
-                    <div className="scan-bar" style={{ height: "100%", background: "linear-gradient(90deg, #7c3aed, #6d28d9, #7c3aed)", backgroundSize: "200% 100%" }} />
+                  <div style={{ height: "2px", background: THEME.surface3 }}>
+                    <div className="scan-bar" style={{ height: "100%", background: `linear-gradient(90deg, ${THEME.brand}, ${THEME.brandHi}, ${THEME.brand})`, backgroundSize: "200% 100%" }} />
                   </div>
                 )}
 
@@ -1216,11 +1170,12 @@ export default function EditorPage() {
                     if (result) { setResult(null); setHumanizedText(null); setHumanizedScore(null); }
                   }}
                   placeholder={"Paste or type AI-generated text here…\n\nTip: try text that starts with \"In today's rapidly evolving landscape\" or uses words like \"furthermore\", \"pivotal\", \"paradigm\""}
+                  aria-label="Text to analyze and humanize"
                   style={{
                     width: "100%", minHeight: "280px", padding: "16px",
-                    background: "#ffffff", border: "none", outline: "none",
-                    resize: "vertical", color: "#111827", fontSize: "13px",
-                    lineHeight: 1.8, fontFamily: "var(--font-mono, ui-monospace, monospace)", boxSizing: "border-box",
+                    background: THEME.surface2, border: "none", outline: "none",
+                    resize: "vertical", color: THEME.text, fontSize: "13px",
+                    lineHeight: 1.8, fontFamily: THEME.fontMono, boxSizing: "border-box",
                     display: "block", opacity: analyzing ? 0.5 : 1, transition: "opacity 0.3s",
                     direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
                     borderRadius: "0",
@@ -1229,36 +1184,36 @@ export default function EditorPage() {
 
                 {/* Intensity slider */}
                 <div style={{
-                  padding: "8px 14px", borderTop: "1px solid #e5e7eb",
+                  padding: "8px 14px", borderTop: `1px solid ${THEME.border}`,
                   display: "flex", alignItems: "center", gap: "10px",
                 }}>
-                  <SlidersHorizontal size={11} color="#4b5563" />
-                  <span style={{ fontSize: "10px", color: "#4b5563", flexShrink: 0 }}>Intensity</span>
+                  <SlidersHorizontal size={11} color={THEME.textDim} aria-hidden="true" />
+                  <span style={{ fontSize: "10px", color: THEME.textDim, flexShrink: 0, fontFamily: THEME.fontMono, textTransform: "uppercase", letterSpacing: "0.06em" }}>Intensity</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "2px", flex: 1, maxWidth: "220px" }}>
                     {INTENSITIES.map(({ value, label }) => (
                       <button key={value} onClick={() => setIntensity(value)} style={{
                         flex: 1, padding: "4px 0", borderRadius: "4px", fontSize: "10px", fontWeight: 600,
-                        cursor: "pointer", border: "none", transition: "all 0.15s",
+                        cursor: "pointer", border: "none", transition: "all 0.15s", fontFamily: THEME.fontMono,
                         background: intensity === value
-                          ? value === "light" ? "rgba(22,163,74,0.1)" : value === "medium" ? "rgba(249,115,22,0.1)" : "rgba(220,38,38,0.1)"
-                          : "#f9fafb",
+                          ? value === "light" ? THEME.humanDim : value === "medium" ? THEME.warnDim : THEME.aiDim
+                          : THEME.surface3,
                         color: intensity === value
-                          ? value === "light" ? "#16a34a" : value === "medium" ? "#f97316" : "#dc2626"
-                          : "#4b5563",
+                          ? value === "light" ? THEME.human : value === "medium" ? THEME.warn : THEME.ai
+                          : THEME.textDim,
                       }}>{label}</button>
                     ))}
                   </div>
-                  <span style={{ fontSize: "9px", color: "#d1d5db", flexShrink: 0 }}>
+                  <span style={{ fontSize: "9px", color: THEME.textMuted, flexShrink: 0 }}>
                     {INTENSITIES.find(i => i.value === intensity)?.desc}
                   </span>
                 </div>
 
                 {/* Toolbar */}
                 <div style={{
-                  padding: "10px 14px", borderTop: "1px solid #e5e7eb",
+                  padding: "10px 14px", borderTop: `1px solid ${THEME.border}`,
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
                 }}>
-                  <span style={{ fontSize: "11px", color: wordCountColor, fontVariantNumeric: "tabular-nums", transition: "color 0.3s" }}>
+                  <span style={{ fontSize: "11px", color: wordCountColor, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums", transition: "color 0.3s" }}>
                     {wordCount > 0 ? `${wordCount.toLocaleString()} words` : "Paste text to get started"}
                   </span>
                   <button
@@ -1267,18 +1222,18 @@ export default function EditorPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
-                      background: canAnalyze ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
-                      color: canAnalyze ? "#fff" : "#4b5563",
+                      background: canAnalyze ? THEME.brand : THEME.surface3,
+                      color: canAnalyze ? "#fff" : THEME.textMuted,
                       fontSize: "13px", fontWeight: 700,
                       cursor: canAnalyze ? "pointer" : "not-allowed",
                       transition: "all 0.2s", flexShrink: 0,
-                      boxShadow: canAnalyze ? "0 4px 12px rgba(124,58,237,0.15)" : "none",
+                      boxShadow: canAnalyze ? "0 4px 18px rgba(124,92,255,0.3)" : "none",
                     }}
                   >
                     {analyzing ? (
                       <><div className="spin-sm" /> Scanning…</>
                     ) : (
-                      <><Zap size={13} /> {result ? "Re-analyze" : "Analyze"} <ArrowRight size={11} /></>
+                      <><Zap size={13} aria-hidden="true" /> {result ? "Re-analyze" : "Analyze"} <ArrowRight size={11} aria-hidden="true" /></>
                     )}
                   </button>
                 </div>
@@ -1289,8 +1244,8 @@ export default function EditorPage() {
               {paragraphMode && result && paragraphs.length > 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", animation: "fadeInUp 0.3s ease" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                    <Rows3 size={12} color="#7c3aed" />
-                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>
+                    <Rows3 size={12} color={THEME.brand} aria-hidden="true" />
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: THEME.textDim }}>
                       {paragraphs.length} paragraph{paragraphs.length !== 1 ? "s" : ""}
                     </span>
                   </div>
@@ -1298,18 +1253,17 @@ export default function EditorPage() {
                     const score = paraScores[idx];
                     const hText = paraHumanized[idx];
                     const isHumanizing = paraHumanizing[idx] ?? false;
-                    const scoreColor = score === null || score === undefined ? "#d1d5db"
-                      : score >= 75 ? "#dc2626" : score >= 50 ? "#f97316" : score >= 30 ? "#d97706" : "#16a34a";
+                    const scoreColor = score === null || score === undefined ? THEME.textMuted
+                      : score >= 75 ? THEME.ai : score >= 50 ? THEME.ai : score >= 30 ? THEME.warn : THEME.human;
 
                     return (
                       <div key={idx} style={{
-                        background: "#ffffff", borderRadius: "10px",
-                        border: "1px solid #f0f0f0",
+                        background: THEME.surface2, borderRadius: THEME.radius,
+                        border: `1px solid ${THEME.border}`,
                         overflow: "hidden",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                       }}>
                         <div style={{
-                          height: "3px", background: "#f3f4f6",
+                          height: "3px", background: THEME.surface3,
                           borderRadius: "10px 10px 0 0", overflow: "hidden",
                         }}>
                           <div style={{
@@ -1322,7 +1276,7 @@ export default function EditorPage() {
                           padding: "10px 14px",
                           display: "flex", alignItems: "flex-start", gap: "10px",
                         }}>
-                          <div style={{
+                          <div aria-hidden="true" style={{
                             width: "8px", height: "8px", borderRadius: "50%",
                             background: scoreColor, flexShrink: 0, marginTop: "5px",
                             transition: "background 0.3s",
@@ -1330,15 +1284,15 @@ export default function EditorPage() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{
                               fontSize: "13px", lineHeight: 1.7,
-                              color: hText ? "#16a34a" : "#4b5563",
+                              color: hText ? THEME.human : THEME.textDim,
                               whiteSpace: "pre-wrap", wordBreak: "break-word",
                             }}>
                               {hText ?? para}
                             </div>
                             {score != null && (
                               <span style={{
-                                fontSize: "10px", fontWeight: 600,
-                                color: scoreColor, opacity: 0.7, marginTop: "4px", display: "inline-block",
+                                fontSize: "10px", fontWeight: 600, fontFamily: THEME.fontMono,
+                                color: scoreColor, opacity: 0.85, marginTop: "4px", display: "inline-block",
                               }}>
                                 {Math.round(score)}% AI
                               </span>
@@ -1349,15 +1303,15 @@ export default function EditorPage() {
                             disabled={isHumanizing}
                             style={{
                               padding: "5px 10px", borderRadius: "6px", fontSize: "10px", fontWeight: 600,
-                              border: "1px solid rgba(124,58,237,0.2)",
-                              background: isHumanizing ? "#faf5ff" : "#f3e8ff",
-                              color: isHumanizing ? "#4b5563" : "#7c3aed",
+                              border: "1px solid rgba(124,92,255,0.3)",
+                              background: isHumanizing ? THEME.surface3 : THEME.brandDim,
+                              color: isHumanizing ? THEME.textMuted : THEME.brandHi,
                               cursor: isHumanizing ? "not-allowed" : "pointer",
                               flexShrink: 0, transition: "all 0.15s",
                               display: "flex", alignItems: "center", gap: "4px",
                             }}
                           >
-                            {isHumanizing ? <><div className="spin-sm" style={{ width: 8, height: 8, borderWidth: 1.5 }} /></> : <><Sparkles size={9} /> Humanize</>}
+                            {isHumanizing ? <><div className="spin-sm" style={{ width: 8, height: 8, borderWidth: 1.5 }} /></> : <><Sparkles size={9} aria-hidden="true" /> Humanize</>}
                           </button>
                         </div>
                       </div>
@@ -1368,42 +1322,42 @@ export default function EditorPage() {
 
               {/* Humanized output */}
               {(humanizing || isDone) && (
-                <div style={{
-                  background: "#ffffff", borderRadius: "12px",
-                  border: `1.5px solid ${isDone ? "rgba(22,163,74,0.25)" : "rgba(124,58,237,0.2)"}`,
+                <div aria-live="polite" style={{
+                  background: THEME.surface2, borderRadius: THEME.radiusLg,
+                  border: `1.5px solid ${isDone ? "rgba(62,224,143,0.3)" : "rgba(124,92,255,0.3)"}`,
                   overflow: "hidden", animation: "fadeInUp 0.35s ease",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                  boxShadow: isDone ? "0 0 22px rgba(62,224,143,0.12)" : "none",
                 }}>
                   {humanizing ? (
                     <HumanizingState chunkProgress={chunkProgress} passInfo={passInfo} />
                   ) : humanizedText && (
                     <>
                       <div style={{
-                        padding: "12px 16px", borderBottom: "1px solid #e5e7eb",
+                        padding: "12px 16px", borderBottom: `1px solid ${THEME.border}`,
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#16a34a", display: "flex", alignItems: "center", gap: "5px" }}>
-                            <CheckCircle2 size={13} /> Humanized{passCount > 1 ? ` in ${passCount} passes` : ""}
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: THEME.human, display: "flex", alignItems: "center", gap: "5px" }}>
+                            <CheckCircle2 size={13} aria-hidden="true" /> Humanized{passCount > 1 ? ` in ${passCount} passes` : ""}
                           </span>
                           {humanizedScore !== null && result && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                              <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, background: "rgba(220,38,38,0.08)", color: "#dc2626", textDecoration: "line-through", opacity: 0.6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px", fontFamily: THEME.fontMono }}>
+                              <span style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, background: THEME.aiDim, color: THEME.ai, textDecoration: "line-through", opacity: 0.7, fontVariantNumeric: "tabular-nums" }}>
                                 {Math.round(result.score)}%
                               </span>
                               {scoreHistory.length > 1 && scoreHistory.slice(0, -1).map((s, i) => (
                                 <span key={i} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                                  <ArrowRight size={9} color="#d1d5db" />
-                                  <span style={{ fontSize: "10px", padding: "2px 5px", borderRadius: "3px", fontWeight: 600, background: "rgba(249,115,22,0.08)", color: "rgba(249,115,22,0.6)", textDecoration: "line-through", opacity: 0.5 }}>
+                                  <ArrowRight size={9} color={THEME.textMuted} aria-hidden="true" />
+                                  <span style={{ fontSize: "10px", padding: "2px 5px", borderRadius: "3px", fontWeight: 600, background: THEME.warnDim, color: THEME.warn, textDecoration: "line-through", opacity: 0.7, fontVariantNumeric: "tabular-nums" }}>
                                     {Math.round(s)}%
                                   </span>
                                 </span>
                               ))}
-                              <ArrowRight size={9} color="#d1d5db" />
+                              <ArrowRight size={9} color={THEME.textMuted} aria-hidden="true" />
                               <span style={{
-                                fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700,
-                                background: humanizedScore < 30 ? "rgba(22,163,74,0.08)" : "rgba(249,115,22,0.08)",
-                                color: humanizedScore < 30 ? "#16a34a" : "#f97316",
+                                fontSize: "11px", padding: "2px 7px", borderRadius: "4px", fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                                background: humanizedScore < 30 ? THEME.humanDim : THEME.warnDim,
+                                color: humanizedScore < 30 ? THEME.human : THEME.warn,
                                 animation: "popIn 0.4s ease",
                               }}>
                                 {Math.round(humanizedScore)}%
@@ -1419,65 +1373,65 @@ export default function EditorPage() {
                           {/* Diff view toggle */}
                           <button onClick={() => setShowDiff(d => !d)} style={{
                             display: "flex", alignItems: "center", gap: "4px",
-                            background: showDiff ? "#f3e8ff" : "#f9fafb",
-                            border: `1px solid ${showDiff ? "rgba(124,58,237,0.25)" : "#e5e7eb"}`,
+                            background: showDiff ? THEME.brandDim : THEME.surface3,
+                            border: `1px solid ${showDiff ? "rgba(124,92,255,0.35)" : THEME.border}`,
                             borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                            color: showDiff ? "#7c3aed" : "#374151", fontSize: "11px",
+                            color: showDiff ? THEME.brandHi : THEME.textDim, fontSize: "11px",
                             transition: "all 0.2s",
                           }}>
-                            <GitCompareArrows size={10} /> {showDiff ? "Clean View" : "Diff View"}
+                            <GitCompareArrows size={10} aria-hidden="true" /> {showDiff ? "Clean View" : "Diff View"}
                           </button>
-                          <button onClick={handleDownloadTxt} title="Download .txt" style={{
+                          <button onClick={handleDownloadTxt} title="Download .txt" aria-label="Download as .txt" style={{
                             display: "flex", alignItems: "center", gap: "4px",
-                            background: "#f9fafb", border: "1px solid #e5e7eb",
+                            background: THEME.surface3, border: `1px solid ${THEME.border}`,
                             borderRadius: "5px", padding: "5px 8px", cursor: "pointer",
-                            color: "#374151", fontSize: "11px", transition: "all 0.2s",
+                            color: THEME.textDim, fontSize: "11px", transition: "all 0.2s",
                           }}>
-                            <Download size={10} /> .txt
+                            <Download size={10} aria-hidden="true" /> .txt
                           </button>
                           <button onClick={() => void handleCopy()} style={{
                             display: "flex", alignItems: "center", gap: "5px",
-                            background: copied ? "rgba(22,163,74,0.06)" : "#f9fafb",
-                            border: `1px solid ${copied ? "rgba(22,163,74,0.2)" : "#e5e7eb"}`,
+                            background: copied ? THEME.humanDim : THEME.surface3,
+                            border: `1px solid ${copied ? "rgba(62,224,143,0.3)" : THEME.border}`,
                             borderRadius: "5px", padding: "5px 10px", cursor: "pointer",
-                            color: copied ? "#16a34a" : "#374151", fontSize: "11px",
+                            color: copied ? THEME.human : THEME.textDim, fontSize: "11px",
                             transition: "all 0.2s",
                           }}>
-                            <Copy size={10} /> {copied ? "Copied!" : "Copy"}
+                            <Copy size={10} aria-hidden="true" /> {copied ? "Copied!" : "Copy"}
                           </button>
                         </div>
                       </div>
                       <div style={{
                         padding: "16px", fontSize: "14px", lineHeight: 1.8,
-                        color: "#111827", whiteSpace: "pre-wrap",
+                        color: THEME.text, whiteSpace: "pre-wrap",
                         maxHeight: "380px", overflow: "auto",
                         direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left",
-                        background: "#f0fdf4", borderLeft: "4px solid #16a34a", borderRadius: "12px",
+                        background: THEME.humanDim, borderLeft: `4px solid ${THEME.human}`, borderRadius: "0",
                       }}>
                         {showDiff ? (
                           computeWordDiff(text, humanizedText).map((seg: DiffSegment, i: number) => (
                             <span key={i} style={
-                              seg.type === "removed" ? { background: "rgba(220,38,38,0.1)", color: "#dc2626", textDecoration: "line-through", borderRadius: "2px", padding: "0 1px" }
-                              : seg.type === "added" ? { background: "rgba(22,163,74,0.1)", color: "#16a34a", borderRadius: "2px", padding: "0 1px" }
+                              seg.type === "removed" ? { background: "rgba(255,93,93,0.18)", color: THEME.ai, textDecoration: "line-through", borderRadius: "2px", padding: "0 1px" }
+                              : seg.type === "added" ? { background: "rgba(62,224,143,0.18)", color: THEME.human, borderRadius: "2px", padding: "0 1px" }
                               : {}
                             }>{seg.text}</span>
                           ))
                         ) : humanizedText}
                       </div>
                       <div style={{
-                        padding: "10px 16px", borderTop: "1px solid #e5e7eb",
+                        padding: "10px 16px", borderTop: `1px solid ${THEME.border}`,
                         display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap",
                       }}>
-                        <span style={{ fontSize: "10px", color: "#4b5563", marginRight: "2px" }}>Try tone:</span>
+                        <span style={{ fontSize: "10px", color: THEME.textDim, marginRight: "2px" }}>Try tone:</span>
                         {TONES.map(({ value, label, icon }) => (
                           <button key={value} onClick={() => { setTone(value); void handleHumanize(value); }} style={{
                             padding: "4px 10px", borderRadius: "20px", fontSize: "11px",
-                            background: tone === value ? "#f3e8ff" : "#f9fafb",
-                            border: `1px solid ${tone === value ? "rgba(124,58,237,0.3)" : "#e5e7eb"}`,
-                            color: tone === value ? "#7c3aed" : "#374151", cursor: "pointer",
+                            background: tone === value ? THEME.brandDim : THEME.surface3,
+                            border: `1px solid ${tone === value ? "rgba(124,92,255,0.35)" : THEME.border}`,
+                            color: tone === value ? THEME.brandHi : THEME.textDim, cursor: "pointer",
                             transition: "all 0.15s",
                             display: "flex", alignItems: "center", gap: "3px",
-                          }}><span style={{ fontSize: "11px" }}>{icon}</span>{label}</button>
+                          }}><span style={{ fontSize: "11px" }} aria-hidden="true">{icon}</span>{label}</button>
                         ))}
                       </div>
                     </>
@@ -1491,13 +1445,12 @@ export default function EditorPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
                 {/* Score card */}
-                <div style={{
-                  background: analyzing ? "#ffffff" : (scoreConfig?.dimColor ?? "#ffffff"),
-                  border: `1px solid ${analyzing ? "#e5e7eb" : (scoreConfig?.border ?? "#e5e7eb")}`,
-                  borderRadius: "14px", padding: "22px",
+                <div aria-live="polite" style={{
+                  background: analyzing ? THEME.surface2 : (scoreConfig?.dimColor ?? THEME.surface2),
+                  border: `1px solid ${analyzing ? THEME.border : (scoreConfig?.border ?? THEME.border)}`,
+                  borderRadius: THEME.radiusLg, padding: "22px",
                   animation: analyzing ? "none" : "fadeInUp 0.35s ease",
                   transition: "background 0.5s, border-color 0.5s",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                 }}>
                   {analyzing ? (
                     /* Skeleton */
@@ -1521,13 +1474,13 @@ export default function EditorPage() {
                       <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "18px" }}>
                         <ScoreRing score={result.score} />
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "1.2px", color: scoreConfig.color, textTransform: "uppercase", marginBottom: "6px" }}>
+                          <div style={{ fontSize: "11px", fontWeight: 800, letterSpacing: "1.2px", color: scoreConfig.color, textTransform: "uppercase", marginBottom: "6px", fontFamily: THEME.fontMono }}>
                             {scoreConfig.label}
                           </div>
-                          <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.6, marginBottom: "6px" }}>
+                          <div style={{ fontSize: "12px", color: THEME.textDim, lineHeight: 1.6, marginBottom: "6px" }}>
                             {scoreConfig.desc}
                           </div>
-                          <div style={{ fontSize: "11px", color: "#4b5563", background: "#f9fafb", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                          <div style={{ fontSize: "11px", color: THEME.textDim, background: THEME.surface3, padding: "2px 8px", borderRadius: "4px", display: "inline-block", fontFamily: THEME.fontMono }}>
                             {result.confidenceBand}
                           </div>
                         </div>
@@ -1540,9 +1493,9 @@ export default function EditorPage() {
                           { label: "Avg Sentence", val: `${result.stats.avgSentenceLength}w`, bad: result.stats.avgSentenceLength >= 18 && result.stats.avgSentenceLength <= 25, tip: "AI clusters around 18-25 words/sentence" },
                           { label: "Readability", val: result.stats.fleschReadingEase.toFixed(0), bad: result.stats.fleschReadingEase >= 40 && result.stats.fleschReadingEase <= 60, tip: "Flesch score — AI typically scores 40-60" },
                         ].map(({ label, val, bad, tip }) => (
-                          <div key={label} title={tip} style={{ background: "#f9fafb", borderRadius: "8px", padding: "10px 12px", cursor: "help" }}>
-                            <div style={{ fontSize: "10px", color: "#4b5563", marginBottom: "4px" }}>{label}</div>
-                            <div style={{ fontSize: "18px", fontWeight: 800, color: bad ? "#f97316" : "#16a34a" }}>{val}</div>
+                          <div key={label} title={tip} style={{ background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: "8px", padding: "10px 12px", cursor: "help" }}>
+                            <div style={{ fontSize: "10px", color: THEME.textDim, marginBottom: "4px", fontFamily: THEME.fontMono, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+                            <div style={{ fontSize: "18px", fontWeight: 800, color: bad ? THEME.warn : THEME.human, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>{val}</div>
                           </div>
                         ))}
                       </div>
@@ -1555,22 +1508,21 @@ export default function EditorPage() {
                   <ReadabilityPanel originalText={text} humanizedText={humanizedText} />
                 )}
 
-                {/* Multi-Engine Detection Panel */}
+                {/* Detection signals readout */}
                 {result && !analyzing && (
                   <div style={{
-                    background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid #f0f0f0", overflow: "hidden",
+                    background: THEME.surface1, borderRadius: THEME.radiusLg,
+                    border: `1px solid ${THEME.border}`, overflow: "hidden",
                     animation: "fadeInUp 0.4s ease 0.15s both",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}>
                     <div style={{
-                      padding: "12px 16px", borderBottom: "1px solid #f0f0f0",
+                      padding: "12px 16px", borderBottom: `1px solid ${THEME.border}`,
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        <Shield size={13} color="#7c3aed" />
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>
-                          {humanizedEngineScores ? "Updated scores" : "How you score across detectors"}
+                        <Shield size={13} color={THEME.brand} aria-hidden="true" />
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: THEME.textDim, fontFamily: THEME.fontMono, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          {humanizedEngineScores ? "Updated signals" : "Detection signals"}
                         </span>
                       </div>
                     </div>
@@ -1578,47 +1530,48 @@ export default function EditorPage() {
                     {(userPlan === "PRO" || userPlan === "TEAM") ? (
                       <div style={{ padding: "10px 16px 6px" }}>
                         {(humanizedEngineScores ?? engineScores ?? []).map((es, i) => {
-                          const barColor = es.score < 30 ? "#16a34a" : es.score < 60 ? "#d97706" : "#dc2626";
-                          const badgeBg = es.status === "PASS" ? "rgba(22,163,74,0.08)" : es.status === "RISKY" ? "rgba(217,119,6,0.08)" : "rgba(220,38,38,0.08)";
-                          const badgeColor = es.status === "PASS" ? "#16a34a" : es.status === "RISKY" ? "#d97706" : "#dc2626";
+                          const barColor = es.score < 30 ? THEME.human : es.score < 60 ? THEME.warn : THEME.ai;
+                          const badgeBg = es.status === "PASS" ? THEME.humanDim : es.status === "RISKY" ? THEME.warnDim : THEME.aiDim;
+                          const badgeColor = es.status === "PASS" ? THEME.human : es.status === "RISKY" ? THEME.warn : THEME.ai;
                           return (
                             <div key={es.engine} style={{
                               display: "flex", alignItems: "center", gap: "10px",
                               padding: "8px 0",
-                              borderBottom: i < (humanizedEngineScores ?? engineScores ?? []).length - 1 ? "1px solid #f3f4f6" : "none",
+                              borderBottom: i < (humanizedEngineScores ?? engineScores ?? []).length - 1 ? `1px solid ${THEME.border}` : "none",
                               animation: `fadeInUp 0.3s ease ${0.05 * i}s both`,
                             }}>
-                              <span style={{ fontSize: "11px", color: "#374151", width: "90px", flexShrink: 0, fontWeight: 500 }}>{es.engine}</span>
-                              <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: "#f3f4f6", overflow: "hidden" }}>
+                              <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: badgeColor, flexShrink: 0, boxShadow: `0 0 6px ${badgeColor}88` }} />
+                              <span style={{ fontSize: "11px", color: THEME.text, width: "84px", flexShrink: 0, fontWeight: 500, fontFamily: THEME.fontMono }}>{es.engine}</span>
+                              <div style={{ flex: 1, height: "6px", borderRadius: "3px", background: THEME.surface3, overflow: "hidden" }}>
                                 <div style={{
                                   width: `${es.score}%`, height: "100%", borderRadius: "3px",
                                   background: barColor, transition: "width 0.6s ease",
                                 }} />
                               </div>
-                              <span style={{ fontSize: "11px", fontWeight: 700, color: barColor, width: "28px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{es.score}</span>
+                              <span style={{ fontSize: "11px", fontWeight: 700, color: barColor, width: "28px", textAlign: "right", fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>{es.score}</span>
                               <span style={{
-                                fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "3px",
+                                fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "3px", fontFamily: THEME.fontMono,
                                 background: badgeBg, color: badgeColor, letterSpacing: "0.5px", width: "38px", textAlign: "center",
                               }}>{es.status}</span>
                             </div>
                           );
                         })}
-                        <p style={{ fontSize: "9px", color: "#d1d5db", padding: "6px 0 4px", lineHeight: 1.4 }}>
+                        <p style={{ fontSize: "9px", color: THEME.textMuted, padding: "6px 0 4px", lineHeight: 1.4 }}>
                           Scores are simulated estimates based on our detection algorithm
                         </p>
                       </div>
                     ) : (
                       <div style={{ padding: "20px 16px", textAlign: "center" }}>
-                        <Lock size={20} color="#d1d5db" style={{ margin: "0 auto 8px" }} />
-                        <p style={{ fontSize: "12px", color: "#374151", marginBottom: "4px", fontWeight: 500 }}>
+                        <Lock size={20} color={THEME.textMuted} style={{ margin: "0 auto 8px" }} aria-hidden="true" />
+                        <p style={{ fontSize: "12px", color: THEME.text, marginBottom: "4px", fontWeight: 500 }}>
                           See how your text scores across 5 AI detectors
                         </p>
-                        <p style={{ fontSize: "10px", color: "#4b5563", marginBottom: "12px" }}>
+                        <p style={{ fontSize: "10px", color: THEME.textDim, marginBottom: "12px", fontFamily: THEME.fontMono }}>
                           GPTZero · Turnitin · Originality.ai · Copyleaks · Winston AI
                         </p>
                         <button onClick={() => setShowUpgradeModal(true)} style={{
-                          padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(124,58,237,0.3)",
-                          background: "#f3e8ff", color: "#7c3aed",
+                          padding: "8px 18px", borderRadius: "7px", border: "1px solid rgba(124,92,255,0.35)",
+                          background: THEME.brandDim, color: THEME.brandHi,
                           fontSize: "12px", fontWeight: 600, cursor: "pointer",
                         }}>
                           Upgrade to Pro
@@ -1630,23 +1583,22 @@ export default function EditorPage() {
 
                 {/* Patterns */}
                 {analyzing ? (
-                  <div style={{ background: "#ffffff", border: "1px solid #f0f0f0", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                  <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     <Skeleton width="55%" height={11} />
                     {[0, 1, 2].map(i => <Skeleton key={i} height={36} radius={6} style={{ animationDelay: `${i * 0.15}s` }} />)}
                   </div>
                 ) : result && result.patterns.length > 0 && (
                   <div style={{
-                    background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid #f0f0f0", overflow: "hidden",
+                    background: THEME.surface2, borderRadius: THEME.radiusLg,
+                    border: `1px solid ${THEME.border}`, overflow: "hidden",
                     animation: "fadeInUp 0.4s ease 0.1s both",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}>
                     <div style={{
-                      padding: "12px 16px", borderBottom: "1px solid #f0f0f0",
+                      padding: "12px 16px", borderBottom: `1px solid ${THEME.border}`,
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                     }}>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#4b5563" }}>AI Patterns Detected</span>
-                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: "#f3e8ff", color: "#7c3aed", fontWeight: 700 }}>
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: THEME.textDim, fontFamily: THEME.fontMono, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Patterns Detected</span>
+                      <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", background: THEME.brandDim, color: THEME.brandHi, fontWeight: 700, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
                         {result.patterns.length}
                       </span>
                     </div>
@@ -1665,13 +1617,13 @@ export default function EditorPage() {
                       <button
                         onClick={() => setShowAllPatterns(p => !p)}
                         style={{
-                          width: "100%", padding: "9px", background: "#f9fafb",
-                          border: "none", borderTop: "1px solid #e5e7eb",
-                          color: "#4b5563", cursor: "pointer", fontSize: "11px",
+                          width: "100%", padding: "9px", background: THEME.surface1,
+                          border: "none", borderTop: `1px solid ${THEME.border}`,
+                          color: THEME.textDim, cursor: "pointer", fontSize: "11px",
                           display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
                         }}
                       >
-                        {showAllPatterns ? <><ChevronUp size={11} /> Show less</> : <><ChevronDown size={11} /> +{result.patterns.length - 3} more</>}
+                        {showAllPatterns ? <><ChevronUp size={11} aria-hidden="true" /> Show less</> : <><ChevronDown size={11} aria-hidden="true" /> +{result.patterns.length - 3} more</>}
                       </button>
                     )}
                   </div>
@@ -1680,29 +1632,29 @@ export default function EditorPage() {
                 {/* Humanize CTA */}
                 {result && !humanizing && !isDone && (
                   <div style={{
-                    background: "#ffffff", borderRadius: "12px",
-                    border: "1px solid rgba(124,58,237,0.15)", padding: "18px",
+                    background: THEME.surface2, borderRadius: THEME.radiusLg,
+                    border: "1px solid rgba(124,92,255,0.25)", padding: "18px",
                     animation: "fadeInUp 0.4s ease 0.2s both",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                    boxShadow: "0 0 22px rgba(124,92,255,0.1)",
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "6px" }}>
-                      <Sparkles size={13} color="#7c3aed" />
-                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#0a0a0a", fontFamily: "var(--font-heading)" }}>Humanize with AI</span>
+                      <Sparkles size={13} color={THEME.brand} aria-hidden="true" />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>Humanize with AI</span>
                     </div>
-                    <p style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6, marginBottom: "14px" }}>
+                    <p style={{ fontSize: "11px", color: THEME.textDim, lineHeight: 1.6, marginBottom: "14px" }}>
                       Multi-pass rewrite · 3 attempts · picks the best result
                     </p>
                     <button
                       onClick={() => void handleHumanize()}
                       style={{
                         width: "100%", padding: "16px", borderRadius: "12px", border: "none",
-                        background: "#7c3aed",
+                        background: THEME.brand,
                         color: "#fff", fontSize: "16px", fontWeight: 600, cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                        boxShadow: "0 4px 12px rgba(124,58,237,0.25)", transition: "all 0.2s",
+                        boxShadow: "0 4px 22px rgba(124,92,255,0.35)", transition: "all 0.2s",
                       }}
                     >
-                      <Sparkles size={14} /> {scoreConfig?.ctaLabel ?? "Humanize"} <ArrowRight size={12} />
+                      <Sparkles size={14} aria-hidden="true" /> {scoreConfig?.ctaLabel ?? "Humanize"} <ArrowRight size={12} aria-hidden="true" />
                     </button>
                   </div>
                 )}
@@ -1712,14 +1664,14 @@ export default function EditorPage() {
                   <button
                     onClick={() => void handleHumanize()}
                     style={{
-                      width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(124,58,237,0.2)",
-                      background: "#f3e8ff", color: "#7c3aed",
+                      width: "100%", padding: "11px", borderRadius: "10px", border: "1px solid rgba(124,92,255,0.3)",
+                      background: THEME.brandDim, color: THEME.brandHi,
                       fontSize: "13px", fontWeight: 600, cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                       animation: "fadeInUp 0.3s ease",
                     }}
                   >
-                    <RotateCcw size={12} /> Humanize again
+                    <RotateCcw size={12} aria-hidden="true" /> Humanize again
                   </button>
                 )}
               </div>
@@ -1733,35 +1685,35 @@ export default function EditorPage() {
             {/* Bulk textarea */}
             {bulkItems.length === 0 && (
               <div style={{
-                background: "#ffffff", borderRadius: "12px",
-                border: "1.5px solid #f0f0f0", overflow: "hidden",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                background: THEME.surface2, borderRadius: THEME.radiusLg,
+                border: `1.5px solid ${THEME.border}`, overflow: "hidden",
               }}>
                 <div style={{
-                  padding: "10px 14px", borderBottom: "1px solid #e5e7eb",
-                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "10px 14px", borderBottom: `1px solid ${THEME.border}`,
+                  display: "flex", alignItems: "center", gap: "6px", background: THEME.surface1,
                 }}>
-                  <Layers size={12} color="#7c3aed" />
-                  <span style={{ fontSize: "11px", color: "#374151", fontWeight: 600 }}>Bulk Mode</span>
-                  <span style={{ fontSize: "10px", color: "#4b5563", marginLeft: "auto" }}>Separate texts with ---</span>
+                  <Layers size={12} color={THEME.brand} aria-hidden="true" />
+                  <span style={{ fontSize: "11px", color: THEME.text, fontWeight: 600, fontFamily: THEME.fontMono }}>Bulk Mode</span>
+                  <span style={{ fontSize: "10px", color: THEME.textDim, marginLeft: "auto", fontFamily: THEME.fontMono }}>Separate texts with ---</span>
                 </div>
                 <textarea
                   value={bulkText}
                   onChange={e => setBulkText(e.target.value)}
                   placeholder={"Paste multiple texts here, separated by --- on its own line.\n\nExample:\n\nFirst text goes here...\n\n---\n\nSecond text goes here...\n\n---\n\nThird text goes here..."}
+                  aria-label="Bulk text input, separate entries with ---"
                   style={{
                     width: "100%", minHeight: "320px", padding: "16px",
-                    background: "#f9fafb", border: "none", outline: "none",
-                    resize: "vertical", color: "#111827", fontSize: "14px",
-                    lineHeight: 1.8, fontFamily: "inherit", boxSizing: "border-box",
+                    background: THEME.surface2, border: "none", outline: "none",
+                    resize: "vertical", color: THEME.text, fontSize: "14px",
+                    lineHeight: 1.8, fontFamily: THEME.fontMono, boxSizing: "border-box",
                     display: "block",
                   }}
                 />
                 <div style={{
-                  padding: "10px 14px", borderTop: "1px solid #e5e7eb",
+                  padding: "10px 14px", borderTop: `1px solid ${THEME.border}`,
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}>
-                  <span style={{ fontSize: "11px", color: "#4b5563" }}>
+                  <span style={{ fontSize: "11px", color: THEME.textDim, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
                     {parseBulkTexts().length} text{parseBulkTexts().length !== 1 ? "s" : ""} detected
                   </span>
                   <button
@@ -1770,14 +1722,14 @@ export default function EditorPage() {
                     style={{
                       display: "flex", alignItems: "center", gap: "7px",
                       padding: "10px 22px", borderRadius: "12px", border: "none",
-                      background: parseBulkTexts().length > 0 ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "rgba(124,58,237,0.12)",
-                      color: parseBulkTexts().length > 0 ? "#fff" : "#4b5563",
+                      background: parseBulkTexts().length > 0 ? THEME.brand : THEME.surface3,
+                      color: parseBulkTexts().length > 0 ? "#fff" : THEME.textMuted,
                       fontSize: "13px", fontWeight: 700,
                       cursor: parseBulkTexts().length > 0 ? "pointer" : "not-allowed",
-                      boxShadow: parseBulkTexts().length > 0 ? "0 4px 12px rgba(124,58,237,0.15)" : "none",
+                      boxShadow: parseBulkTexts().length > 0 ? "0 4px 18px rgba(124,92,255,0.3)" : "none",
                     }}
                   >
-                    <Zap size={13} /> Analyze All <ArrowRight size={11} />
+                    <Zap size={13} aria-hidden="true" /> Analyze All <ArrowRight size={11} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -1785,20 +1737,20 @@ export default function EditorPage() {
 
             {/* Bulk progress */}
             {bulkProcessing && (
-              <div style={{
-                background: "#faf5ff", border: "1px solid rgba(124,58,237,0.2)",
-                borderRadius: "10px", padding: "14px 18px", marginBottom: "16px",
+              <div aria-live="polite" style={{
+                background: THEME.surface2, border: "1px solid rgba(124,92,255,0.3)",
+                borderRadius: THEME.radius, padding: "14px 18px", marginBottom: "16px",
                 display: "flex", alignItems: "center", gap: "12px",
                 animation: "fadeInUp 0.3s ease",
               }}>
                 <div className="spin-sm" />
-                <span style={{ fontSize: "13px", color: "#7c3aed", fontWeight: 600 }}>
+                <span style={{ fontSize: "13px", color: THEME.brandHi, fontWeight: 600, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
                   Processing {bulkProgress.current}/{bulkProgress.total}...
                 </span>
                 <button onClick={() => { bulkAbortRef.current = true; }} style={{
                   marginLeft: "auto", padding: "4px 10px", borderRadius: "5px",
-                  background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.2)",
-                  color: "#dc2626", fontSize: "11px", cursor: "pointer",
+                  background: THEME.aiDim, border: "1px solid rgba(255,93,93,0.3)",
+                  color: THEME.ai, fontSize: "11px", cursor: "pointer",
                 }}>Stop</button>
               </div>
             )}
@@ -1811,20 +1763,20 @@ export default function EditorPage() {
                   <div style={{ display: "flex", gap: "10px", marginBottom: "4px" }}>
                     <button onClick={() => void handleBulkHumanize()} style={{
                       flex: 1, padding: "13px", borderRadius: "12px", border: "none",
-                      background: "#7c3aed",
+                      background: THEME.brand,
                       color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                      boxShadow: "0 4px 12px rgba(124,58,237,0.25)",
+                      boxShadow: "0 4px 22px rgba(124,92,255,0.35)",
                     }}>
-                      <Sparkles size={14} /> Humanize All <ArrowRight size={12} />
+                      <Sparkles size={14} aria-hidden="true" /> Humanize All <ArrowRight size={12} aria-hidden="true" />
                     </button>
                     <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
                       padding: "13px 18px", borderRadius: "12px",
-                      background: "#f9fafb", border: "1px solid #e5e7eb",
-                      color: "#374151", fontSize: "13px", cursor: "pointer",
+                      background: THEME.surface3, border: `1px solid ${THEME.border}`,
+                      color: THEME.textDim, fontSize: "13px", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: "5px",
                     }}>
-                      <RotateCcw size={12} /> Reset
+                      <RotateCcw size={12} aria-hidden="true" /> Reset
                     </button>
                   </div>
                 )}
@@ -1833,12 +1785,12 @@ export default function EditorPage() {
                 {!bulkProcessing && bulkItems.every(i => i.status === "done" || i.status === "error") && bulkItems.some(i => i.status === "done") && (
                   <button onClick={() => { setBulkItems([]); setBulkText(""); }} style={{
                     padding: "11px", borderRadius: "10px",
-                    background: "#f9fafb", border: "1px solid #e5e7eb",
-                    color: "#374151", fontSize: "13px", cursor: "pointer",
+                    background: THEME.surface3, border: `1px solid ${THEME.border}`,
+                    color: THEME.textDim, fontSize: "13px", cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: "5px",
                     marginBottom: "4px",
                   }}>
-                    <RotateCcw size={12} /> Start New Batch
+                    <RotateCcw size={12} aria-hidden="true" /> Start New Batch
                   </button>
                 )}
 
@@ -1846,22 +1798,21 @@ export default function EditorPage() {
                   const itemScore = item.result ? getScoreConfig(item.result.score) : null;
                   return (
                     <div key={item.id} style={{
-                      background: "#ffffff", borderRadius: "12px",
-                      border: `1px solid ${item.status === "done" ? "rgba(22,163,74,0.2)" : item.status === "error" ? "rgba(220,38,38,0.2)" : "#e5e7eb"}`,
+                      background: THEME.surface2, borderRadius: THEME.radiusLg,
+                      border: `1px solid ${item.status === "done" ? "rgba(62,224,143,0.3)" : item.status === "error" ? "rgba(255,93,93,0.3)" : THEME.border}`,
                       overflow: "hidden", animation: "fadeInUp 0.3s ease",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                     }}>
                       {/* Card header */}
                       <div style={{
-                        padding: "10px 14px", borderBottom: "1px solid #f3f4f6",
+                        padding: "10px 14px", borderBottom: `1px solid ${THEME.border}`,
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                       }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <span style={{
-                            fontSize: "11px", fontWeight: 700, color: "#7c3aed",
-                            background: "#f3e8ff", padding: "2px 8px", borderRadius: "4px",
+                            fontSize: "11px", fontWeight: 700, color: THEME.brandHi, fontFamily: THEME.fontMono,
+                            background: THEME.brandDim, padding: "2px 8px", borderRadius: "4px",
                           }}>#{item.id + 1}</span>
-                          <span style={{ fontSize: "11px", color: "#4b5563" }}>
+                          <span style={{ fontSize: "11px", color: THEME.textDim, fontFamily: THEME.fontMono, fontVariantNumeric: "tabular-nums" }}>
                             {item.text.split(/\s+/).length} words
                           </span>
                         </div>
@@ -1869,27 +1820,27 @@ export default function EditorPage() {
                           {item.status === "analyzing" || item.status === "humanizing" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                               <div className="spin-sm" />
-                              <span style={{ fontSize: "10px", color: "#7c3aed" }}>
+                              <span style={{ fontSize: "10px", color: THEME.brandHi, fontFamily: THEME.fontMono }}>
                                 {item.status === "analyzing" ? "Analyzing" : "Humanizing"}
                               </span>
                             </div>
                           ) : item.status === "error" ? (
-                            <span style={{ fontSize: "10px", color: "#dc2626" }}>{item.error}</span>
+                            <span style={{ fontSize: "10px", color: THEME.ai }}>{item.error}</span>
                           ) : item.result && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px", fontFamily: THEME.fontMono }}>
                               <span style={{
-                                fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700,
-                                background: `${itemScore!.color}15`, color: itemScore!.color,
+                                fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                                background: `${itemScore!.color}22`, color: itemScore!.color,
                               }}>
                                 {Math.round(item.result.score)}%
                               </span>
                               {item.humanizedScore !== null && (
                                 <>
-                                  <ArrowRight size={9} color="#d1d5db" />
+                                  <ArrowRight size={9} color={THEME.textMuted} aria-hidden="true" />
                                   <span style={{
-                                    fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700,
-                                    background: item.humanizedScore < 30 ? "rgba(22,163,74,0.08)" : "rgba(249,115,22,0.08)",
-                                    color: item.humanizedScore < 30 ? "#16a34a" : "#f97316",
+                                    fontSize: "11px", padding: "2px 8px", borderRadius: "4px", fontWeight: 700, fontVariantNumeric: "tabular-nums",
+                                    background: item.humanizedScore < 30 ? THEME.humanDim : THEME.warnDim,
+                                    color: item.humanizedScore < 30 ? THEME.human : THEME.warn,
                                   }}>
                                     {Math.round(item.humanizedScore)}%
                                   </span>
@@ -1902,16 +1853,16 @@ export default function EditorPage() {
 
                       {/* Card body */}
                       <div style={{ padding: "12px 14px" }}>
-                        <div style={{ fontSize: "12px", color: "#374151", lineHeight: 1.7, maxHeight: "80px", overflow: "hidden", position: "relative" }}>
+                        <div style={{ fontSize: "12px", color: THEME.textDim, lineHeight: 1.7, maxHeight: "80px", overflow: "hidden", position: "relative" }}>
                           {item.text.slice(0, 200)}{item.text.length > 200 ? "…" : ""}
-                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30px", background: "linear-gradient(transparent, #ffffff)" }} />
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "30px", background: `linear-gradient(transparent, ${THEME.surface2})` }} />
                         </div>
                         {item.humanizedText && (
-                          <div style={{ marginTop: "10px", padding: "10px", borderRadius: "8px", background: "rgba(22,163,74,0.04)", border: "1px solid rgba(22,163,74,0.1)" }}>
-                            <div style={{ fontSize: "10px", color: "#16a34a", fontWeight: 600, marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
-                              <CheckCircle2 size={10} /> Humanized
+                          <div style={{ marginTop: "10px", padding: "10px", borderRadius: "8px", background: THEME.humanDim, border: "1px solid rgba(62,224,143,0.2)" }}>
+                            <div style={{ fontSize: "10px", color: THEME.human, fontWeight: 600, marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <CheckCircle2 size={10} aria-hidden="true" /> Humanized
                             </div>
-                            <div style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.7, maxHeight: "120px", overflow: "auto" }}>
+                            <div style={{ fontSize: "12px", color: THEME.text, lineHeight: 1.7, maxHeight: "120px", overflow: "auto" }}>
                               {item.humanizedText}
                             </div>
                             <button onClick={async () => {
@@ -1919,11 +1870,11 @@ export default function EditorPage() {
                               toast.success(`Text #${item.id + 1} copied`);
                             }} style={{
                               marginTop: "6px", display: "flex", alignItems: "center", gap: "4px",
-                              background: "#f9fafb", border: "1px solid #e5e7eb",
+                              background: THEME.surface3, border: `1px solid ${THEME.border}`,
                               borderRadius: "4px", padding: "3px 8px", cursor: "pointer",
-                              color: "#374151", fontSize: "10px",
+                              color: THEME.textDim, fontSize: "10px",
                             }}>
-                              <Copy size={9} /> Copy
+                              <Copy size={9} aria-hidden="true" /> Copy
                             </button>
                           </div>
                         )}
@@ -1950,14 +1901,14 @@ export default function EditorPage() {
         @keyframes orb1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(8px,-10px); } }
         @keyframes orb2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-10px,7px); } }
         @keyframes orb3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(7px,10px); } }
-        @keyframes passGlow { 0%,100% { opacity:0.3; } 50% { opacity:1; border-color: rgba(124,58,237,0.5); } }
+        @keyframes passGlow { 0%,100% { opacity:0.3; } 50% { opacity:1; border-color: rgba(124,92,255,0.5); } }
         @keyframes dotBlink { 0%,100% { opacity:0; } 50% { opacity:1; } }
         .dots span { animation: dotBlink 1.4s infinite; }
         .dots span:nth-child(2) { animation-delay: 0.2s; }
         .dots span:nth-child(3) { animation-delay: 0.4s; }
         .scan-bar { animation: scanAnim 1.8s linear infinite; }
-        .scan-pulse { width: 6px; height: 6px; border-radius: 50%; background: #7c3aed; animation: pulse 1s ease-in-out infinite; }
-        .spin-sm { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #e5e7eb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
+        .scan-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); animation: pulse 1s ease-in-out infinite; }
+        .spin-sm { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--brand); animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
         @media (max-width: 900px) { .editor-grid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>

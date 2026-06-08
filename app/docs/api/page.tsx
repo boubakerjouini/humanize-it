@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 
 function Code({ children, lang }: { children: string; lang?: string }) {
   return (
-    <div className="relative group rounded-lg bg-[#0d1117] border border-zinc-800 overflow-hidden">
+    <div className="relative group rounded-lg bg-[var(--surface-1)] border border-border overflow-hidden">
       {lang && (
-        <div className="px-4 py-1.5 border-b border-zinc-800/50 text-[10px] font-mono text-zinc-600 uppercase tracking-wider">{lang}</div>
+        <div className="px-4 py-1.5 border-b border-border text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">{lang}</div>
       )}
-      <pre className="p-4 text-[13px] font-mono text-zinc-400 overflow-x-auto leading-relaxed">
+      <pre className="p-4 text-[13px] font-mono text-muted-foreground overflow-x-auto leading-relaxed">
         {children}
       </pre>
     </div>
@@ -23,20 +23,20 @@ function Code({ children, lang }: { children: string; lang?: string }) {
 
 function Table({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-800">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-zinc-900/50 border-b border-zinc-800">
+          <tr className="bg-[var(--surface-1)] border-b border-border">
             {headers.map((h) => (
-              <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">{h}</th>
+              <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider font-mono">{h}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-800/50">
+        <tbody className="divide-y divide-[var(--border)]">
           {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-zinc-800/20 transition-colors">
+            <tr key={i} className="hover:bg-[var(--surface-3)] transition-colors">
               {row.map((cell, j) => (
-                <td key={j} className={`px-4 py-2.5 text-zinc-400 ${j === 0 ? "font-mono text-blue-300 text-xs" : "text-sm"}`}>{cell}</td>
+                <td key={j} className={`px-4 py-2.5 text-muted-foreground ${j === 0 ? "font-mono text-[var(--human)] text-xs" : "text-sm"}`}>{cell}</td>
               ))}
             </tr>
           ))}
@@ -73,7 +73,7 @@ export default function ApiDocsPage() {
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="block px-3 py-1.5 text-sm text-zinc-500 hover:text-zinc-200 rounded-md hover:bg-zinc-800/30 transition-colors"
+                className="block px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-[var(--surface-3)] transition-colors font-mono"
               >
                 {item.label}
               </a>
@@ -87,7 +87,7 @@ export default function ApiDocsPage() {
             <a
               key={item.id}
               href={`#${item.id}`}
-              className="shrink-0 px-3 py-1.5 text-xs text-zinc-500 hover:text-zinc-200 rounded-full border border-zinc-800 hover:border-zinc-700 transition-colors"
+              className="shrink-0 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-full border border-border hover:border-[var(--border-strong)] transition-colors font-mono"
             >
               {item.label}
             </a>
@@ -101,28 +101,28 @@ export default function ApiDocsPage() {
           <section id="introduction">
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">v1</span>
-                <span className="flex items-center gap-1.5 text-[10px] text-green-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--brand-dim)] text-[var(--brand-hi)] border border-[var(--brand)]/30 font-mono">v1</span>
+                <span className="flex items-center gap-1.5 text-[10px] text-[var(--human)] font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--human)] animate-pulse" aria-hidden="true" />
                   Operational
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 tracking-tight mb-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-3 font-[family-name:var(--font-heading)]">
                 HumanizeIt API
               </h1>
-              <p className="text-lg text-zinc-400 max-w-xl leading-relaxed">
+              <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
                 Make any text undetectable. Programmatically.
               </p>
               <div className="flex gap-3 mt-6">
                 <a
                   href="/dashboard/api"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-[var(--brand-hi)] text-white text-sm font-semibold transition-colors"
                 >
                   Get API Key
                 </a>
                 <a
                   href="#playground"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium border border-zinc-700/50 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--surface-3)] hover:bg-[var(--surface-2)] text-foreground text-sm font-medium border border-border transition-colors"
                 >
                   Try the playground
                 </a>
@@ -132,19 +132,19 @@ export default function ApiDocsPage() {
 
           {/* 2. QUICK START */}
           <section id="quickstart">
-            <h2 className="text-xl font-bold text-zinc-100 mb-6">Quick Start</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6 font-[family-name:var(--font-heading)]">Quick Start</h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
                 { n: "1", title: "Get your API key", desc: "Create a key in the dashboard. It's shown only once — save it securely." },
                 { n: "2", title: "Make a request", desc: "Send text to analyze or humanize via a simple POST request." },
                 { n: "3", title: "Get results back", desc: "Receive human-sounding text or an AI detection score as JSON." },
               ].map((step) => (
-                <div key={step.n} className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold mb-3">
+                <div key={step.n} className="rounded-xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--brand-dim)] text-[var(--brand-hi)] text-xs font-bold mb-3 font-mono">
                     {step.n}
                   </div>
-                  <h3 className="text-sm font-semibold text-zinc-200 mb-1">{step.title}</h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">{step.desc}</p>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">{step.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -167,34 +167,34 @@ export default function ApiDocsPage() {
 
           {/* 3. AUTHENTICATION */}
           <section id="authentication">
-            <h2 className="text-xl font-bold text-zinc-100 mb-4">Authentication</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
-              All API requests require a Bearer token in the <code className="text-xs font-mono text-blue-300 bg-blue-500/5 px-1.5 py-0.5 rounded">Authorization</code> header.
+            <h2 className="text-xl font-bold text-foreground mb-4 font-[family-name:var(--font-heading)]">Authentication</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              All API requests require a Bearer token in the <code className="text-xs font-mono text-[var(--human)] bg-[var(--surface-3)] px-1.5 py-0.5 rounded">Authorization</code> header.
               Keys are generated in your dashboard and shown only once at creation.
             </p>
 
             <Code lang="http">{`Authorization: Bearer sk_live_aBcDeFgHiJkLmNoPqRsT...`}</Code>
 
-            <div className="mt-4 p-4 rounded-lg bg-amber-500/5 border border-amber-500/10">
-              <p className="text-xs text-amber-300/80 leading-relaxed">
-                <strong className="text-amber-300">Security:</strong> Never expose API keys in client-side code, public repositories, or browser requests. Always use keys server-side.
+            <div className="mt-4 p-4 rounded-lg bg-[var(--warn-dim)] border border-[var(--warn)]/20">
+              <p className="text-xs text-[var(--warn)] leading-relaxed">
+                <strong className="text-[var(--warn)]">Security:</strong> Never expose API keys in client-side code, public repositories, or browser requests. Always use keys server-side.
               </p>
             </div>
           </section>
 
           {/* 4. ENDPOINTS */}
           <section id="endpoints">
-            <h2 className="text-xl font-bold text-zinc-100 mb-6">Endpoints</h2>
+            <h2 className="text-xl font-bold text-foreground mb-6 font-[family-name:var(--font-heading)]">Endpoints</h2>
 
             {/* 4a. Analyze */}
             <div className="mb-12">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400 uppercase">POST</span>
-                <code className="text-sm font-mono text-zinc-200">/api/v1/analyze</code>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--human-dim)] text-[var(--human)] uppercase font-mono">POST</span>
+                <code className="text-sm font-mono text-foreground">/api/v1/analyze</code>
               </div>
-              <p className="text-sm text-zinc-400 mb-4">Analyze text for AI-generated patterns and return a detection score.</p>
+              <p className="text-sm text-muted-foreground mb-4">Analyze text for AI-generated patterns and return a detection score.</p>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Request Body</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 font-mono">Request Body</h4>
               <Table
                 headers={["Field", "Type", "Required", "Description"]}
                 rows={[
@@ -202,13 +202,13 @@ export default function ApiDocsPage() {
                 ]}
               />
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Request</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Request</h4>
               <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/analyze \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"text": "Your text to analyze..."}'`}</Code>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">JavaScript</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">JavaScript</h4>
               <Code lang="javascript">{`const res = await fetch("https://humanize-it.app/api/v1/analyze", {
   method: "POST",
   headers: {
@@ -219,7 +219,7 @@ export default function ApiDocsPage() {
 });
 const data = await res.json();`}</Code>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Response</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Response</h4>
               <Code lang="json">{`{
   "score": 72,
   "confidenceBand": "likely-ai",
@@ -235,7 +235,7 @@ const data = await res.json();`}</Code>
   "wordCount": 222
 }`}</Code>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Response Schema</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Response Schema</h4>
               <Table
                 headers={["Field", "Type", "Description"]}
                 rows={[
@@ -251,12 +251,12 @@ const data = await res.json();`}</Code>
             {/* 4b. Humanize */}
             <div className="mb-12">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400 uppercase">POST</span>
-                <code className="text-sm font-mono text-zinc-200">/api/v1/humanize</code>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--human-dim)] text-[var(--human)] uppercase font-mono">POST</span>
+                <code className="text-sm font-mono text-foreground">/api/v1/humanize</code>
               </div>
-              <p className="text-sm text-zinc-400 mb-4">Rewrite text to sound more natural and human-written.</p>
+              <p className="text-sm text-muted-foreground mb-4">Rewrite text to sound more natural and human-written.</p>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Request Body</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 font-mono">Request Body</h4>
               <Table
                 headers={["Field", "Type", "Required", "Description"]}
                 rows={[
@@ -267,7 +267,7 @@ const data = await res.json();`}</Code>
                 ]}
               />
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Tone Options</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Tone Options</h4>
               <Table
                 headers={["Value", "Description"]}
                 rows={[
@@ -280,7 +280,7 @@ const data = await res.json();`}</Code>
                 ]}
               />
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Intensity Options</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Intensity Options</h4>
               <Table
                 headers={["Value", "Description"]}
                 rows={[
@@ -290,13 +290,13 @@ const data = await res.json();`}</Code>
                 ]}
               />
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Request</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Request</h4>
               <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/humanize \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"text": "Your text...", "tone": "casual", "intensity": "medium", "passes": 2}'`}</Code>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Response</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Response</h4>
               <Code lang="json">{`{
   "humanizedText": "So here's the thing about mitochondria, they're basically the engine room of every cell...",
   "originalScore": 78,
@@ -312,15 +312,15 @@ const data = await res.json();`}</Code>
             {/* 4c. Usage */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 uppercase">GET</span>
-                <code className="text-sm font-mono text-zinc-200">/api/v1/usage</code>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--brand-dim)] text-[var(--brand-hi)] uppercase font-mono">GET</span>
+                <code className="text-sm font-mono text-foreground">/api/v1/usage</code>
               </div>
-              <p className="text-sm text-zinc-400 mb-4">Check your current API usage and quota.</p>
+              <p className="text-sm text-muted-foreground mb-4">Check your current API usage and quota.</p>
 
               <Code lang="curl">{`curl https://humanize-it.app/api/v1/usage \\
   -H "Authorization: Bearer sk_live_..."`}</Code>
 
-              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Response</h4>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Response</h4>
               <Code lang="json">{`{
   "plan": "PRO",
   "wordsUsed": 12450,
@@ -334,8 +334,8 @@ const data = await res.json();`}</Code>
 
           {/* 5. RATE LIMITS */}
           <section id="rate-limits">
-            <h2 className="text-xl font-bold text-zinc-100 mb-4">Rate Limits</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+            <h2 className="text-xl font-bold text-foreground mb-4 font-[family-name:var(--font-heading)]">Rate Limits</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               API requests are rate-limited per billing cycle. Every response includes rate limit headers.
             </p>
 
@@ -348,7 +348,7 @@ const data = await res.json();`}</Code>
               ]}
             />
 
-            <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">Rate Limit Headers</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">Rate Limit Headers</h4>
             <Table
               headers={["Header", "Description"]}
               rows={[
@@ -359,7 +359,7 @@ const data = await res.json();`}</Code>
               ]}
             />
 
-            <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mt-6 mb-2">429 Response</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2 font-mono">429 Response</h4>
             <Code lang="json">{`{
   "error": {
     "code": "QUOTA_EXCEEDED",
@@ -370,7 +370,7 @@ const data = await res.json();`}</Code>
 
           {/* 6. ERROR CODES */}
           <section id="errors">
-            <h2 className="text-xl font-bold text-zinc-100 mb-4">Error Codes</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4 font-[family-name:var(--font-heading)]">Error Codes</h2>
             <Table
               headers={["Code", "HTTP", "Description", "Solution"]}
               rows={[
@@ -386,8 +386,8 @@ const data = await res.json();`}</Code>
 
           {/* 7. PLAYGROUND */}
           <section id="playground">
-            <h2 className="text-xl font-bold text-zinc-100 mb-2">Playground</h2>
-            <p className="text-sm text-zinc-400 mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-2 font-[family-name:var(--font-heading)]">Playground</h2>
+            <p className="text-sm text-muted-foreground mb-6">
               Test the API directly from your browser. Enter your API key and try a request.
             </p>
             <Playground />
@@ -395,14 +395,14 @@ const data = await res.json();`}</Code>
 
           {/* 8. CHANGELOG */}
           <section id="changelog">
-            <h2 className="text-xl font-bold text-zinc-100 mb-4">Changelog</h2>
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
+            <h2 className="text-xl font-bold text-foreground mb-4 font-[family-name:var(--font-heading)]">Changelog</h2>
+            <div className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">v1.0</span>
-                <span className="text-xs text-zinc-600">March 2026</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[var(--brand-dim)] text-[var(--brand-hi)] border border-[var(--brand)]/30 font-mono">v1.0</span>
+                <span className="text-xs text-[var(--text-muted)] font-mono">March 2026</span>
               </div>
-              <p className="text-sm text-zinc-400">
-                Initial release. Two endpoints: <code className="text-xs font-mono text-blue-300">analyze</code> and <code className="text-xs font-mono text-blue-300">humanize</code>. Rate limiting, hash-based API key authentication, and interactive playground.
+              <p className="text-sm text-muted-foreground">
+                Initial release. Two endpoints: <code className="text-xs font-mono text-[var(--human)]">analyze</code> and <code className="text-xs font-mono text-[var(--human)]">humanize</code>. Rate limiting, hash-based API key authentication, and interactive playground.
               </p>
             </div>
           </section>

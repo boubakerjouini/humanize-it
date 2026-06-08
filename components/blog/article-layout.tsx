@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { BlogPost } from "@/lib/blog";
+import { THEME } from "@/lib/theme";
 
 export function ArticleLayout({
   post,
@@ -13,8 +14,7 @@ export function ArticleLayout({
     <div
       style={{
         minHeight: "100vh",
-        background: "#ffffff",
-        color: "#111827",
+        color: THEME.text,
       }}
     >
       {/* Nav */}
@@ -26,9 +26,9 @@ export function ArticleLayout({
           height: "56px",
           display: "flex",
           alignItems: "center",
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: `1px solid ${THEME.border}`,
           backdropFilter: "blur(16px) saturate(180%)",
-          background: "rgba(255,255,255,0.88)",
+          background: "rgba(16,18,24,0.82)",
           padding: "0 24px",
         }}
       >
@@ -46,12 +46,12 @@ export function ArticleLayout({
             href="/"
             style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}
           >
-            <span style={{ fontSize: "19px", fontWeight: 800, color: "#7e22ce", letterSpacing: "-0.5px" }}>H.</span>
-            <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>HumanizeIt</span>
+            <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", fontFamily: THEME.fontHeading }}>H.</span>
+            <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <Link href="/blog" style={{ color: "#6b7280", fontSize: "13px", textDecoration: "none" }}>Blog</Link>
-            <Link href="/dashboard/editor" style={{ background: "#7e22ce", color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: "6px", textDecoration: "none" }}>
+            <Link href="/blog" style={{ color: THEME.textDim, fontSize: "13px", textDecoration: "none" }}>Blog</Link>
+            <Link href="/dashboard/editor" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: "8px", textDecoration: "none" }}>
               Try Free &rarr;
             </Link>
           </div>
@@ -66,13 +66,14 @@ export function ArticleLayout({
             display: "inline-flex",
             alignItems: "center",
             gap: "6px",
-            color: "#6b7280",
+            color: THEME.textDim,
             fontSize: "13px",
             textDecoration: "none",
             marginBottom: "32px",
+            fontFamily: THEME.fontMono,
           }}
         >
-          <ArrowLeft size={14} /> Back to Blog
+          <ArrowLeft size={14} aria-hidden="true" /> Back to Blog
         </Link>
 
         {/* Header */}
@@ -82,10 +83,11 @@ export function ArticleLayout({
               display: "inline-block",
               fontSize: "12px",
               fontWeight: 600,
-              color: "#7e22ce",
+              color: THEME.brandHi,
               textTransform: "uppercase",
               letterSpacing: "0.08em",
               marginBottom: "12px",
+              fontFamily: THEME.fontMono,
             }}
           >
             {post.category}
@@ -93,11 +95,12 @@ export function ArticleLayout({
           <h1
             style={{
               fontSize: "clamp(28px, 5vw, 40px)",
-              fontWeight: 800,
+              fontWeight: 700,
               lineHeight: 1.15,
               letterSpacing: "-0.02em",
-              color: "#111827",
+              color: THEME.text,
               margin: "0 0 16px",
+              fontFamily: THEME.fontHeading,
             }}
           >
             {post.title}
@@ -108,7 +111,8 @@ export function ArticleLayout({
               alignItems: "center",
               gap: "16px",
               fontSize: "13px",
-              color: "#6b7280",
+              color: THEME.textMuted,
+              fontFamily: THEME.fontMono,
             }}
           >
             <span>{new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
@@ -124,29 +128,29 @@ export function ArticleLayout({
         <div
           style={{
             marginTop: "56px",
-            border: "1px solid rgba(126,34,206,0.3)",
-            borderRadius: "12px",
-            background: "#faf5ff",
+            border: `1px solid ${THEME.borderStrong}`,
+            borderRadius: THEME.radiusLg,
+            background: THEME.surface2,
             padding: "32px",
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: "22px", fontWeight: 700, color: "#111827", marginBottom: "8px" }}>
+          <div style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "8px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>
             Try HumanizeIt Free
           </div>
-          <p style={{ fontSize: "15px", color: "#4b5563", marginBottom: "20px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "15px", color: THEME.textDim, marginBottom: "20px", lineHeight: 1.5 }}>
             Paste your text, get an AI detection score, and humanize it in seconds.
           </p>
           <Link
             href="/"
             style={{
               display: "inline-block",
-              background: "#7e22ce",
+              background: THEME.brand,
               color: "#fff",
               fontSize: "15px",
               fontWeight: 600,
               padding: "12px 28px",
-              borderRadius: "8px",
+              borderRadius: THEME.radius,
               textDecoration: "none",
             }}
           >
