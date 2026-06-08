@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Prisma generated client (too large for GitHub, regenerated via prisma generate)
 /app/generated/
+
+# secrets — generated redeem/discount codes must never be committed
+/scripts/generated-codes.txt
+/scripts/*codes*.txt

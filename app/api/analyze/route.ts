@@ -6,8 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
-import { PLANS } from "@/lib/plans";
-import { checkAndResetQuota } from "@/lib/quota";
+import { checkAndResetQuota, planConfigFor, consumeWordQuota } from "@/lib/quota";
+import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
 
@@ -95,14 +95,21 @@ export async function POST(req: Request) {
       freshUser = user; // continue with stale quota rather than failing
     }
 
-    // 5. Check word quota
-    const plan = PLANS[freshUser.plan as keyof typeof PLANS] ?? PLANS["FREE"];
+    // 5. Resolve plan, rate-limit, then atomically reserve the word quota
+    const plan = planConfigFor(freshUser);
     const wordCount = text.split(/\s+/).filter(Boolean).length;
 
-    if (
-      plan.wordsLimit !== -1 &&
-      freshUser.wordsUsed + wordCount > plan.wordsLimit
-    ) {
+    const rl = await checkRateLimit(`analyze:${freshUser.id}`, plan.rateLimit);
+    const rlHeaders = rateLimitHeaders(rl);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
+        { status: 429, headers: { ...rlHeaders, "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
+
+    const reserved = await consumeWordQuota(freshUser.id, wordCount, plan);
+    if (!reserved) {
       return NextResponse.json(
         {
           error: {
@@ -110,7 +117,7 @@ export async function POST(req: Request) {
             message: `You have reached your ${plan.wordsLimitPeriod}ly analysis limit. Upgrade to Pro for more.`,
           },
         },
-        { status: 402 }
+        { status: 402, headers: rlHeaders }
       );
     }
 
@@ -135,15 +142,7 @@ export async function POST(req: Request) {
       console.error("[analyze] failed to save document (table may not exist):", dbErr);
     }
 
-    // 8. Increment wordsUsed (resilient — analysis works even if this fails)
-    try {
-      await db.user.update({
-        where: { id: user.id },
-        data: { wordsUsed: { increment: wordCount } },
-      });
-    } catch (dbErr) {
-      console.error("[analyze] failed to increment wordsUsed:", dbErr);
-    }
+    // 8. (Word quota was already atomically reserved in step 5.)
 
     // 9. Track event
     trackServer(clerkId, "text_analyzed", {
@@ -155,14 +154,17 @@ export async function POST(req: Request) {
     });
 
     // 10. Return response
-    return NextResponse.json({
-      score: analysisResult.score,
-      confidenceBand: analysisResult.confidenceBand,
-      patterns: analysisResult.patterns,
-      stats: analysisResult.stats,
-      wordCount: analysisResult.wordCount,
-      documentId: document?.id ?? null,
-    });
+    return NextResponse.json(
+      {
+        score: analysisResult.score,
+        confidenceBand: analysisResult.confidenceBand,
+        patterns: analysisResult.patterns,
+        stats: analysisResult.stats,
+        wordCount: analysisResult.wordCount,
+        documentId: document?.id ?? null,
+      },
+      { headers: rlHeaders }
+    );
   } catch (err) {
     console.error("[analyze] error:", err);
     return NextResponse.json(

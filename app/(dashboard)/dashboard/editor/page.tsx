@@ -568,7 +568,12 @@ export default function EditorPage() {
 
         finalText = results.join("\n\n");
       } else {
-        // Single-chunk flow with multi-pass
+        // Single-chunk flow. FREE plans get exactly one pass so the first (and
+        // only daily) humanize always completes and is shown as the win — the
+        // multi-pass refinement is a paid feature. Paid plans run up to 3 passes.
+        const isPaid = userPlan === "PRO" || userPlan === "TEAM";
+        const maxPasses = isPaid ? MAX_PASSES : 1;
+
         const pass1 = await runSinglePass(text, result.documentId, useTone, intensity);
         if (!pass1) return;
 
@@ -577,29 +582,29 @@ export default function EditorPage() {
         setPassInfo({ current: 1, scores });
         setScoreHistory(scores);
         let passes = 1;
+        let prevText = pass1.text;
+        let prevDocId = pass1.docId;
+        let prevScore = pass1.score;
 
-        // Auto pass 2 if score >= threshold
-        if (pass1.score >= SCORE_THRESHOLD && passes < MAX_PASSES) {
-          passes++;
-          setPassInfo({ current: 2, scores: [...scores] });
-          const pass2 = await runSinglePass(pass1.text, pass1.docId, useTone, "heavy");
-          if (!pass2) return;
-          finalText = pass2.text;
-          scores.push(pass2.score);
-          setPassInfo({ current: 2, scores: [...scores] });
+        // Additional passes while the score is still above threshold. A blocked
+        // or failed later pass is NON-destructive: we keep the best result so
+        // far visible instead of discarding it and dead-ending the user.
+        while (prevScore >= SCORE_THRESHOLD && passes < maxPasses) {
+          const next = passes + 1;
+          setPassInfo({ current: next, scores: [...scores] });
+          const hint = next >= 3
+            ? "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style."
+            : undefined;
+          const passResult = await runSinglePass(prevText, prevDocId, useTone, "heavy", hint);
+          if (!passResult) break; // keep prior finalText; runSinglePass already surfaced the reason
+          passes = next;
+          finalText = passResult.text;
+          scores.push(passResult.score);
+          setPassInfo({ current: next, scores: [...scores] });
           setScoreHistory([...scores]);
-
-          // Auto pass 3 if still >= threshold — with aggressive hint
-          if (pass2.score >= SCORE_THRESHOLD && passes < MAX_PASSES) {
-            passes++;
-            setPassInfo({ current: 3, scores: [...scores] });
-            const pass3 = await runSinglePass(pass2.text, pass2.docId, useTone, "heavy", "The text still shows AI patterns. Be more aggressive in varying sentence structure, vocabulary, and style.");
-            if (!pass3) return;
-            finalText = pass3.text;
-            scores.push(pass3.score);
-            setPassInfo({ current: 3, scores: [...scores] });
-            setScoreHistory([...scores]);
-          }
+          prevText = passResult.text;
+          prevDocId = passResult.docId;
+          prevScore = passResult.score;
         }
 
         setPassCount(passes);

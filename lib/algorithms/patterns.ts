@@ -286,7 +286,7 @@ export interface PatternConfig {
   category: "vocabulary" | "phrase" | "structural" | "semantic" | "statistical";
 }
 
-/** All 24 detection patterns with severity and weight */
+/** All detection patterns with severity and weight */
 export const PATTERNS_CONFIG: PatternConfig[] = [
   // Vocabulary (1-3)
   { id: "ai-vocab-t1", label: "AI Vocabulary — Tier 1", severity: "critical", weight: 12, category: "vocabulary" },
@@ -344,6 +344,9 @@ export const PATTERNS_CONFIG: PatternConfig[] = [
   { id: "ai-metacommentary", label: "AI Self-Commentary (I think/I believe/I feel)", severity: "medium", weight: 5, category: "phrase" },
   { id: "creative-ai-melodrama", label: "Melodramatic Descriptors (AI Creative)", severity: "high", weight: 6, category: "vocabulary" },
 ] as const;
+
+/** Canonical number of detection patterns — single source of truth for all UI/marketing copy. */
+export const PATTERN_COUNT = PATTERNS_CONFIG.length;
 
 // ---- Score Weights ----
 

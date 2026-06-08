@@ -21,6 +21,31 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+
+  async function handleUpgrade(planId: string) {
+    if (checkingOut) return;
+    setCheckingOut(planId);
+    posthog?.capture("upgrade_cta_clicked", { plan: planId, current_plan: currentPlan });
+    track("upgrade_cta_clicked", { plan: planId });
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planId }),
+      });
+      const data = (await res.json()) as { url?: string; error?: { message: string } };
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return; // keep spinner until navigation
+      }
+      setCodeStatus({ type: "error", message: data.error?.message ?? "Could not start checkout. Try again." });
+      setCheckingOut(null);
+    } catch {
+      setCodeStatus({ type: "error", message: "Network error starting checkout." });
+      setCheckingOut(null);
+    }
+  }
 
   // Lock body scroll + track open
   useEffect(() => {
@@ -157,19 +182,21 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                       Current
                     </div>
                   ) : plan.id !== "FREE" ? (
-                    <a
-                      href={`/api/checkout?plan=${plan.id.toLowerCase()}`}
-                      onClick={() => { posthog?.capture("upgrade_cta_clicked", { plan: plan.id, current_plan: currentPlan }); track("upgrade_cta_clicked", { plan: plan.id }); }}
+                    <button
+                      onClick={() => handleUpgrade(plan.id)}
+                      disabled={checkingOut !== null}
                       style={{
-                        display: "block", padding: "8px", borderRadius: "8px",
-                        fontSize: "12px", fontWeight: 600, textDecoration: "none",
+                        display: "block", width: "100%", padding: "8px", borderRadius: "8px",
+                        fontSize: "12px", fontWeight: 600, border: "none",
                         background: isPro ? "#ffffff" : "#7e22ce",
                         color: isPro ? "#7e22ce" : "#ffffff",
                         textAlign: "center",
+                        cursor: checkingOut ? "wait" : "pointer",
+                        opacity: checkingOut && checkingOut !== plan.id ? 0.6 : 1,
                       }}
                     >
-                      Upgrade &rarr;
-                    </a>
+                      {checkingOut === plan.id ? "Starting…" : "Upgrade →"}
+                    </button>
                   ) : null}
                 </div>
               );

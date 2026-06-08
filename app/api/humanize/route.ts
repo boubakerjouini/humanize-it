@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
-import { PLANS } from "@/lib/plans";
-import { checkAndResetQuota } from "@/lib/quota";
+import { checkAndResetQuota, planConfigFor, consumeWordQuota, refundWordQuota } from "@/lib/quota";
+import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
 
@@ -69,8 +69,19 @@ export async function POST(req: Request) {
       },
     });
 
-    // 3b. Reset quota if period has expired
+    // 3b. Reset quota / downgrade lapsed grants if needed, then resolve plan
     const freshUser = await checkAndResetQuota(user);
+    const plan = planConfigFor(freshUser);
+
+    // 3c. Rate limit (per user / per minute) on this Anthropic-backed endpoint
+    const rl = await checkRateLimit(`humanize:${freshUser.id}`, plan.rateLimit);
+    const rlHeaders = rateLimitHeaders(rl);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
+        { status: 429, headers: { ...rlHeaders, "Retry-After": String(rl.retryAfterSeconds) } }
+      );
+    }
 
     // 4. Load document and verify ownership
     const document = await db.document.findUnique({
@@ -80,14 +91,13 @@ export async function POST(req: Request) {
     if (!document || document.userId !== freshUser.id) {
       return NextResponse.json(
         { error: { code: "NOT_FOUND", message: "Document not found." } },
-        { status: 404 }
+        { status: 404, headers: rlHeaders }
       );
     }
 
-    // 5. Check rewrite quota for FREE plan
-    const plan = PLANS[freshUser.plan as keyof typeof PLANS] ?? PLANS["FREE"];
+    // 5. Secondary FREE rewrite-count gate (rate of distinct rewrites/day)
     if (
-      freshUser.plan === "FREE" &&
+      plan.id === "FREE" &&
       plan.rewriteLimit !== -1 &&
       freshUser.rewriteCount >= plan.rewriteLimit
     ) {
@@ -95,30 +105,69 @@ export async function POST(req: Request) {
         {
           error: {
             code: "QUOTA_EXCEEDED",
-            message:
-              "You have reached your rewrite limit. Upgrade to Pro for unlimited rewrites.",
+            message: "You have reached your daily rewrite limit. Upgrade to Pro for more.",
           },
         },
-        { status: 402 }
+        { status: 402, headers: rlHeaders }
       );
     }
 
-    // 6. Call humanizeText()
+    // 5b. Atomically reserve the word quota for ALL plans (the real cost gate
+    // on the expensive Claude path). Reserve before calling the model so two
+    // concurrent requests can never both exceed the limit.
+    const words = document.wordCount || 0;
+    const reserved = await consumeWordQuota(freshUser.id, words, plan);
+    if (!reserved) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "QUOTA_EXCEEDED",
+            message: `You've used your ${plan.wordsLimitPeriod}ly word allowance. Upgrade for more.`,
+          },
+        },
+        { status: 402, headers: rlHeaders }
+      );
+    }
+
+    // 6. Call humanizeText() — refund the reserved words on any failure
     const analysisResult = document.analysisResult as unknown as AnalysisResult;
     const styleData = typeof styleFingerprint === "object" && styleFingerprint !== null
       ? (styleFingerprint as Record<string, string>)
       : undefined;
     const langValue = typeof language === "string" && language ? language : undefined;
     const hintValue = typeof aggressiveHint === "string" ? aggressiveHint : undefined;
-    const { humanizedText, tokensUsed } = await humanizeText(
-      document.originalText,
-      toneValue,
-      analysisResult,
-      intensityValue,
-      styleData,
-      langValue,
-      hintValue
-    );
+
+    let humanizedText: string;
+    let tokensUsed: number;
+    try {
+      const result = await humanizeText(
+        document.originalText,
+        toneValue,
+        analysisResult,
+        intensityValue,
+        styleData,
+        langValue,
+        hintValue
+      );
+      humanizedText = result.humanizedText;
+      tokensUsed = result.tokensUsed;
+    } catch (modelErr) {
+      await refundWordQuota(freshUser.id, words);
+      console.error("[humanize] model call failed:", modelErr);
+      return NextResponse.json(
+        { error: { code: "REWRITE_FAILED", message: "The rewrite could not be completed. Please try again." } },
+        { status: 502, headers: rlHeaders }
+      );
+    }
+
+    // 6b. Guard against an empty/refusal response silently destroying user text
+    if (!humanizedText || humanizedText.trim().length === 0) {
+      await refundWordQuota(freshUser.id, words);
+      return NextResponse.json(
+        { error: { code: "EMPTY_RESULT", message: "The rewrite returned no usable text. Your original is unchanged." } },
+        { status: 502, headers: rlHeaders }
+      );
+    }
 
     // 7. Score the humanized text and update document
     const humanizedAnalysis = analyzeText(humanizedText);
@@ -136,8 +185,8 @@ export async function POST(req: Request) {
       console.error("[humanize] failed to update document (table may not exist):", dbErr);
     }
 
-    // 8. Increment rewriteCount for FREE users
-    if (freshUser.plan === "FREE") {
+    // 8. Increment rewriteCount for FREE users (daily rewrite-rate counter)
+    if (plan.id === "FREE") {
       await db.user.update({
         where: { id: freshUser.id },
         data: { rewriteCount: { increment: 1 } },
@@ -149,15 +198,18 @@ export async function POST(req: Request) {
       tone: toneValue,
       tokens_used: tokensUsed,
       word_count: document.wordCount,
-      plan: freshUser.plan,
+      plan: plan.id,
     });
 
     // 10. Return
-    return NextResponse.json({
-      humanizedText,
-      tokensUsed,
-      documentId: document.id,
-    });
+    return NextResponse.json(
+      {
+        humanizedText,
+        tokensUsed,
+        documentId: document.id,
+      },
+      { headers: rlHeaders }
+    );
   } catch (err) {
     console.error("[humanize] error:", err);
     return NextResponse.json(

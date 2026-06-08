@@ -18,12 +18,14 @@ model User {
   clerkId      String   @unique
   email        String   @unique
   name         String?
-  plan         Plan     @default(FREE)
-  wordsUsed    Int      @default(0)
-  rewriteCount Int      @default(0)
-  quotaResetAt DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  plan         Plan      @default(FREE)
+  /** When a non-FREE plan granted via redeem code expires; null = no expiry (paid subscription or lifetime). */
+  planExpiresAt DateTime?
+  wordsUsed    Int       @default(0)
+  rewriteCount Int       @default(0)
+  quotaResetAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   documents    Document[]
   subscription Subscription?
@@ -88,9 +90,30 @@ model DiscountCode {
   plan        String       // "PRO" | "TEAM"
   maxUses     Int          @default(1)
   usedCount   Int          @default(0)
+  /** Days the granted plan stays active after redemption; null = lifetime. */
+  grantDays   Int?         @default(365)
   expiresAt   DateTime?
   createdAt   DateTime     @default(now())
   redemptions Redemption[]
+}
+
+/// Fixed-window rate limiter counters (one row per key + minute window).
+model RateLimit {
+  id       String   @id @default(cuid())
+  key      String
+  windowAt DateTime
+  count    Int      @default(0)
+
+  @@unique([key, windowAt])
+  @@index([windowAt])
+}
+
+/// Idempotency ledger for processed billing webhooks (prevents replay/double-apply).
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  source    String   @default("lemonsqueezy")
+  createdAt DateTime @default(now())
 }
 
 model Redemption {

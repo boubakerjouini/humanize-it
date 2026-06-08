@@ -6,7 +6,11 @@
       "Bash(cp:*)",
       "Bash(npm install:*)",
       "Bash(git:*)",
-      "Bash(npx shadcn@latest:*)"
+      "Bash(npx shadcn@latest:*)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(npx jest *)"
     ]
   },
   "enableAllProjectMcpServers": true,
