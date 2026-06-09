@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin, isAdminEmail } from "@/lib/admin";
+import { resolveIdentities } from "@/lib/clerk-identity";
 
 function adminError(err: unknown) {
   const status = (err as { status?: number })?.status ?? 500;
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
         skip: (page - 1) * limit,
         take: limit,
         select: {
-          id: true, email: true, name: true, plan: true, role: true,
+          id: true, clerkId: true, email: true, name: true, plan: true, role: true,
           wordsUsed: true, rewriteCount: true, createdAt: true, planExpiresAt: true,
           subscription: { select: { status: true } },
           _count: { select: { documents: true, memberships: true } },
@@ -41,7 +42,14 @@ export async function GET(req: Request) {
       db.user.count({ where }),
     ]);
 
-    return NextResponse.json({ users, total, page, totalPages: Math.ceil(total / limit) });
+    // The DB email/name may be a placeholder; show the REAL identity from Clerk.
+    const identities = await resolveIdentities(users.map((u) => u.clerkId));
+    const enriched = users.map(({ clerkId, ...u }) => {
+      const id = identities.get(clerkId);
+      return { ...u, email: id?.email ?? u.email, name: id?.name ?? u.name, imageUrl: id?.imageUrl ?? null };
+    });
+
+    return NextResponse.json({ users: enriched, total, page, totalPages: Math.ceil(total / limit) });
   } catch (err) {
     return adminError(err);
   }
