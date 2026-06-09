@@ -115,7 +115,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "flex", minHeight: "100dvh", background: THEME.bg, fontFamily: THEME.fontSans }}>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${THEME.border}`, background: THEME.surface1, flexDirection: "column", position: "sticky", top: 0, height: "100dvh" }}>
+      <aside className="ws-sidebar" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${THEME.border}`, background: THEME.surface1, flexDirection: "column", position: "sticky", top: 0, height: "100dvh" }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, padding: "18px 16px 14px", textDecoration: "none", borderBottom: `1px solid ${THEME.border}` }}>
           <span style={{ fontSize: 19, fontWeight: 800, color: THEME.brand, fontFamily: THEME.fontHeading, letterSpacing: "-0.5px" }}>H<span style={{ color: THEME.accent }}>.</span></span>
           <span style={{ fontSize: 15, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>HumanizeIt</span>
@@ -127,7 +127,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="md:hidden" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 40, height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${THEME.border}` }}>
+      <div className="ws-topbar" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 40, height: 52, alignItems: "center", justifyContent: "space-between", padding: "0 16px", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", borderBottom: `1px solid ${THEME.border}` }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 7, textDecoration: "none" }}>
           <span style={{ fontSize: 18, fontWeight: 800, color: THEME.brand, fontFamily: THEME.fontHeading }}>H<span style={{ color: THEME.accent }}>.</span></span>
         </Link>
@@ -138,12 +138,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Content */}
-      <main style={{ flex: 1, minWidth: 0 }} className="pt-[52px] pb-[64px] md:pt-0 md:pb-0">
+      <main style={{ flex: 1, minWidth: 0 }} className="ws-main-pad">
         {children}
       </main>
 
       {/* Mobile bottom tabs */}
-      <nav className="md:hidden" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40, height: 60, display: "flex", background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)", borderTop: `1px solid ${THEME.border}` }}>
+      <nav className="ws-bottomnav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40, height: 60, background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)", borderTop: `1px solid ${THEME.border}` }}>
         {nav.slice(0, 4).map(({ href, label, icon: Icon, exact }) => {
           const active = isActive(href, exact);
           return (

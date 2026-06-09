@@ -287,6 +287,21 @@
   .main-content { padding: 16px 12px !important; }
 }
 
+/* ── Workspace shell (responsive nav — driven by CSS, never inline display) ── */
+.ws-sidebar { display: flex; }
+.ws-topbar { display: none; }
+.ws-bottomnav { display: none; }
+.ws-main-pad { padding-top: 0; padding-bottom: 0; }
+@media (max-width: 768px) {
+  .ws-sidebar { display: none !important; }
+  .ws-topbar { display: flex !important; }
+  .ws-bottomnav { display: flex !important; }
+  .ws-main-pad { padding-top: 52px; padding-bottom: 64px; }
+}
+@media (max-width: 640px) {
+  .ws-pick-label { display: none; }
+}
+
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr !important; }
   .hero-h1 { font-size: 40px !important; letter-spacing: -1.5px !important; }
