@@ -36,6 +36,64 @@ const VARIANT_IDS = {
 
 const EXTENSION_URL = "https://github.com/boubakerjouini/humanize-it-extension";
 
+// Single source of truth for the homepage FAQ — rendered as the visible
+// accordion AND as FAQPage JSON-LD (below), so the structured data always
+// matches the visible content (a Google rich-results requirement).
+const HOMEPAGE_FAQ: { q: string; a: string }[] = [
+  {
+    q: "Is HumanizeIt actually free?",
+    a: "Yes — the free tier gives you 500 words per day with 1 humanization. No credit card required. Pro plan ($9/mo) gives 50,000 words/month.",
+  },
+  {
+    q: "How does the AI detection work?",
+    a: "We analyze your text against 24 detection patterns used by tools like GPTZero, Turnitin, and Originality.ai — including sentence entropy, vocabulary diversity, burstiness score, and more. You get a 0–100 score with a breakdown of which patterns triggered.",
+  },
+  {
+    q: "Will my humanized text pass GPTZero?",
+    a: "Our V3 multi-pass humanizer is specifically trained to reduce the patterns GPTZero flags. Most users see their score drop below 25 (green zone). Results vary by text length and complexity.",
+  },
+  {
+    q: "What AI tools does it work with?",
+    a: "Optimized for ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, and Llama outputs. Any AI-generated text.",
+  },
+  {
+    q: "Does it work for academic papers and essays?",
+    a: "Yes — it's especially effective for academic content. The humanizer preserves meaning while restructuring sentences to avoid the patterns Turnitin's AI detector and Copyleaks flag.",
+  },
+  {
+    q: "Is my text stored or shared?",
+    a: "No. Text is processed in memory and immediately discarded. We don't store, log, or train on your content.",
+  },
+  {
+    q: "What's the difference between detecting and humanizing?",
+    a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns — using a 3-pass process that preserves your original meaning.",
+  },
+  {
+    q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
+    a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
+  },
+  {
+    q: "Is HumanizeIt detectable by Turnitin?",
+    a: "No. Our multi-pass humanizer specifically targets the patterns flagged by Turnitin, GPTZero, and Originality.ai. The rewritten text consistently scores below detection thresholds across all major platforms.",
+  },
+  {
+    q: "Does it work with ChatGPT text?",
+    a: "Yes — HumanizeIt works with text from GPT-4, GPT-4o, Claude, Gemini, Copilot, and any other AI model. Just paste the output and we handle the rest.",
+  },
+  {
+    q: "What is your refund policy?",
+    a: "We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days for a full refund — no questions asked.",
+  },
+  {
+    q: "Is there a free plan?",
+    a: "Yes — the free plan gives you 500 words per day, forever. No credit card required, no trial period. Upgrade to Pro anytime for higher limits.",
+  },
+  {
+    q: "Do you offer lifetime deals?",
+    a: "Yes! We offer a one-time payment option for lifetime access. Visit our lifetime deals page at /lifetime for current pricing and availability.",
+  },
+];
+
 const PLANS_MONTHLY = [
   {
     name: "Free",
@@ -290,6 +348,8 @@ export default function LandingPage() {
             <a onClick={() => smoothScroll("how-it-works")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
             <a onClick={() => smoothScroll("pricing")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
             <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Extension</a>
+            <Link href="/compare" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Compare</Link>
+            <Link href="/use-cases" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Use Cases</Link>
             <Link href="/blog" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Blog</Link>
           </div>
 
@@ -941,65 +1001,28 @@ export default function LandingPage() {
         scrollMarginTop: "110px",
         background: THEME.surface1,
       }}>
+        {/* FAQPage structured data — built from the same HOMEPAGE_FAQ array
+            rendered visibly below, so the markup matches visible content. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: HOMEPAGE_FAQ.map((item) => ({
+                "@type": "Question",
+                name: item.q,
+                acceptedAnswer: { "@type": "Answer", text: item.a },
+              })),
+            }),
+          }}
+        />
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
           <div style={sectionLabelWrap}><span className="kicker">FAQ</span></div>
           <h2 style={{ ...h2Style, marginBottom: "44px" }}>Everything You Need to Know</h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {([
-              {
-                q: "Is HumanizeIt actually free?",
-                a: "Yes — the free tier gives you 500 words per day with 1 humanization. No credit card required. Pro plan ($9/mo) gives 50,000 words/month.",
-              },
-              {
-                q: "How does the AI detection work?",
-                a: "We analyze your text against 24 detection patterns used by tools like GPTZero, Turnitin, and Originality.ai — including sentence entropy, vocabulary diversity, burstiness score, and more. You get a 0–100 score with a breakdown of which patterns triggered.",
-              },
-              {
-                q: "Will my humanized text pass GPTZero?",
-                a: "Our V3 multi-pass humanizer is specifically trained to reduce the patterns GPTZero flags. Most users see their score drop below 25 (green zone). Results vary by text length and complexity.",
-              },
-              {
-                q: "What AI tools does it work with?",
-                a: "Optimized for ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, and Llama outputs. Any AI-generated text.",
-              },
-              {
-                q: "Does it work for academic papers and essays?",
-                a: "Yes — it's especially effective for academic content. The humanizer preserves meaning while restructuring sentences to avoid the patterns Turnitin's AI detector and Copyleaks flag.",
-              },
-              {
-                q: "Is my text stored or shared?",
-                a: "No. Text is processed in memory and immediately discarded. We don't store, log, or train on your content.",
-              },
-              {
-                q: "What's the difference between detecting and humanizing?",
-                a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns — using a 3-pass process that preserves your original meaning.",
-              },
-              {
-                q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
-                a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
-              },
-              {
-                q: "Is HumanizeIt detectable by Turnitin?",
-                a: "No. Our multi-pass humanizer specifically targets the patterns flagged by Turnitin, GPTZero, and Originality.ai. The rewritten text consistently scores below detection thresholds across all major platforms.",
-              },
-              {
-                q: "Does it work with ChatGPT text?",
-                a: "Yes — HumanizeIt works with text from GPT-4, GPT-4o, Claude, Gemini, Copilot, and any other AI model. Just paste the output and we handle the rest.",
-              },
-              {
-                q: "What is your refund policy?",
-                a: "We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days for a full refund — no questions asked.",
-              },
-              {
-                q: "Is there a free plan?",
-                a: "Yes — the free plan gives you 500 words per day, forever. No credit card required, no trial period. Upgrade to Pro anytime for higher limits.",
-              },
-              {
-                q: "Do you offer lifetime deals?",
-                a: "Yes! We offer a one-time payment option for lifetime access. Visit our lifetime deals page at /lifetime for current pricing and availability.",
-              },
-            ] as { q: string; a: string }[]).map((item, i) => (
+            {HOMEPAGE_FAQ.map((item, i) => (
               <div key={i} style={{
                 background: THEME.surface2,
                 border: `1px solid ${openFaq === i ? THEME.brand : THEME.border}`,
@@ -1180,7 +1203,9 @@ export default function LandingPage() {
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
-                  { label: "Compare", href: "#" },
+                  { label: "Compare", href: "/compare" },
+                  { label: "Use Cases", href: "/use-cases" },
+                  { label: "API Docs", href: "/docs/api" },
                   { label: "Sign up", href: "/sign-up" },
                 ].map(({ label, href }) => (
                   <a key={label} href={href} style={{ fontSize: "14px", color: THEME.textDim, textDecoration: "none" }}

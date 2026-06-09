@@ -136,19 +136,10 @@ export default function ComparePage() {
             See what competitors give you &mdash; and what they hide.
           </p>
 
-          {/* Feature 5c: Social proof */}
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px", flexWrap: "wrap" }}>
-            {[
-              { dot: THEME.warn, text: "4.8/5 rating" },
-              { dot: THEME.brand, text: "12,000+ users" },
-              { dot: THEME.accent, text: "2M+ documents analyzed" },
-            ].map((s) => (
-              <span key={s.text} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 500, color: THEME.textDim, background: THEME.surface1, border: `1px solid ${THEME.border}`, padding: "6px 14px", borderRadius: "999px" }}>
-                <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-                {s.text}
-              </span>
-            ))}
-          </div>
+          {/* Social-proof stat chips ("4.8/5 rating", "12,000+ users",
+              "2M+ documents analyzed") removed — the figures were not
+              substantiated. Re-add with real numbers + AggregateRating/Review
+              schema only when backed by visible reviews. */}
         </div>
 
         {/* Input */}

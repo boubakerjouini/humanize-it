@@ -2,7 +2,18 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/compare",
+  // Marketing surface — MUST be crawlable. `/compare(.*)` (not exact `/compare`)
+  // so the comparison detail/spoke pages are public too.
+  "/compare(.*)",
+  "/lifetime",
+  "/use-cases(.*)",
+  "/docs(.*)",
+  "/bypass(.*)",
+  "/alternatives(.*)",
+  "/ai-detector(.*)",
+  "/gptzero-checker(.*)",
+  "/free-ai-humanizer(.*)",
+  "/faq(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/extension-auth(.*)",
@@ -13,6 +24,8 @@ const isPublicRoute = createRouteMatcher([
   // Extension uses custom HMAC JWT — auth handled inside route handler
   "/api/analyze(.*)",
   "/api/humanize(.*)",
+  // Public (anonymous, IP-rate-limited) tool endpoints
+  "/api/public(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
   // Blog
