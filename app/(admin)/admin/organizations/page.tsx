@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
+import { resolveIdentities } from "@/lib/clerk-identity";
 import { ORG_SEAT } from "@/lib/plans";
 import { THEME } from "@/lib/theme";
 import { Building2, Users } from "lucide-react";
@@ -15,10 +16,13 @@ export default async function AdminOrganizationsPage() {
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {
-      owner: { select: { email: true } },
+      owner: { select: { clerkId: true, email: true } },
       _count: { select: { memberships: true, invitations: true } },
     },
   });
+
+  // Real owner identity from Clerk (DB email may be a placeholder).
+  const owners = await resolveIdentities(orgs.map((o) => o.owner.clerkId));
 
   return (
     <div style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 28px", fontFamily: THEME.fontSans }}>
@@ -44,7 +48,10 @@ export default async function AdminOrganizationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {orgs.map(o => (
+                {orgs.map(o => {
+                  const oi = owners.get(o.owner.clerkId);
+                  const ownerEmail = oi?.email ?? o.owner.email;
+                  return (
                   <tr key={o.id} style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <td style={{ padding: "12px 14px", fontWeight: 600, color: THEME.text }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
@@ -52,7 +59,10 @@ export default async function AdminOrganizationsPage() {
                       </div>
                       <div style={{ fontSize: 11, color: THEME.textMuted }}>/{o.slug}</div>
                     </td>
-                    <td style={{ padding: "12px 14px", color: THEME.textDim }}>{o.owner.email}</td>
+                    <td style={{ padding: "12px 14px", color: THEME.textDim }}>
+                      {oi?.name && <div style={{ color: THEME.text, fontWeight: 500 }}>{oi.name}</div>}
+                      <span>{ownerEmail}</span>
+                    </td>
                     <td style={{ padding: "12px 14px", color: THEME.textDim }}>
                       <span className="tnum" style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                         <Users size={12} aria-hidden="true" /> {o._count.memberships} / {o.seatsTotal}
@@ -68,7 +78,8 @@ export default async function AdminOrganizationsPage() {
                     <td className="tnum" style={{ padding: "12px 14px", color: THEME.text, fontWeight: 600 }}>${(o.seatsTotal * ORG_SEAT.pricePerSeatMonthly).toLocaleString()}</td>
                     <td style={{ padding: "12px 14px", color: THEME.textDim, whiteSpace: "nowrap" }}>{new Date(o.createdAt).toLocaleDateString()}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
