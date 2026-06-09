@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 import { checkAndResetQuota, planConfigFor, consumeWordQuota, refundWordQuota } from "@/lib/quota";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
@@ -57,17 +58,8 @@ export async function POST(req: Request) {
         ? (intensity as IntensityLevel)
         : "medium";
 
-    // 3. Load user (auto-upsert in case webhook didn't fire)
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
-        clerkId,
-        email: `${clerkId}@placeholder.humanize-it.app`,
-        plan: "FREE",
-        wordsUsed: 0,
-      },
-    });
+    // 3. Load user (lazily create with the real Clerk email; see lib/user.ts)
+    const user = await ensureUser(clerkId);
 
     // 3b. Reset quota / downgrade lapsed grants if needed, then resolve plan
     const freshUser = await checkAndResetQuota(user);

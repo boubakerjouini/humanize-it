@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 import { checkAndResetQuota, planConfigFor, consumeWordQuota } from "@/lib/quota";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
@@ -61,19 +62,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. Load user from DB (auto-upsert in case webhook didn't fire)
+    // 4. Load user from DB (lazily create with the real Clerk email; lib/user.ts)
     let user;
     try {
-      user = await db.user.upsert({
-        where: { clerkId },
-        update: {},
-        create: {
-          clerkId,
-          email: `${clerkId}@placeholder.humanize-it.app`,
-          plan: "FREE",
-          wordsUsed: 0,
-        },
-      });
+      user = await ensureUser(clerkId);
     } catch (dbErr) {
       console.error("[analyze] DB connection/query failed on user upsert:", dbErr);
       const message =

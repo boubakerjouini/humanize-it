@@ -5,6 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 
 export async function GET(req: Request) {
   try {
@@ -16,16 +17,7 @@ export async function GET(req: Request) {
       );
     }
 
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
-        clerkId,
-        email: `${clerkId}@placeholder.humanize-it.app`,
-        plan: "FREE",
-        wordsUsed: 0,
-      },
-    });
+    const user = await ensureUser(clerkId);
 
     const isFree = user.plan === "FREE";
 

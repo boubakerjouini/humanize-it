@@ -12,6 +12,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 import { checkAndResetQuota, planConfigFor, consumeWordQuota, refundWordQuota } from "@/lib/quota";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractFromBuffer } from "@/lib/extract-server";
@@ -44,11 +45,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: { clerkId, email: `${clerkId}@placeholder.humanize-it.app`, plan: "FREE", wordsUsed: 0 },
-    });
+    const user = await ensureUser(clerkId);
     const freshUser = await checkAndResetQuota(user);
     const plan = planConfigFor(freshUser);
 
