@@ -82,7 +82,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      // Send users straight into the app after auth — covers ALL surfaces
+      // (modals on the landing page included), not just the dedicated pages.
+      signInForceRedirectUrl="/dashboard"
+      signUpForceRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
       <html
         lang="en"
         suppressHydrationWarning
