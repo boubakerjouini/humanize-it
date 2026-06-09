@@ -9,6 +9,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/lifetime`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${baseUrl}/compare`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
+    // Free tools (high-intent, no-signup)
+    { url: `${baseUrl}/ai-detector`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/free-ai-humanizer`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/gptzero-checker`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+
+    // Hubs & docs
+    { url: `${baseUrl}/use-cases`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/docs/api`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+
     // Blog articles
     { url: `${baseUrl}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/blog/undetectable-ai-alternative`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -29,5 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Legal
     { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${baseUrl}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${baseUrl}/cookies`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${baseUrl}/refunds`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 }
