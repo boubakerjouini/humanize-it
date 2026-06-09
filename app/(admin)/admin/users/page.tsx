@@ -15,8 +15,26 @@ interface AdminUser {
   rewriteCount: number;
   createdAt: string;
   planExpiresAt: string | null;
+  imageUrl?: string | null;
   subscription: { status: string } | null;
   _count: { documents: number; memberships: number };
+}
+
+function Avatar({ name, email, imageUrl }: { name: string | null; email: string; imageUrl?: string | null }) {
+  if (imageUrl) return <img src={imageUrl} alt="" width={30} height={30} style={{ borderRadius: 999, flexShrink: 0, objectFit: "cover" }} />;
+  const ch = (name?.trim()?.[0] ?? email[0] ?? "?").toUpperCase();
+  return <div style={{ width: 30, height: 30, borderRadius: 999, flexShrink: 0, background: THEME.brandDim, color: THEME.brandHi, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 700 }}>{ch}</div>;
+}
+
+function StatusBadge({ u }: { u: AdminUser }) {
+  const paid = u.subscription?.status === "active";
+  const comped = !paid && u.plan !== "FREE";
+  const { bg, fg, label } = paid
+    ? { bg: THEME.humanDim, fg: THEME.human, label: "Paid" }
+    : comped
+      ? { bg: THEME.accentDim, fg: THEME.accentHi, label: "Comped" }
+      : { bg: THEME.surface3, fg: THEME.textMuted, label: "Free" };
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: fg, background: bg, borderRadius: 999, padding: "3px 9px" }}><span style={{ width: 6, height: 6, borderRadius: 999, background: fg }} />{label}</span>;
 }
 
 export default function AdminUsersPage() {
@@ -94,7 +112,7 @@ export default function AdminUsersPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
-                  {["User", "Plan", "Role", "Usage", "Joined", ""].map(h => (
+                  {["User", "Status", "Plan", "Role", "Usage", "Joined", ""].map(h => (
                     <th key={h} style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
                   ))}
                 </tr>
@@ -102,13 +120,19 @@ export default function AdminUsersPage() {
               <tbody>
                 {users.map(u => (
                   <tr key={u.id} style={{ borderBottom: `1px solid ${THEME.border}` }}>
-                    <td style={{ padding: "12px 14px", maxWidth: 260 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600, color: THEME.text, overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {u.role === "ADMIN" && <ShieldCheck size={13} color={THEME.brand} aria-hidden="true" />}
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</span>
+                    <td style={{ padding: "12px 14px", maxWidth: 290 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <Avatar name={u.name} email={u.email} imageUrl={u.imageUrl} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, color: THEME.text }}>
+                            {u.role === "ADMIN" && <ShieldCheck size={12} color={THEME.brand} aria-hidden="true" />}
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{u.name || u.email.split("@")[0]}</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: THEME.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 230 }}>{u.email}</div>
+                        </div>
                       </div>
-                      {u.name && <div style={{ fontSize: 11, color: THEME.textMuted }}>{u.name}</div>}
                     </td>
+                    <td style={{ padding: "12px 14px" }}><StatusBadge u={u} /></td>
                     <td style={{ padding: "12px 14px" }}>
                       <select value={u.plan} disabled={savingId === u.id} onChange={e => patch(u.id, { plan: e.target.value })} style={selectStyle}>
                         <option value="FREE">FREE</option>
