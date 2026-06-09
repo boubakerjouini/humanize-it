@@ -86,7 +86,7 @@ export default function SignUpPage() {
         }}>HumanizeIt</span>
       </div>
       <div style={{ position: "relative", zIndex: 1 }}>
-        <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" afterSignUpUrl="/dashboard/editor" redirectUrl="/dashboard/editor" />
+        <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
       </div>
       <Link href="/" style={{
         fontSize: "13px", color: THEME.textDim, textDecoration: "none", marginTop: "20px",

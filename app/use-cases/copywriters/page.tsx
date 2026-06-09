@@ -54,7 +54,9 @@ export default function CopywritersUseCasePage() {
           Home
         </Link>
         {" > "}
-        <span>Use Cases</span>
+        <Link href="/use-cases" className="hover:underline">
+          Use Cases
+        </Link>
         {" > "}
         <span>Copywriters</span>
       </nav>

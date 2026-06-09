@@ -2,8 +2,17 @@ import { Metadata } from "next";
 import Playground from "./playground";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt API Documentation",
-  description: "Integrate AI text humanization into your apps with the HumanizeIt API.",
+  title: "HumanizeIt API — Humanize & Detect AI Text via REST",
+  description:
+    "Integrate AI humanizing and detection into your app with the HumanizeIt REST API. Endpoints, authentication, code examples, and rate limits.",
+  alternates: { canonical: "https://humanizeit.app/docs/api" },
+  openGraph: {
+    title: "HumanizeIt API — Humanize & Detect AI Text via REST",
+    description: "Integrate AI humanizing and detection into your app with the HumanizeIt REST API.",
+    url: "https://humanizeit.app/docs/api",
+    siteName: "HumanizeIt",
+    type: "website",
+  },
 };
 
 // ── Code block helper ──────────────────────────────────────
@@ -150,7 +159,7 @@ export default function ApiDocsPage() {
             </div>
 
             <div className="mt-6 space-y-4">
-              <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/analyze \\
+              <Code lang="curl">{`curl -X POST https://humanizeit.app/api/v1/analyze \\
   -H "Authorization: Bearer sk_live_your_key_here" \\
   -H "Content-Type: application/json" \\
   -d '{"text": "The mitochondria is the powerhouse of the cell."}'`}</Code>
@@ -203,13 +212,13 @@ export default function ApiDocsPage() {
               />
 
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2">Request</h4>
-              <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/analyze \\
+              <Code lang="curl">{`curl -X POST https://humanizeit.app/api/v1/analyze \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"text": "Your text to analyze..."}'`}</Code>
 
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2">JavaScript</h4>
-              <Code lang="javascript">{`const res = await fetch("https://humanize-it.app/api/v1/analyze", {
+              <Code lang="javascript">{`const res = await fetch("https://humanizeit.app/api/v1/analyze", {
   method: "POST",
   headers: {
     "Authorization": "Bearer sk_live_...",
@@ -291,7 +300,7 @@ const data = await res.json();`}</Code>
               />
 
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2">Request</h4>
-              <Code lang="curl">{`curl -X POST https://humanize-it.app/api/v1/humanize \\
+              <Code lang="curl">{`curl -X POST https://humanizeit.app/api/v1/humanize \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"text": "Your text...", "tone": "casual", "intensity": "medium", "passes": 2}'`}</Code>
@@ -317,7 +326,7 @@ const data = await res.json();`}</Code>
               </div>
               <p className="text-sm text-muted-foreground mb-4">Check your current API usage and quota.</p>
 
-              <Code lang="curl">{`curl https://humanize-it.app/api/v1/usage \\
+              <Code lang="curl">{`curl https://humanizeit.app/api/v1/usage \\
   -H "Authorization: Bearer sk_live_..."`}</Code>
 
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-6 mb-2">Response</h4>

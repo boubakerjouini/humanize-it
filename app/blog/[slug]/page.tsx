@@ -1,24 +1,10 @@
-import { notFound, redirect } from "next/navigation";
-import { getAllPosts } from "@/lib/blog";
+import { notFound } from "next/navigation";
 
-// All individual posts have their own directories — this dynamic route
-// handles any unknown slug gracefully.
-
-export async function generateStaticParams() {
-  return []; // Individual pages handle their own routes
-}
-
-export default async function BlogSlugPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const posts = getAllPosts();
-  const post = posts.find((p) => p.slug === slug);
-
-  if (!post) return notFound();
-
-  // Redirect to the named route if it exists
-  redirect(`/blog/${slug}`);
+// Every published post has its own statically-routed directory (one folder per
+// slug in lib/posts-metadata.ts). This catch-all therefore only ever receives
+// UNKNOWN slugs, which must 404. It must NOT redirect to `/blog/${slug}` — for
+// any post lacking a named directory that redirect targets this same route and
+// loops forever (which is exactly what happened to /blog/undetectable-ai-alternative).
+export default function BlogSlugPage() {
+  notFound();
 }

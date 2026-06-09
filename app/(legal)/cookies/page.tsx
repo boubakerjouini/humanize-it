@@ -1,6 +1,11 @@
 import { THEME } from "@/lib/theme";
 
-export const metadata = { title: 'Cookie Policy — HumanizeIt' }
+export const metadata = {
+  title: 'Cookie Policy — HumanizeIt',
+  description:
+    'How HumanizeIt uses cookies and similar technologies for authentication, preferences, and privacy-friendly analytics — and how to control them.',
+  alternates: { canonical: 'https://humanizeit.app/cookies' },
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>

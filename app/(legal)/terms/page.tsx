@@ -1,6 +1,11 @@
 import { THEME } from "@/lib/theme";
 
-export const metadata = { title: 'Terms of Service — HumanizeIt' }
+export const metadata = {
+  title: 'Terms of Service — HumanizeIt',
+  description:
+    'The terms governing your use of HumanizeIt — accounts, acceptable use, billing, refunds, and your responsibilities when using the AI humanizer.',
+  alternates: { canonical: 'https://humanizeit.app/terms' },
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>

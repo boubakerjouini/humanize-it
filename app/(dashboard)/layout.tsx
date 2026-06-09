@@ -1,11 +1,7 @@
-import { DashboardNav } from "@/components/dashboard-nav";
+import { WorkspaceShell } from "@/components/workspace/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <DashboardNav>{children}</DashboardNav>;
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return <WorkspaceShell>{children}</WorkspaceShell>;
 }

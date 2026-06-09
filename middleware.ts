@@ -1,8 +1,20 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/compare",
+  // Marketing surface — MUST be crawlable. `/compare(.*)` (not exact `/compare`)
+  // so the comparison detail/spoke pages are public too.
+  "/compare(.*)",
+  "/lifetime",
+  "/use-cases(.*)",
+  "/docs(.*)",
+  "/bypass(.*)",
+  "/alternatives(.*)",
+  "/ai-detector(.*)",
+  "/gptzero-checker(.*)",
+  "/free-ai-humanizer(.*)",
+  "/faq(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/extension-auth(.*)",
@@ -13,6 +25,8 @@ const isPublicRoute = createRouteMatcher([
   // Extension uses custom HMAC JWT — auth handled inside route handler
   "/api/analyze(.*)",
   "/api/humanize(.*)",
+  // Public (anonymous, IP-rate-limited) tool endpoints
+  "/api/public(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
   // Blog
@@ -28,6 +42,15 @@ const isPublicRoute = createRouteMatcher([
 // processed (enabling auth() to return userId for logged-in users on public
 // routes). Only PROTECTS non-public routes (redirects to sign-in if not authed).
 export default clerkMiddleware(async (auth, req) => {
+  // Signed-in users who hit the marketing homepage go straight to the app.
+  // Other marketing routes (/blog, /compare, …) stay browsable while signed in.
+  if (req.nextUrl.pathname === "/") {
+    const { userId } = await auth();
+    if (userId) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
   if (!isPublicRoute(req)) {
     await auth.protect();
   }

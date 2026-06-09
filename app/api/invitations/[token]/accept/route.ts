@@ -6,6 +6,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureUser, isPlaceholderEmail } from "@/lib/user";
 import { applySeatEntitlement } from "@/lib/organizations";
 
 interface RouteContext {
@@ -26,11 +27,7 @@ export async function POST(_req: Request, context: RouteContext) {
   }
 
   const { token } = await context.params;
-  const user = await db.user.upsert({
-    where: { clerkId },
-    update: {},
-    create: { clerkId, email: `${clerkId}@placeholder.humanize-it.app`, plan: "FREE", wordsUsed: 0 },
-  });
+  const user = await ensureUser(clerkId);
 
   const invite = await db.invitation.findUnique({ where: { token } });
   if (!invite) {
@@ -50,16 +47,20 @@ export async function POST(_req: Request, context: RouteContext) {
     return NextResponse.json({ error: { message: "This invitation has expired or was already used." } }, { status: 410 });
   }
 
-  // Resolve the caller's real Clerk email; backfill a placeholder DB email.
-  let realEmail: string | null = null;
-  try {
-    const cu = await currentUser();
-    realEmail = cu?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? null;
-    if (realEmail && user.email !== realEmail && user.email.endsWith("@placeholder.humanize-it.app")) {
-      await db.user.update({ where: { id: user.id }, data: { email: realEmail } });
-      user.email = realEmail;
-    }
-  } catch { /* best-effort */ }
+  // ensureUser() already backfilled the real Clerk email at creation. Use it
+  // for the seat-ownership check; only fall back to a fresh session lookup if
+  // it's somehow still a placeholder (e.g. Clerk was unreachable at create).
+  let realEmail: string | null = isPlaceholderEmail(user.email) ? null : user.email;
+  if (!realEmail) {
+    try {
+      const cu = await currentUser();
+      realEmail = cu?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? null;
+      if (realEmail) {
+        await db.user.update({ where: { id: user.id }, data: { email: realEmail } });
+        user.email = realEmail;
+      }
+    } catch { /* best-effort */ }
+  }
 
   // The seat belongs to the invited person: require the email to match when known.
   if (realEmail && realEmail !== invite.email.toLowerCase()) {

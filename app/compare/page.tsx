@@ -136,19 +136,10 @@ export default function ComparePage() {
             See what competitors give you &mdash; and what they hide.
           </p>
 
-          {/* Feature 5c: Social proof */}
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center", marginTop: "20px", flexWrap: "wrap" }}>
-            {[
-              { dot: THEME.warn, text: "4.8/5 rating" },
-              { dot: THEME.brand, text: "12,000+ users" },
-              { dot: THEME.accent, text: "2M+ documents analyzed" },
-            ].map((s) => (
-              <span key={s.text} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontWeight: 500, color: THEME.textDim, background: THEME.surface1, border: `1px solid ${THEME.border}`, padding: "6px 14px", borderRadius: "999px" }}>
-                <span aria-hidden="true" style={{ width: "7px", height: "7px", borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-                {s.text}
-              </span>
-            ))}
-          </div>
+          {/* Social-proof stat chips ("4.8/5 rating", "12,000+ users",
+              "2M+ documents analyzed") removed — the figures were not
+              substantiated. Re-add with real numbers + AggregateRating/Review
+              schema only when backed by visible reviews. */}
         </div>
 
         {/* Input */}
@@ -449,6 +440,34 @@ export default function ComparePage() {
           </div>
         )}
       </div>
+
+      {/* Detailed comparisons — link the hub down to each spoke page (SEO hub/spoke) */}
+      <section style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 24px 64px" }}>
+        <h2 style={{ fontFamily: THEME.fontHeading, fontWeight: 700, fontSize: "22px", color: THEME.text, letterSpacing: "-0.01em", marginBottom: "16px", textAlign: "center" }}>
+          Detailed comparisons
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+          {[
+            { name: "vs Undetectable.ai", href: "/compare/humanizeit-vs-undetectable-ai" },
+            { name: "vs StealthGPT", href: "/compare/humanizeit-vs-stealthgpt" },
+            { name: "vs Quillbot", href: "/compare/humanizeit-vs-quillbot" },
+            { name: "vs WriteHuman", href: "/compare/humanizeit-vs-writehuman" },
+            { name: "vs Phrasly", href: "/compare/humanizeit-vs-phrasly" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              style={{
+                display: "block", background: THEME.surface1, border: `1px solid ${THEME.border}`,
+                borderRadius: THEME.radius, padding: "16px 18px", textDecoration: "none",
+                color: THEME.text, fontWeight: 600, fontSize: "15px",
+              }}
+            >
+              HumanizeIt {c.name} <span style={{ color: THEME.brandHi }}>&rarr;</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} redirectAfterSignup="/dashboard/editor" />

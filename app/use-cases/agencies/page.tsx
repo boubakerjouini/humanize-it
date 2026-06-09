@@ -54,7 +54,9 @@ export default function AgenciesUseCasePage() {
           Home
         </Link>
         {" > "}
-        <span>Use Cases</span>
+        <Link href="/use-cases" className="hover:underline">
+          Use Cases
+        </Link>
         {" > "}
         <span>Agencies</span>
       </nav>

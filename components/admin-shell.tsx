@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Users, Building2, Ticket, ShieldCheck, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, Building2, Ticket, ShieldCheck, ArrowLeft, DollarSign, TrendingUp, Gift } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 
 const ADMIN_NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+  { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
+  { href: "/admin/growth", label: "Growth", icon: TrendingUp },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/organizations", label: "Organizations", icon: Building2 },
   { href: "/admin/codes", label: "Discount codes", icon: Ticket },
+  { href: "/admin/redemptions", label: "Redemptions", icon: Gift },
 ];
 
 export function AdminShell({ email, children }: { email: string; children: React.ReactNode }) {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 
 export const metadata: Metadata = {
   title: "7 Best AI Humanizer Tools in 2025 (Tested) | HumanizeIt",
@@ -545,6 +546,8 @@ export default function BestAiHumanizerToolsPage() {
           Start Free &rarr;
         </Link>
       </div>
+
+      <BlogPostExtras slug="best-ai-humanizer-tools" />
     </article>
   );
 }

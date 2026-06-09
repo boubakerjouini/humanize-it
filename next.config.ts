@@ -4,6 +4,11 @@ import { withWorkflow } from "workflow/next";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
+  // Tree-shake large icon/util barrels (lucide-react is imported across ~29
+  // files) so marketing pages ship less JS.
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   async rewrites() {
     return [
       {

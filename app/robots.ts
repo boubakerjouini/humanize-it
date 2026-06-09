@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard/", "/api/", "/sign-in", "/sign-up"],
+        disallow: ["/dashboard/", "/admin/", "/api/", "/sign-in", "/sign-up"],
       },
     ],
     sitemap: "https://humanizeit.app/sitemap.xml",

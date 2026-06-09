@@ -5,6 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 import { PLANS } from "@/lib/plans";
 
 export async function GET() {
@@ -17,17 +18,17 @@ export async function GET() {
       );
     }
 
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
-        clerkId,
-        email: `${clerkId}@placeholder.humanize-it.app`,
-        plan: "FREE",
-        wordsUsed: 0,
-      },
+    const base = await ensureUser(clerkId);
+    const user = await db.user.findUnique({
+      where: { id: base.id },
       include: { subscription: true },
     });
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: "INTERNAL_ERROR", message: "Something went wrong." } },
+        { status: 500 }
+      );
+    }
 
     const plan = PLANS[user.plan];
 

@@ -2,8 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 
+// Hub-level metadata. The detail/spoke pages (humanizeit-vs-*) export their own
+// title + canonical, which override these for their routes. Without this, the
+// "use client" /compare hub inherited the root canonical (https://humanizeit.app)
+// and self-canonicalized into a duplicate of the homepage.
 export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
+  title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
+  description:
+    "See how HumanizeIt compares to Undetectable.ai, WriteHuman, and other AI humanizers on detection bypass, transparency, and price. Honest, side-by-side.",
+  alternates: { canonical: "https://humanizeit.app/compare" },
+  openGraph: {
+    title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
+    description:
+      "Side-by-side comparison of HumanizeIt against the top AI humanizers on detection bypass, transparency, and price.",
+    url: "https://humanizeit.app/compare",
+    siteName: "HumanizeIt",
+    type: "website",
+  },
 };
 
 export default function CompareLayout({ children }: { children: React.ReactNode }) {

@@ -5,6 +5,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 
 const PLAN_WORDS_LIMIT: Record<string, number> = {
   PRO: 50_000,
@@ -41,17 +42,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Load or create user
-    const user = await db.user.upsert({
-      where: { clerkId },
-      update: {},
-      create: {
-        clerkId,
-        email: `${clerkId}@placeholder.humanize-it.app`,
-        plan: "FREE",
-        wordsUsed: 0,
-      },
-    });
+    // 3. Load or create user (real Clerk email resolved in lib/user.ts)
+    const user = await ensureUser(clerkId);
 
     // 4. Find discount code (case-insensitive already handled by toUpperCase)
     const discountCode = await db.discountCode.findUnique({
