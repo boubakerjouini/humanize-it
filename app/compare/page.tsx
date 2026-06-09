@@ -441,6 +441,34 @@ export default function ComparePage() {
         )}
       </div>
 
+      {/* Detailed comparisons — link the hub down to each spoke page (SEO hub/spoke) */}
+      <section style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 24px 64px" }}>
+        <h2 style={{ fontFamily: THEME.fontHeading, fontWeight: 700, fontSize: "22px", color: THEME.text, letterSpacing: "-0.01em", marginBottom: "16px", textAlign: "center" }}>
+          Detailed comparisons
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+          {[
+            { name: "vs Undetectable.ai", href: "/compare/humanizeit-vs-undetectable-ai" },
+            { name: "vs StealthGPT", href: "/compare/humanizeit-vs-stealthgpt" },
+            { name: "vs Quillbot", href: "/compare/humanizeit-vs-quillbot" },
+            { name: "vs WriteHuman", href: "/compare/humanizeit-vs-writehuman" },
+            { name: "vs Phrasly", href: "/compare/humanizeit-vs-phrasly" },
+          ].map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              style={{
+                display: "block", background: THEME.surface1, border: `1px solid ${THEME.border}`,
+                borderRadius: THEME.radius, padding: "16px 18px", textDecoration: "none",
+                color: THEME.text, fontWeight: 600, fontSize: "15px",
+              }}
+            >
+              HumanizeIt {c.name} <span style={{ color: THEME.brandHi }}>&rarr;</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} redirectAfterSignup="/dashboard/editor" />
 

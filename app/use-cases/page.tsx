@@ -43,6 +43,36 @@ const USE_CASES = [
     title: "Agencies",
     desc: "Scale client content production while keeping every deliverable natural, undetectable, and quality-checked.",
   },
+  {
+    href: "/use-cases/essays",
+    kicker: "For essays",
+    title: "Essays",
+    desc: "Make AI-assisted essays read naturally and avoid false flags from Turnitin and GPTZero — responsibly.",
+  },
+  {
+    href: "/use-cases/research-papers",
+    kicker: "For research",
+    title: "Research Papers",
+    desc: "Humanize thesis and dissertation drafts while preserving citations, technical terms, and your argument.",
+  },
+  {
+    href: "/use-cases/cover-letters",
+    kicker: "For job seekers",
+    title: "Cover Letters",
+    desc: "Turn a generic AI draft into a cover letter that sounds like you and gets past ATS and recruiter scrutiny.",
+  },
+  {
+    href: "/use-cases/seo-content",
+    kicker: "For SEO",
+    title: "SEO Content",
+    desc: "Publish AI-assisted content at scale that reads human and holds up against Originality.ai and helpful-content checks.",
+  },
+  {
+    href: "/use-cases/freelancers",
+    kicker: "For freelancers",
+    title: "Freelancers",
+    desc: "Deliver client work fast without tripping the AI-detection checks that put your reputation on the line.",
+  },
 ];
 
 export default function UseCasesHubPage() {
