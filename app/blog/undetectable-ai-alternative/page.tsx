@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 
 export const metadata: Metadata = {
   title: "Best Undetectable AI Alternative in 2025 | HumanizeIt",
@@ -568,6 +569,8 @@ export default function UndetectableAiAlternativePage() {
           Get Started Free &rarr;
         </Link>
       </div>
+
+      <BlogPostExtras slug="undetectable-ai-alternative" />
     </div>
   );
 }

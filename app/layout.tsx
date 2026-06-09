@@ -123,6 +123,25 @@ export default function RootLayout({
               }),
             }}
           />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "@id": "https://humanizeit.app/#organization",
+                name: "HumanizeIt",
+                url: "https://humanizeit.app",
+                logo: "https://humanizeit.app/icon.png",
+                description:
+                  "AI text humanizer that rewrites AI-generated text to read naturally and bypass AI detectors like GPTZero, Turnitin, and Originality.ai.",
+                sameAs: [
+                  "https://www.linkedin.com/in/boubakerjouini/",
+                  "https://github.com/boubakerjouini/humanize-it-extension",
+                ],
+              }),
+            }}
+          />
           {/* FAQPage JSON-LD is emitted per-page (homepage, /bypass/*, /faq) from
               that page's *visible* FAQ — Google requires the markup to match
               visible content, so it must not live in the global <head>. */}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 
 export const metadata: Metadata = {
   title: "How AI Detection Works in 2025 — And How to Beat It | HumanizeIt",
@@ -363,6 +364,8 @@ export default function AiDetectionHowItWorksPage() {
           Get Started Free &rarr;
         </Link>
       </div>
+
+      <BlogPostExtras slug="ai-detection-how-it-works" />
     </main>
   );
 }

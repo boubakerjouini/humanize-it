@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 
 export const metadata: Metadata = {
   title: "How to Bypass AI Detection in 2025 — Complete Guide | HumanizeIt",
@@ -231,6 +232,8 @@ export default function BypassAiDetectionPage() {
           Get Started Free &rarr;
         </Link>
       </div>
+
+      <BlogPostExtras slug="bypass-ai-detection" />
     </div>
   );
 }
