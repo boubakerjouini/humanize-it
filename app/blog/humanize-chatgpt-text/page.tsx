@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Metadata } from "next";
 import { THEME, glow } from "@/lib/theme";
+import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 
 export const metadata: Metadata = {
   title: "How to Humanize ChatGPT Text in 2025 (Free) | HumanizeIt",
@@ -484,6 +485,8 @@ export default function HumanizeChatGPTTextPage() {
           Get Started Free &rarr;
         </Link>
       </div>
+
+      <BlogPostExtras slug="humanize-chatgpt-text" />
     </main>
   );
 }

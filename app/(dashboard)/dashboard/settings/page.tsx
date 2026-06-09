@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import { ExternalLink, Zap, ArrowRight, AlertTriangle, Check, Sparkles, Gift, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
+import { ApiKeysSection } from "@/components/workspace/api-keys-section";
 
 interface UsageData {
   plan: string;
@@ -18,424 +18,160 @@ interface UsageData {
   stripeCurrentPeriodEnd: string | null;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-}
+const PLAN_META: Record<string, { label: string; icon: typeof Crown; color: string }> = {
+  TEAM: { label: "Team", icon: Crown, color: THEME.accent },
+  PRO: { label: "Pro", icon: Sparkles, color: THEME.brand },
+  FREE: { label: "Free", icon: Zap, color: THEME.textMuted },
+};
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: THEME.surface2, border: `1px solid ${THEME.border}`,
-      borderRadius: THEME.radius, overflow: "hidden",
-    }}>
-      <div style={{ padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
-        <h2 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>{title}</h2>
-      </div>
-      <div style={{ padding: "20px" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function UsageBar({ label, used, limit, warning }: { label: string; used: number; limit: number; warning?: boolean }) {
-  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-  const barColor = warning && pct > 80 ? THEME.ai : THEME.brand;
-
-  return (
-    <div style={{ marginBottom: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-        <span style={{ fontSize: "12px", color: THEME.textDim }}>{label}</span>
-        <span className="tnum" style={{ fontSize: "12px", color: THEME.text }}>
-          {used.toLocaleString()} / {limit === -1 ? "∞" : limit.toLocaleString()}
-        </span>
-      </div>
-      <div style={{ height: "6px", background: THEME.surface3, borderRadius: "100px" }}>
-        <div style={{
-          height: "6px", borderRadius: "100px",
-          width: `${pct}%`,
-          background: barColor,
-          transition: "width 0.5s ease",
-        }} />
-      </div>
-      {warning && pct > 80 && (
-        <p style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", color: THEME.ai, marginTop: "6px" }}>
-          <AlertTriangle size={11} aria-hidden="true" /> {pct}% used — consider upgrading
-        </p>
-      )}
-    </div>
-  );
+function fmt(iso: string | null): string {
+  return iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
 }
 
 export default function SettingsPage() {
   const { user } = useUser();
   const [usage, setUsage] = useState<UsageData | null>(null);
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
-  const [loadingPortal, setLoadingPortal] = useState(false);
-  const [redeemCode, setRedeemCode] = useState("");
-  const [loadingRedeem, setLoadingRedeem] = useState(false);
+  const [redeem, setRedeem] = useState("");
+  const [busy, setBusy] = useState<"checkout" | "portal" | "redeem" | null>(null);
 
-  useEffect(() => {
-    fetch("/api/usage")
-      .then(r => r.json())
-      .then((d: UsageData) => setUsage(d))
-      .catch(() => undefined);
-  }, []);
+  const loadUsage = () => fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d) => d && setUsage(d)).catch(() => {});
+  useEffect(() => { void loadUsage(); }, []);
 
-  const handleUpgrade = async (planId: "PRO" | "TEAM") => {
-    setLoadingCheckout(true);
+  async function checkout() {
+    setBusy("checkout");
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId }),
-      });
-      const data = await res.json() as { url?: string; error?: { message: string } };
-      if (!res.ok || !data.url) { toast.error(data.error?.message ?? "Failed to open checkout."); return; }
-      window.location.href = data.url;
-    } catch { toast.error("Network error."); }
-    finally { setLoadingCheckout(false); }
-  };
-
-  const handleBillingPortal = async () => {
-    setLoadingPortal(true);
+      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: "PRO" }) });
+      const d = await res.json();
+      if (d.url) window.location.href = d.url; else toast.error(d.error?.message ?? "Checkout failed.");
+    } catch { toast.error("Checkout failed."); } finally { setBusy(null); }
+  }
+  async function portal() {
+    setBusy("portal");
     try {
       const res = await fetch("/api/billing/portal", { method: "POST" });
-      const data = await res.json() as { url?: string; error?: { message: string } };
-      if (!res.ok || !data.url) { toast.error(data.error?.message ?? "Failed to open billing portal."); return; }
-      window.location.href = data.url;
-    } catch { toast.error("Network error."); }
-    finally { setLoadingPortal(false); }
-  };
-
-  const handleRedeem = async () => {
-    if (!redeemCode.trim()) { toast.error("Enter a code first."); return; }
-    setLoadingRedeem(true);
+      const d = await res.json();
+      if (res.ok && d.url) window.location.href = d.url; else toast.error(d.error?.message ?? "Failed to open billing portal.");
+    } catch { toast.error("Failed to open billing portal."); } finally { setBusy(null); }
+  }
+  async function applyCode() {
+    if (!redeem.trim()) { toast.error("Enter a code first."); return; }
+    setBusy("redeem");
     try {
-      const res = await fetch("/api/redeem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: redeemCode.trim() }),
-      });
-      const data = await res.json() as { success?: boolean; plan?: string; error?: { message: string } };
-      if (!res.ok || !data.success) { toast.error(data.error?.message ?? "Invalid code."); return; }
-      toast.success(`🎉 Code redeemed! You're now on the ${data.plan} plan.`);
-      setRedeemCode("");
-      // Refresh usage data
-      fetch("/api/usage").then(r => r.json()).then((d: UsageData) => setUsage(d)).catch(() => undefined);
-    } catch { toast.error("Network error."); }
-    finally { setLoadingRedeem(false); }
-  };
+      const res = await fetch("/api/redeem", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: redeem.trim() }) });
+      const d = await res.json();
+      if (!res.ok) { toast.error(d.error?.message ?? "Invalid code."); return; }
+      toast.success(`🎉 Redeemed — you're now on ${d.plan}.`);
+      setRedeem(""); void loadUsage();
+    } catch { toast.error("Failed to redeem."); } finally { setBusy(null); }
+  }
 
-  const isFree    = !usage || usage.plan === "FREE";
-  const isPro     = usage?.plan === "PRO";
-  const isTeam    = usage?.plan === "TEAM";
-  const isPastDue = usage?.subscriptionStatus === "past_due";
+  const plan = usage?.plan ?? "FREE";
+  const meta = PLAN_META[plan] ?? PLAN_META.FREE;
+  const isFree = plan === "FREE";
+  const pastDue = usage?.subscriptionStatus === "past_due";
 
   return (
-    <div style={{ maxWidth: "600px", margin: "0 auto", padding: "32px 24px", fontFamily: THEME.fontSans }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "28px 24px 64px", fontFamily: THEME.fontSans }}>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.02em", margin: "0 0 4px" }}>Settings</h1>
+      <p style={{ fontSize: 14, color: THEME.textDim, margin: "0 0 22px" }}>Your plan, usage, billing, and developer access.</p>
 
-      {/* Header */}
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 700, color: THEME.text, letterSpacing: "-0.02em", fontFamily: THEME.fontHeading }}>Settings</h1>
-        <p style={{ fontSize: "13px", color: THEME.textDim, marginTop: "4px" }}>
-          Manage your plan, usage, and account.
-        </p>
-      </div>
+      {pastDue && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: THEME.aiDim, border: `1px solid ${THEME.ai}55`, borderRadius: THEME.radius, padding: "12px 16px", marginBottom: 16 }}>
+          <AlertTriangle size={16} color={THEME.ai} aria-hidden="true" />
+          <span style={{ fontSize: 13, color: THEME.text, flex: 1 }}>Your last payment failed. Update your billing to keep Pro features.</span>
+          <button onClick={portal} style={smallBtn}>Fix billing</button>
+        </div>
+      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-
-        {/* Payment failed banner — shows when Stripe marks subscription past_due */}
-        {isPastDue && (
-          <div role="alert" style={{
-            padding: "14px 16px", borderRadius: THEME.radius,
-            background: THEME.aiDim, border: `1px solid ${THEME.ai}55`,
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
-          }}>
-            <div>
-              <p style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.ai, marginBottom: "3px" }}>
-                <AlertTriangle size={14} aria-hidden="true" /> Payment failed
-              </p>
-              <p style={{ fontSize: "12px", color: THEME.textDim }}>
-                Your last payment couldn&apos;t be processed. Update your payment method to keep your plan.
-              </p>
-            </div>
-            <button
-              onClick={() => void handleBillingPortal()}
-              disabled={loadingPortal}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "5px",
-                padding: "9px 16px", flexShrink: 0,
-                background: THEME.ai, border: "none", borderRadius: "10px",
-                fontSize: "12px", fontWeight: 700, color: "#fff",
-                cursor: loadingPortal ? "not-allowed" : "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Fix now <ArrowRight size={13} aria-hidden="true" />
-            </button>
-          </div>
-        )}
-
-        {/* Plan & Usage */}
-        <Section title="Current Plan">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-            <span style={{ fontSize: "14px", color: THEME.textDim }}>Your plan</span>
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: "5px",
-              fontSize: "12px", fontWeight: 700, padding: "4px 12px", borderRadius: "100px",
-              textTransform: "capitalize",
-              background: isFree ? THEME.surface3 : THEME.brandDim,
-              color: isFree ? THEME.textDim : THEME.brandHi,
-              border: isFree ? `1px solid ${THEME.border}` : `1px solid ${THEME.brand}55`,
-            }}>
-              {!isFree && <Sparkles size={12} aria-hidden="true" />}
-              {(usage?.plan ?? "FREE").toLowerCase()}
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* Plan & usage */}
+        <Section title="Plan & usage" icon={meta.icon} accent={meta.color}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, background: isFree ? THEME.surface3 : THEME.brandDim, border: `1px solid ${isFree ? THEME.border : THEME.brand + "44"}`, borderRadius: 100, padding: "5px 12px" }}>
+              <meta.icon size={13} color={meta.color} aria-hidden="true" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: isFree ? THEME.textDim : THEME.brandHi }}>{meta.label} plan</span>
             </span>
+            {isFree ? (
+              <button onClick={checkout} disabled={busy === "checkout"} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
+                {busy === "checkout" ? "Loading…" : <>Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" /></>}
+              </button>
+            ) : (
+              <button onClick={portal} disabled={busy === "portal"} style={smallBtn}><CreditCard size={13} aria-hidden="true" /> Manage billing</button>
+            )}
           </div>
-
-          {usage ? (
+          {usage && (
             <>
-              <UsageBar
-                label="Words used this period"
-                used={usage.wordsUsed}
-                limit={usage.wordsLimit}
-                warning
-              />
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
-                <span style={{ fontSize: "12px", color: THEME.textDim }}>Rewrites used</span>
-                <span className="tnum" style={{ fontSize: "12px", color: THEME.text }}>
-                  {usage.rewriteCount} / {usage.rewriteLimit === -1 ? "∞" : usage.rewriteLimit}
-                </span>
+              <UsageBar label="Words" used={usage.wordsUsed} limit={usage.wordsLimit} />
+              <UsageBar label="Rewrites" used={usage.rewriteCount} limit={usage.rewriteLimit} />
+              <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 10 }}>
+                Quota resets {fmt(usage.quotaResetAt)}{usage.stripeCurrentPeriodEnd ? ` · renews ${fmt(usage.stripeCurrentPeriodEnd)}` : ""}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ fontSize: "12px", color: THEME.textDim }}>Quota resets</span>
-                <span style={{ fontSize: "12px", fontWeight: 500, color: THEME.text }}>
-                  {formatDate(usage.quotaResetAt)}
-                </span>
-              </div>
-              {usage.stripeCurrentPeriodEnd && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "12px", color: THEME.textDim }}>Renews on</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "12px", fontWeight: 500, color: isPastDue ? THEME.ai : THEME.text }}>
-                    {formatDate(usage.stripeCurrentPeriodEnd)}
-                    {isPastDue && <AlertTriangle size={12} aria-hidden="true" />}
-                  </span>
-                </div>
-              )}
             </>
-          ) : (
-            <div style={{ height: "80px", background: THEME.surface3, borderRadius: "6px", animation: "pulse 2s infinite" }} />
           )}
         </Section>
 
-        {/* Upgrade card — FREE only */}
-        {isFree && (
-          <div style={{
-            background: THEME.surface2,
-            border: `1px solid ${THEME.border}`,
-            borderRadius: THEME.radius, padding: "24px",
-            boxShadow: glow(THEME.brand, 0.16),
-          }}>
-            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-              <div style={{
-                width: "40px", height: "40px", borderRadius: "12px",
-                background: THEME.gradient, display: "flex",
-                alignItems: "center", justifyContent: "center", flexShrink: 0,
-                boxShadow: glow(THEME.brand, 0.3),
-              }}>
-                <Zap size={18} color="#ffffff" aria-hidden="true" />
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                  <h3 style={{ fontSize: "15px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>
-                    Upgrade to Pro
-                  </h3>
-                  <span style={{
-                    fontSize: "11px", fontWeight: 700, color: THEME.accentHi,
-                    background: THEME.accentDim, padding: "2px 8px", borderRadius: "100px",
-                  }}>
-                    $9 / month
-                  </span>
-                </div>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day document history", "No watermark"].map(f => (
-                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: THEME.textDim }}>
-                      <Check size={14} color={THEME.human} strokeWidth={2.5} aria-hidden="true" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="upgrade-btns" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <button
-                onClick={() => void handleUpgrade("PRO")}
-                disabled={loadingCheckout}
-                style={{
-                  flex: 1, padding: "12px",
-                  border: "none", borderRadius: "10px",
-                  fontSize: "13px", fontWeight: 700, color: "#ffffff",
-                  background: THEME.brand,
-                  boxShadow: glow(THEME.brand, 0.3),
-                  cursor: loadingCheckout ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                }}
-              >
-                <Zap size={14} aria-hidden="true" />
-                Upgrade to Pro
-              </button>
-              <button
-                onClick={() => void handleUpgrade("TEAM")}
-                disabled={loadingCheckout}
-                style={{
-                  padding: "12px 18px",
-                  background: THEME.accentDim, border: `1px solid ${THEME.accent}55`,
-                  borderRadius: "10px", fontSize: "12px", fontWeight: 700, color: THEME.accentHi,
-                  cursor: loadingCheckout ? "not-allowed" : "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                Team · $29/mo
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Billing — paid users */}
-        {!isFree && (
-          <Section title="Billing">
-            <button
-              onClick={() => void handleBillingPortal()}
-              disabled={loadingPortal}
-              style={{
-                display: "flex", alignItems: "center", gap: "7px",
-                background: THEME.surface1, border: `1px solid ${THEME.border}`,
-                color: THEME.text, fontSize: "13px", fontWeight: 600,
-                padding: "9px 16px", borderRadius: "10px", cursor: loadingPortal ? "not-allowed" : "pointer",
-              }}
-            >
-              <ExternalLink size={14} color={THEME.brand} aria-hidden="true" />
-              Manage billing
+        {/* Redeem */}
+        <Section title="Redeem a code" icon={Gift} accent={THEME.accent}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={redeem} onChange={(e) => setRedeem(e.target.value.toUpperCase())} placeholder="HUMAN-PRO-XXXX" aria-label="Discount code"
+              style={{ flex: 1, minWidth: 200, border: `1px solid ${THEME.border}`, borderRadius: 8, padding: "9px 12px", fontSize: 13, color: THEME.text, background: THEME.surface1, outline: "none", fontFamily: THEME.fontMono, textTransform: "uppercase" }} />
+            <button onClick={applyCode} disabled={busy === "redeem" || !redeem.trim()} style={{ background: redeem.trim() ? THEME.brand : THEME.surface3, color: redeem.trim() ? "#fff" : THEME.textMuted, border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: redeem.trim() ? "pointer" : "not-allowed" }}>
+              {busy === "redeem" ? "Redeeming…" : "Redeem"}
             </button>
-          </Section>
-        )}
-
-        {/* Organization — Team plan */}
-        {isTeam && (
-          <Link href="/dashboard/organization" style={{ textDecoration: "none" }}>
-            <div style={{
-              background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius,
-              padding: "16px 20px", display: "flex", alignItems: "center", gap: "12px",
-              boxShadow: glow(THEME.brand, 0.1),
-            }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: THEME.brandDim, display: "grid", placeItems: "center", flexShrink: 0 }}>
-                <Building2 size={17} color={THEME.brand} aria-hidden="true" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>Organization &amp; seats</div>
-                <div style={{ fontSize: "12px", color: THEME.textDim }}>Create a team workspace and invite members per seat.</div>
-              </div>
-              <ArrowRight size={16} color={THEME.brandHi} aria-hidden="true" />
-            </div>
-          </Link>
-        )}
-
-        {/* Redeem Discount Code */}
-        <div style={{
-          background: THEME.surface2, border: `1px solid ${THEME.border}`,
-          borderRadius: THEME.radius, overflow: "hidden",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "16px 20px", borderBottom: `1px solid ${THEME.border}` }}>
-            <Gift size={15} color={THEME.accent} aria-hidden="true" />
-            <h2 style={{ fontSize: "14px", fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>Have a discount code?</h2>
-          </div>
-          <div style={{ padding: "20px" }}>
-            <p style={{ fontSize: "12px", color: THEME.textDim, marginBottom: "14px" }}>
-              Redeem a code to unlock a Pro or Team plan instantly.
-            </p>
-            <div className="redeem-row" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <input
-                type="text"
-                aria-label="Discount code"
-                placeholder="HUMAN-PRO-XXXXX"
-                value={redeemCode}
-                onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
-                onKeyDown={(e) => { if (e.key === "Enter") void handleRedeem(); }}
-                style={{
-                  flex: "1 1 200px", padding: "10px 14px",
-                  background: THEME.surface1,
-                  border: `1px solid ${THEME.border}`,
-                  borderRadius: "10px", color: THEME.text,
-                  fontSize: "13px", fontFamily: THEME.fontMono,
-                  outline: "none",
-                  letterSpacing: "0.04em",
-                  minWidth: "0",
-                }}
-              />
-              <button
-                onClick={() => void handleRedeem()}
-                disabled={loadingRedeem || !redeemCode.trim()}
-                style={{
-                  padding: "10px 20px",
-                  background: loadingRedeem || !redeemCode.trim() ? `${THEME.brand}55` : THEME.brand,
-                  border: "none", borderRadius: "10px",
-                  fontSize: "13px", fontWeight: 700, color: "#fff",
-                  cursor: loadingRedeem || !redeemCode.trim() ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {loadingRedeem ? "…" : "Redeem"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: "1px", background: THEME.border }} />
-
-        {/* Profile */}
-        <Section title="Profile">
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-            <div>
-              <p style={{ fontSize: "14px", fontWeight: 500, color: THEME.text, marginBottom: "3px" }}>
-                {user?.fullName ?? "—"}
-              </p>
-              <p style={{ fontSize: "13px", color: THEME.textDim }}>
-                {user?.primaryEmailAddress?.emailAddress ?? "—"}
-              </p>
-            </div>
-            <span style={{ fontSize: "11px", color: THEME.textMuted }}>
-              To update your profile, click your avatar in the sidebar.
-            </span>
           </div>
         </Section>
 
-        {/* Plan features reference */}
-        {(isPro || isTeam) && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: "8px",
-            padding: "14px 16px", borderRadius: "10px",
-            background: THEME.brandDim, border: `1px solid ${THEME.brand}33`,
-          }}>
-            <Sparkles size={14} color={THEME.brandHi} aria-hidden="true" />
-            <p style={{ fontSize: "12px", color: THEME.brandHi, fontWeight: 600 }}>
-              {isTeam
-                ? "Team plan active — you have access to all features + team collaboration"
-                : "Pro plan active — you have access to all features"}
-            </p>
-          </div>
-        )}
-      </div>
+        {/* API keys */}
+        <Section title="API keys" icon={Key} accent={THEME.brand} sub="Developer access to the HumanizeIt API.">
+          <ApiKeysSection onUpgrade={checkout} />
+          <a href="/docs/api" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 12, fontSize: 12, color: THEME.brandHi, textDecoration: "none", fontWeight: 600 }}>
+            API documentation <ExternalLink size={12} aria-hidden="true" />
+          </a>
+        </Section>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.7; }
-        }
-      `}</style>
+        {/* Account */}
+        <Section title="Account" icon={UserIcon} accent={THEME.textMuted}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 13, color: THEME.text, fontWeight: 600 }}>{user?.fullName || user?.firstName || "Your account"}</div>
+              <div style={{ fontSize: 13, color: THEME.textDim }}>{user?.primaryEmailAddress?.emailAddress ?? "—"}</div>
+            </div>
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }
+
+function Section({ title, icon: Icon, accent, sub, children }: { title: string; icon: typeof Crown; accent: string; sub?: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, overflow: "hidden" }}>
+      <div style={{ padding: "14px 18px", borderBottom: `1px solid ${THEME.border}`, display: "flex", alignItems: "center", gap: 9 }}>
+        <Icon size={15} color={accent} aria-hidden="true" />
+        <div>
+          <h2 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em", margin: 0 }}>{title}</h2>
+          {sub && <p style={{ fontSize: 12, color: THEME.textMuted, margin: "2px 0 0" }}>{sub}</p>}
+        </div>
+      </div>
+      <div style={{ padding: 18 }}>{children}</div>
+    </div>
+  );
+}
+
+function UsageBar({ label, used, limit }: { label: string; used: number; limit: number }) {
+  const unlimited = limit < 0;
+  const pct = unlimited || limit === 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
+        <span style={{ color: THEME.textDim, fontWeight: 500 }}>{label}</span>
+        <span className="tnum" style={{ color: THEME.textMuted }}>{unlimited ? `${used.toLocaleString()} · unlimited` : `${used.toLocaleString()} / ${limit.toLocaleString()}`}</span>
+      </div>
+      <div style={{ height: 6, background: THEME.surface3, borderRadius: 999 }}>
+        <div style={{ height: 6, width: `${unlimited ? 6 : pct}%`, background: pct > 90 ? THEME.warn : THEME.brand, borderRadius: 999, transition: "width .4s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+const smallBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, background: THEME.surface3, color: THEME.text, border: `1px solid ${THEME.border}`, borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: THEME.fontSans };

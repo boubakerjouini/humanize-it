@@ -7,6 +7,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureUser } from "@/lib/user";
 import { ORG_SEAT } from "@/lib/plans";
 import {
   uniqueOrgSlug,
@@ -20,11 +21,7 @@ import {
 async function currentUser() {
   const { userId: clerkId } = await auth();
   if (!clerkId) return null;
-  return db.user.upsert({
-    where: { clerkId },
-    update: {},
-    create: { clerkId, email: `${clerkId}@placeholder.humanize-it.app`, plan: "FREE", wordsUsed: 0 },
-  });
+  return ensureUser(clerkId);
 }
 
 export async function GET() {

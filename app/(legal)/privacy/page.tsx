@@ -1,6 +1,11 @@
 import { THEME } from "@/lib/theme";
 
-export const metadata = { title: 'Privacy Policy — HumanizeIt' }
+export const metadata = {
+  title: 'Privacy Policy — HumanizeIt',
+  description:
+    'How HumanizeIt collects, uses, and protects your data. We process your text in memory, never store it, and never train on your content.',
+  alternates: { canonical: 'https://humanizeit.app/privacy' },
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>

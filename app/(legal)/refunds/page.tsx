@@ -1,6 +1,11 @@
 import { THEME } from "@/lib/theme";
 
-export const metadata = { title: 'Refund Policy — HumanizeIt' }
+export const metadata = {
+  title: 'Refund Policy — HumanizeIt',
+  description:
+    "HumanizeIt's refund policy — our money-back guarantee on paid plans, how to request a refund, and what to expect.",
+  alternates: { canonical: 'https://humanizeit.app/refunds' },
+}
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section style={{ marginBottom: '40px' }}>
