@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { Search, Loader2, ShieldCheck, FileText, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { THEME } from "@/lib/theme";
@@ -126,7 +127,7 @@ export default function AdminUsersPage() {
                         <div style={{ minWidth: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, color: THEME.text }}>
                             {u.role === "ADMIN" && <ShieldCheck size={12} color={THEME.brand} aria-hidden="true" />}
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{u.name || u.email.split("@")[0]}</span>
+                            <Link href={`/admin/users/${u.id}`} style={{ color: THEME.text, textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{u.name || u.email.split("@")[0]}</Link>
                           </div>
                           <div style={{ fontSize: 11, color: THEME.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 230 }}>{u.email}</div>
                         </div>

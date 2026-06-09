@@ -59,6 +59,10 @@ model User {
   memberships        Membership[]
   ownedOrganizations Organization[] @relation("OrgOwner")
   sentInvitations    Invitation[]   @relation("InvitedBy")
+
+  // CRM
+  notes AdminNote[] @relation("NoteSubject")
+  tags  UserTag[]
 }
 
 /// A team/company workspace that owns a pool of seats. The owner pays for
@@ -247,4 +251,62 @@ model Redemption {
   discountCode   DiscountCode @relation(fields: [discountCodeId], references: [id])
 
   @@unique([userId, discountCodeId])
+}
+
+// ── CRM ─────────────────────────────────────────────────────────────────────
+
+/// Free-text admin note attached to a customer. authorEmail is a snapshot so
+/// the note survives even if the author's row changes.
+model AdminNote {
+  id          String   @id @default(cuid())
+  subjectId   String
+  authorEmail String
+  body        String
+  createdAt   DateTime @default(now())
+
+  subject User @relation("NoteSubject", fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+}
+
+/// A reusable label for segmenting customers.
+model Tag {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  color     String    @default("#7c3aed")
+  createdAt DateTime  @default(now())
+
+  users UserTag[]
+}
+
+/// Join row: a Tag applied to a User.
+model UserTag {
+  id        String   @id @default(cuid())
+  userId    String
+  tagId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tagId])
+  @@index([userId])
+  @@index([tagId])
+}
+
+/// Append-only record of every admin action (who did what to whom). Decoupled
+/// from User (snapshot actorEmail) so it remains a faithful, immutable ledger.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorEmail String
+  action     String
+  targetType String
+  targetId   String?
+  summary    String?
+  meta       Json?
+  createdAt  DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([actorEmail])
 }
