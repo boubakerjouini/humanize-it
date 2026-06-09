@@ -2,8 +2,17 @@ import { Metadata } from "next";
 import Playground from "./playground";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt API Documentation",
-  description: "Integrate AI text humanization into your apps with the HumanizeIt API.",
+  title: "HumanizeIt API — Humanize & Detect AI Text via REST",
+  description:
+    "Integrate AI humanizing and detection into your app with the HumanizeIt REST API. Endpoints, authentication, code examples, and rate limits.",
+  alternates: { canonical: "https://humanizeit.app/docs/api" },
+  openGraph: {
+    title: "HumanizeIt API — Humanize & Detect AI Text via REST",
+    description: "Integrate AI humanizing and detection into your app with the HumanizeIt REST API.",
+    url: "https://humanizeit.app/docs/api",
+    siteName: "HumanizeIt",
+    type: "website",
+  },
 };
 
 // ── Code block helper ──────────────────────────────────────

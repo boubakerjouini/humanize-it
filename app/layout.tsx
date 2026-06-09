@@ -32,7 +32,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
+  title: "HumanizeIt — AI Humanizer That Bypasses GPTZero & Turnitin",
   description: "Paste your ChatGPT text and get an undetectable, naturally human version in seconds. Beats GPTZero, Turnitin & Originality.ai. Free plan available — no credit card required.",
   metadataBase: new URL("https://humanizeit.app"),
   icons: {
