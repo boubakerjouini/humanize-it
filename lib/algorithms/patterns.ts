@@ -350,8 +350,14 @@ export const PATTERN_COUNT = PATTERNS_CONFIG.length;
 
 // ---- Score Weights ----
 
+// Re-weighted (2026 recalibration) toward statistics. The old 0.60 pattern
+// weight rode on vocabulary/phrase tells ("delve", "in conclusion") that modern
+// GPT-4o/Claude avoid, so default-AI text was under-flagged ~83% of the time.
+// Statistical signals (Flesch, burstiness) reflect the generation process and
+// generalise far better; the humanness axis (see analyzeText.ts) is applied on
+// top of this base, not inside it.
 export const SCORE_WEIGHTS = {
-  pattern: 0.60,
-  statistical: 0.30,
-  structural: 0.10,
+  pattern: 0.30,
+  statistical: 0.55,
+  structural: 0.15,
 } as const;
