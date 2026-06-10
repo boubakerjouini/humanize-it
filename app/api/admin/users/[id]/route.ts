@@ -22,6 +22,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     await requireAdmin();
     const { id } = await params;
 
+    // Core profile uses only long-existing tables, so it always loads.
     const user = await db.user.findUnique({
       where: { id },
       include: {
@@ -29,15 +30,20 @@ export async function GET(_req: Request, { params }: Ctx) {
         documents: { orderBy: { createdAt: "desc" }, take: 20, select: { id: true, title: true, overallScore: true, humanizedScore: true, wordCount: true, status: true, createdAt: true } },
         redemptions: { orderBy: { redeemedAt: "desc" }, include: { discountCode: { select: { code: true, plan: true } } } },
         memberships: { include: { organization: { select: { id: true, name: true, slug: true } } } },
-        notes: { orderBy: { createdAt: "desc" } },
-        tags: { include: { tag: true } },
         _count: { select: { documents: true } },
       },
     });
     if (!user) return NextResponse.json({ error: { message: "User not found." } }, { status: 404 });
 
     const ident = (await resolveIdentities([user.clerkId])).get(user.clerkId);
-    const audit = await db.auditLog.findMany({ where: { targetType: "user", targetId: id }, orderBy: { createdAt: "desc" }, take: 40 });
+
+    // CRM extras live in newer tables that may not exist in every environment
+    // yet — fetch defensively so a missing table degrades to empty, never a 500.
+    const [notes, tagRows, audit] = await Promise.all([
+      db.adminNote.findMany({ where: { subjectId: id }, orderBy: { createdAt: "desc" } }).catch(() => []),
+      db.userTag.findMany({ where: { userId: id }, include: { tag: true } }).catch(() => []),
+      db.auditLog.findMany({ where: { targetType: "user", targetId: id }, orderBy: { createdAt: "desc" }, take: 40 }).catch(() => []),
+    ]);
 
     return NextResponse.json({
       user: {
@@ -60,8 +66,8 @@ export async function GET(_req: Request, { params }: Ctx) {
       documents: user.documents,
       redemptions: user.redemptions.map((r) => ({ id: r.id, code: r.discountCode.code, plan: r.discountCode.plan, redeemedAt: r.redeemedAt })),
       memberships: user.memberships.map((m) => ({ id: m.id, org: m.organization, role: m.role, seatActive: m.seatActive })),
-      notes: user.notes,
-      tags: user.tags.map((t) => t.tag),
+      notes,
+      tags: tagRows.map((t) => t.tag),
       audit,
     });
   } catch (err) {
