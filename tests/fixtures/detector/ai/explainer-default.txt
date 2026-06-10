@@ -1,0 +1,23 @@
+# How Photosynthesis Works
+
+Photosynthesis is the remarkable process that plants use to convert sunlight into food, making life on Earth possible. Think of it as nature's solar panels at work.
+
+## The Basic Recipe
+
+Plants need three simple ingredients: carbon dioxide (CO₂) from the air, water (H₂O) from the soil, and sunlight. Through photosynthesis, they transform these into glucose (sugar) and oxygen. The glucose provides energy for the plant to grow, while the oxygen is released into the atmosphere—which is pretty convenient for us air-breathing creatures.
+
+## Where It Happens
+
+Photosynthesis occurs primarily in leaves, inside tiny structures called chloroplasts. These contain chlorophyll, the green pigment that captures light energy. This is why most plants appear green—chlorophyll reflects green light while absorbing red and blue wavelengths.
+
+## The Two-Stage Process
+
+Photosynthesis happens in two main stages:
+
+**Light-dependent reactions** occur first, taking place in the chloroplast membranes. Here, chlorophyll absorbs sunlight and uses that energy to split water molecules. This produces oxygen (released as waste), and also creates energy-storing molecules called ATP and NADPH.
+
+**Light-independent reactions** (also called the Calvin cycle) happen next in the chloroplast's fluid-filled interior. These reactions don't directly need light. Instead, they use the ATP and NADPH from stage one, along with CO₂ from the air, to build glucose molecules.
+
+## Why It Matters
+
+Photosynthesis is Earth's fundamental energy source. It feeds plants, which feed animals, which feed other animals. It also produced the oxygen in our atmosphere and continues to replenish it. Without photosynthesis, complex life as we know it simply couldn't exist.

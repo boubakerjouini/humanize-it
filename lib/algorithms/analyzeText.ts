@@ -1038,34 +1038,100 @@ function computePatternScore(patterns: PatternHit[]): number {
 }
 
 function computeStatisticalScore(stats: TextStats): number {
-  let score = 0;
+  // Modern-AI calibrated (measured against a real labeled corpus — see
+  // scripts/detector-eval.ts). Flesch Reading Ease is the strongest single
+  // separator: AI clusters at "college" level (~30-65) while genuine human
+  // informal writing reads easy (~75-85). Burstiness catches non-adversarial
+  // (default) AI; average sentence length is a weak prior.
+  //
+  // Type-Token Ratio was REMOVED from scoring: modern AI now has *higher*
+  // lexical diversity than humans (AI mean 0.82 vs human 0.77 on the corpus),
+  // so the legacy "low TTR ⇒ AI" rule fired backwards and risked flagging
+  // humans. It is still computed for the UI breakdown, just not scored.
 
-  // Low burstiness → high AI probability (wider thresholds)
-  const burstyScore =
-    stats.burstiness < 0.15 ? 100 :
-    stats.burstiness < 0.30 ? 80 :
-    stats.burstiness < 0.45 ? 50 :
-    stats.burstiness < 0.55 ? 20 : 0;
-  score += burstyScore * 0.3;
-
-  // Low TTR → high AI probability (stricter thresholds)
-  const ttrScore =
-    stats.typeTokenRatio < 0.35 ? 100 :
-    stats.typeTokenRatio < 0.45 ? 70 :
-    stats.typeTokenRatio < 0.55 ? 40 : 0;
-  score += ttrScore * 0.25;
-
-  // Avg sentence length in AI range (wider)
-  const asl = stats.avgSentenceLength;
-  const aslScore = asl >= 15 && asl <= 30 ? 85 : asl >= 12 && asl <= 35 ? 45 : 0;
-  score += aslScore * 0.25;
-
-  // Flesch Reading Ease in AI range (wider)
+  // Flesch Reading Ease — lower = more AI-typical.
   const fre = stats.fleschReadingEase;
-  const freScore = fre >= 35 && fre <= 65 ? 85 : fre >= 25 && fre <= 75 ? 45 : 0;
-  score += freScore * 0.2;
+  const freScore =
+    fre < 40 ? 100 :
+    fre < 55 ? 82 :
+    fre < 65 ? 58 :
+    fre < 72 ? 30 : 0;
 
-  return Math.min(100, score);
+  // Burstiness — uniform rhythm = AI. Defeated by "vary your sentence length"
+  // prompts (adversarial AI reaches 0.6-0.76), so it sits below Flesch, but it
+  // remains a strong tell on default output (which clusters 0.27-0.43).
+  const b = stats.burstiness;
+  const burstScore =
+    b < 0.30 ? 100 :
+    b < 0.40 ? 72 :
+    b < 0.50 ? 42 :
+    b < 0.60 ? 18 : 0;
+
+  // Average sentence length — mild prior (AI favours 14-26-word sentences).
+  const asl = stats.avgSentenceLength;
+  const aslScore = asl >= 14 && asl <= 26 ? 60 : asl >= 11 && asl <= 32 ? 30 : 0;
+
+  return Math.min(100, freScore * 0.45 + burstScore * 0.35 + aslScore * 0.2);
+}
+
+// ---- Humanness axis ----
+// Historically the engine only ever *added* AI points; it never rewarded the
+// fingerprints that only real humans leave. These are signals modern AI almost
+// never produces even when explicitly told to "sound human": sentences that
+// start lowercase, doubled punctuation ("!!", "..."), informal markers,
+// dense first-person voice, and the occasional very long run-on sentence.
+// A high humanness index pulls the final AI-likelihood DOWN (fewer false
+// positives); its ABSENCE in otherwise-clean prose is itself AI-indicative
+// (the "sterile" bonus), which is what catches polished/adversarial AI.
+
+const INFORMAL_MARKER_RE =
+  /\b(lol|lmao|imo|imho|tbh|omg|idk|btw|fyi|gonna|wanna|gotta|kinda|sorta|yeah|yep|nope|nah|anyway|honestly|literally|basically|dude|guys|ngl)\b/gi;
+const HUMANNESS_FIRST_PERSON_RE = /\b(i|me|my|mine|myself|i'm|i've|i'd|i'll)\b/gi;
+const MULTI_PUNCT_RE = /[!?]{2,}|\.{3,}|\?!|!\?/g;
+
+interface Humanness {
+  /** 0-100; higher = more genuinely-human fingerprints present. */
+  index: number;
+  /** Long enough + grammatically pristine + no casual markers → "too clean to be human". */
+  sterileEligible: boolean;
+}
+
+function computeHumanness(
+  text: string,
+  words: string[],
+  sentences: string[],
+  stats: TextStats
+): Humanness {
+  const wc = Math.max(words.length, 1);
+  const sc = Math.max(sentences.length, 1);
+
+  const lowercaseStarts = sentences.filter((s) => /^[a-z]/.test(s.trim())).length / sc; // 0-1
+  const multiPunct = (text.match(MULTI_PUNCT_RE) ?? []).length;
+  const informal = (text.match(INFORMAL_MARKER_RE) ?? []).length;
+  const firstPerson = ((text.match(HUMANNESS_FIRST_PERSON_RE) ?? []).length / wc) * 100;
+  const longRuns =
+    sentences.filter((s) => s.split(/\s+/).filter(Boolean).length > 30).length / sc; // 0-1
+  const digits = (words.filter((w) => /^\d[\d.,]*$/.test(w)).length / wc) * 100;
+
+  // Fingerprints AI essentially never fakes (one-way: presence ⇒ human).
+  const informalFingerprint = Math.min(
+    46,
+    lowercaseStarts * 100 * 1.1 + multiPunct * 12 + informal * 7 + digits * 2.5
+  );
+  // Dense first-person, personal voice.
+  const personalVoice = Math.min(22, firstPerson * 4);
+  // Human rhythm: the occasional very long sentence + genuinely high burstiness.
+  const rhythmVariety = Math.min(
+    22,
+    longRuns * 100 * 1.3 + Math.max(0, stats.burstiness - 0.62) * 55
+  );
+  // Plain, highly readable English.
+  const readability = Math.min(12, Math.max(0, stats.fleschReadingEase - 74) * 0.9);
+
+  const index = Math.min(100, informalFingerprint + personalVoice + rhythmVariety + readability);
+  const sterileEligible = wc >= 70 && lowercaseStarts === 0 && multiPunct === 0 && informal <= 1;
+
+  return { index, sterileEligible };
 }
 
 function computeStructuralScore(
@@ -1270,23 +1336,37 @@ export function analyzeText(text: string): AnalysisResult {
   const lowPerplexity = detectLowPerplexity(sentences);
   if (lowPerplexity) patterns.push(lowPerplexity);
 
-  // Step 7: Compute final score
+  // Step 7: Compute component scores
   const patternScore = computePatternScore(patterns);
   const statisticalScore = computeStatisticalScore(stats);
   const structuralScore = computeStructuralScore(structuralHits);
 
-  // Multi-pattern amplifier: boost pattern score when many patterns fire
+  // Multi-pattern amplifier: boost pattern score when many patterns fire.
   const patternCount = patterns.length;
   const amplifier = patternCount >= 12 ? 1.6 : patternCount >= 8 ? 1.45 : patternCount >= 5 ? 1.25 : 1.0;
   const boostedPatternScore = Math.min(100, patternScore * amplifier);
 
-  const score = clamp(
-    0,
-    100,
+  // AI-positive base. Re-weighted toward statistics (SCORE_WEIGHTS): vocabulary
+  // and phrase tells are 2022-era and modern models avoid them, so they no
+  // longer carry 60% of the verdict.
+  const base =
     boostedPatternScore * SCORE_WEIGHTS.pattern +
-      statisticalScore * SCORE_WEIGHTS.statistical +
-      structuralScore * SCORE_WEIGHTS.structural
-  );
+    statisticalScore * SCORE_WEIGHTS.statistical +
+    structuralScore * SCORE_WEIGHTS.structural;
+
+  // Humanness axis: subtract for genuine-human fingerprints (fewer false
+  // positives), and add a "sterile" bonus when clean prose has none of them —
+  // the signal that catches polished, tell-free, and adversarial AI.
+  const human = computeHumanness(text, words, sentences, stats);
+  const HUMAN_CREDIT_WEIGHT = 0.55; // max realistic subtraction ≈ 40 pts
+  const STERILE_CEIL = 19; // only near-zero-humanness prose gets boosted
+  const STERILE_SLOPE = 2.5; // max sterile bonus ≈ 47 pts (index 0)
+  const humanCredit = human.index * HUMAN_CREDIT_WEIGHT;
+  const sterileBonus = human.sterileEligible
+    ? Math.max(0, STERILE_CEIL - human.index) * STERILE_SLOPE
+    : 0;
+
+  const score = clamp(0, 100, base - humanCredit + sterileBonus);
 
   return {
     score: Math.round(score * 10) / 10,

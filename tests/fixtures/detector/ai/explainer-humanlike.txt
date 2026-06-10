@@ -1,0 +1,18 @@
+# How Photosynthesis Works
+
+You've probably heard that plants make their own food. But how does that actually happen? It's all thanks to photosynthesis, and it's pretty incredible when you break it down.
+
+Think of plants as tiny factories powered by sunlight. Here's the basic recipe: they take in carbon dioxide from the air (through tiny holes in their leaves called stomata) and water from the soil (sucked up through roots). Then the magic happens.
+
+Inside plant cells are these structures called chloroplasts—they're green because they contain chlorophyll, which is what makes leaves look green. Chlorophyll is like a solar panel. It captures light energy from the sun.
+
+That light energy gets used to split water molecules apart. This process releases oxygen as a waste product, which is pretty convenient for us since we need oxygen to breathe. Meanwhile, the plant takes the hydrogen from water and combines it with carbon dioxide through a series of chemical reactions. The end result? Glucose, a simple sugar.
+
+The basic equation looks like this:
+6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂
+
+The glucose becomes the plant's food source—it uses it for energy to grow, reproduce, and repair itself. Plants can also convert glucose into other substances like cellulose (for building cell walls) or starch (for storage).
+
+So basically, photosynthesis transforms light energy into chemical energy stored in sugar molecules. It's the foundation of most food chains on Earth. Without it, we wouldn't have oxygen to breathe or food to eat.
+
+Pretty much everything relies on plants doing this one elegant chemical trick.
