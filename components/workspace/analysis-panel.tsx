@@ -83,7 +83,7 @@ export function AnalysisPanel({
         <ScoreRing score={result.score} size={128} countUp />
         <div style={{ flex: "1 1 260px", minWidth: 240 }}>
           <div style={{ fontSize: 12, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-            AI detection · {humanScoreLabel(human)}
+            Instant estimate · {humanScoreLabel(human)}
           </div>
           <p style={{ fontSize: 15, color: THEME.textDim, lineHeight: 1.6, margin: "0 0 14px" }}>
             {triggered.length === 0
