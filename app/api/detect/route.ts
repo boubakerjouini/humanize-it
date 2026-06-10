@@ -8,16 +8,24 @@
 // per-IP daily allowance — so it can't be turned into a free LLM proxy.
 // ===========================================================
 
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { deepScanText } from "@/lib/detect-llm";
 import { activeProvider } from "@/lib/llm";
+import { ensureUser } from "@/lib/user";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 const MAX_CHARS = 6000;
 const MAX_WORDS = 1200; // a deep scan reads more than the humanizer rewrites
 const MIN_WORDS = 25; // below this the model can't judge reliably
-const BURST_PER_MIN = 5; // per IP
-const FREE_PER_DAY = 15; // deep scans per IP per day
+
+// Anonymous (public detector tool) — bounded per IP.
+const ANON_BURST_PER_MIN = 5;
+const ANON_PER_DAY = 15;
+
+// Signed-in (dashboard editor) — bounded per user, generous for paid plans.
+const USER_BURST_PER_MIN = 10;
+const USER_PER_DAY: Record<string, number> = { FREE: 20, PRO: 200, TEAM: 200 };
 
 function clientIp(req: Request): string {
   const xff = req.headers.get("x-forwarded-for");
@@ -27,6 +35,56 @@ function clientIp(req: Request): string {
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/** Resolve the signed-in user (if any). /api/detect is anonymous-capable, so a
+ *  missing/bypassed Clerk session is normal — fall through to the IP path. */
+async function currentUser(): Promise<{ id: string; plan: string } | null> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+    const u = await ensureUser(userId);
+    return { id: u.id, plan: u.plan };
+  } catch {
+    return null;
+  }
+}
+
+/** Apply burst + daily limits scoped to the signed-in user or the IP. Returns
+ *  the daily result (for headers/remaining) or a 429 NextResponse to return. */
+async function enforceLimits(req: Request): Promise<
+  | { ok: true; daily: Awaited<ReturnType<typeof checkDailyLimit>> }
+  | { ok: false; response: NextResponse }
+> {
+  const user = await currentUser();
+  const scope = user ? `user:${user.id}` : `ip:${clientIp(req)}`;
+  const burstLimit = user ? USER_BURST_PER_MIN : ANON_BURST_PER_MIN;
+  const dailyLimit = user ? (USER_PER_DAY[user.plan] ?? USER_PER_DAY.FREE) : ANON_PER_DAY;
+
+  const burst = await checkRateLimit(`detect:min:${scope}`, burstLimit);
+  if (!burst.ok) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "You're going a bit fast — try again in a few seconds." } },
+        { status: 429, headers: { ...rateLimitHeaders(burst), "Retry-After": String(burst.retryAfterSeconds) } }
+      ),
+    };
+  }
+  const daily = await checkDailyLimit(`detect:day:${scope}`, dailyLimit);
+  if (!daily.ok) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: { code: "DAILY_LIMIT_REACHED", message: `You've used your ${dailyLimit} deep scans for today.${user ? "" : " Sign up free for more."}` },
+          signupCta: !user,
+        },
+        { status: 429, headers: { ...rateLimitHeaders(daily), "Retry-After": String(daily.retryAfterSeconds) } }
+      ),
+    };
+  }
+  return { ok: true, daily };
 }
 
 export async function POST(req: Request) {
@@ -59,24 +117,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const ip = clientIp(req);
-  const burst = await checkRateLimit(`detect:min:${ip}`, BURST_PER_MIN);
-  if (!burst.ok) {
-    return NextResponse.json(
-      { error: { code: "RATE_LIMITED", message: "You're going a bit fast — try again in a few seconds." } },
-      { status: 429, headers: { ...rateLimitHeaders(burst), "Retry-After": String(burst.retryAfterSeconds) } }
-    );
-  }
-  const daily = await checkDailyLimit(`detect:day:${ip}`, FREE_PER_DAY);
-  if (!daily.ok) {
-    return NextResponse.json(
-      {
-        error: { code: "DAILY_LIMIT_REACHED", message: `You've used your ${FREE_PER_DAY} free deep scans for today. Sign up free for more.` },
-        signupCta: true,
-      },
-      { status: 429, headers: { ...rateLimitHeaders(daily), "Retry-After": String(daily.retryAfterSeconds) } }
-    );
-  }
+  const limited = await enforceLimits(req);
+  if (!limited.ok) return limited.response;
+  const { daily } = limited;
 
   try {
     const result = await deepScanText(text);

@@ -27,6 +27,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/humanize(.*)",
   // Public (anonymous, IP-rate-limited) tool endpoints
   "/api/public(.*)",
+  // AI-detection deep scan — anonymous-capable; per-IP vs per-user limits are
+  // enforced inside the handler (auth() still resolves the session here).
+  "/api/detect(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
   // Blog
