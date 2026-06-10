@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { getAdminUser } from "@/lib/admin";
 import { resolveIdentities } from "@/lib/clerk-identity";
@@ -55,7 +56,7 @@ export default async function AdminOrganizationsPage() {
                   <tr key={o.id} style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <td style={{ padding: "12px 14px", fontWeight: 600, color: THEME.text }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <Building2 size={14} color={THEME.brand} aria-hidden="true" /> {o.name}
+                        <Building2 size={14} color={THEME.brand} aria-hidden="true" /> <Link href={`/admin/organizations/${o.id}`} style={{ color: THEME.text, textDecoration: "none" }}>{o.name}</Link>
                       </div>
                       <div style={{ fontSize: 11, color: THEME.textMuted }}>/{o.slug}</div>
                     </td>
