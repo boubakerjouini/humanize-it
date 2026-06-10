@@ -68,3 +68,36 @@ literary prose even to a strong grader — an honest hard limit, surfaced as
 Division of labour: the instant heuristic is the free, client-side preview
 (nails default AI, zero false positives); the deep scan is the opt-in precise
 verdict for the uncertain band.
+
+---
+
+# Formal/professional-human precision round (false-positive fix)
+
+A real human professional article (NYT-style, see `human/news-ai-writers.txt`)
+was scoring **65 → "Likely AI"** (a false positive). Added 3 formal-human
+fixtures (the article + public-domain Darwin & Mill) and fixed the drivers:
+
+- **`detectLowPerplexity` bug**: it set `hits` = the raw count of sentences
+  starting with a common word ("The/This/In/A…") — quadrupling a weak signal
+  that fires on normal formal prose. Now counts once (`hits = 1`).
+- **Specificity (humanness)**: credit parenthetical citations/annotations
+  ("(opens in a new window)", "(2019)") — referential human writing has them,
+  generic AI rarely does. Kept narrow (parentheticals only; proper nouns and
+  em-dashes appear in AI too).
+- **Very-low Flesch (<40)** no longer maxes the AI signal (86, not 100) —
+  dense human academic/journalism lives there too; it's ambiguous, not AI-proof.
+
+Result (12 AI / 14 human):
+
+| Metric | Value |
+|---|---|
+| `news-ai-writers` (the false positive) | 65 → **45** ("uncertain") |
+| Default AI flagged | 5/6 (only creative `story` slips) — unchanged |
+| False positives | **0/14** |
+| Highest human (FP margin) | 45 |
+| Separation | 45.8 |
+
+AI detection is unchanged from the prior recalibration; only the formal-human
+over-flagging was corrected. The editor also no longer asserts a confident
+verdict on the instant pass (it's framed "Instant estimate · heuristic preview"
++ signals); the deep scan is the authoritative verdict.

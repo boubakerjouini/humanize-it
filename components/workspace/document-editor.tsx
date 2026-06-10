@@ -50,7 +50,9 @@ export function DocumentEditor() {
   useEffect(() => () => { if (analyzeTimer.current) clearTimeout(analyzeTimer.current); }, []);
 
   const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-  const beforeScore = useMemo(() => (text.trim().length > 30 ? analyzeText(text).score : null), [text]);
+  // No live as-you-type score: the score is the payoff of pressing "Detect AI"
+  // (otherwise the button just re-shows a number that's already on screen).
+  // The pill only returns on the post-Humanize result screen (the after-score).
   const afterScore = useMemo(() => (humanized ? analyzeText(humanized).score : null), [humanized]);
   const canRun = words >= 5 && !busy;
   const canDetect = words >= 15 && !busy;
@@ -106,8 +108,6 @@ export function DocumentEditor() {
     const a = document.createElement("a"); a.href = url; a.download = "humanized.txt"; a.click(); URL.revokeObjectURL(url);
   }
 
-  const score = screen === "result" ? afterScore : beforeScore;
-
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
       {/* Sticky toolbar */}
@@ -138,7 +138,7 @@ export function DocumentEditor() {
             </div>
           )}
 
-          {score !== null && <ScorePill score={score} />}
+          {screen === "result" && afterScore !== null && <ScorePill score={afterScore} />}
 
           {screen === "result" && <>
             <IconBtn onClick={copy} title="Copy">{copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}</IconBtn>

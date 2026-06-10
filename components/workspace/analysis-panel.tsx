@@ -7,7 +7,7 @@ import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 import type { Severity } from "@/lib/algorithms/patterns";
 import { buildFlaggedSegments, isHighlightable } from "@/lib/algorithms/flagged-spans";
 import { ScoreRing } from "@/components/ui/score-ring";
-import { THEME, glow, humanScore, humanScoreLabel } from "@/lib/theme";
+import { THEME, glow } from "@/lib/theme";
 
 /** Min words for a reliable deep scan — mirrors app/api/detect MIN_WORDS. */
 const DEEP_MIN_WORDS = 25;
@@ -52,8 +52,6 @@ export function AnalysisPanel({
   const wholeText: PatternHit[] = [];
   for (const p of triggered) (isHighlightable(text, p) ? inline : wholeText).push(p);
 
-  const human = humanScore(result.score);
-
   async function runDeepScan() {
     if (words < DEEP_MIN_WORDS || deepLoading) return;
     setDeepLoading(true);
@@ -80,15 +78,15 @@ export function AnalysisPanel({
     <div className="animate-fade-up" style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       {/* Score + verdict */}
       <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap" }}>
-        <ScoreRing score={result.score} size={128} countUp />
+        <ScoreRing score={result.score} size={128} countUp hideLabel />
         <div style={{ flex: "1 1 260px", minWidth: 240 }}>
           <div style={{ fontSize: 12, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-            AI detection · {humanScoreLabel(human)}
+            Instant estimate · heuristic preview
           </div>
           <p style={{ fontSize: 15, color: THEME.textDim, lineHeight: 1.6, margin: "0 0 14px" }}>
             {triggered.length === 0
-              ? "No strong AI patterns found in the instant scan. Run a deep scan for a precise verdict."
-              : `${triggered.length} signal${triggered.length === 1 ? "" : "s"} detected across ${result.wordCount.toLocaleString()} words. Highlighted spans below are the locatable tells.`}
+              ? "No AI patterns found in the instant scan. This is a quick heuristic — run a Deep scan below for the precise verdict."
+              : `Found ${triggered.length} potential AI signal${triggered.length === 1 ? "" : "s"} across ${result.wordCount.toLocaleString()} words (highlighted below). This is a quick heuristic — run a Deep scan for the precise verdict.`}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={onHumanize} disabled={busy}

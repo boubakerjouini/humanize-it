@@ -689,13 +689,17 @@ function detectLowPerplexity(sentences: string[]): PatternHit | null {
     }
   }
 
+  // Starting sentences with "The/This/In/A…" is normal in ALL English prose,
+  // especially formal writing, so this is a weak whole-text signal: require a
+  // high proportion (>0.72) and count it ONCE (hits=1). Previously hits was the
+  // raw count, which quadrupled its weight and false-flagged human journalism.
   const ratio = predictableCount / sentences.length;
   if (ratio <= 0.6) return null;
 
   return {
     id: config.id,
     label: config.label,
-    hits: predictableCount,
+    hits: 1,
     examples: [
       `${Math.round(ratio * 100)}% of sentences start with common AI starters`,
     ],
@@ -1049,10 +1053,12 @@ function computeStatisticalScore(stats: TextStats): number {
   // so the legacy "low TTR ⇒ AI" rule fired backwards and risked flagging
   // humans. It is still computed for the UI breakdown, just not scored.
 
-  // Flesch Reading Ease — lower = more AI-typical.
+  // Flesch Reading Ease — lower = more AI-typical. Note: *very* low FRE (<40)
+  // is ambiguous — dense human academic/journalism lives there too — so it is
+  // not maxed; the AI sweet spot is the "college" 40-65 band.
   const fre = stats.fleschReadingEase;
   const freScore =
-    fre < 40 ? 100 :
+    fre < 40 ? 86 :
     fre < 55 ? 82 :
     fre < 65 ? 58 :
     fre < 72 ? 30 : 0;
@@ -1128,7 +1134,15 @@ function computeHumanness(
   // Plain, highly readable English.
   const readability = Math.min(12, Math.max(0, stats.fleschReadingEase - 74) * 0.9);
 
-  const index = Math.min(100, informalFingerprint + personalVoice + rhythmVariety + readability);
+  // Concreteness/specificity: referential human writing (journalism, academic,
+  // professional) cites and annotates with parentheticals — "(opens in a new
+  // window)", "(2019)", "(see below)" — which generic AI prose rarely produces.
+  // Kept narrow (parentheticals only): proper nouns and em-dashes appear in AI
+  // too, so crediting them as human hurt real AI detection.
+  const parentheticals = (text.match(/\([^)]{1,80}\)/g) ?? []).length;
+  const specificity = Math.min(12, parentheticals * 4);
+
+  const index = Math.min(100, informalFingerprint + personalVoice + rhythmVariety + readability + specificity);
   const sterileEligible = wc >= 70 && lowercaseStarts === 0 && multiPunct === 0 && informal <= 1;
 
   return { index, sterileEligible };
