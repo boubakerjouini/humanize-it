@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { THEME, humanScore, humanScoreColor, humanScoreLabel } from "@/lib/theme";
 
 interface ScoreRingProps {
@@ -11,6 +11,8 @@ interface ScoreRingProps {
   animate?: boolean;
   /** Hide the caption label under the ring. */
   hideLabel?: boolean;
+  /** Animate the centre number counting up from 0 to the human score (~1s). */
+  countUp?: boolean;
 }
 
 /**
@@ -18,13 +20,32 @@ interface ScoreRingProps {
  * score and displays the HUMAN score (100 − ai) so a fuller, greener ring always
  * means "more human / better". This is the single ring used across the product.
  */
-export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, hideLabel = false }: ScoreRingProps) {
+export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, hideLabel = false, countUp = false }: ScoreRingProps) {
   const circleRef = useRef<SVGCircleElement>(null);
   const human = humanScore(score);
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (human / 100) * circumference;
   const color = humanScoreColor(human);
+
+  // Centre number: static unless `countUp`, in which case it eases 0 → human
+  // over ~1s in step with the ring stroke (the ring number was previously fixed).
+  const [display, setDisplay] = useState(countUp ? 0 : human);
+  useEffect(() => {
+    if (!countUp) { setDisplay(human); return; }
+    let raf = 0;
+    let startTs: number | null = null;
+    const duration = 1000;
+    const tick = (ts: number) => {
+      if (startTs === null) startTs = ts;
+      const t = Math.min(1, (ts - startTs) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setDisplay(Math.round(eased * human));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [countUp, human]);
 
   useEffect(() => {
     if (!animate || !circleRef.current) return;
@@ -75,7 +96,7 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, 
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {human}
+            {display}
           </span>
           <span style={{ fontSize: `${size * 0.085}px`, color: THEME.textMuted, marginTop: "2px", fontFamily: THEME.fontMono }}>
             / 100 human
