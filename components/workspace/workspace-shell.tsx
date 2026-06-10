@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Wand2, History, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight } from "lucide-react";
+import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 
 interface PlanInfo {
@@ -38,7 +38,6 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/dashboard", label: "Humanize", icon: Wand2, exact: true },
-    { href: "/dashboard/history", label: "History", icon: History },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
   if (info.plan === "TEAM" || info.organization) nav.push({ href: "/dashboard/organization", label: "Organization", icon: Building2, exact: false });

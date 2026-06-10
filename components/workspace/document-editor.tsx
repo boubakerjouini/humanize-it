@@ -4,12 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Wand2, Copy, Download, Upload, Check, RotateCcw, Sparkles, ArrowRight,
-  Pencil, MoreHorizontal, Globe,
+  Pencil, MoreHorizontal, Globe, ScanSearch, History as HistoryIcon,
 } from "lucide-react";
-import { analyzeText } from "@/lib/algorithms/analyzeText";
+import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import type { ToneOption, IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { UploadZone } from "@/components/ui/upload-zone";
 import { highlightChanges, sentenceDiff } from "@/lib/sentence-diff";
+import { AnalysisPanel } from "@/components/workspace/analysis-panel";
+import { HistoryDrawer } from "@/components/workspace/history-drawer";
 import { THEME, glow, humanScore, humanScoreColor, humanScoreLabel } from "@/lib/theme";
 
 type Lang = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
@@ -19,13 +22,16 @@ const LANGS: Lang[] = ["English", "French", "Spanish", "Arabic", "German", "Ital
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 type View = "humanized" | "original" | "diff";
+type Screen = "edit" | "analyzing" | "analysis" | "result";
+const ANALYZE_MS = 1500;
 
 export function DocumentEditor() {
   const [plan, setPlan] = useState("FREE");
   const [text, setText] = useState("");
   const [original, setOriginal] = useState<string | null>(null);
   const [humanized, setHumanized] = useState<string | null>(null);
-  const [mode, setMode] = useState<"edit" | "result">("edit");
+  const [screen, setScreen] = useState<Screen>("edit");
+  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [view, setView] = useState<View>("humanized");
   const [busy, setBusy] = useState(false);
   const [tone, setTone] = useState<ToneOption>("standard");
@@ -35,15 +41,19 @@ export function DocumentEditor() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [quotaHit, setQuotaHit] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { fetch("/api/user-plan").then((r) => r.json()).then((d) => setPlan(d.plan ?? "FREE")).catch(() => {}); }, []);
-  useEffect(() => { if (mode === "edit") taRef.current?.focus(); }, [mode]);
+  useEffect(() => { if (screen === "edit") taRef.current?.focus(); }, [screen]);
+  useEffect(() => () => { if (analyzeTimer.current) clearTimeout(analyzeTimer.current); }, []);
 
   const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const beforeScore = useMemo(() => (text.trim().length > 30 ? analyzeText(text).score : null), [text]);
   const afterScore = useMemo(() => (humanized ? analyzeText(humanized).score : null), [humanized]);
   const canRun = words >= 5 && !busy;
+  const canDetect = words >= 15 && !busy;
 
   async function checkout() {
     try {
@@ -51,6 +61,17 @@ export function DocumentEditor() {
       const d = (await res.json()) as { url?: string };
       if (d.url) window.location.href = d.url;
     } catch { /* ignore */ }
+  }
+
+  // The instant engine is synchronous; we stage the reveal over ~1.5s so the
+  // detection reads as deliberate work (scan animation), then show the panel.
+  function detectAI() {
+    if (!canDetect) return;
+    setMenu(false);
+    setAnalysis(analyzeText(text));
+    setScreen("analyzing");
+    if (analyzeTimer.current) clearTimeout(analyzeTimer.current);
+    analyzeTimer.current = setTimeout(() => setScreen("analysis"), ANALYZE_MS);
   }
 
   async function run() {
@@ -65,7 +86,7 @@ export function DocumentEditor() {
       if (!hRes.ok) return fail(hRes.status, await hRes.json().catch(() => null));
       const hData = (await hRes.json()) as { humanizedText?: string };
       if (!hData.humanizedText) { toast.error("The rewrite returned no text. Your original is unchanged."); return; }
-      setOriginal(text); setHumanized(hData.humanizedText); setMode("result"); setView("humanized");
+      setOriginal(text); setHumanized(hData.humanizedText); setScreen("result"); setView("humanized");
       toast.success("Humanized ✓");
     } catch { toast.error("Something went wrong. Please try again."); } finally { setBusy(false); }
   }
@@ -74,8 +95,10 @@ export function DocumentEditor() {
     toast.error(body?.error?.message ?? "Something went wrong.");
   }
 
-  function edit() { if (humanized) setText(humanized); setMode("edit"); }
-  function reset() { setText(""); setOriginal(null); setHumanized(null); setMode("edit"); setQuotaHit(false); }
+  function backToEdit() { if (analyzeTimer.current) clearTimeout(analyzeTimer.current); setScreen("edit"); }
+  function edit() { if (humanized) setText(humanized); setScreen("edit"); }
+  function reset() { setText(""); setOriginal(null); setHumanized(null); setAnalysis(null); setScreen("edit"); setQuotaHit(false); }
+  function loadFromHistory(t: string) { setText(t); setOriginal(null); setHumanized(null); setAnalysis(null); setScreen("edit"); }
   function copy() { navigator.clipboard?.writeText(humanized ?? text); setCopied(true); toast.success("Copied"); }
   function download() {
     const blob = new Blob([humanized ?? text], { type: "text/plain;charset=utf-8" });
@@ -83,7 +106,7 @@ export function DocumentEditor() {
     const a = document.createElement("a"); a.href = url; a.download = "humanized.txt"; a.click(); URL.revokeObjectURL(url);
   }
 
-  const score = mode === "result" ? afterScore : beforeScore;
+  const score = screen === "result" ? afterScore : beforeScore;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh" }}>
@@ -92,15 +115,22 @@ export function DocumentEditor() {
         <div style={{ maxWidth: 980, margin: "0 auto", padding: "10px 20px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <button onClick={run} disabled={!canRun}
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: canRun ? THEME.gradient : THEME.surface3, color: canRun ? "#fff" : THEME.textMuted, border: "none", borderRadius: 10, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: canRun ? "pointer" : "not-allowed", boxShadow: canRun ? glow(THEME.brand, 0.3) : "none", fontFamily: THEME.fontSans }}>
-            <Wand2 size={16} aria-hidden="true" /> {busy ? "Humanizing…" : mode === "result" ? "Re-humanize" : "Humanize"}
+            <Wand2 size={16} aria-hidden="true" /> {busy ? "Humanizing…" : screen === "result" ? "Re-humanize" : "Humanize"}
           </button>
+
+          {screen !== "result" && (
+            <button onClick={detectAI} disabled={!canDetect} title={words < 15 ? "Write at least 15 words to detect AI" : undefined}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7, background: THEME.surface2, color: canDetect ? THEME.text : THEME.textMuted, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: "10px 16px", fontSize: 14, fontWeight: 600, cursor: canDetect ? "pointer" : "not-allowed", fontFamily: THEME.fontSans }}>
+              <ScanSearch size={16} aria-hidden="true" /> Detect AI
+            </button>
+          )}
 
           <Pick label="Tone" value={tone} options={TONES} onChange={(v) => setTone(v as ToneOption)} />
           <Pick label="Strength" value={intensity} options={INTENSITIES} onChange={(v) => setIntensity(v as IntensityLevel)} />
 
           <div style={{ flex: 1 }} />
 
-          {mode === "result" && (
+          {screen === "result" && (
             <div style={{ display: "inline-flex", background: THEME.surface3, borderRadius: 9, padding: 3, gap: 2 }}>
               {(["original", "humanized", "diff"] as View[]).map((v) => (
                 <button key={v} onClick={() => setView(v)} style={{ border: "none", cursor: "pointer", borderRadius: 7, padding: "5px 11px", fontSize: 12, fontWeight: view === v ? 700 : 500, background: view === v ? THEME.surface2 : "transparent", color: view === v ? THEME.text : THEME.textDim, fontFamily: THEME.fontSans, textTransform: "capitalize" }}>{v}</button>
@@ -110,11 +140,13 @@ export function DocumentEditor() {
 
           {score !== null && <ScorePill score={score} />}
 
-          {mode === "result" && <>
+          {screen === "result" && <>
             <IconBtn onClick={copy} title="Copy">{copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}</IconBtn>
             <IconBtn onClick={download} title="Download"><Download size={15} aria-hidden="true" /></IconBtn>
             <button onClick={edit} style={ghostBtn}><Pencil size={14} aria-hidden="true" /> Edit</button>
           </>}
+
+          <IconBtn onClick={() => setHistoryOpen(true)} title="History"><HistoryIcon size={16} aria-hidden="true" /></IconBtn>
 
           {/* Overflow menu */}
           <div style={{ position: "relative" }}>
@@ -152,17 +184,39 @@ export function DocumentEditor() {
       <div style={{ flex: 1, width: "100%", maxWidth: 820, margin: "0 auto", padding: "28px 24px 80px" }}>
         {uploadOpen && (
           <div style={{ marginBottom: 18, background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, padding: 16 }}>
-            <UploadZone plan={plan} uploadEnabled={plan !== "FREE"} onExtracted={(r) => { setText(r.text); setMode("edit"); setHumanized(null); setOriginal(null); setUploadOpen(false); toast.success(`Loaded ${r.fileName}`); }} />
+            <UploadZone plan={plan} uploadEnabled={plan !== "FREE"} onExtracted={(r) => { setText(r.text); setScreen("edit"); setHumanized(null); setOriginal(null); setAnalysis(null); setUploadOpen(false); toast.success(`Loaded ${r.fileName}`); }} />
             <button onClick={() => setUploadOpen(false)} style={{ marginTop: 10, background: "transparent", border: "none", color: THEME.textDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           </div>
         )}
 
-        {mode === "edit" ? (
+        {screen === "edit" && (
           <textarea ref={taRef} value={text} onChange={(e) => setText(e.target.value)}
-            placeholder="Write or paste your text here, then press Humanize…"
+            placeholder="Write or paste your text here, then Detect AI or Humanize…"
             aria-label="Document"
             style={{ width: "100%", minHeight: "62vh", resize: "none", border: "none", outline: "none", background: "transparent", fontSize: 17, lineHeight: 1.85, color: THEME.text, fontFamily: THEME.fontSans }} />
-        ) : (
+        )}
+
+        {screen === "analyzing" && (
+          <div style={{ position: "relative", overflow: "hidden", borderRadius: THEME.radiusLg }}>
+            <div aria-hidden="true" style={{ fontSize: 17, lineHeight: 1.85, color: THEME.text, whiteSpace: "pre-wrap", minHeight: "48vh", opacity: 0.4, userSelect: "none" }}>{text}</div>
+            <div className="detect-scan-beam" />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 12, background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: 999, padding: "12px 20px", boxShadow: glow(THEME.brand, 0.18), fontSize: 14, fontWeight: 600, color: THEME.text }}>
+              <ScanSearch size={18} color={THEME.brand} aria-hidden="true" />
+                Analyzing… checking {PATTERN_COUNT} signals
+                <span style={{ display: "inline-flex", gap: 3 }}>
+                  <Dot delay="0s" /><Dot delay="0.2s" /><Dot delay="0.4s" />
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {screen === "analysis" && analysis && (
+          <AnalysisPanel text={text} result={analysis} busy={busy} onHumanize={run} onBack={backToEdit} />
+        )}
+
+        {screen === "result" && (
           <div style={{ fontSize: 17, lineHeight: 1.85, color: THEME.text, whiteSpace: "pre-wrap", minHeight: "62vh" }}>
             {view === "original" && original}
             {view === "humanized" && highlightChanges(original ?? "", humanized ?? "").map((seg, i) => (
@@ -183,11 +237,26 @@ export function DocumentEditor() {
       <div style={{ position: "sticky", bottom: 0, background: "rgba(255,255,255,0.85)", backdropFilter: "blur(10px)", borderTop: `1px solid ${THEME.border}` }} className="ws-editor-footer">
         <div style={{ maxWidth: 980, margin: "0 auto", padding: "8px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12, color: THEME.textMuted }}>
           <span>{words.toLocaleString()} words</span>
-          <span>{mode === "result" ? "Highlighted sentences were rewritten" : "Scored instantly as you type · never stored"}</span>
+          <span>{footerStatus(screen)}</span>
         </div>
       </div>
+
+      <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} onOpen={loadFromHistory} />
     </div>
   );
+}
+
+function footerStatus(screen: Screen): string {
+  switch (screen) {
+    case "result": return "Highlighted sentences were rewritten";
+    case "analyzing": return "Analyzing…";
+    case "analysis": return "Highlighted spans are the AI tells we located";
+    default: return "Scored instantly as you type · never stored";
+  }
+}
+
+function Dot({ delay }: { delay: string }) {
+  return <span className="pulse-dot" style={{ width: 5, height: 5, borderRadius: 999, background: THEME.brand, animationDelay: delay }} />;
 }
 
 function Pick({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
