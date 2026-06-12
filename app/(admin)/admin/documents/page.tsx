@@ -96,10 +96,10 @@ export default function AdminDocumentsPage() {
                 {documents.map(doc => (
                   <tr key={doc.id} style={{ borderBottom: `1px solid ${THEME.border}` }}>
                     <td style={{ padding: "12px 14px", maxWidth: 290 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Link href={`/admin/documents/${doc.id}`} style={{ display: "flex", alignItems: "center", gap: 10, color: THEME.text, textDecoration: "none" }}>
                         <FileText size={15} color={THEME.brand} aria-hidden="true" style={{ flexShrink: 0 }} />
                         <span style={{ fontWeight: 600, color: THEME.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 250 }}>{doc.title || "Untitled"}</span>
-                      </div>
+                      </Link>
                     </td>
                     <td style={{ padding: "12px 14px", maxWidth: 230 }}>
                       <Link href={`/admin/users/${doc.user.id}`} style={{ display: "flex", alignItems: "center", gap: 6, color: THEME.text, textDecoration: "none", minWidth: 0 }}>
