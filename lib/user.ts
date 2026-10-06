@@ -10,11 +10,16 @@
 // never showed up in the DB. ensureUser() resolves the real Clerk email at
 // creation time (and repairs any row still holding a placeholder), so callers
 // never have to think about it. Always use this instead of upserting inline.
+//
+// It also hands new accounts to the CRM (contact, signup event, attribution)
+// after the response, via runAfter. That work is imported lazily and can
+// neither slow down nor break ensureUser.
 // ===========================================================
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import type { User } from "@/app/generated/prisma/client";
+import { runAfter } from "@/lib/growth/safe";
 
 export const PLACEHOLDER_EMAIL_DOMAIN = "@placeholder.humanize-it.app";
 
@@ -74,6 +79,46 @@ export async function resolveEmailFromClerkApi(clerkId: string): Promise<string 
   }
 }
 
+// ── CRM hand-off ─────────────────────────────────────────────────────────────
+
+/** Accounts younger than this are still synced to the CRM from the fast path. */
+const RECENT_SIGNUP_MS = 24 * 60 * 60 * 1000;
+/** Per-instance memory of recent users already scheduled, bounded by clearing. */
+const RECENT_IDENTIFY_MAX = 1000;
+const recentIdentifyScheduled = new Set<string>();
+
+/**
+ * Sync the user's contact after the response, reading the visit's attribution
+ * cookies inside the after() callback. "recent" covers accounts the Clerk
+ * webhook created before their first request (it can't see cookies); it skips
+ * when a request-scoped sync already ran.
+ */
+function scheduleIdentify(user: User, reason: "created" | "repaired" | "recent"): void {
+  try {
+    runAfter("identify", async () => {
+      const hooks = await import("@/lib/crm/hooks");
+      if (reason === "recent" && (await hooks.wasIdentifiedFromRequest(user.id))) return;
+      const { readAttribution } = await import("@/lib/growth/attribution-server");
+      const attribution = await readAttribution();
+      await hooks.onUserIdentified(user, { isNew: true, attribution, via: "ensure_user" });
+    });
+  } catch {
+    // The CRM must never affect ensureUser.
+  }
+}
+
+function scheduleRecentIdentify(user: User): void {
+  try {
+    if (Date.now() - new Date(user.createdAt).getTime() > RECENT_SIGNUP_MS) return;
+    if (recentIdentifyScheduled.has(user.id)) return;
+    if (recentIdentifyScheduled.size >= RECENT_IDENTIFY_MAX) recentIdentifyScheduled.clear();
+    recentIdentifyScheduled.add(user.id);
+    scheduleIdentify(user, "recent");
+  } catch {
+    // The CRM must never affect ensureUser.
+  }
+}
+
 /**
  * Get the DB User for a Clerk id, creating it on first use with the real Clerk
  * email and backfilling the real email whenever the stored one is still a
@@ -88,7 +133,10 @@ export async function ensureUser(clerkId: string): Promise<User> {
   const existing = await db.user.findUnique({ where: { clerkId } });
 
   // Fast path: a fully-formed row already exists — no Clerk round-trip.
-  if (existing && !isPlaceholderEmail(existing.email)) return existing;
+  if (existing && !isPlaceholderEmail(existing.email)) {
+    scheduleRecentIdentify(existing);
+    return existing;
+  }
 
   // Creating, or repairing a placeholder row → resolve the real email. Prefer
   // the request session; fall back to the Backend API for non-request contexts.
@@ -96,7 +144,7 @@ export async function ensureUser(clerkId: string): Promise<User> {
     (await resolveEmailFromSession(clerkId)) ?? (await resolveEmailFromClerkApi(clerkId));
 
   try {
-    return await db.user.upsert({
+    const user = await db.user.upsert({
       where: { clerkId },
       // Only overwrite email when we actually resolved a real one — never
       // clobber a good email back to a placeholder.
@@ -108,6 +156,9 @@ export async function ensureUser(clerkId: string): Promise<User> {
         wordsUsed: 0,
       },
     });
+    if (!existing) scheduleIdentify(user, "created");
+    else if (realEmail) scheduleIdentify(user, "repaired");
+    return user;
   } catch {
     // Possible causes: the email unique constraint collided with another row,
     // or a concurrent create won the race. Re-read and return whatever exists.
