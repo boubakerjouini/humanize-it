@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt for Copywriters — Write Faster, Sound Human | HumanizeIt",
+  title: "AI Humanizer for Copywriters: Write Faster | HumanizeIt",
   description:
     "Copywriters use HumanizeIt to turn fast AI drafts into natural, on-brand copy and check it for AI-like patterns before clients do. Pro plan $9/mo.",
   keywords: [
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "AI text humanizer",
   ],
   openGraph: {
-    title: "HumanizeIt for Copywriters — Write Faster, Sound Human | HumanizeIt",
+    title: "AI Humanizer for Copywriters: Write Faster | HumanizeIt",
     description:
       "Turn fast AI drafts into natural, on-brand copy and check it for AI-like patterns before clients do. Pro plan at $9/mo.",
     url: "https://humanizeit.app/use-cases/copywriters",

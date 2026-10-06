@@ -3,18 +3,18 @@ import type { Metadata } from "next";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt vs StealthGPT 2025 — Which Is Better? | HumanizeIt",
+  title: "HumanizeIt vs StealthGPT (2026): Honest Comparison",
   description:
     "A thorough comparison of HumanizeIt and StealthGPT: pricing, billing complaints users report, the free tier, output quality, and which tool fits your workflow.",
   keywords: [
     "HumanizeIt vs StealthGPT",
     "StealthGPT alternative",
     "StealthGPT billing issues",
-    "AI humanizer comparison 2025",
+    "AI humanizer comparison 2026",
     "best AI humanizer",
   ],
   openGraph: {
-    title: "HumanizeIt vs StealthGPT 2025 — Which Is Better?",
+    title: "HumanizeIt vs StealthGPT (2026): Honest Comparison",
     description:
       "Side-by-side comparison of HumanizeIt and StealthGPT covering pricing, billing transparency, the free tier, and output quality.",
     type: "article",
@@ -115,7 +115,7 @@ export default function HumanizeItVsStealthGpt() {
           marginBottom: "24px",
         }}
       >
-        HumanizeIt vs StealthGPT (2025): Which AI Humanizer Is{" "}
+        HumanizeIt vs StealthGPT (2026): Which AI Humanizer Is{" "}
         <span style={{ color: THEME.brand }}>Actually Worth It?</span>
       </h1>
 

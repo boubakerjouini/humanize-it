@@ -3,19 +3,19 @@ import type { Metadata } from "next";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "HumanizeIt vs Undetectable.ai 2025 — Honest Comparison | HumanizeIt",
+  title: "HumanizeIt vs Undetectable.ai (2026): Honest Comparison",
   description:
     "An honest, side-by-side comparison of HumanizeIt and Undetectable.ai: pricing, free tier, billing transparency, output quality, and how each shows its work.",
   keywords: [
     "HumanizeIt vs Undetectable.ai",
     "Undetectable.ai alternative",
     "AI humanizer comparison",
-    "best AI humanizer 2025",
+    "best AI humanizer 2026",
     "Undetectable.ai pricing",
     "AI text humanizer",
   ],
   openGraph: {
-    title: "HumanizeIt vs Undetectable.ai 2025 — Honest Comparison",
+    title: "HumanizeIt vs Undetectable.ai (2026): Honest Comparison",
     description:
       "Side-by-side comparison of HumanizeIt and Undetectable.ai covering price, quality, transparency, and features.",
     type: "article",
@@ -116,7 +116,7 @@ export default function HumanizeItVsUndetectableAi() {
           marginBottom: "24px",
         }}
       >
-        HumanizeIt vs Undetectable.ai (2025): An{" "}
+        HumanizeIt vs Undetectable.ai (2026): An{" "}
         <span style={{ color: THEME.brand }}>Honest, Side-by-Side</span> Comparison
       </h1>
 
