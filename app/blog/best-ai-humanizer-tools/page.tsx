@@ -189,7 +189,7 @@ export default function BestAiHumanizerToolsPage() {
             </tr>
             <tr>
               <td style={{ ...tdStyle, fontWeight: 600, color: THEME.text }}>Undetectable.ai</td>
-              <td style={tdStyle}>$14.99/mo</td>
+              <td style={tdStyle}>From $9.99/mo</td>
               <td style={tdStyle}>Limited</td>
               <td style={tdStyle}>Humanizing with a built-in detector check</td>
               <td style={tdStyle}>Renewal complaints in reviews</td>
@@ -282,7 +282,7 @@ export default function BestAiHumanizerToolsPage() {
         see how your text performs before you copy it out.
       </p>
       <p style={pStyle}>
-        The downside is the price: its entry plan costs more than HumanizeIt&apos;s for fewer words.
+        The downside is the price: its paid plans start above HumanizeIt&apos;s $9 per month.
         Public reviews also include complaints about annual auto-renewals and cancelling, so read the
         renewal terms before you subscribe.
       </p>
@@ -294,7 +294,7 @@ export default function BestAiHumanizerToolsPage() {
       </ul>
       <p style={{ ...pStyle, fontWeight: 600, color: THEME.text }}>Cons:</p>
       <ul style={{ ...pStyle, paddingLeft: "24px", marginTop: "0" }}>
-        <li>Higher entry price for a smaller word allowance</li>
+        <li>Higher entry price</li>
         <li>Renewal and cancellation complaints in public reviews</li>
         <li>Shows a score, not why your text was flagged</li>
       </ul>
