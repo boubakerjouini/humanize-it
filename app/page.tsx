@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -167,17 +167,19 @@ const COMPARISON = [
   { label: "Price", us: "From $0", quill: "From $9.95", undet: "From $9.99" },
 ];
 
+const subscribeNoop = () => () => {};
+
 export default function LandingPage() {
   const router = useRouter();
   const [text, setText] = useState("");
-  const [mounted, setMounted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  // false during SSR/hydration, true afterwards (no setState-in-effect re-render)
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const result = showResult && text.trim().length > 10 ? analyzeText(text) : null;
   const aiScore = result?.score ?? 0;
