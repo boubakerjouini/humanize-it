@@ -3,20 +3,80 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Users, Building2, Ticket, ShieldCheck, ArrowLeft, DollarSign, TrendingUp, Gift, FileText, Tag, ScrollText } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Ticket,
+  ShieldCheck,
+  ArrowLeft,
+  DollarSign,
+  TrendingUp,
+  Gift,
+  FileText,
+  Tag,
+  ScrollText,
+  Funnel,
+  ContactRound,
+  SquareKanban,
+  ListTodo,
+  Layers,
+  Share2,
+  Megaphone,
+  Workflow,
+  MailCheck,
+  type LucideIcon,
+} from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 
-const ADMIN_NAV = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/admin/users", label: "Customers", icon: Users },
-  { href: "/admin/organizations", label: "Organizations", icon: Building2 },
-  { href: "/admin/documents", label: "Documents", icon: FileText },
-  { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
-  { href: "/admin/growth", label: "Growth", icon: TrendingUp },
-  { href: "/admin/codes", label: "Discount codes", icon: Ticket },
-  { href: "/admin/redemptions", label: "Redemptions", icon: Gift },
-  { href: "/admin/tags", label: "Tags", icon: Tag },
-  { href: "/admin/audit", label: "Audit log", icon: ScrollText },
+type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean };
+
+// No href is a prefix of another, so the startsWith active check stays exact.
+const ADMIN_NAV: { title: string | null; items: NavItem[] }[] = [
+  {
+    title: null,
+    items: [
+      { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+      { href: "/admin/users", label: "Customers", icon: Users },
+      { href: "/admin/organizations", label: "Organizations", icon: Building2 },
+      { href: "/admin/documents", label: "Documents", icon: FileText },
+    ],
+  },
+  {
+    title: "CRM",
+    items: [
+      { href: "/admin/funnel", label: "Funnel", icon: Funnel },
+      { href: "/admin/contacts", label: "Contacts", icon: ContactRound },
+      { href: "/admin/pipeline", label: "Pipeline", icon: SquareKanban },
+      { href: "/admin/tasks", label: "Tasks", icon: ListTodo },
+      { href: "/admin/segments", label: "Segments", icon: Layers },
+      { href: "/admin/referrals", label: "Referrals", icon: Share2 },
+    ],
+  },
+  {
+    title: "Email",
+    items: [
+      { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
+      { href: "/admin/sequences", label: "Sequences", icon: Workflow },
+      { href: "/admin/email-log", label: "Email log", icon: MailCheck },
+    ],
+  },
+  {
+    title: "Money",
+    items: [
+      { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
+      { href: "/admin/growth", label: "Growth", icon: TrendingUp },
+      { href: "/admin/codes", label: "Discount codes", icon: Ticket },
+      { href: "/admin/redemptions", label: "Redemptions", icon: Gift },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { href: "/admin/tags", label: "Tags", icon: Tag },
+      { href: "/admin/audit", label: "Audit log", icon: ScrollText },
+    ],
+  },
 ];
 
 export function AdminShell({ email, children }: { email: string; children: React.ReactNode }) {
@@ -37,22 +97,31 @@ export function AdminShell({ email, children }: { email: string; children: React
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {ADMIN_NAV.map(({ href, label, icon: Icon, exact }) => {
-            const active = isActive(href, exact);
-            return (
-              <Link key={href} href={href} aria-current={active ? "page" : undefined} style={{
-                display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 8, textDecoration: "none",
-                background: active ? THEME.brandDim : "transparent",
-                color: active ? THEME.brandHi : THEME.textDim,
-                fontSize: 13, fontWeight: active ? 600 : 500,
-                border: active ? `1px solid ${THEME.brand}44` : "1px solid transparent",
-              }}>
-                <Icon size={15} color={active ? THEME.brandHi : THEME.textMuted} aria-hidden="true" />
-                {label}
-              </Link>
-            );
-          })}
+        <nav aria-label="Admin" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+          {ADMIN_NAV.map((group) => (
+            <div key={group.title ?? "main"} role="group" aria-label={group.title ?? undefined} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {group.title ? (
+                <div style={{ padding: "14px 12px 6px", fontSize: 10, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {group.title}
+                </div>
+              ) : null}
+              {group.items.map(({ href, label, icon: Icon, exact }) => {
+                const active = isActive(href, exact);
+                return (
+                  <Link key={href} href={href} aria-current={active ? "page" : undefined} style={{
+                    display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 8, textDecoration: "none",
+                    background: active ? THEME.brandDim : "transparent",
+                    color: active ? THEME.brandHi : THEME.textDim,
+                    fontSize: 13, fontWeight: active ? 600 : 500,
+                    border: active ? `1px solid ${THEME.brand}44` : "1px solid transparent",
+                  }}>
+                    <Icon size={15} color={active ? THEME.brandHi : THEME.textMuted} aria-hidden="true" />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}` }}>
