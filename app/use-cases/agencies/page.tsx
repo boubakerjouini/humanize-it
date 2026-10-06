@@ -134,7 +134,7 @@ export default function AgenciesUseCasePage() {
       <p style={pStyle}>
         For a whole team, create an organization and buy seats: each seat costs $12 a month (or $120 a year), gives a
         member Team-level features, and adds 100,000 words to the organization&apos;s shared monthly pool. Admins invite
-        writers and editors by email and manage seats from one place.
+        writers and editors with a personal invite link and manage seats from one place.
       </p>
 
       <h2 style={h2Style}>ROI That Speaks for Itself</h2>
