@@ -7,7 +7,7 @@ import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_s
 export const metadata: Metadata = {
   title: "Free AI Humanizer — Make AI Text Sound Human, No Signup",
   description:
-    "Free AI humanizer. Paste ChatGPT, Claude or Gemini text and get a natural, human-sounding rewrite that keeps your meaning, with your AI score before and after. No signup.",
+    "Free AI humanizer, no signup. Paste ChatGPT, Claude or Gemini text and get a natural rewrite that keeps your meaning, with your AI score before and after.",
   keywords: ["free ai humanizer", "humanize ai text free", "ai humanizer", "humanize chatgpt", "undetectable ai free", "ai text humanizer"],
   openGraph: {
     title: "Free AI Humanizer — Make AI Text Sound Human, No Signup",

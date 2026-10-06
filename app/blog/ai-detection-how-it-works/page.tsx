@@ -10,7 +10,7 @@ const POST = getPostBySlug("ai-detection-how-it-works")!;
 export const metadata: Metadata = {
   title: "How AI Detection Works in 2026 — and Why It Flags Humans",
   description:
-    "A deep technical breakdown of how AI detectors like GPTZero and Turnitin identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
+    "How AI detectors like GPTZero and Turnitin use perplexity, burstiness and classifiers to spot AI text, why they flag human writing, and how to write naturally.",
   keywords: [
     "AI detection",
     "how AI detection works",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How AI Detection Works in 2026 — and Why It Flags Humans",
     description:
-      "A deep technical breakdown of how AI detectors identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
+      "How AI detectors use perplexity, burstiness and classifiers to spot AI text, why they still flag human writing, and how to keep your own writing natural.",
     url: "https://humanizeit.app/blog/ai-detection-how-it-works",
     siteName: "HumanizeIt",
     type: "article",

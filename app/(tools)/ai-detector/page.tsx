@@ -6,12 +6,12 @@ import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
 
 export const metadata: Metadata = {
-  title: "Free AI Detector — Check Text for GPTZero & Turnitin Patterns",
+  title: "Free AI Detector: Check Text for GPTZero & Turnitin Patterns",
   description:
-    "Free, no-signup AI detector. Paste any text to see its AI-likelihood score and which patterns make it read as AI-written — the signals detectors like GPTZero and Turnitin weigh.",
+    "Free, no-signup AI detector. See your AI-likelihood score and which patterns make text read as AI-written, the signals GPTZero and Turnitin weigh.",
   keywords: ["ai detector", "ai checker", "free ai detector", "gptzero alternative", "ai content detector", "detect ai text"],
   openGraph: {
-    title: "Free AI Detector — Check Text for GPTZero & Turnitin Patterns",
+    title: "Free AI Detector: Check Text for GPTZero & Turnitin Patterns",
     description: "Paste any text to see its AI-likelihood score and the exact patterns detectors flag. Free, no signup.",
     url: "https://humanizeit.app/ai-detector",
     siteName: "HumanizeIt",
