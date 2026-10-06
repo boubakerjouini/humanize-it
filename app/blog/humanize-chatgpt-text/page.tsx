@@ -2,9 +2,12 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
+import { getPostBySlug, formatPostDate } from "@/lib/blog";
+
+const POST = getPostBySlug("humanize-chatgpt-text")!;
 
 export const metadata: Metadata = {
-  title: "How to Humanize ChatGPT Text in 2025 (Free) | HumanizeIt",
+  title: "How to Humanize ChatGPT Text in 2026 (Free) | HumanizeIt",
   description:
     "Learn how to humanize ChatGPT text step by step: make AI-assisted drafts sound natural, keep your meaning, and check the result before you publish.",
   keywords: [
@@ -20,12 +23,14 @@ export const metadata: Metadata = {
     "free AI humanizer",
   ],
   openGraph: {
-    title: "How to Humanize ChatGPT Text in 2025 (Free) | HumanizeIt",
+    title: "How to Humanize ChatGPT Text in 2026 (Free) | HumanizeIt",
     description:
       "Step-by-step guide to turning ChatGPT output into natural, human-sounding text — and checking it before you publish.",
     url: "https://humanizeit.app/blog/humanize-chatgpt-text",
     siteName: "HumanizeIt",
     type: "article",
+    publishedTime: POST.date,
+    modifiedTime: POST.dateModified,
   },
   alternates: {
     canonical: "https://humanizeit.app/blog/humanize-chatgpt-text",
@@ -110,7 +115,7 @@ export default function HumanizeChatGPTTextPage() {
           Blog
         </Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
-        <span style={{ color: THEME.textDim }}>How to Humanize ChatGPT Text in 2025 (Free)</span>
+        <span style={{ color: THEME.textDim }}>How to Humanize ChatGPT Text in 2026 (Free)</span>
       </nav>
 
       {/* H1 */}
@@ -126,7 +131,7 @@ export default function HumanizeChatGPTTextPage() {
           lineHeight: 1.15,
         }}
       >
-        How to Humanize ChatGPT Text in 2025 (Free)
+        How to Humanize ChatGPT Text in 2026 (Free)
       </h1>
 
       <p
@@ -136,7 +141,9 @@ export default function HumanizeChatGPTTextPage() {
           marginBottom: "16px",
         }}
       >
-        Updated March 2025 &middot; 6 min read
+        Published {formatPostDate(POST.date)}
+        {POST.dateModified && <> &middot; Updated {formatPostDate(POST.dateModified)}</>} &middot;{" "}
+        {POST.readingTime} min read
       </p>
 
       <p style={pStyle}>

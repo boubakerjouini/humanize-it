@@ -3,9 +3,12 @@ import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
+import { getPostBySlug, formatPostDate } from "@/lib/blog";
+
+const POST = getPostBySlug("best-ai-humanizer-tools")!;
 
 export const metadata: Metadata = {
-  title: "7 Best AI Humanizer Tools in 2025 (Compared) | HumanizeIt",
+  title: "7 Best AI Humanizer Tools in 2026 (Compared) | HumanizeIt",
   description:
     "We compared 7 popular AI humanizer tools on pricing, free tiers, transparency, billing, and what each is built for — plus how to test them on your own writing.",
   keywords: [
@@ -21,12 +24,14 @@ export const metadata: Metadata = {
     "HumanizeIt",
   ],
   openGraph: {
-    title: "7 Best AI Humanizer Tools in 2025 (Compared) | HumanizeIt",
+    title: "7 Best AI Humanizer Tools in 2026 (Compared) | HumanizeIt",
     description:
       "7 popular AI humanizer tools compared on pricing, free tiers, transparency, billing, and what each is built for.",
     url: "https://humanizeit.app/blog/best-ai-humanizer-tools",
     siteName: "HumanizeIt",
     type: "article",
+    publishedTime: POST.date,
+    modifiedTime: POST.dateModified,
   },
   alternates: {
     canonical: "https://humanizeit.app/blog/best-ai-humanizer-tools",
@@ -93,7 +98,7 @@ export default function BestAiHumanizerToolsPage() {
           Blog
         </Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
-        <span style={{ color: THEME.textDim }}>7 Best AI Humanizer Tools in 2025</span>
+        <span style={{ color: THEME.textDim }}>7 Best AI Humanizer Tools in 2026</span>
       </nav>
 
       {/* H1 */}
@@ -109,11 +114,13 @@ export default function BestAiHumanizerToolsPage() {
           marginBottom: "16px",
         }}
       >
-        7 Best AI Humanizer Tools in 2025 (Compared)
+        7 Best AI Humanizer Tools in 2026 (Compared)
       </h1>
 
       <p style={{ ...pStyle, color: THEME.textDim, fontSize: "13px" }}>
-        Last updated: January 15, 2025 &middot; 8 min read
+        Published {formatPostDate(POST.date)}
+        {POST.dateModified && <> &middot; Updated {formatPostDate(POST.dateModified)}</>} &middot;{" "}
+        {POST.readingTime} min read
       </p>
 
       <p style={pStyle}>

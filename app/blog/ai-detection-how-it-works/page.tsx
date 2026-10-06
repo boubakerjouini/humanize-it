@@ -3,9 +3,12 @@ import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
+import { getPostBySlug, formatPostDate } from "@/lib/blog";
+
+const POST = getPostBySlug("ai-detection-how-it-works")!;
 
 export const metadata: Metadata = {
-  title: "How AI Detection Works in 2025 — and Why It Flags Humans",
+  title: "How AI Detection Works in 2026 — and Why It Flags Humans",
   description:
     "A deep technical breakdown of how AI detectors like GPTZero and Turnitin identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
   keywords: [
@@ -26,13 +29,14 @@ export const metadata: Metadata = {
     canonical: "https://humanizeit.app/blog/ai-detection-how-it-works",
   },
   openGraph: {
-    title: "How AI Detection Works in 2025 — and Why It Flags Humans",
+    title: "How AI Detection Works in 2026 — and Why It Flags Humans",
     description:
       "A deep technical breakdown of how AI detectors identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
     url: "https://humanizeit.app/blog/ai-detection-how-it-works",
     siteName: "HumanizeIt",
     type: "article",
-    publishedTime: "2025-06-10T00:00:00Z",
+    publishedTime: POST.date,
+    modifiedTime: POST.dateModified,
   },
 };
 
@@ -60,7 +64,7 @@ export default function AiDetectionHowItWorksPage() {
         </Link>
         <span className="mx-2" style={{ color: THEME.border }}>/</span>
         <span style={{ color: THEME.textDim }}>
-          How AI Detection Works in 2025 — and Why It Flags Humans
+          How AI Detection Works in 2026 — and Why It Flags Humans
         </span>
       </nav>
 
@@ -77,7 +81,7 @@ export default function AiDetectionHowItWorksPage() {
           letterSpacing: "-0.02em",
         }}
       >
-        How AI Detection Works in 2025 — and Why It Flags Humans
+        How AI Detection Works in 2026 — and Why It Flags Humans
       </h1>
 
       <p
@@ -87,7 +91,9 @@ export default function AiDetectionHowItWorksPage() {
           marginBottom: "40px",
         }}
       >
-        Published June 10, 2025 &middot; 7 min read
+        Published {formatPostDate(POST.date)}
+        {POST.dateModified && <> &middot; Updated {formatPostDate(POST.dateModified)}</>} &middot;{" "}
+        {POST.readingTime} min read
       </p>
 
       <div className="blog-prose">
