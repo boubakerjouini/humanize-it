@@ -100,9 +100,9 @@ export default function SeoContentUseCasePage() {
         The workflow that holds up treats AI as a drafting accelerant, not an autopilot. Start from real keyword and
         intent research. Add the things a model cannot invent: your own data, screenshots, product knowledge, customer
         questions, and a point of view. Draft fast, then edit for accuracy and substance. Humanizing belongs near the end
-        &mdash; once the page says something true and specific, you smooth the machine texture so it reads naturally and
-        clears whatever detector your client runs. That keeps throughput high while protecting the quality bar that
-        rankings depend on.
+        &mdash; once the page says something true and specific, you smooth the machine texture so it reads naturally,
+        then re-check it against the detector your client uses. That keeps throughput high while protecting the quality
+        bar that rankings depend on.
       </p>
 
       <h2 style={kitStyles.h2}>The Originality.ai risk for content teams</h2>

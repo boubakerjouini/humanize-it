@@ -172,7 +172,7 @@ export default function CanGptzeroDetectChatgptPage() {
           },
           {
             q: "Will a humanizer reliably beat GPTZero?",
-            a: "A good humanizer restores natural variation in rhythm and word choice, which lowers detector scores in most cases. No tool can promise a perfect pass on every detector forever, since detectors update — so review the output and use it to present honest work naturally.",
+            a: "Not reliably, and no tool can promise it. A good humanizer restores natural variation in rhythm and word choice, which reduces the patterns detectors react to, but GPTZero updates its models often and the same text can score differently over time. Review the output and use it to present your own work naturally.",
           },
         ]}
       />

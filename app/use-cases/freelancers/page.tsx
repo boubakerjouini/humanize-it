@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Humanizer for Freelancers | HumanizeIt",
     description:
-      "Deliver client work that reads naturally and clears AI-detection checks. See how freelancers use HumanizeIt to protect their reputation and save time.",
+      "Deliver client work that reads naturally and check it for AI-like patterns first. See how freelancers use HumanizeIt to protect their reputation and save time.",
     url: URL,
     siteName: "HumanizeIt",
     type: "article",

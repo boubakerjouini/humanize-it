@@ -41,7 +41,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const faqQuestions: [slug: string, lastModified: string][] = [
     ["can-turnitin-detect-chatgpt", "2026-10-06"],
     ["can-turnitin-detect-claude", "2026-10-06"],
-    ["can-gptzero-detect-chatgpt", "2026-06-09"],
+    ["can-gptzero-detect-chatgpt", "2026-10-06"],
   ];
   const useCaseSlugs: [slug: string, lastModified: string][] = [
     ["students", "2026-10-06"],

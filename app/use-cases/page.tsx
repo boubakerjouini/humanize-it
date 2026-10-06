@@ -65,13 +65,13 @@ const USE_CASES = [
     href: "/use-cases/seo-content",
     kicker: "For SEO",
     title: "SEO Content",
-    desc: "Publish AI-assisted content at scale that reads human and holds up against Originality.ai and helpful-content checks.",
+    desc: "Publish AI-assisted content at scale that reads naturally and gets checked for the patterns Originality.ai flags before it ships.",
   },
   {
     href: "/use-cases/freelancers",
     kicker: "For freelancers",
     title: "Freelancers",
-    desc: "Deliver client work fast without tripping the AI-detection checks that put your reputation on the line.",
+    desc: "Deliver client work fast and check it for AI-like patterns before your client does.",
   },
 ];
 

@@ -412,7 +412,7 @@ export default function HumanizeChatGPTTextPage() {
         <li style={{ marginBottom: "12px" }}>
           <strong style={{ color: THEME.text }}>Use the built-in AI detection score.</strong> HumanizeIt shows
           you a detection probability score before and after humanization so you
-          can verify that your text will pass.
+          can see what changed and re-check it.
         </li>
       </ol>
 
