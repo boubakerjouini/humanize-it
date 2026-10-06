@@ -74,9 +74,12 @@ export const config = {
     // the durable document pipeline can't enqueue/resume steps.
     // Also skipped: the PostHog reverse proxy (`/ingest/*`, rewritten in
     // next.config.ts — signed-out analytics calls were being 404ed by
-    // auth.protect()) and .txt/.xml files, so robots.txt, sitemap.xml and the
-    // IndexNow key stay reachable for crawlers.
-    "/((?!_next|ingest(?:/|$)|\\.well-known/workflow|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|txt|xml)).*)",
+    // auth.protect()) and the root crawler files: robots.txt, sitemap.xml and
+    // the IndexNow key (`/<32 hex>.txt`). They are named exactly rather than
+    // skipping every .txt/.xml path: a generic exclusion would also let
+    // `/admin/users/x.xml` bypass Clerk, and the admin layout then 500s instead
+    // of getting the protect 404.
+    "/((?!_next|ingest(?:/|$)|\\.well-known/workflow|(?:robots\\.txt|sitemap\\.xml|[0-9a-f]{32}\\.txt)$|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };
