@@ -9,7 +9,7 @@ const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 export const metadata: Metadata = {
   title: "Can Turnitin Detect Claude? (2026 Answer)",
   description:
-    "Yes — Turnitin can flag raw Claude output at high rates in 2026. Learn how its AI detector works, why Claude is not safe by default, and how to lower the risk.",
+    "Yes — Turnitin can flag raw Claude output at high rates in 2026. Learn how its AI detector works, why Claude is not invisible, and how to avoid false flags.",
   keywords: [
     "can Turnitin detect Claude",
     "Turnitin Claude detection",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Can Turnitin Detect Claude? (2026 Answer)",
     description:
-      "Yes — Turnitin can flag raw Claude output at high rates in 2026. How its AI detector works, why Claude is not safe by default, and how to lower the risk.",
+      "Yes — Turnitin can flag raw Claude output at high rates in 2026. How its AI detector works, why Claude is not invisible, and how to avoid false flags.",
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -54,9 +54,9 @@ export default function CanTurnitinDetectClaudePage() {
         Short answer: yes. As of 2026, Turnitin&apos;s AI writing indicator regularly flags unedited output from
         Anthropic&apos;s Claude models &mdash; including Claude Opus, Sonnet, and Haiku &mdash; at high rates. Turnitin does
         not maintain a separate detector for each chatbot; it is trained to recognize the statistical signature of large
-        language models in general, and Claude produces that signature just as ChatGPT does. Pasting Claude&apos;s answer
-        straight into an assignment is not a safe assumption, and this page explains why, how the detection works, and
-        what actually lowers the risk of a false flag.
+        language models in general, and Claude produces that signature just as ChatGPT does. Assuming Claude&apos;s
+        answers are invisible to Turnitin is a mistake, and this page explains why, how the detection works, and what
+        actually lowers the risk of a false flag on your own writing.
       </p>
 
       <h2 style={kitStyles.h2}>The direct answer: raw Claude output is detectable</h2>
@@ -92,7 +92,7 @@ export default function CanTurnitinDetectClaudePage() {
         level &mdash; precisely because a wrong accusation is so costly to a student.
       </p>
 
-      <h2 style={kitStyles.h2}>Why Claude is not safe by default</h2>
+      <h2 style={kitStyles.h2}>Why Claude output is not invisible</h2>
       <p style={kitStyles.p}>
         Some students assume Claude is harder to detect than ChatGPT because it sounds more natural or more
         &quot;human.&quot; That intuition does not hold up against how the detector measures text. A model can read warmly
@@ -128,7 +128,7 @@ export default function CanTurnitinDetectClaudePage() {
         safe-phrasing a model defaults to.
       </p>
 
-      <h2 style={kitStyles.h2}>How to lower the risk of being flagged</h2>
+      <h2 style={kitStyles.h2}>How to lower the risk of a false flag</h2>
       <p style={kitStyles.p}>
         The most reliable way to read as human is to write with the variation humans actually produce. Start with
         burstiness: mix long, clause-heavy sentences with short, punchy ones instead of letting every sentence settle near
@@ -138,43 +138,50 @@ export default function CanTurnitinDetectClaudePage() {
         sense if you genuinely understand the material.
       </p>
       <p style={kitStyles.p}>
-        Doing this by hand across a full essay is tedious, and it is easy to overcorrect into prose that reads worse than
-        where you started. That is the gap a humanizer fills. For a checklist of techniques framed specifically around
-        Turnitin, the guide on{" "}
+        You do not have to guess where to start. A detector that names the patterns it reacts to shows you which passages
+        read flat, so you can revise those and leave the rest of your voice alone. For a checklist framed specifically
+        around Turnitin, our{" "}
         <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
-          bypassing Turnitin AI detection
+          Turnitin AI detection guide
         </Link>{" "}
-        walks through each lever in more depth, including how the per-segment scoring shapes what you should edit first.
+        walks through each lever in more depth, including how the per-segment scoring shapes what you should revise first.
       </p>
 
-      <h2 style={kitStyles.h2}>How HumanizeIt rewrites Claude output</h2>
+      <h2 style={kitStyles.h2}>Check your own writing before you submit</h2>
       <p style={kitStyles.p}>
-        HumanizeIt automates the rewrite: paste a Claude draft, choose a humanization level, and the model varies sentence
-        length, diversifies vocabulary, and introduces natural cadence while preserving your argument, structure, and
-        meaning. The point is to change the surface texture &mdash; the perplexity and burstiness the detector measures
-        &mdash; without changing your ideas. You can try this on a real document with the{" "}
+        Start with the free{" "}
+        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>
+          AI detector
+        </Link>
+        : paste your draft and it shows which passages read as machine-like and why &mdash; uniform sentence length,
+        stock transitions, predictable phrasing. If a passage of your own writing reads stiffly, edit it yourself or let
+        the{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>
           free AI humanizer
         </Link>{" "}
-        before deciding whether it fits your workflow.
+        suggest a more natural version, then read the result and keep only what still sounds like you. Keep your drafts,
+        notes, and version history as you go: if a score is ever questioned, your writing process is the evidence that
+        matters.
       </p>
       <p style={kitStyles.p}>
-        The workflow we recommend is iterative rather than one-shot. Humanize the text, re-check it, read it yourself for
-        accuracy, and repeat on any sections that still read flat. No tool can promise a guaranteed Turnitin pass &mdash;
-        Turnitin updates its model, institutions layer on additional checkers, and the same text can score differently
-        across detectors and re-runs, and since August 2025 Turnitin also looks for text that has been run through AI
-        humanizers. Anyone advertising a fixed success rate is selling certainty that does not exist.
-        Treat humanizing as editing, not evasion, and always do a final human pass: you are the only one who can confirm
-        that a citation is accurate and that the argument still says what you meant.
+        No tool can promise a guaranteed Turnitin pass &mdash; Turnitin updates its model, institutions layer on
+        additional checkers, and the same text can score differently across detectors and re-runs, and since August 2025
+        Turnitin also looks for text that has been run through AI humanizers. Running Claude&apos;s output through a
+        humanizer is not a way to hand it in as your own work. Anyone advertising a fixed success rate is selling
+        certainty that does not exist. Treat any rewrite as editing, not evasion, and always do a final human pass: you
+        are the only one who can confirm that a citation is accurate and that the argument still says what you meant.
       </p>
 
       <h2 style={kitStyles.h2}>Using this responsibly</h2>
       <p style={kitStyles.p}>
         These techniques exist to protect honest work and to improve writing &mdash; not to misrepresent authorship of
-        ideas you did not develop. Follow your institution&apos;s academic-integrity policy, and where AI assistance is
-        disclosed or permitted, use Claude and a humanizer to make your own thinking read clearly rather than to fake
-        effort you did not put in. The most defensible position is always the one where you understand and can defend every
-        sentence you submit.
+        ideas you did not develop. Handing in Claude&apos;s writing as your own breaks our{" "}
+        <Link href="/terms" style={{ color: THEME.brandHi }}>
+          Terms of Service
+        </Link>{" "}
+        and most academic-integrity policies. Follow your institution&apos;s rules, and where AI assistance is disclosed
+        or permitted, use it to make your own thinking read clearly rather than to fake effort you did not put in. The
+        most defensible position is always the one where you understand and can defend every sentence you submit.
       </p>
 
       <FaqSection
@@ -185,18 +192,18 @@ export default function CanTurnitinDetectClaudePage() {
           },
           {
             q: "Is Claude harder to detect than ChatGPT?",
-            a: "Not in any reliable way. People assume Claude is safer because it reads warmly and naturally, but tone is not the same as the perplexity and burstiness the detector actually measures. Claude's consistent, polished register is exactly what raises an AI score. Both models reach the same conclusion: raw output is detectable, and editing is what changes that.",
+            a: "Not in any reliable way. People assume Claude is safer because it reads warmly and naturally, but tone is not the same as the perplexity and burstiness the detector actually measures. Claude's consistent, polished register is exactly what raises an AI score. The same analysis applies to both: raw output from either model is detectable at high rates.",
           },
           {
             q: "Does Claude add a watermark that Turnitin reads?",
             a: "No. Turnitin's detection is statistical, based on how predictable the text is, not a secret signature embedded by Anthropic. That means there is no hidden switch making Claude output invisible, and no unique marker that exclusively identifies it. The score comes from the text's patterns, which is why varying your writing changes it.",
           },
           {
-            q: "How can I lower the chance Claude text gets flagged?",
-            a: "Increase variation. Mix long and short sentences for burstiness, replace generic filler with specific concrete language to raise perplexity, and add real voice and point of view. Doing this by hand is tedious, so a humanizer that rewrites for those properties helps. Always re-check the result and read it for accuracy before submitting.",
+            q: "How do I avoid a false flag on my own writing?",
+            a: "Write with natural variation: mix long and short sentences, swap generic filler for specific, concrete language, and let your own voice and point of view show. Check your draft with a free AI detector to see which passages read as machine-like, and keep your drafts and notes so you can show how you wrote it. Rewriting Claude's output to get past the detector is not the answer: Turnitin now also looks for humanizer-modified text, and submitting AI-written work as your own breaks most academic-integrity policies.",
           },
           {
-            q: "Will humanizing Claude output change my meaning?",
+            q: "Will a humanizer change the meaning of my draft?",
             a: "A good humanizer rewrites the surface texture while preserving your argument and structure, but no rewrite is risk-free. Always read the output, confirm that citations and claims are still accurate, and fix anything that drifted. The tool changes how the text reads, not what you intended to say, so the final accuracy check is yours.",
           },
           {
@@ -207,10 +214,10 @@ export default function CanTurnitinDetectClaudePage() {
       />
 
       <PageCta
-        heading="Make Claude drafts read human"
-        body="Paste a Claude draft into the free humanizer to vary its rhythm, diversify its vocabulary, and restore a natural voice — no account required to try it."
-        href="/free-ai-humanizer"
-        cta="Try the Free Humanizer"
+        heading="Check your draft before you submit"
+        body="Paste your draft into the free AI detector to see which passages read as machine-like and why — no signup, no credit card."
+        href="/ai-detector"
+        cta="Check My Writing Free"
       />
     </div>
   );
