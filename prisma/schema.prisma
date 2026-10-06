@@ -474,6 +474,8 @@ model EmailMessage {
   stream       String
   topic        String?
   subject      String?
+  /// Template props kept so a failed send can be retried (firstName stripped; never user text).
+  props        Json?
   dedupeKey    String         @unique
   /// queued | sending | sent | delivered | bounced | complained | failed | skipped | cancelled | suppressed
   status       String         @default("queued")
