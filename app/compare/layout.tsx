@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
+import { MarketingFooterLinks } from "@/components/marketing/marketing-shell";
 
 // Hub-level metadata. The detail/spoke pages (humanizeit-vs-*) export their own
 // title + canonical, which override these for their routes. Without this, the
@@ -59,7 +60,7 @@ export default function CompareLayout({ children }: { children: React.ReactNode 
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
             <Link
-              href="/dashboard/editor"
+              href="/free-ai-humanizer"
               style={{
                 background: THEME.brand,
                 color: "#ffffff",
@@ -87,8 +88,9 @@ export default function CompareLayout({ children }: { children: React.ReactNode 
           color: THEME.textDim,
         }}
       >
-        <div style={{ maxWidth: "1140px", margin: "0 auto" }}>
-          © {new Date().getFullYear()} HumanizeIt. All rights reserved.
+        <div style={{ maxWidth: "1140px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <MarketingFooterLinks />
+          <div>© {new Date().getFullYear()} HumanizeIt. All rights reserved.</div>
         </div>
       </footer>
     </div>

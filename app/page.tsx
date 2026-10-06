@@ -343,7 +343,8 @@ export default function LandingPage() {
           </Link>
 
           <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <a onClick={() => smoothScroll("demo")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
+            <Link href="/ai-detector" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>AI Detector</Link>
+            <Link href="/free-ai-humanizer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Humanizer</Link>
             <a onClick={() => smoothScroll("how-it-works")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
             <a onClick={() => smoothScroll("pricing")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
             <Link href="/compare" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Compare</Link>
@@ -421,9 +422,17 @@ export default function LandingPage() {
               color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
-          <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
-            color: THEME.textDim, fontSize: "14px", textDecoration: "none",
-          }}>Blog</Link>
+          {[
+            { label: "AI Detector", href: "/ai-detector" },
+            { label: "Free Humanizer", href: "/free-ai-humanizer" },
+            { label: "Compare", href: "/compare" },
+            { label: "Use Cases", href: "/use-cases" },
+            { label: "Blog", href: "/blog" },
+          ].map(({ label, href }) => (
+            <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)} style={{
+              color: THEME.textDim, fontSize: "14px", textDecoration: "none",
+            }}>{label}</Link>
+          ))}
         </div>
       )}
 
@@ -494,32 +503,36 @@ export default function LandingPage() {
                 </Link>
               </SignedIn>
 
-              {/* Secondary = orange-tinted ghost button */}
-              <button onClick={() => smoothScroll("demo")} style={{
+              {/* Secondary = orange-tinted ghost button → the no-signup tool */}
+              <Link href="/free-ai-humanizer" style={{
                 background: THEME.accentDim, color: THEME.accentHi, fontWeight: 600,
                 padding: "15px 24px", borderRadius: THEME.radius,
                 border: `1px solid ${THEME.accent}33`,
-                fontSize: "15px", cursor: "pointer",
-                fontFamily: THEME.fontSans,
+                fontSize: "15px", textDecoration: "none",
                 display: "inline-flex", alignItems: "center", gap: "7px",
               }}>
-                Try the live demo <ArrowRight size={15} aria-hidden="true" />
-              </button>
+                Free humanizer, no signup <ArrowRight size={15} aria-hidden="true" />
+              </Link>
             </div>
 
-            {/* Trust row — soft green check chip */}
+            {/* Trust row — soft green check chip + the other free tool */}
             <div style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
+              display: "flex", alignItems: "center", gap: "8px 18px", flexWrap: "wrap",
               fontSize: "13px", fontWeight: 500, color: THEME.textDim,
             }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: "20px", height: "20px", borderRadius: "50%",
-                background: THEME.humanDim,
-              }}>
-                <Check size={13} color={THEME.human} aria-hidden="true" />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: "20px", height: "20px", borderRadius: "50%",
+                  background: THEME.humanDim,
+                }}>
+                  <Check size={13} color={THEME.human} aria-hidden="true" />
+                </span>
+                No credit card required
               </span>
-              No credit card required
+              <Link href="/ai-detector" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+                Check any text with the free AI detector &rarr;
+              </Link>
             </div>
           </div>
 
@@ -1176,6 +1189,9 @@ export default function LandingPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
+                  { label: "Free AI Humanizer", href: "/free-ai-humanizer" },
+                  { label: "AI Detector", href: "/ai-detector" },
+                  { label: "GPTZero Checker", href: "/gptzero-checker" },
                   { label: "Dashboard", href: "/dashboard/editor" },
                   { label: "Pricing", href: "#pricing" },
                   { label: "Lifetime Deal", href: "/lifetime" },
@@ -1199,8 +1215,11 @@ export default function LandingPage() {
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
+                  { label: "Detector Guides", href: "/bypass" },
                   { label: "Compare", href: "/compare" },
+                  { label: "Alternatives", href: "/alternatives" },
                   { label: "Use Cases", href: "/use-cases" },
+                  { label: "FAQ", href: "/faq" },
                   { label: "API Docs", href: "/docs/api" },
                   { label: "Sign up", href: "/sign-up" },
                 ].map(({ label, href }) => (

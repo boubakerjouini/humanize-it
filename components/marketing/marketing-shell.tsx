@@ -1,5 +1,7 @@
 // Shared marketing chrome (sticky nav + footer) for content-cluster sections.
-// Server component. Used by the /bypass, /alternatives, /faq layouts.
+// Server component. Used by the /bypass, /alternatives, /faq layouts; the
+// footer link row (MarketingFooterLinks) is also used by the tools, blog,
+// compare and use-cases layouts.
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 
@@ -10,6 +12,30 @@ const NAV = [
   { label: "Use Cases", href: "/use-cases" },
   { label: "Blog", href: "/blog" },
 ];
+
+// Every free tool and content hub, in every marketing footer, so each sitemap
+// URL stays within two clicks of any page (footer -> hub -> spoke).
+const SITE_LINKS = [
+  { label: "AI Detector", href: "/ai-detector" },
+  { label: "Free AI Humanizer", href: "/free-ai-humanizer" },
+  { label: "GPTZero Checker", href: "/gptzero-checker" },
+  { label: "Detector Guides", href: "/bypass" },
+  { label: "Compare", href: "/compare" },
+  { label: "Alternatives", href: "/alternatives" },
+  { label: "Use Cases", href: "/use-cases" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Blog", href: "/blog" },
+];
+
+export function MarketingFooterLinks() {
+  return (
+    <nav aria-label="Free tools and guides" style={{ display: "flex", gap: "18px", justifyContent: "center", flexWrap: "wrap" }}>
+      {SITE_LINKS.map((n) => (
+        <Link key={n.href} href={n.href} style={{ color: THEME.textDim, textDecoration: "none" }}>{n.label}</Link>
+      ))}
+    </nav>
+  );
+}
 
 export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -46,11 +72,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
 
       <footer style={{ borderTop: `1px solid ${THEME.border}`, padding: "32px 24px", textAlign: "center", fontSize: "13px", color: THEME.textDim }}>
         <div style={{ maxWidth: "1140px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ display: "flex", gap: "18px", justifyContent: "center", flexWrap: "wrap" }}>
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} style={{ color: THEME.textDim, textDecoration: "none" }}>{n.label}</Link>
-            ))}
-          </div>
+          <MarketingFooterLinks />
           <div>© {new Date().getFullYear()} HumanizeIt. All rights reserved.</div>
         </div>
       </footer>
