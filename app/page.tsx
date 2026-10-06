@@ -34,8 +34,6 @@ const VARIANT_IDS = {
   teamAnnual: "1368289",
 };
 
-const EXTENSION_URL = "https://github.com/boubakerjouini/humanize-it-extension";
-
 // Single source of truth for the homepage FAQ — rendered as the visible
 // accordion AND as FAQPage JSON-LD (below), so the structured data always
 // matches the visible content (a Google rich-results requirement).
@@ -165,7 +163,6 @@ const COMPARISON = [
   { label: "GPTZero", us: "✅", quill: "⚠️", undet: "✅" },
   { label: "Turnitin", us: "✅", quill: "❌", undet: "⚠️" },
   { label: "Originality.ai", us: "✅", quill: "❌", undet: "⚠️" },
-  { label: "Chrome Extension", us: "✅", quill: "❌", undet: "❌" },
   { label: "Free Tier", us: "✅", quill: "✅", undet: "❌" },
   { label: "Price", us: "From $0", quill: "From $9.95", undet: "From $9.99" },
 ];
@@ -347,7 +344,6 @@ export default function LandingPage() {
             <a onClick={() => smoothScroll("demo")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
             <a onClick={() => smoothScroll("how-it-works")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
             <a onClick={() => smoothScroll("pricing")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Extension</a>
             <Link href="/compare" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Compare</Link>
             <Link href="/use-cases" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Use Cases</Link>
             <Link href="/blog" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Blog</Link>
@@ -423,9 +419,6 @@ export default function LandingPage() {
               color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
-          <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
-            color: THEME.textDim, fontSize: "14px", textDecoration: "none",
-          }}>Chrome Extension</a>
           <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
             color: THEME.textDim, fontSize: "14px", textDecoration: "none",
           }}>Blog</Link>
@@ -698,7 +691,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 4: CHROME EXTENSION CTA ── */}
+      {/* ── SECTION 4: CHROME EXTENSION (COMING SOON) ──
+          Not released yet, so nothing here links to an install page: the CTAs
+          send people to the free web tools that work today. */}
       <section id="extension" style={{ padding: "72px 24px", borderTop: `1px solid ${THEME.border}`, scrollMarginTop: "110px", background: THEME.surface1 }}>
         <div className="panel" style={{
           maxWidth: "960px", margin: "0 auto",
@@ -723,38 +718,38 @@ export default function LandingPage() {
                 fontFamily: THEME.fontHeading,
                 display: "inline-flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
               }}>
-                HumanizeIt is now a Chrome Extension
+                A Chrome extension is on the way
                 <span style={{
                   fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em",
                   color: "#ffffff", background: THEME.accent,
                   padding: "3px 10px", borderRadius: "999px",
                   fontFamily: THEME.fontSans, textTransform: "uppercase",
-                }}>New</span>
+                }}>Coming soon</span>
               </h2>
               <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "24px" }}>
-                Analyze and humanize text directly in Gmail, Google Docs, LinkedIn, and Notion &mdash; without leaving the page.
+                We&apos;re building an extension to check and polish text right inside Gmail, Google Docs, LinkedIn, and Notion. It isn&apos;t released yet &mdash; until it is, the free web tools do the same job in any browser, with no install and no signup.
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
-                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                <Link href="/free-ai-humanizer" style={{
                   display: "inline-flex", alignItems: "center", gap: "7px",
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   fontSize: "14px", textDecoration: "none",
                 }}>
-                  Install Chrome Extension <ArrowRight size={15} aria-hidden="true" />
-                </a>
-                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                  Use the free humanizer <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+                <Link href="/ai-detector" style={{
                   display: "inline-flex", alignItems: "center",
                   background: "transparent", color: THEME.textDim,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   border: `1px solid ${THEME.border}`,
                   fontSize: "14px", textDecoration: "none", fontWeight: 500,
                 }}>
-                  Learn more
-                </a>
+                  Check text with the AI detector
+                </Link>
               </div>
               <p style={{ fontSize: "13px", color: THEME.textMuted }}>
-                Works on Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
+                Planned for Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
               </p>
             </div>
           </div>
@@ -950,7 +945,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 8: EXTENSION MINI ── */}
+      {/* ── SECTION 8: WORKS WITH YOUR APPS (copy & paste, no extension needed) ── */}
       <section style={{
         padding: "60px 24px",
         borderTop: `1px solid ${THEME.border}`,
@@ -972,10 +967,10 @@ export default function LandingPage() {
             marginBottom: "12px", color: THEME.text,
             fontFamily: THEME.fontHeading,
           }}>
-            Use it anywhere you write
+            Use it with whatever you write in
           </h2>
           <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "24px" }}>
-            The HumanizeIt extension works in any text field on any website.
+            HumanizeIt runs in any browser, desktop or mobile. Paste a draft from your usual app, check it, polish it, and copy it back.
           </p>
           <div style={{
             display: "inline-flex", gap: "10px", flexWrap: "wrap", justifyContent: "center",
@@ -1129,15 +1124,15 @@ export default function LandingPage() {
                 Open Dashboard <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </SignedIn>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+            <Link href="/free-ai-humanizer" style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
               background: "transparent", color: THEME.accentHi, fontWeight: 600,
               padding: "15px 18px", borderRadius: THEME.radius,
               border: `1px solid ${THEME.accent}33`,
               fontSize: "15px", textDecoration: "none",
             }}>
-              <Puzzle size={15} aria-hidden="true" /> Install Chrome Extension
-            </a>
+              <Sparkles size={15} aria-hidden="true" /> Try it without signing up
+            </Link>
           </div>
         </div>
       </section>
@@ -1180,7 +1175,6 @@ export default function LandingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   { label: "Dashboard", href: "/dashboard/editor" },
-                  { label: "Chrome Extension", href: EXTENSION_URL },
                   { label: "Pricing", href: "#pricing" },
                   { label: "Lifetime Deal", href: "/lifetime" },
                 ].map(({ label, href }) => (

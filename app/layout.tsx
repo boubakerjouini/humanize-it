@@ -144,7 +144,6 @@ export default function RootLayout({
                   "AI text humanizer that rewrites AI-generated text to read naturally and bypass AI detectors like GPTZero, Turnitin, and Originality.ai.",
                 sameAs: [
                   "https://www.linkedin.com/in/boubakerjouini/",
-                  "https://github.com/boubakerjouini/humanize-it-extension",
                 ],
               }),
             }}
