@@ -285,13 +285,23 @@ export default function AiDetectionHowItWorksPage() {
           organizational structure of a document carries its own statistical
           fingerprint.
         </p>
+        <p>
+          Each detector weighs these signals a little differently. Our{" "}
+          <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
+          cover how Turnitin, GPTZero, Originality.ai, and others score text.
+        </p>
 
         {/* HumanizeIt */}
         <h2>How HumanizeIt Does This Automatically</h2>
         <p>
           Doing all of this manually is tedious and time-consuming. That is
           exactly why we built HumanizeIt. It looks for the same kinds of signals
-          detectors do, then helps you change them.
+          detectors do, then helps you change them. You can try it on a short
+          passage with the{" "}
+          <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link>,
+          no signup needed — or, if you are weighing tools, see how it compares in
+          our{" "}
+          <Link href="/alternatives" style={{ color: THEME.brandHi }}>alternatives hub</Link>.
         </p>
         <p>
           HumanizeIt scores your text against {PATTERN_COUNT} patterns at the word,
@@ -342,7 +352,7 @@ export default function AiDetectionHowItWorksPage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Ready to humanize your AI text?
+          See what detectors see in your text
         </h2>
         <p
           style={{
@@ -353,10 +363,10 @@ export default function AiDetectionHowItWorksPage() {
           }}
         >
           Check your text for the patterns detectors flag, then polish it so it
-          reads like you wrote it.
+          reads like you wrote it. Free, no signup.
         </p>
         <Link
-          href="/sign-up"
+          href="/ai-detector"
           style={{
             display: "inline-block",
             background: THEME.brand,
@@ -369,7 +379,7 @@ export default function AiDetectionHowItWorksPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Get Started Free &rarr;
+          Check Your Text Free &rarr;
         </Link>
       </div>
 

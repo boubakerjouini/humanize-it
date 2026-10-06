@@ -44,7 +44,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 600 }}>Blog</Link>
             <Link
-              href="/dashboard/editor"
+              href="/free-ai-humanizer"
               style={{
                 background: THEME.brand,
                 color: "#ffffff",

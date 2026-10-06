@@ -509,11 +509,11 @@ export default function BestAiHumanizerToolsPage() {
           Ready to Humanize Your AI Text?
         </h2>
         <p style={{ fontSize: "16px", lineHeight: 1.75, marginBottom: "24px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
-          Try HumanizeIt free &mdash; no credit card required. Get 500 words per day on the free
-          tier, or 50,000 words a month on Pro for $9/month.
+          Try the free humanizer on your own text &mdash; no signup, no credit card. Need more? The
+          free plan gives you 500 words per day, and Pro is $9/month for 50,000 words.
         </p>
         <Link
-          href="/sign-up"
+          href="/free-ai-humanizer"
           style={{
             display: "inline-block",
             background: THEME.brand,
@@ -526,7 +526,7 @@ export default function BestAiHumanizerToolsPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Start Free &rarr;
+          Try the Free Humanizer &rarr;
         </Link>
       </div>
 

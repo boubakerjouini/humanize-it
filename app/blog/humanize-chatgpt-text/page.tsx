@@ -446,7 +446,10 @@ export default function HumanizeChatGPTTextPage() {
         For heavier use, Pro ($9/month) gives you 50,000 words a month with more
         tone options and document uploads, and Team ($29/month) raises that to
         200,000 words. For occasional use, the free plan covers most needs
-        without any credit card required.
+        without any credit card required. Comparing tools first? Our{" "}
+        <Link href="/alternatives" style={{ color: THEME.brandHi }}>alternatives hub</Link>{" "}
+        shows how HumanizeIt stacks up against Undetectable.ai, Quillbot, and
+        StealthGPT.
       </p>
 
       {/* CTA Box */}
@@ -483,10 +486,10 @@ export default function HumanizeChatGPTTextPage() {
           }}
         >
           Turn ChatGPT drafts into natural writing that sounds like you, then
-          check it before you publish. Start for free today.
+          check it before you publish. No signup needed to try it.
         </p>
         <Link
-          href="/sign-up"
+          href="/free-ai-humanizer"
           className="inline-block font-semibold px-8 py-3 transition-colors"
           style={{
             background: THEME.brand,
@@ -496,7 +499,7 @@ export default function HumanizeChatGPTTextPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Get Started Free &rarr;
+          Try the Free Humanizer &rarr;
         </Link>
       </div>
 
