@@ -63,6 +63,12 @@ model User {
   // CRM
   notes AdminNote[] @relation("NoteSubject")
   tags  UserTag[]
+
+  // Growth engine and product gaps: virtual back-relations only (no columns),
+  // so feature previews against the production database keep working.
+  contact       Contact?
+  voiceProfiles VoiceProfile[]
+  purchases     Purchase[]
 }
 
 /// A team/company workspace that owns a pool of seats. The owner pays for
@@ -277,6 +283,8 @@ model Tag {
   createdAt DateTime  @default(now())
 
   users UserTag[]
+  // Growth engine: virtual back-relation only (no column)
+  contacts ContactTag[]
 }
 
 /// Join row: a Tag applied to a User.
@@ -309,4 +317,385 @@ model AuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
   @@index([actorEmail])
+}
+
+// ── Growth engine ────────────────────────────────────────────────────────────
+// Every model below is new. Existing models only gained virtual back-relations
+// (User.contact, User.voiceProfiles, User.purchases, Tag.contacts), never a
+// column, index or unique: feature previews query the production database
+// without a schema push, and Prisma selects every scalar column by default.
+
+/// One row per person we can talk to: every User (1:1), leads, outreach prospects.
+model Contact {
+  id                 String    @id @default(cuid())
+  /// trim + lower-case. Null = prospect without email, or user still on a placeholder email.
+  email              String?   @unique
+  name               String?
+  userId             String?   @unique
+  user               User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Lifecycle (lib/crm/lifecycle.ts) + manual outreach pipeline
+  stage              String    @default("lead")
+  stageOverride      String?
+  stageChangedAt     DateTime?
+  pipelineStage      String?
+  pipelineUpdatedAt  DateTime?
+
+  // Lead score (lib/crm/scoring.ts)
+  score              Int       @default(0)
+  scoreBreakdown     Json?
+  scoredAt           DateTime?
+
+  // Product activity (kept here, never on User)
+  firstDocumentAt    DateTime?
+  lastActiveAt       DateTime?
+  /// Last request-scoped identification (cookies readable). Guards the ensureUser recent-signup hook.
+  lastSeenAt         DateTime?
+  /// Bonus-word pool, drawn only after the plan allowance runs out (lib/crm/bonus.ts).
+  bonusWords         Int       @default(0)
+  /// Null = the balance never expires. An expired balance counts as 0.
+  bonusWordsExpireAt DateTime?
+  referralCode       String?   @unique
+
+  /// signup | magnet_page | detector_report | exit_intent | blog_inline | extension_waitlist | founding_waitlist | manual
+  source             String    @default("unknown")
+
+  // First-touch attribution: written once, never overwritten
+  channel            String?
+  referrerHost       String?
+  landingPath        String?
+  utmSource          String?
+  utmMedium          String?
+  utmCampaign        String?
+  utmTerm            String?
+  utmContent         String?
+  refCode            String?
+  firstTouchAt       DateTime?
+  lastTouch          Json?
+  magnets            String[]  @default([])
+
+  // Consent + deliverability
+  subscribedTopics   String[]  @default([])
+  pendingTopics      String[]  @default([])
+  lifecycleEmails    Boolean   @default(true)
+  consentPromptedAt  DateTime?
+  emailVerifiedAt    DateTime?
+  /// ok | bounced | complained | invalid
+  emailStatus        String    @default("ok")
+  unsubscribedAt     DateTime?
+  lastEmailedAt      DateTime?
+
+  // Outreach prospects
+  phone              String?
+  handle             String?
+  company            String?
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  events        ContactEvent[]
+  messages      EmailMessage[]
+  enrollments   SequenceEnrollment[]
+  consents      ConsentRecord[]
+  tasks         CrmTask[]
+  tags          ContactTag[]
+  referralsMade Referral[] @relation("ReferralReferrer")
+  referredBy    Referral?  @relation("ReferralReferee")
+
+  @@index([stage])
+  @@index([score])
+  @@index([source])
+  @@index([channel])
+  @@index([pipelineStage])
+  @@index([createdAt])
+  @@index([lastActiveAt])
+}
+
+model ContactEvent {
+  id         String   @id @default(cuid())
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  type       String
+  props      Json?
+  actor      String   @default("system")
+  dedupeKey  String?  @unique
+  occurredAt DateTime @default(now())
+
+  @@index([contactId, occurredAt])
+  @@index([type, occurredAt])
+}
+
+/// Proof of consent (ICO: who, when, how, what they were told).
+model ConsentRecord {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  /// tips | extension_launch | lifecycle
+  topic     String
+  /// grant | confirm | withdraw
+  action    String
+  /// checkbox | doi | in_app | preferences | one_click | link | admin | webhook
+  method    String
+  /// consent copy version id, e.g. "tips-v1"
+  wording   String?
+  /// page path / form id
+  source    String?
+  ipHash    String?
+  userAgent String?
+  actor     String?
+  createdAt DateTime @default(now())
+
+  @@index([contactId, createdAt])
+}
+
+/// Survives contact/user deletion. Keyed by sha256(normalized email).
+model EmailSuppression {
+  id        String   @id @default(cuid())
+  emailHash String
+  /// all | nonessential | marketing
+  scope     String
+  /// bounce | complaint | unsubscribe | provider | manual | erasure
+  reason    String
+  source    String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([emailHash, scope])
+}
+
+model EmailMessage {
+  id           String         @id @default(cuid())
+  contactId    String?
+  contact      Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  toEmailHash  String
+  toDomain     String?
+  template     String
+  /// transactional | lifecycle | marketing | personal
+  stream       String
+  topic        String?
+  subject      String?
+  dedupeKey    String         @unique
+  /// queued | sending | sent | delivered | bounced | complained | failed | skipped | cancelled | suppressed
+  status       String         @default("queued")
+  skipReason   String?
+  error        String?
+  attempts     Int            @default(0)
+  resendId     String?        @unique
+  sequenceKey  String?
+  stepKey      String?
+  enrollmentId String?
+  campaignId   String?
+  campaign     EmailCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  queuedAt     DateTime       @default(now())
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  bouncedAt    DateTime?
+  complainedAt DateTime?
+  updatedAt    DateTime       @updatedAt
+
+  @@index([contactId, queuedAt])
+  @@index([status, queuedAt])
+  @@index([sentAt])
+  @@index([campaignId, status])
+  @@index([sequenceKey, stepKey])
+}
+
+/// On/off switch per flow or sequence key. No row = OFF.
+model EmailFlowSetting {
+  key       String   @id
+  enabled   Boolean  @default(false)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+}
+
+model SequenceEnrollment {
+  id          String    @id @default(cuid())
+  contactId   String
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  sequenceKey String
+  cycle       String    @default("1")
+  /// active | paused | completed | exited
+  status      String    @default("active")
+  /// index of the NEXT step to run
+  stepIndex   Int       @default(0)
+  /// step offsets are relative to this (may be in the future)
+  anchorAt    DateTime
+  nextRunAt   DateTime?
+  /// e.g. { magnet, grantDays, trialCode, bonusGranted }
+  context     Json?
+  enrolledBy  String    @default("system")
+  enrolledAt  DateTime  @default(now())
+  lastStepAt  DateTime?
+  exitedAt    DateTime?
+  exitReason  String?
+
+  @@unique([contactId, sequenceKey, cycle])
+  @@index([status, nextRunAt])
+  @@index([sequenceKey, status])
+}
+
+model EmailCampaign {
+  id             String         @id @default(cuid())
+  name           String
+  topic          String         @default("tips")
+  /// "sys:<key>" or a Segment id
+  segmentRef     String
+  /// compiled filter at confirm time (audit)
+  filterSnapshot Json?
+  subject        String
+  preheader      String?
+  bodyMd         String
+  /// draft | tested | sending | sent | cancelled
+  status         String         @default("draft")
+  contentHash    String?
+  testSentAt     DateTime?
+  testSentTo     String?
+  confirmedAt    DateTime?
+  confirmedBy    String?
+  recipientCount Int            @default(0)
+  createdBy      String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  completedAt    DateTime?
+  messages       EmailMessage[]
+
+  @@index([status])
+}
+
+/// Saved contact filter (SegmentFilter, lib/crm/segments.ts). System segments live in code.
+model Segment {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  filter      Json
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CrmTask {
+  id          String    @id @default(cuid())
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  title       String
+  body        String?
+  /// follow_up | outreach | email | call | review | founder_review | team_setup | other
+  kind        String    @default("follow_up")
+  /// low | normal | high
+  priority    String    @default("normal")
+  /// open | done | dismissed
+  status      String    @default("open")
+  dueAt       DateTime?
+  /// manual | rule | request
+  source      String    @default("manual")
+  ruleKey     String?
+  /// `${ruleKey}:${contactId}:${cycle}`
+  dedupeKey   String?   @unique
+  createdBy   String
+  completedAt DateTime?
+  completedBy String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, dueAt])
+  @@index([contactId])
+}
+
+/// Tag on a lead or prospect contact. Contacts linked to a User use UserTag instead.
+model ContactTag {
+  id        String   @id @default(cuid())
+  contactId String
+  tagId     String
+  createdAt DateTime @default(now())
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, tagId])
+  @@index([tagId])
+}
+
+model Referral {
+  id                String    @id @default(cuid())
+  referrerContactId String
+  referrer          Contact   @relation("ReferralReferrer", fields: [referrerContactId], references: [id], onDelete: Cascade)
+  refereeContactId  String    @unique
+  referee           Contact   @relation("ReferralReferee", fields: [refereeContactId], references: [id], onDelete: Cascade)
+  code              String
+  /// pending | rewarded | rejected
+  status            String    @default("pending")
+  rejectReason      String?
+  rewardWords       Int       @default(0)
+  createdAt         DateTime  @default(now())
+  rewardedAt        DateTime?
+
+  @@index([referrerContactId, createdAt])
+}
+
+/// Aggregate daily counters (lead.captured.<source>, lead.confirmed). RateLimit rows are reaped after ~25h.
+model DailyMetric {
+  id    String   @id @default(cuid())
+  /// UTC midnight
+  day   DateTime
+  key   String
+  count Int      @default(0)
+
+  @@unique([day, key])
+  @@index([key, day])
+}
+
+model JobRun {
+  id         String    @id @default(cuid())
+  job        String
+  /// cron | manual
+  trigger    String
+  actorEmail String?
+  /// running | ok | error | locked
+  status     String    @default("running")
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  stats      Json?
+  error      String?
+
+  @@index([job, startedAt])
+}
+
+/// Lease lock (works through Neon's transaction pooler, unlike session advisory locks).
+model JobLock {
+  key         String   @id
+  owner       String
+  lockedUntil DateTime
+  updatedAt   DateTime @updatedAt
+}
+
+// ── Product gaps (features built by stream D) ────────────────────────────────
+
+/// A saved "write like me" fingerprint from the user's own samples (Style Clone).
+model VoiceProfile {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  fingerprint Json
+  sampleWords Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// One-time LemonSqueezy orders (Founding 100, word packs). lsOrderId makes webhook replays idempotent.
+model Purchase {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// founding | wordpack
+  kind        String
+  lsOrderId   String   @unique
+  lsVariantId String?
+  amountCents Int?
+  words       Int?
+  createdAt   DateTime @default(now())
+
+  @@index([kind])
+  @@index([userId])
 }
