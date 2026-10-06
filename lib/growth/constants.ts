@@ -104,6 +104,65 @@ export const OUTREACH_OUTCOMES = [
 export type OutreachOutcome = (typeof OUTREACH_OUTCOMES)[number];
 
 /**
+ * ContactEvent.type values. Lives here (not in lib/crm/events.ts, which imports
+ * the DB) so pure modules such as the segment compiler can validate against it.
+ */
+export const EVENT_TYPES = [
+  // Product
+  "signed_up",
+  "first_document",
+  "document_analyzed",
+  "document_humanized",
+  "document_uploaded",
+  "quota_hit",
+  "checkout_started",
+  // Billing
+  "subscription_started",
+  "subscription_plan_changed",
+  "subscription_cancelled",
+  "subscription_expired",
+  "subscription_paused",
+  "subscription_resumed",
+  "payment_failed",
+  "payment_recovered",
+  // One-time purchases (Founding 100, word packs)
+  "founding_purchased",
+  "wordpack_purchased",
+  // Plans and codes
+  "grant_applied",
+  "grant_expired",
+  "code_redeemed",
+  "plan_changed",
+  "trial_code_issued",
+  // Leads
+  "lead_captured",
+  "email_confirmed",
+  "magnet_downloaded",
+  "waitlist_joined",
+  "converted",
+  "merged",
+  // Referrals and bonus words
+  "referral_signup",
+  "referral_rewarded",
+  "referral_rejected",
+  "bonus_granted",
+  "bonus_used",
+  // Founder services (first-document review, team setup)
+  "service_requested",
+  // CRM
+  "note",
+  "stage_changed",
+  "stage_overridden",
+  "pipeline_changed",
+  "outreach_touch",
+] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
+export function isEventType(value: unknown): value is EventType {
+  return typeof value === "string" && (EVENT_TYPES as readonly string[]).includes(value);
+}
+
+/**
  * Versioned consent copy. ConsentRecord.wording stores the id, so the exact
  * text a person agreed to stays provable after the copy changes: add a new id
  * instead of editing an existing one.
