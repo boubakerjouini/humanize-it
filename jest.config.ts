@@ -8,7 +8,11 @@ const config: Config = {
   },
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: { strict: false } }],
+    // Email template tests: @react-email/render's CommonJS build uses a native
+    // import() that jest's CommonJS runtime can't run (see the transformer).
+    "^.+[/\\\\]@react-email[/\\\\]render[/\\\\].+\\.cjs$": "<rootDir>/jest.dynamic-import.cjs",
   },
+  transformIgnorePatterns: ["[/\\\\]node_modules[/\\\\](?!@react-email[/\\\\]render[/\\\\])"],
 };
 
 export default config;
