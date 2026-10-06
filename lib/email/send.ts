@@ -196,11 +196,21 @@ async function claimMessage(i: PrepareInput, fields: MessageFields): Promise<Cla
   return res.count === 1 ? { kind: "claimed", messageId: row.id, queuedAt: row.queuedAt } : { kind: "duplicate", messageId: row.id };
 }
 
+/**
+ * Mark a message failed. A non-retryable failure pins attempts to the maximum,
+ * so neither a re-claim nor the daily retry (status failed, attempts < 3) picks
+ * it up again.
+ */
 async function markFailed(messageId: string, error: string, retryable: boolean, extra: { quotaExceeded?: boolean; subject?: string } = {}): Promise<SendOutcome> {
   try {
     await db.emailMessage.update({
       where: { id: messageId },
-      data: { status: "failed", error: error.slice(0, 500), ...(extra.subject ? { subject: extra.subject } : {}) },
+      data: {
+        status: "failed",
+        error: error.slice(0, 500),
+        ...(retryable ? {} : { attempts: MAX_ATTEMPTS }),
+        ...(extra.subject ? { subject: extra.subject } : {}),
+      },
     });
   } catch (err) {
     logGrowthError("email-mark-failed", err);
