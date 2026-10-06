@@ -10,15 +10,6 @@ export interface BlogPost {
 
 export const POSTS: BlogPost[] = [
   {
-    slug: "undetectable-ai-alternative",
-    title: "Best Undetectable AI Alternative in 2025",
-    description: "Why users are switching from Undetectable.ai — and what to use instead.",
-    date: "2025-03-14",
-    category: "Comparison",
-    readingTime: 6,
-    excerpt: "Why users are switching from Undetectable.ai — and what to use instead.",
-  },
-  {
     slug: "humanize-chatgpt-text",
     title: "How to Humanize ChatGPT Text in 2025 (Free)",
     description: "A step-by-step guide to making AI-generated text undetectable.",
@@ -26,15 +17,6 @@ export const POSTS: BlogPost[] = [
     category: "Guide",
     readingTime: 5,
     excerpt: "A step-by-step guide to making AI-generated text undetectable.",
-  },
-  {
-    slug: "bypass-ai-detection",
-    title: "How to Bypass AI Detection in 2025 — Complete Guide",
-    description: "Everything you need to know about beating GPTZero, Turnitin, and Originality.ai.",
-    date: "2025-03-12",
-    category: "Guide",
-    readingTime: 7,
-    excerpt: "Everything you need to know about beating GPTZero, Turnitin, and Originality.ai.",
   },
   {
     slug: "best-ai-humanizer-tools",

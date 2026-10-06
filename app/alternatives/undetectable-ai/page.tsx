@@ -140,9 +140,9 @@ export default function UndetectableAiAlternativePage() {
         original AI draft into HumanizeIt, and compare the two rewrites for meaning, tone, and how they
         score against your detector of choice. Doing this on your own content &mdash; rather than a demo
         passage &mdash; is the fastest way to know whether the switch is right for you. If you want a
-        broader market view before deciding, this rundown of an{" "}
-        <Link href="/blog/undetectable-ai-alternative" style={{ color: THEME.brandHi }}>
-          Undetectable.ai alternative
+        broader market view before deciding, our roundup of the{" "}
+        <Link href="/blog/best-ai-humanizer-tools" style={{ color: THEME.brandHi }}>
+          best AI humanizer tools
         </Link>{" "}
         covers the landscape and what separates the serious tools from the rest.
       </p>
