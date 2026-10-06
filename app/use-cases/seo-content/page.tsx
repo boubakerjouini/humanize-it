@@ -9,7 +9,7 @@ const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 export const metadata: Metadata = {
   title: "AI Humanizer for SEO Content | HumanizeIt",
   description:
-    "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts against Originality.ai-style patterns, and keep them reading naturally.",
+    "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts for Originality.ai-style patterns, and keep them natural.",
   keywords: [
     "AI humanizer for SEO content",
     "humanize AI content",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Humanizer for SEO Content | HumanizeIt",
     description:
-      "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts against Originality.ai-style patterns, and keep them reading naturally.",
+      "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts for Originality.ai-style patterns, and keep them natural.",
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",

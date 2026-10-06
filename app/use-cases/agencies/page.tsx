@@ -5,7 +5,7 @@ import { THEME, glow } from "@/lib/theme";
 export const metadata: Metadata = {
   title: "AI Humanizer for Agencies: Content at Scale | HumanizeIt",
   description:
-    "Content agencies use HumanizeIt to check and humanize AI-assisted drafts at scale: document uploads, a REST API, and per-seat team organizations. Team plan $29/mo.",
+    "Agencies use HumanizeIt to check and humanize AI-assisted drafts at scale: document uploads, a REST API, and per-seat team organizations. Team plan $29/mo.",
   keywords: [
     "bulk AI humanization",
     "agency AI content",
