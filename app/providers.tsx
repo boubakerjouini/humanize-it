@@ -4,6 +4,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { AttributionCapture } from "@/components/growth/attribution-capture";
 
 // Initialize PostHog once
 function PostHogInit() {
@@ -49,6 +50,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <PostHogProvider client={posthog}>
       <PostHogInit />
+      <AttributionCapture />
       {children}
     </PostHogProvider>
   );
