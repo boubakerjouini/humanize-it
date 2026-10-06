@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 
 const COMPETITORS = [
   {
     name: "Undetectable.ai",
-    tagline: "22M+ users",
+    tagline: "Popular humanizer",
     color: "#6366f1",
     shows: "score-only",
     free: true,
@@ -62,13 +63,6 @@ const CONFIDENCE_LABELS: Record<string, { label: string; color: string }> = {
   "possibly-ai":         { label: "Possibly AI",           color: THEME.warn },
   "likely-ai":           { label: "Likely AI",             color: THEME.ai },
 };
-
-/** Simulate what a competitor score would look like based on our real score */
-function simulateCompetitorScore(ourScore: number, competitorIndex: number): number {
-  const offsets = [+8, -6, +12];
-  const noise = (competitorIndex * 7 + ourScore * 0.03) % 15;
-  return Math.max(5, Math.min(99, Math.round(ourScore + offsets[competitorIndex]! - noise)));
-}
 
 /** A feature row is a "win" for HumanizeIt when it has the feature (index 0)
  *  but at least one competitor does not — used for a subtle green row tint. */
@@ -264,18 +258,16 @@ export default function ComparePage() {
                 </div>
 
                 {/* Competitor columns (hidden on mobile unless toggled) */}
-                {COMPETITORS.map((comp, i) => {
-                  const simScore = simulateCompetitorScore(result.score, i);
+                {/* We can't know what another tool would score this text, so the
+                    competitor columns show what kind of result each one returns,
+                    never an invented number. */}
+                {COMPETITORS.map((comp) => {
                   return (
                     <div key={comp.name} className="compare-competitor-col" style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, overflow: "hidden" }}>
                       <div style={{ background: THEME.surface1, padding: "16px", borderBottom: `1px solid ${THEME.border}` }}>
                         <div style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, marginBottom: "2px" }}>{comp.name}</div>
                         <div style={{ fontSize: "11px", color: THEME.textMuted, marginBottom: "12px" }}>{comp.tagline}</div>
-                        {comp.shows === "none" ? (
-                          <div style={{ fontSize: "22px", fontWeight: 800, color: THEME.textMuted }}>&mdash;</div>
-                        ) : (
-                          <div className="tnum" style={{ fontSize: "28px", fontWeight: 800, color: THEME.textDim, lineHeight: 1 }}>{humanScore(simScore)}</div>
-                        )}
+                        <div style={{ fontSize: "22px", fontWeight: 800, color: THEME.textMuted }}>&mdash;</div>
                         <div style={{ fontSize: "11px", color: THEME.textMuted, marginTop: "4px", fontWeight: 500 }}>
                           {comp.shows === "none" ? "No detection shown" : "Score only"}
                         </div>
@@ -337,11 +329,11 @@ export default function ComparePage() {
                   path: "M3 12h4l3 8 4-16 3 8h4",
                 },
                 {
-                  tint: THEME.accent, dim: THEME.accentDim, title: "37 patterns", desc: "Not just a score. We break down every signal.",
+                  tint: THEME.accent, dim: THEME.accentDim, title: `${PATTERN_COUNT} patterns`, desc: "Not just a score. We break down every signal.",
                   path: "M3 3v18h18 M7 16v-5 M12 16V8 M17 16v-9",
                 },
                 {
-                  tint: THEME.brand, dim: THEME.brandDim, title: "Real scores", desc: "We use the same neural patterns detectors use.",
+                  tint: THEME.brand, dim: THEME.brandDim, title: "Open method", desc: "Every pattern we score is listed, with examples from your text.",
                   path: "M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4z",
                 },
               ].map((item) => (
@@ -378,7 +370,7 @@ export default function ComparePage() {
                   <tbody>
                     {[
                       { label: "AI Score (0-100)", vals: [true, true, true, false] },
-                      { label: "Pattern breakdown (37 patterns)", vals: [true, false, false, false] },
+                      { label: `Pattern breakdown (${PATTERN_COUNT} patterns)`, vals: [true, false, false, false] },
                       { label: "Explains WHY text is flagged", vals: [true, false, false, false] },
                       { label: "Statistical analysis (burstiness, TTR...)", vals: [true, false, false, false] },
                       { label: "Confidence band (Likely Human / AI)", vals: [true, false, false, false] },

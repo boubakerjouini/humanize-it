@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 
 export const runtime = "edge";
-export const alt = "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin";
+export const alt = "HumanizeIt — AI Humanizer & AI Detector for Natural Writing";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -94,7 +95,7 @@ export default function OGImage() {
           <p style={{
             fontSize: "24px", color: TEXT_DIM, margin: 0, lineHeight: 1.4, maxWidth: "720px",
           }}>
-            Beat GPTZero, Turnitin &amp; Originality.ai in seconds. 24 detection patterns. Free to start.
+            {`Check your writing against ${PATTERN_COUNT} AI-detection patterns and polish it to sound like you. Free to start.`}
           </p>
         </div>
 

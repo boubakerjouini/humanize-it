@@ -6,9 +6,9 @@ import { THEME } from "@/lib/theme";
 const URL = "https://humanizeit.app/use-cases/essays";
 
 export const metadata: Metadata = {
-  title: "AI Humanizer for Essays — Pass Detection | HumanizeIt",
+  title: "AI Humanizer for Essays: Polish Your Own Drafts | HumanizeIt",
   description:
-    "Use an AI humanizer for essays to rewrite AI-assisted drafts so they read naturally and survive detector scans. Keep your citations, meaning, and voice intact.",
+    "Polish essay drafts so they read naturally, check them for the patterns AI detectors flag, and keep your citations, meaning, and voice intact.",
   keywords: [
     "AI humanizer for essays",
     "humanize essay text",
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     "humanize ChatGPT essay",
   ],
   openGraph: {
-    title: "AI Humanizer for Essays — Pass Detection | HumanizeIt",
+    title: "AI Humanizer for Essays: Polish Your Own Drafts | HumanizeIt",
     description:
-      "Use an AI humanizer for essays to rewrite AI-assisted drafts so they read naturally and survive detector scans. Keep citations, meaning, and voice intact.",
+      "Polish essay drafts so they read naturally, check them for the patterns AI detectors flag, and keep citations, meaning, and voice intact.",
     url: URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -166,8 +166,8 @@ export default function EssaysUseCasePage() {
       </p>
       <p style={kitStyles.p}>
         We will not pretend detector outcomes are guaranteed; these tools change constantly, and no humanizer can
-        promise a specific score on a specific scanner. What HumanizeIt offers is a reliable way to make AI-assisted
-        prose read like a human wrote it. Always review the final essay yourself &mdash; confirm it says what you mean,
+        promise a specific score on a specific scanner — and Turnitin now also looks for text that has been run
+        through AI humanizers. What HumanizeIt offers is a practical way to make stiff prose read more naturally. Always review the final essay yourself &mdash; confirm it says what you mean,
         cites what it should, and meets the assignment &mdash; before you submit.
       </p>
 

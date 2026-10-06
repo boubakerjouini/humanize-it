@@ -162,7 +162,8 @@ export default function CanTurnitinDetectClaudePage() {
         The workflow we recommend is iterative rather than one-shot. Humanize the text, re-check it, read it yourself for
         accuracy, and repeat on any sections that still read flat. No tool can promise a guaranteed Turnitin pass &mdash;
         Turnitin updates its model, institutions layer on additional checkers, and the same text can score differently
-        across detectors and re-runs. Anyone advertising a fixed success rate is selling certainty that does not exist.
+        across detectors and re-runs, and since August 2025 Turnitin also looks for text that has been run through AI
+        humanizers. Anyone advertising a fixed success rate is selling certainty that does not exist.
         Treat humanizing as editing, not evasion, and always do a final human pass: you are the only one who can confirm
         that a citation is accurate and that the argument still says what you meant.
       </p>
@@ -200,7 +201,7 @@ export default function CanTurnitinDetectClaudePage() {
           },
           {
             q: "Can any tool guarantee I pass Turnitin with Claude text?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions add other checkers, and the same text can score differently across detectors and re-runs. Tools meaningfully reduce the risk of reading as AI, but a guaranteed pass is not something any honest service can offer.",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions add other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
           },
         ]}
       />

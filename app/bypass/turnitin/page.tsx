@@ -151,9 +151,11 @@ export default function BypassTurnitinPage() {
       <p style={kitStyles.p}>
         No tool can promise a guaranteed Turnitin pass, and anyone who claims a fixed success rate is selling certainty
         that does not exist. Turnitin updates its model, your institution may run additional checkers, and the same text
-        can score differently across detectors and across re-runs. Our detector uses a transparent, pattern-based engine
-        that runs in your browser; it is a strong directional signal, but it is not Turnitin itself, so treat its score
-        as guidance rather than a verdict.
+        can score differently across detectors and across re-runs. Since August 2025 Turnitin has also flagged text it
+        believes was modified by AI humanizers and other &quot;bypasser&quot; tools, so running AI-written work through a
+        humanizer is not a way around it. Our detector uses a transparent, pattern-based engine that runs in your
+        browser; it is a useful directional signal, but it is not Turnitin itself, so treat its score as guidance rather
+        than a verdict.
       </p>
       <p style={kitStyles.p}>
         Expect to do a final human pass every time. The rewrite handles texture, but you are the only one who can confirm
@@ -186,7 +188,7 @@ export default function BypassTurnitinPage() {
           },
           {
             q: "Does paraphrasing beat Turnitin?",
-            a: "Light synonym-swapping paraphrasers usually do not, because they keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps is genuinely varying sentence length and word choice and adding real voice. A humanizer that rewrites for burstiness and perplexity is far more effective than a thesaurus swap.",
+            a: "Light synonym-swapping paraphrasers usually do not, because they keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
           },
           {
             q: "Will humanizing change my meaning?",
@@ -194,7 +196,7 @@ export default function BypassTurnitinPage() {
           },
           {
             q: "Can any tool guarantee I pass Turnitin?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. Tools meaningfully reduce the risk of reading as AI, but a guaranteed pass is not something any honest service can offer.",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
           },
         ]}
       />

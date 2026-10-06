@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
   title: "HumanizeIt Lifetime Deal — Pay Once, Humanize Forever",
   description:
-    "Get lifetime access to HumanizeIt's AI humanizer for a single one-time payment. No monthly fees — bypass GPTZero, Turnitin & Originality.ai forever.",
+    "Get lifetime access to HumanizeIt's AI humanizer and AI detector for a single one-time payment. No subscription and no monthly fees, ever.",
   alternates: { canonical: "https://humanizeit.app/lifetime" },
   openGraph: {
     title: "HumanizeIt Lifetime Deal — Pay Once, Humanize Forever",

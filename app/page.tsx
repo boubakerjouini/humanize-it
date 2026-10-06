@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, UserButton, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import {
   Loader2,
   ArrowRight,
@@ -44,35 +45,35 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does the AI detection work?",
-    a: "We analyze your text against 24 detection patterns used by tools like GPTZero, Turnitin, and Originality.ai — including sentence entropy, vocabulary diversity, burstiness score, and more. You get a 0–100 score with a breakdown of which patterns triggered.",
+    a: `We check your text against ${PATTERN_COUNT} patterns associated with AI-generated writing — the kinds of signals detectors such as GPTZero and Turnitin weigh, like predictable word choice, uniform sentence rhythm, stock AI vocabulary, and formulaic structure. You get a 0–100 score with a breakdown of which patterns triggered. Like any detector, it gives an estimate, not proof.`,
   },
   {
     q: "Will my humanized text pass GPTZero?",
-    a: "Our V3 multi-pass humanizer is specifically trained to reduce the patterns GPTZero flags. Most users see their score drop below 25 (green zone). Results vary by text length and complexity.",
+    a: "No tool can promise that. The humanizer rewrites your text to reduce the patterns GPTZero and similar detectors tend to flag, and shows you the score before and after. Detectors differ and update often, so re-check the result with our free AI detector and read it over before you use it.",
   },
   {
     q: "What AI tools does it work with?",
-    a: "Optimized for ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, and Llama outputs. Any AI-generated text.",
+    a: "It works with text from ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, Llama, and any other model — or with your own writing.",
   },
   {
     q: "Does it work for academic papers and essays?",
-    a: "Yes — it's especially effective for academic content. The humanizer preserves meaning while restructuring sentences to avoid the patterns Turnitin's AI detector and Copyleaks flag.",
+    a: "You can use it to check and polish writing that is your own — for example if you write in English as a second language and worry about a false AI flag. Don't use it to hand in work that isn't yours: that breaks our Terms of Service and most schools' rules. Always follow your institution's policy on AI tools.",
   },
   {
     q: "Is my text stored or shared?",
-    a: "No. Text is processed in memory and immediately discarded. We don't store, log, or train on your content.",
+    a: "The free tools don't keep your text: the instant AI-detector score is calculated in your browser, and the optional deep scan and the no-signup humanizer process text without saving it. When you're signed in, the documents you check or humanize are saved to your account so they can appear in your history, and you can delete them at any time. We never sell your text or use it to train AI models.",
   },
   {
     q: "What's the difference between detecting and humanizing?",
-    a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns — using a 3-pass process that preserves your original meaning.",
+    a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns while keeping your meaning — always read the result to make sure it still says what you intended.",
   },
   {
     q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
-    a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
+    a: `We show the full ${PATTERN_COUNT}-pattern breakdown behind your score, before and after rewriting, instead of a single black-box number. There's also a real free tier, and Pro starts at $9/month.`,
   },
   {
     q: "Is HumanizeIt detectable by Turnitin?",
-    a: "No. Our multi-pass humanizer specifically targets the patterns flagged by Turnitin, GPTZero, and Originality.ai. The rewritten text consistently scores below detection thresholds across all major platforms.",
+    a: "No tool can guarantee how Turnitin — or any AI detector — will score a piece of writing. Detectors change their models often, and Turnitin now also looks for text that has been run through AI humanizers. What HumanizeIt does is reduce the patterns detectors tend to flag and show you the result. Check any text with our free AI detector before you submit it, and follow your institution's rules on AI use.",
   },
   {
     q: "Does it work with ChatGPT text?",
@@ -80,7 +81,7 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What is your refund policy?",
-    a: "We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days for a full refund — no questions asked.",
+    a: "Annual plans come with a 14-day money-back guarantee — no questions asked. Monthly plans can be cancelled at any time and stay active until the end of the billing period. Billing errors are always refunded; see our refund policy for the details.",
   },
   {
     q: "Is there a free plan?",
@@ -159,10 +160,10 @@ const PLANS_ANNUAL = [
 ];
 
 
+// Only rows we can stand behind. No per-detector "passes" ticks: there is no
+// test data behind them, and detectors change their models all the time.
 const COMPARISON = [
-  { label: "GPTZero", us: "✅", quill: "⚠️", undet: "✅" },
-  { label: "Turnitin", us: "✅", quill: "❌", undet: "⚠️" },
-  { label: "Originality.ai", us: "✅", quill: "❌", undet: "⚠️" },
+  { label: "Pattern-by-pattern breakdown", us: "✅", quill: "❌", undet: "❌" },
   { label: "Free Tier", us: "✅", quill: "✅", undet: "❌" },
   { label: "Price", us: "From $0", quill: "From $9.95", undet: "From $9.99" },
 ];
@@ -473,7 +474,7 @@ export default function LandingPage() {
               margin: "0 0 32px",
               maxWidth: "480px",
             }}>
-              Paste your ChatGPT text and get an undetectable, natural-sounding version in seconds.
+              Paste a draft, see which patterns make it read as AI-written, and polish it into natural, human-sounding text before you hit submit.
             </p>
 
             {/* ONE dominant primary CTA + a quieter secondary */}
@@ -581,7 +582,7 @@ export default function LandingPage() {
                   background: THEME.aiDim, color: THEME.ai,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai, display: "inline-block" }} />
-                  <span className="tnum">13</span>/100 human
+                  <span className="tnum">20</span>/100 human
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.8, margin: 0 }}>
@@ -619,14 +620,19 @@ export default function LandingPage() {
                   background: THEME.humanDim, color: THEME.human,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.human, display: "inline-block" }} />
-                  <span className="tnum">96</span>/100 human
+                  <span className="tnum">90</span>/100 human
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.text, lineHeight: 1.8, margin: 0 }}>
-                Most businesses know they need better tech — but few actually use it well. The ones that grow aren&apos;t just buying tools, they&apos;re rethinking how teams work together. It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics: clear communication, faster feedback loops, and actually listening to customers.
+                Most businesses know they need better tech, but few actually use it well. The ones that grow aren&apos;t just buying tools. They&apos;re rethinking how teams work together. Honestly? It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics — talking clearly, getting feedback faster, and listening to customers.
               </p>
             </div>
           </div>
+          {/* The badges are real outputs of analyzeText (the demo's engine) on
+              these exact passages; re-check them if either text changes. */}
+          <p style={{ fontSize: "13px", color: THEME.textMuted, textAlign: "center", margin: "16px 0 0" }}>
+            Scores from our free AI detector. Paste either passage into the demo above to check them yourself.
+          </p>
         </div>
       </section>
 
@@ -656,13 +662,13 @@ export default function LandingPage() {
                 Icon: ScanSearch,
                 step: "02",
                 title: "Analyze",
-                desc: "See your human score and exactly which patterns were detected across 24 signals.",
+                desc: `See your human score and exactly which patterns were detected across ${PATTERN_COUNT} signals.`,
               },
               {
                 Icon: Sparkles,
                 step: "03",
                 title: "Humanize",
-                desc: "One click rewrites your text to sound natural and pass every major detector.",
+                desc: "One click rewrites the flagged passages to sound natural, then re-scores the result so you can see what changed.",
               },
             ].map(({ Icon, step, title, desc }) => (
               <div key={title} style={{
@@ -778,7 +784,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
           <div style={sectionLabelWrap}><span className="kicker">Comparison</span></div>
-          <h2 style={{ ...h2Style, marginBottom: "44px" }}>Beats every AI detector</h2>
+          <h2 style={{ ...h2Style, marginBottom: "44px" }}>How HumanizeIt compares</h2>
 
           <div className="panel" style={{
             borderRadius: THEME.radiusLg,
@@ -808,6 +814,11 @@ export default function LandingPage() {
               </tbody>
             </table>
           </div>
+          <p style={{ textAlign: "center", margin: "18px 0 0", fontSize: "14px" }}>
+            <Link href="/compare" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+              See detailed, side-by-side comparisons &rarr;
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -1178,7 +1189,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.7, maxWidth: "240px", margin: 0 }}>
-                The AI humanizer that actually works. Make your AI text undetectable in seconds.
+                Free AI detector and AI humanizer. Check your writing for AI patterns and polish it so it sounds like you.
               </p>
             </div>
 

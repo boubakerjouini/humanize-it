@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
   title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
   description:
-    "See how HumanizeIt compares to Undetectable.ai, WriteHuman, and other AI humanizers on detection bypass, transparency, and price. Honest, side-by-side.",
+    "See how HumanizeIt compares to Undetectable.ai, WriteHuman, and other AI humanizers on output quality, transparency, and price. Honest, side-by-side.",
   alternates: { canonical: "https://humanizeit.app/compare" },
   openGraph: {
     title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
     description:
-      "Side-by-side comparison of HumanizeIt against the top AI humanizers on detection bypass, transparency, and price.",
+      "Side-by-side comparison of HumanizeIt against the top AI humanizers on output quality, transparency, and price.",
     url: "https://humanizeit.app/compare",
     siteName: "HumanizeIt",
     type: "website",

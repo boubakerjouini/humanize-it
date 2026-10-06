@@ -117,7 +117,7 @@ export default function StealthGptAlternativePage() {
       <p style={kitStyles.p}>
         We try to be honest about what humanizers can and cannot do. No tool can promise a permanent,
         100 percent pass rate against every detector forever &mdash; detection models change, and any
-        company claiming otherwise is overselling. What a good humanizer does is reliably reduce the
+        company claiming otherwise is overselling. What a good humanizer does is reduce the
         statistical signals that detectors look for: the uniform sentence rhythm, predictable word
         choices, and smooth-but-flat structure that large language models tend to produce.
       </p>
@@ -173,7 +173,7 @@ export default function StealthGptAlternativePage() {
           },
           {
             q: "Can HumanizeIt guarantee text passes every AI detector?",
-            a: "No honest tool can. Detection models change over time, so a permanent 100 percent guarantee is not realistic. What a good humanizer does is reliably reduce the patterns detectors look for, which is what we focus on.",
+            a: "No honest tool can. Detection models change over time, so a permanent 100 percent guarantee is not realistic. What a good humanizer does is reduce the patterns detectors look for, which is what we focus on.",
           },
           {
             q: "Is HumanizeIt cheaper than StealthGPT?",

@@ -5,7 +5,7 @@ import { THEME, glow } from "@/lib/theme";
 export const metadata: Metadata = {
   title: "AI Humanizer Use Cases — Students, Copywriters & Agencies",
   description:
-    "See how different people use HumanizeIt to make AI-assisted writing read naturally and pass AI detectors — from students beating Turnitin to agencies scaling content.",
+    "See how students, writers, job seekers and agencies use HumanizeIt to check drafts for AI-like patterns, avoid false AI flags, and make writing read naturally.",
   keywords: [
     "AI humanizer use cases",
     "humanize AI text",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Humanizer Use Cases — Students, Copywriters & Agencies",
     description:
-      "How students, copywriters, and agencies use HumanizeIt to make AI-assisted writing read naturally and pass AI detectors.",
+      "How students, copywriters, and agencies use HumanizeIt to check drafts for AI-like patterns and make writing read naturally.",
     url: "https://humanizeit.app/use-cases",
     siteName: "HumanizeIt",
     type: "website",
@@ -29,25 +29,25 @@ const USE_CASES = [
     href: "/use-cases/students",
     kicker: "For students",
     title: "Students",
-    desc: "Make AI-assisted essays and assignments read naturally and avoid false flags from GPTZero and Turnitin — responsibly.",
+    desc: "Check your own writing before you submit and protect it from false GPTZero and Turnitin flags — within your school's rules.",
   },
   {
     href: "/use-cases/copywriters",
     kicker: "For copywriters",
     title: "Copywriters",
-    desc: "Turn fast AI drafts into on-brand, human-sounding copy that ranks and converts without tripping AI detectors.",
+    desc: "Turn fast AI drafts into on-brand, human-sounding copy that ranks and converts.",
   },
   {
     href: "/use-cases/agencies",
     kicker: "For agencies",
     title: "Agencies",
-    desc: "Scale client content production while keeping every deliverable natural, undetectable, and quality-checked.",
+    desc: "Scale client content production while keeping every deliverable natural, on-brand, and quality-checked.",
   },
   {
     href: "/use-cases/essays",
     kicker: "For essays",
     title: "Essays",
-    desc: "Make AI-assisted essays read naturally and avoid false flags from Turnitin and GPTZero — responsibly.",
+    desc: "Polish essay drafts so they read clearly and naturally, and check them for AI-like patterns before you submit.",
   },
   {
     href: "/use-cases/research-papers",
@@ -102,8 +102,8 @@ export default function UseCasesHubPage() {
         How people use <span style={{ color: THEME.brand }}>HumanizeIt</span>
       </h1>
       <p style={{ color: THEME.textDim, lineHeight: 1.75, marginBottom: "32px", fontSize: "16px" }}>
-        HumanizeIt makes AI-assisted writing read naturally and pass AI detectors. Here&apos;s how different
-        people put it to work — pick the guide that fits you.
+        HumanizeIt checks writing for the patterns AI detectors flag and helps you polish it so it reads naturally.
+        Here&apos;s how different people put it to work — pick the guide that fits you.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

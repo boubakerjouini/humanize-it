@@ -239,7 +239,7 @@ export default function TwitterImage() {
               lineHeight: 1.4,
             }}
           >
-            Detect & bypass AI detection in seconds
+            Spot AI patterns. Polish your writing.
           </p>
 
           {/* Domain */}

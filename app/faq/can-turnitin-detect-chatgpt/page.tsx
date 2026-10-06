@@ -148,7 +148,8 @@ export default function CanTurnitinDetectChatGptPage() {
         </Link>{" "}
         walks through the same techniques in the context of a graded submission. And remember the honest limit: no tool
         can guarantee a pass, because Turnitin updates its model, your institution may run extra checkers, and the same
-        text can score differently across detectors and re-runs.
+        text can score differently across detectors and re-runs. Since August 2025 Turnitin also looks for text that has
+        been run through AI humanizers, so a humanizer is not a way to pass off ChatGPT output as your own.
       </p>
 
       <h2 style={kitStyles.h2}>Using this responsibly</h2>
@@ -176,7 +177,7 @@ export default function CanTurnitinDetectChatGptPage() {
           },
           {
             q: "Does paraphrasing ChatGPT text beat Turnitin?",
-            a: "Usually not on its own. Synonym-swapping paraphrasers keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps is genuinely varying sentence length and word choice and adding real voice, which a humanizer that rewrites for burstiness and perplexity does far more effectively than a thesaurus swap.",
+            a: "Usually not on its own. Synonym-swapping paraphrasers keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
           },
           {
             q: "Will humanizing change my meaning?",
@@ -184,7 +185,7 @@ export default function CanTurnitinDetectChatGptPage() {
           },
           {
             q: "Can any tool guarantee I pass Turnitin?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. Tools meaningfully reduce the risk of reading as AI, but a guaranteed pass is not something any honest service can offer.",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
           },
         ]}
       />

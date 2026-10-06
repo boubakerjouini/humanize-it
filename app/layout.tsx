@@ -32,8 +32,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HumanizeIt — AI Humanizer That Bypasses GPTZero & Turnitin",
-  description: "Paste your ChatGPT text and get an undetectable, naturally human version in seconds. Beats GPTZero, Turnitin & Originality.ai. Free plan available — no credit card required.",
+  title: "HumanizeIt — AI Humanizer & AI Detector for Natural Writing",
+  description: "Free AI detector and AI humanizer: see what makes your writing look AI-generated, polish your draft so it sounds like you, and check it before you submit.",
   metadataBase: new URL("https://humanizeit.app"),
   icons: {
     icon: [
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
     apple: "/favicon.ico",
   },
   openGraph: {
-    title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
-    description: `Score your text against ${PATTERN_COUNT} AI detection patterns and rewrite it to sound 100% human.`,
+    title: "HumanizeIt — AI Humanizer & AI Detector for Natural Writing",
+    description: `Score your text against ${PATTERN_COUNT} AI-detection patterns, see exactly what gets flagged, and polish it so it reads like you wrote it.`,
     url: "https://humanizeit.app",
     siteName: "HumanizeIt",
     type: "website",
@@ -53,8 +53,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "HumanizeIt — AI Text Humanizer That Bypasses GPTZero & Turnitin",
-    description: `Score your text against ${PATTERN_COUNT} AI detection patterns and rewrite it to sound 100% human.`,
+    title: "HumanizeIt — AI Humanizer & AI Detector for Natural Writing",
+    description: `Score your text against ${PATTERN_COUNT} AI-detection patterns, see exactly what gets flagged, and polish it so it reads like you wrote it.`,
     // Image auto-wired from app/twitter-image.tsx.
   },
   robots: {
@@ -104,7 +104,7 @@ export default function RootLayout({
                 "@type": "WebApplication",
                 name: "HumanizeIt",
                 url: "https://humanizeit.app",
-                description: `Detect AI-generated text with ${PATTERN_COUNT}-pattern analysis and humanize it to read naturally against GPTZero, Turnitin, and Originality.ai`,
+                description: `Check writing against ${PATTERN_COUNT} AI-detection patterns and humanize drafts so they read naturally, to help avoid false AI flags.`,
                 applicationCategory: "WritingApplication",
                 operatingSystem: "Web",
                 offers: [
@@ -141,7 +141,7 @@ export default function RootLayout({
                 url: "https://humanizeit.app",
                 logo: "https://humanizeit.app/icon.png",
                 description:
-                  "AI text humanizer that rewrites AI-generated text to read naturally and bypass AI detectors like GPTZero, Turnitin, and Originality.ai.",
+                  "AI humanizer and AI detector that helps writers check drafts for AI-like patterns and rewrite them to read naturally.",
                 sameAs: [
                   "https://www.linkedin.com/in/boubakerjouini/",
                 ],
