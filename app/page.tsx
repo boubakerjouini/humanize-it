@@ -294,7 +294,11 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── LAUNCH BANNER ── */}
+      {/* ── LAUNCH BANNER ──
+          The fixed nav sits 30px below the top, so the banner must stay one
+          line: on phones the full text wrapped to three lines and hid the
+          whole nav (logo, CTA, menu button). The prefix and the "Claim offer"
+          link are desktop-only for that reason. */}
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 51,
         padding: "7px 16px",
@@ -304,13 +308,13 @@ export default function LandingPage() {
         display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap",
       }}>
         <span>
-          Launch offer: 50% off Pro forever — use code{" "}
+          <span className="desktop-only">Launch offer: </span>50% off Pro forever — use code{" "}
           <strong className="tnum" style={{
             fontWeight: 700, padding: "1px 7px", borderRadius: "6px",
             background: "rgba(255,255,255,0.18)", letterSpacing: "0.02em",
           }}>LAUNCH50</strong>
         </span>
-        <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
+        <a href="#pricing" className="desktop-only" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
           color: "#ffffff", fontWeight: 600, textDecoration: "none",
           display: "inline-flex", alignItems: "center", gap: "4px",
           borderBottom: "1px solid rgba(255,255,255,0.6)", paddingBottom: "1px",
