@@ -85,8 +85,8 @@ export function AnalysisPanel({
           </div>
           <p style={{ fontSize: 15, color: THEME.textDim, lineHeight: 1.6, margin: "0 0 14px" }}>
             {triggered.length === 0
-              ? "No AI patterns found in the instant scan. This is a quick heuristic — run a Deep scan below for the precise verdict."
-              : `Found ${triggered.length} potential AI signal${triggered.length === 1 ? "" : "s"} across ${result.wordCount.toLocaleString()} words (highlighted below). This is a quick heuristic — run a Deep scan for the precise verdict.`}
+              ? "No AI patterns found in the instant scan. This is a quick estimate: run a Deep scan below for a second opinion."
+              : `Found ${triggered.length} potential AI signal${triggered.length === 1 ? "" : "s"} across ${result.wordCount.toLocaleString()} words (highlighted below). This is a quick estimate: run a Deep scan for a second opinion.`}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={onHumanize} disabled={busy}
@@ -140,7 +140,7 @@ export function AnalysisPanel({
             <div style={{ flex: "1 1 260px" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: THEME.text }}>Deep scan</div>
               <div style={{ fontSize: 13, color: THEME.textMuted, lineHeight: 1.5 }}>
-                The score above is an instant heuristic. Run an AI-powered deep scan for a precise, calibrated verdict.
+                The score above is an instant estimate. Run a deep scan for a second opinion from an AI model.
               </div>
             </div>
             <button onClick={runDeepScan} disabled={deepLoading || words < DEEP_MIN_WORDS}
