@@ -29,6 +29,7 @@ export type TemplateProps = {
   };
   waitlist_confirm: Base & { confirmUrl: string };
   doi_confirm: Base & { confirmUrl: string; topics: Topic[] };
+  founding_confirm: Base & { confirmUrl: string };
   // Onboarding
   welcome: Base;
   first_run_nudge: Base;
@@ -110,6 +111,8 @@ export const TEMPLATES: { [K in TemplateKey]: TemplateMeta } = {
   detector_report: { stream: "transactional", topic: null, flow: "detector_report" },
   waitlist_confirm: { stream: "transactional", topic: null, flow: "waitlist_confirm" },
   doi_confirm: { stream: "transactional", topic: null, flow: "doi_confirm" },
+  // Founding 100 list sign-ups (/lifetime): the same double opt-in, with copy that names the offer.
+  founding_confirm: { stream: "transactional", topic: null, flow: "doi_confirm" },
 
   welcome: { stream: "lifecycle", topic: null, flow: "onboarding" },
   first_run_nudge: { stream: "lifecycle", topic: null, flow: "onboarding" },
@@ -196,9 +199,9 @@ export const FLOW_META: Record<FlowKey, FlowMeta> = {
   doi_confirm: {
     name: "Subscription confirmation",
     kind: "transactional",
-    description: "Neutral double opt-in reminder for pending topics, sent from the email log.",
-    audience: "Contacts with pending topics",
-    playbook: { sequence: null, emails: { doi_confirm: null } },
+    description: "Double opt-in for pending topics: the neutral reminder sent from the email log, and the Founding 100 list confirmation.",
+    audience: "Contacts with pending topics, and Founding 100 list sign-ups",
+    playbook: { sequence: null, emails: { doi_confirm: null, founding_confirm: null } },
   },
   referral_reward: {
     name: "Referral reward notice",

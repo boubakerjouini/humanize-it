@@ -256,8 +256,8 @@ export async function POST(req: Request) {
         runAfter("leads:send-founding", () =>
           sendEmail({
             contactId,
-            template: "doi_confirm",
-            props: { confirmUrl: genericConfirmUrl(contactId), topics: pending },
+            template: "founding_confirm",
+            props: { confirmUrl: genericConfirmUrl(contactId) },
             dedupeKey: `doi:${contactId}:founding:${utcDay(now).toISOString().slice(0, 10)}`,
             pool: "inline",
           })

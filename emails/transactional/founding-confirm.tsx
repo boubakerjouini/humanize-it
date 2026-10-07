@@ -2,19 +2,16 @@
 // emails/transactional/founding-confirm.tsx — Double opt-in for the
 // Founding 100 list (lead source founding_waitlist, captured on /lifetime).
 //
-// NOT REGISTERED YET: the catalog (lib/email/catalog.ts) has no template key
-// for it, so founding sign-ups get the neutral doi_confirm email for now.
-// Once a `founding_confirm` key exists with props `Base & { confirmUrl }`,
-// add it to emails/transactional/index.ts and switch the founding branch of
-// app/api/public/leads/route.ts to it. The props match waitlist_confirm's, so
-// this definition fits the new key unchanged.
+// Gated by the doi_confirm flow, like the neutral double opt-in it replaces
+// for this source. The confirm link goes to /free/confirmed, which confirms
+// the pending topics only on an explicit click.
 // ===========================================================
 
 import type { TemplateComponentProps, TemplateDef } from "@/emails/registry";
 import { EmailLayout } from "@/emails/components/layout";
 import { Button, Greeting, P, Signature } from "@/emails/components/primitives";
 
-function FoundingConfirm({ p, ctx }: TemplateComponentProps<"waitlist_confirm">) {
+function FoundingConfirm({ p, ctx }: TemplateComponentProps<"founding_confirm">) {
   return (
     <EmailLayout ctx={ctx} preview="One click so the Founding 100 email reaches you.">
       <Greeting ctx={ctx} />
@@ -32,8 +29,7 @@ function FoundingConfirm({ p, ctx }: TemplateComponentProps<"waitlist_confirm">)
   );
 }
 
-/** Ready for a future `founding_confirm` catalog key (see the header). */
-export const foundingConfirm: TemplateDef<"waitlist_confirm"> = {
+export const foundingConfirm: TemplateDef<"founding_confirm"> = {
   subject: () => "Confirm your place on the Founding 100 list",
   Component: FoundingConfirm,
 };

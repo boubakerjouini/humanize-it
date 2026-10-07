@@ -1,7 +1,4 @@
-import { render } from "react-email";
-import { createElement } from "react";
 import { TRANSACTIONAL } from "@/emails/transactional";
-import { foundingConfirm } from "@/emails/transactional/founding-confirm";
 import { describeTopics } from "@/emails/transactional/doi-confirm";
 import { buildRenderCtx, renderEmail } from "@/lib/email/render";
 import type { TemplateKey, TemplateProps } from "@/lib/email/catalog";
@@ -17,7 +14,7 @@ afterAll(() => {
   process.env = savedEnv;
 });
 
-const SAMPLES: { [K in "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm"]: TemplateProps[K][] } = {
+const SAMPLES: { [K in "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm" | "founding_confirm"]: TemplateProps[K][] } = {
   magnet_delivery: [
     {
       magnet: "false-ai-flag-appeal-kit",
@@ -52,6 +49,7 @@ const SAMPLES: { [K in "magnet_delivery" | "detector_report" | "waitlist_confirm
   ],
   waitlist_confirm: [{ confirmUrl: "https://humanizeit.app/extension/confirmed?t=v1.abc.def" }],
   doi_confirm: [{ confirmUrl: "https://humanizeit.app/free/confirmed?t=v1.abc.def", topics: ["tips", "extension_launch"] }],
+  founding_confirm: [{ confirmUrl: "https://humanizeit.app/free/confirmed?t=v1.abc.def" }],
 };
 
 async function renderSample<K extends keyof typeof SAMPLES>(key: K, props: TemplateProps[K]) {
@@ -71,8 +69,8 @@ function expectClean(out: { subject: string; html: string; text: string }) {
 }
 
 describe("transactional registry", () => {
-  it("registers the four transactional templates", () => {
-    expect(Object.keys(TRANSACTIONAL).sort()).toEqual(["detector_report", "doi_confirm", "magnet_delivery", "waitlist_confirm"]);
+  it("registers the five transactional templates", () => {
+    expect(Object.keys(TRANSACTIONAL).sort()).toEqual(["detector_report", "doi_confirm", "founding_confirm", "magnet_delivery", "waitlist_confirm"]);
   });
 
   for (const key of Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]) {
@@ -135,12 +133,11 @@ describe("confirmation emails", () => {
     expect(out.text).toContain("no launch date yet");
   });
 
-  it("the founding confirmation renders for when its catalog key lands", async () => {
-    const ctx = buildRenderCtx({ contactId: "contact_1", template: "doi_confirm" });
-    const el = createElement(foundingConfirm.Component, { p: { confirmUrl: "https://humanizeit.app/free/confirmed?t=x" }, ctx });
-    const text = await render(el, { plainText: true });
-    expect(foundingConfirm.subject({ confirmUrl: "x" }, ctx)).toContain("Founding 100");
-    expect(text).toContain("Confirm my place on the list");
-    expect(text).not.toContain("undefined");
+  it("founding_confirm names the offer and the tips it subscribes to", async () => {
+    const out = await renderSample("founding_confirm", SAMPLES.founding_confirm[0]);
+    expect(out.subject).toContain("Founding 100");
+    expect(out.text).toContain("Confirm my place on the list");
+    expect(out.text).toContain("writing tips and offers");
+    expect(out.text).toContain("ignore this email");
   });
 });
