@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
+
+const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
 const MAX_WORDS = 300;
 const TONES = ["standard", "formal", "casual", "academic", "professional"] as const;
@@ -18,7 +22,8 @@ interface HumanizeResponse {
 /**
  * Free, no-signup humanizer. Calls the capped POST /api/public/humanize
  * (anonymous, IP-rate-limited, 300-word cap). On the daily cap it surfaces a
- * sign-up CTA. Real per-document humanizing lives behind auth in the dashboard.
+ * sign-up CTA plus a free checklist for finishing the draft by hand. Real
+ * per-document humanizing lives behind auth in the dashboard.
  */
 export function HumanizerTool() {
   const [text, setText] = useState("");
@@ -119,6 +124,18 @@ export function HumanizerTool() {
               Sign up free for more &rarr;
             </Link>
           )}
+          {err.signupCta && (
+            <div style={{ marginTop: "20px", borderTop: `1px solid ${THEME.border}`, paddingTop: "18px", textAlign: "left" }}>
+              <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.6, margin: "0 0 12px" }}>
+                Or finish this draft by hand: the free{" "}
+                <Link href="/free/linkedin-humanizer-checklist" style={{ color: THEME.brandHi }}>
+                  LinkedIn &amp; Cover Letter Checklist
+                </Link>{" "}
+                lists the tells to cut and what to write instead.
+              </p>
+              <LeadCaptureForm source="blog_inline" magnet="linkedin-humanizer-checklist" variant="compact" ctaLabel="Get the checklist" />
+            </div>
+          )}
         </div>
       )}
 
@@ -166,6 +183,8 @@ export function HumanizerTool() {
           </div>
         </div>
       )}
+
+      <ExitIntent variant="magnet" magnet="false-ai-flag-appeal-kit" suppress={loading} />
     </div>
   );
 }
