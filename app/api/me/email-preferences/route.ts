@@ -2,12 +2,16 @@
 // GET/POST /api/me/email-preferences — The signed-in user's email choices
 //
 // GET  → { email, topics, pendingTopics, lifecycleEmails, prompt }
-// POST { topics?, lifecycleEmails?, dismissPrompt?, source? } → same shape.
+// POST { subscribe?, unsubscribe?, lifecycleEmails?, dismissPrompt?, source? }
+//      → same shape.
 //
-// `topics` is the full set the user wants. Missing ones are granted directly
-// (method in_app: Clerk already verified the address, so no double opt-in),
-// the rest withdrawn (method preferences). Every POST marks the in-app prompt
-// as answered, so the consent card never comes back after Save or Not now.
+// Changes are deltas, never a full set, so a client that only knows about one
+// topic can't silently withdraw (or confirm) another, e.g. a waitlist topic
+// still waiting for its double opt-in. `subscribe` grants directly (method
+// in_app: the user ticked the box here and Clerk verified the address, so no
+// double opt-in); `unsubscribe` withdraws (method preferences). Every POST
+// marks the in-app prompt as answered, so the consent card never comes back
+// after Save or Not now.
 // `prompt` stays false for anyone who unsubscribed before: we don't re-ask.
 // ===========================================================
 
@@ -21,8 +25,11 @@ import { getOrCreateContactForUser } from "@/lib/crm/contacts";
 import { grantTopics, markConsentPrompted, setLifecycleEmails, withdrawTopics } from "@/lib/crm/consent";
 import { TOPICS, type ConsentWordingId, type Topic } from "@/lib/growth/constants";
 
+const topicList = z.array(z.enum(TOPICS)).max(TOPICS.length);
+
 const bodySchema = z.object({
-  topics: z.array(z.enum(TOPICS)).max(TOPICS.length).optional(),
+  subscribe: topicList.optional(),
+  unsubscribe: topicList.optional(),
   lifecycleEmails: z.boolean().optional(),
   dismissPrompt: z.boolean().optional(),
   source: z.enum(["consent_card", "settings"]).optional(),
@@ -110,21 +117,13 @@ export async function POST(req: Request) {
     const source = body.source ?? "settings";
     const meta = { source: `in_app:${source}`, ip: clientIp(req), userAgent: req.headers.get("user-agent") };
 
-    if (body.topics) {
-      const current = await db.contact.findUnique({
-        where: { id: contactId },
-        select: { subscribedTopics: true, pendingTopics: true },
-      });
-      const wanted = new Set<Topic>(body.topics);
-      const held = new Set([...(current?.subscribedTopics ?? []), ...(current?.pendingTopics ?? [])]);
-      for (const topic of TOPICS) {
-        if (wanted.has(topic) && !current?.subscribedTopics.includes(topic)) {
-          await grantTopics(contactId, [topic], { ...meta, method: "in_app", pending: false, wording: IN_APP_WORDING[topic] });
-        }
-      }
-      const toWithdraw = TOPICS.filter((t) => !wanted.has(t) && held.has(t));
-      if (toWithdraw.length > 0) await withdrawTopics(contactId, toWithdraw, { ...meta, method: "preferences" });
+    const unsubscribe = new Set<Topic>(body.unsubscribe ?? []);
+    // A topic in both lists is a contradiction: withdrawing is the safe reading.
+    for (const topic of new Set<Topic>(body.subscribe ?? [])) {
+      if (unsubscribe.has(topic)) continue;
+      await grantTopics(contactId, [topic], { ...meta, method: "in_app", pending: false, wording: IN_APP_WORDING[topic] });
     }
+    if (unsubscribe.size > 0) await withdrawTopics(contactId, [...unsubscribe], { ...meta, method: "preferences" });
 
     if (typeof body.lifecycleEmails === "boolean") {
       await setLifecycleEmails(contactId, body.lifecycleEmails, { ...meta, method: "preferences" });
