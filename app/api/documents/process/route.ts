@@ -151,7 +151,7 @@ export async function POST(req: Request) {
     }
 
     // Atomically reserve the word quota, plan allowance first, then bonus words
-    // (refunded by the workflow on failure; it always refunds the plan pool).
+    // (the workflow refunds the same pool on failure, via options.wordPool).
     const pool = await reserveWords(freshUser.id, wordCount, plan);
     if (!pool) {
       runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "upload_words", plan.id));
@@ -194,7 +194,7 @@ export async function POST(req: Request) {
     // reserved quota and mark the document errored here.
     let runId: string | null = null;
     try {
-      const run = await start(humanizeDocumentWorkflow, [document.id, options]);
+      const run = await start(humanizeDocumentWorkflow, [document.id, { ...options, wordPool: pool }]);
       runId = run.runId;
     } catch (startErr) {
       console.error("[documents/process] failed to start workflow:", startErr);

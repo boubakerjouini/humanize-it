@@ -18,13 +18,15 @@ import {
   type ToneOption,
   type IntensityLevel,
 } from "@/lib/algorithms/humanizeText";
-import { refundWordQuota } from "@/lib/quota";
+import { refundWords, type WordPool } from "@/lib/quota";
 
 export interface PipelineOptions {
   tone: ToneOption;
   intensity: IntensityLevel;
   language?: string;
   styleFingerprint?: Record<string, string>;
+  /** Which pool /api/documents/process charged, so a failure refunds that pool. Runs started before this field existed paid from the plan. */
+  wordPool?: WordPool;
 }
 
 export type PipelineStage =
@@ -149,7 +151,7 @@ async function scoreStep(documentId: string, humanizedText: string): Promise<{ s
   return { score: analysis.score };
 }
 
-async function failDocumentStep(documentId: string, message: string): Promise<void> {
+async function failDocumentStep(documentId: string, message: string, pool: WordPool): Promise<void> {
   "use step";
   const doc = await db.document.findUnique({ where: { id: documentId } });
   if (!doc) return;
@@ -162,7 +164,7 @@ async function failDocumentStep(documentId: string, message: string): Promise<vo
     data: { status: "error", stage: "error", errorMessage: message.slice(0, 300) },
   });
   if (res.count === 1) {
-    await refundWordQuota(doc.userId, doc.wordCount);
+    await refundWords(doc.userId, doc.wordCount, pool);
   }
   await emit({ documentId, stage: "error", message });
 }
@@ -187,7 +189,7 @@ export async function humanizeDocumentWorkflow(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Processing failed.";
-    await failDocumentStep(documentId, message);
+    await failDocumentStep(documentId, message, options.wordPool ?? "plan");
     throw err;
   }
 }
