@@ -18,6 +18,7 @@ export function BlogPostExtras({ slug }: { slug: string }) {
           description={post.description}
           url={`https://humanizeit.app/blog/${slug}`}
           datePublished={post.date}
+          dateModified={post.dateModified}
         />
       )}
 

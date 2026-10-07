@@ -9,7 +9,11 @@ export function getPostHogClient(): PostHog | null {
 
   if (!_client) {
     _client = new PostHog(key, {
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com",
+      // Straight to EU ingestion. NEXT_PUBLIC_POSTHOG_HOST is the browser's
+      // /ingest reverse proxy (an ad-blocker workaround); server events don't
+      // need it, and sending them through our own domain adds a hop through
+      // the edge and the Clerk middleware (which used to 404 them).
+      host: "https://eu.i.posthog.com",
       flushAt: 1,
       flushInterval: 0,
     });

@@ -51,7 +51,7 @@ export function ArticleLayout({
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 600 }}>Blog</Link>
-            <Link href="/dashboard/editor" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "7px 18px", borderRadius: "999px", textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}>
+            <Link href="/free-ai-humanizer" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "7px 18px", borderRadius: "999px", textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}>
               Try Free &rarr;
             </Link>
           </div>
@@ -132,7 +132,7 @@ export function ArticleLayout({
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link
-              href="/"
+              href="/free-ai-humanizer"
               style={{
                 display: "inline-block",
                 background: THEME.brand,
@@ -145,7 +145,7 @@ export function ArticleLayout({
                 boxShadow: glow(THEME.brand, 0.32),
               }}
             >
-              Get Started Free &rarr;
+              Try the Free Humanizer &rarr;
             </Link>
             <Link
               href="/blog"

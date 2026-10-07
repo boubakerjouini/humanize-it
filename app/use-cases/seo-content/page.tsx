@@ -9,7 +9,7 @@ const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 export const metadata: Metadata = {
   title: "AI Humanizer for SEO Content | HumanizeIt",
   description:
-    "How publishers and SEO teams use an AI humanizer for SEO content to scale output, clear Originality.ai checks, and keep drafts reading like real people wrote them.",
+    "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts for Originality.ai-style patterns, and keep them natural.",
   keywords: [
     "AI humanizer for SEO content",
     "humanize AI content",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Humanizer for SEO Content | HumanizeIt",
     description:
-      "How publishers and SEO teams use an AI humanizer for SEO content to scale output, clear Originality.ai checks, and keep drafts reading like real people wrote them.",
+      "How publishers and SEO teams use an AI humanizer for SEO content to scale output, check drafts for Originality.ai-style patterns, and keep them natural.",
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -100,9 +100,9 @@ export default function SeoContentUseCasePage() {
         The workflow that holds up treats AI as a drafting accelerant, not an autopilot. Start from real keyword and
         intent research. Add the things a model cannot invent: your own data, screenshots, product knowledge, customer
         questions, and a point of view. Draft fast, then edit for accuracy and substance. Humanizing belongs near the end
-        &mdash; once the page says something true and specific, you smooth the machine texture so it reads naturally and
-        clears whatever detector your client runs. That keeps throughput high while protecting the quality bar that
-        rankings depend on.
+        &mdash; once the page says something true and specific, you smooth the machine texture so it reads naturally,
+        then re-check it against the detector your client uses. That keeps throughput high while protecting the quality
+        bar that rankings depend on.
       </p>
 
       <h2 style={kitStyles.h2}>The Originality.ai risk for content teams</h2>
@@ -148,7 +148,7 @@ export default function SeoContentUseCasePage() {
           },
           {
             q: "Why humanize AI content if Google doesn't ban it?",
-            a: "Two reasons. First, many clients and editors require a passing AI-detector score before they accept a deliverable, and raw model output usually fails. Second, the same edits that beat a detector — varied rhythm, concrete detail, a real voice — also make the page better for readers and stronger for E-E-A-T.",
+            a: "Two reasons. First, many clients and editors require a passing AI-detector score before they accept a deliverable, and raw model output usually fails. Second, the same edits that reduce detector flags — varied rhythm, concrete detail, a real voice — also make the page better for readers and stronger for E-E-A-T.",
           },
           {
             q: "Will humanizing my content hurt its rankings?",
@@ -156,7 +156,7 @@ export default function SeoContentUseCasePage() {
           },
           {
             q: "Can HumanizeIt help me pass Originality.ai at scale?",
-            a: "It is designed for that workflow: it rewrites drafts to read naturally while preserving meaning and keywords, so they're far less likely to trip a classifier like Originality.ai. No tool can guarantee a permanent pass — detectors retrain often — so re-check each piece before publishing.",
+            a: "It is designed for that workflow: it rewrites drafts to read naturally while preserving meaning and keywords, which reduces the patterns a classifier like Originality.ai reacts to. No tool can guarantee a permanent pass — detectors retrain often — so re-check each piece before publishing.",
           },
           {
             q: "How do I scale content without it looking mass-produced?",

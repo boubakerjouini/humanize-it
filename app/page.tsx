@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useSyncExternalStore } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut, UserButton, SignUpButton, SignInButton } from "@clerk/nextjs";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import {
   Loader2,
   ArrowRight,
@@ -34,8 +35,6 @@ const VARIANT_IDS = {
   teamAnnual: "1368289",
 };
 
-const EXTENSION_URL = "https://github.com/boubakerjouini/humanize-it-extension";
-
 // Single source of truth for the homepage FAQ — rendered as the visible
 // accordion AND as FAQPage JSON-LD (below), so the structured data always
 // matches the visible content (a Google rich-results requirement).
@@ -46,35 +45,35 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How does the AI detection work?",
-    a: "We analyze your text against 24 detection patterns used by tools like GPTZero, Turnitin, and Originality.ai — including sentence entropy, vocabulary diversity, burstiness score, and more. You get a 0–100 score with a breakdown of which patterns triggered.",
+    a: `We check your text against ${PATTERN_COUNT} patterns associated with AI-generated writing — the kinds of signals detectors such as GPTZero and Turnitin weigh, like predictable word choice, uniform sentence rhythm, stock AI vocabulary, and formulaic structure. You get a 0–100 score with a breakdown of which patterns triggered. Like any detector, it gives an estimate, not proof.`,
   },
   {
     q: "Will my humanized text pass GPTZero?",
-    a: "Our V3 multi-pass humanizer is specifically trained to reduce the patterns GPTZero flags. Most users see their score drop below 25 (green zone). Results vary by text length and complexity.",
+    a: "No tool can promise that. The humanizer rewrites your text to reduce the patterns GPTZero and similar detectors tend to flag, and shows you the score before and after. Detectors differ and update often, so re-check the result with our free AI detector and read it over before you use it.",
   },
   {
     q: "What AI tools does it work with?",
-    a: "Optimized for ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, and Llama outputs. Any AI-generated text.",
+    a: "It works with text from ChatGPT (GPT-3.5, GPT-4, GPT-4o), Claude, Gemini, Copilot, Llama, and any other model — or with your own writing.",
   },
   {
     q: "Does it work for academic papers and essays?",
-    a: "Yes — it's especially effective for academic content. The humanizer preserves meaning while restructuring sentences to avoid the patterns Turnitin's AI detector and Copyleaks flag.",
+    a: "You can use it to check and polish writing that is your own — for example if you write in English as a second language and worry about a false AI flag. Don't use it to hand in work that isn't yours: that breaks our Terms of Service and most schools' rules. Always follow your institution's policy on AI tools.",
   },
   {
     q: "Is my text stored or shared?",
-    a: "No. Text is processed in memory and immediately discarded. We don't store, log, or train on your content.",
+    a: "The free tools don't keep your text: the instant AI-detector score is calculated in your browser, and the optional deep scan and the no-signup humanizer process text without saving it. When you're signed in, the documents you check or humanize are saved to your account so they can appear in your history, and you can delete them at any time. We never sell your text or use it to train AI models.",
   },
   {
     q: "What's the difference between detecting and humanizing?",
-    a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns — using a 3-pass process that preserves your original meaning.",
+    a: "Detection scores your text and shows you exactly which AI patterns are present. Humanizing rewrites the text to reduce those patterns while keeping your meaning — always read the result to make sure it still says what you intended.",
   },
   {
     q: "How is HumanizeIt different from Undetectable.ai or Quillbot?",
-    a: "We show you the exact detection breakdown (24 patterns) before and after — transparency competitors don't offer. We're also significantly cheaper, with a real free tier.",
+    a: `We show the full ${PATTERN_COUNT}-pattern breakdown behind your score, before and after rewriting, instead of a single black-box number. There's also a real free tier, and Pro starts at $9/month.`,
   },
   {
     q: "Is HumanizeIt detectable by Turnitin?",
-    a: "No. Our multi-pass humanizer specifically targets the patterns flagged by Turnitin, GPTZero, and Originality.ai. The rewritten text consistently scores below detection thresholds across all major platforms.",
+    a: "No tool can guarantee how Turnitin — or any AI detector — will score a piece of writing. Detectors change their models often, and Turnitin now also looks for text that has been run through AI humanizers. What HumanizeIt does is reduce the patterns detectors tend to flag and show you the result. Check any text with our free AI detector before you submit it, and follow your institution's rules on AI use.",
   },
   {
     q: "Does it work with ChatGPT text?",
@@ -82,7 +81,7 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What is your refund policy?",
-    a: "We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days for a full refund — no questions asked.",
+    a: "Annual plans come with a 14-day money-back guarantee — no questions asked. Monthly plans can be cancelled at any time and stay active until the end of the billing period. Billing errors are always refunded; see our refund policy for the details.",
   },
   {
     q: "Is there a free plan?",
@@ -161,26 +160,27 @@ const PLANS_ANNUAL = [
 ];
 
 
+// Only rows we can stand behind. No per-detector "passes" ticks: there is no
+// test data behind them, and detectors change their models all the time.
 const COMPARISON = [
-  { label: "GPTZero", us: "✅", quill: "⚠️", undet: "✅" },
-  { label: "Turnitin", us: "✅", quill: "❌", undet: "⚠️" },
-  { label: "Originality.ai", us: "✅", quill: "❌", undet: "⚠️" },
-  { label: "Chrome Extension", us: "✅", quill: "❌", undet: "❌" },
+  { label: "Pattern-by-pattern breakdown", us: "✅", quill: "❌", undet: "❌" },
   { label: "Free Tier", us: "✅", quill: "✅", undet: "❌" },
   { label: "Price", us: "From $0", quill: "From $9.95", undet: "From $9.99" },
 ];
 
+const subscribeNoop = () => () => {};
+
 export default function LandingPage() {
   const router = useRouter();
   const [text, setText] = useState("");
-  const [mounted, setMounted] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  // false during SSR/hydration, true afterwards (no setState-in-effect re-render)
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const result = showResult && text.trim().length > 10 ? analyzeText(text) : null;
   const aiScore = result?.score ?? 0;
@@ -294,7 +294,11 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── LAUNCH BANNER ── */}
+      {/* ── LAUNCH BANNER ──
+          The fixed nav sits 30px below the top, so the banner must stay one
+          line: on phones the full text wrapped to three lines and hid the
+          whole nav (logo, CTA, menu button). The prefix and the "Claim offer"
+          link are desktop-only for that reason. */}
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 51,
         padding: "7px 16px",
@@ -304,13 +308,13 @@ export default function LandingPage() {
         display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap",
       }}>
         <span>
-          Launch offer: 50% off Pro forever — use code{" "}
+          <span className="desktop-only">Launch offer: </span>50% off Pro forever — use code{" "}
           <strong className="tnum" style={{
             fontWeight: 700, padding: "1px 7px", borderRadius: "6px",
             background: "rgba(255,255,255,0.18)", letterSpacing: "0.02em",
           }}>LAUNCH50</strong>
         </span>
-        <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
+        <a href="#pricing" className="desktop-only" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
           color: "#ffffff", fontWeight: 600, textDecoration: "none",
           display: "inline-flex", alignItems: "center", gap: "4px",
           borderBottom: "1px solid rgba(255,255,255,0.6)", paddingBottom: "1px",
@@ -344,10 +348,10 @@ export default function LandingPage() {
           </Link>
 
           <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-            <a onClick={() => smoothScroll("demo")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Demo</a>
+            <Link href="/ai-detector" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>AI Detector</Link>
+            <Link href="/free-ai-humanizer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Humanizer</Link>
             <a onClick={() => smoothScroll("how-it-works")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
             <a onClick={() => smoothScroll("pricing")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Extension</a>
             <Link href="/compare" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Compare</Link>
             <Link href="/use-cases" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Use Cases</Link>
             <Link href="/blog" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Blog</Link>
@@ -423,12 +427,17 @@ export default function LandingPage() {
               color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
-          <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
-            color: THEME.textDim, fontSize: "14px", textDecoration: "none",
-          }}>Chrome Extension</a>
-          <Link href="/blog" onClick={() => setMobileMenuOpen(false)} style={{
-            color: THEME.textDim, fontSize: "14px", textDecoration: "none",
-          }}>Blog</Link>
+          {[
+            { label: "AI Detector", href: "/ai-detector" },
+            { label: "Free Humanizer", href: "/free-ai-humanizer" },
+            { label: "Compare", href: "/compare" },
+            { label: "Use Cases", href: "/use-cases" },
+            { label: "Blog", href: "/blog" },
+          ].map(({ label, href }) => (
+            <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)} style={{
+              color: THEME.textDim, fontSize: "14px", textDecoration: "none",
+            }}>{label}</Link>
+          ))}
         </div>
       )}
 
@@ -469,7 +478,7 @@ export default function LandingPage() {
               margin: "0 0 32px",
               maxWidth: "480px",
             }}>
-              Paste your ChatGPT text and get an undetectable, natural-sounding version in seconds.
+              Paste a draft, see which patterns make it read as AI-written, and polish it into natural, human-sounding text before you hit submit.
             </p>
 
             {/* ONE dominant primary CTA + a quieter secondary */}
@@ -499,32 +508,36 @@ export default function LandingPage() {
                 </Link>
               </SignedIn>
 
-              {/* Secondary = orange-tinted ghost button */}
-              <button onClick={() => smoothScroll("demo")} style={{
+              {/* Secondary = orange-tinted ghost button → the no-signup tool */}
+              <Link href="/free-ai-humanizer" style={{
                 background: THEME.accentDim, color: THEME.accentHi, fontWeight: 600,
                 padding: "15px 24px", borderRadius: THEME.radius,
                 border: `1px solid ${THEME.accent}33`,
-                fontSize: "15px", cursor: "pointer",
-                fontFamily: THEME.fontSans,
+                fontSize: "15px", textDecoration: "none",
                 display: "inline-flex", alignItems: "center", gap: "7px",
               }}>
-                Try the live demo <ArrowRight size={15} aria-hidden="true" />
-              </button>
+                Free humanizer, no signup <ArrowRight size={15} aria-hidden="true" />
+              </Link>
             </div>
 
-            {/* Trust row — soft green check chip */}
+            {/* Trust row — soft green check chip + the other free tool */}
             <div style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
+              display: "flex", alignItems: "center", gap: "8px 18px", flexWrap: "wrap",
               fontSize: "13px", fontWeight: 500, color: THEME.textDim,
             }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: "20px", height: "20px", borderRadius: "50%",
-                background: THEME.humanDim,
-              }}>
-                <Check size={13} color={THEME.human} aria-hidden="true" />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: "20px", height: "20px", borderRadius: "50%",
+                  background: THEME.humanDim,
+                }}>
+                  <Check size={13} color={THEME.human} aria-hidden="true" />
+                </span>
+                No credit card required
               </span>
-              No credit card required
+              <Link href="/ai-detector" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+                Check any text with the free AI detector &rarr;
+              </Link>
             </div>
           </div>
 
@@ -573,7 +586,7 @@ export default function LandingPage() {
                   background: THEME.aiDim, color: THEME.ai,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai, display: "inline-block" }} />
-                  <span className="tnum">13</span>/100 human
+                  <span className="tnum">20</span>/100 human
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.8, margin: 0 }}>
@@ -611,14 +624,19 @@ export default function LandingPage() {
                   background: THEME.humanDim, color: THEME.human,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.human, display: "inline-block" }} />
-                  <span className="tnum">96</span>/100 human
+                  <span className="tnum">90</span>/100 human
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.text, lineHeight: 1.8, margin: 0 }}>
-                Most businesses know they need better tech — but few actually use it well. The ones that grow aren&apos;t just buying tools, they&apos;re rethinking how teams work together. It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics: clear communication, faster feedback loops, and actually listening to customers.
+                Most businesses know they need better tech, but few actually use it well. The ones that grow aren&apos;t just buying tools. They&apos;re rethinking how teams work together. Honestly? It&apos;s less about &quot;digital transformation&quot; buzzwords and more about fixing the basics — talking clearly, getting feedback faster, and listening to customers.
               </p>
             </div>
           </div>
+          {/* The badges are real outputs of analyzeText (the demo's engine) on
+              these exact passages; re-check them if either text changes. */}
+          <p style={{ fontSize: "13px", color: THEME.textMuted, textAlign: "center", margin: "16px 0 0" }}>
+            Scores from our free AI detector. Paste either passage into the demo above to check them yourself.
+          </p>
         </div>
       </section>
 
@@ -648,13 +666,13 @@ export default function LandingPage() {
                 Icon: ScanSearch,
                 step: "02",
                 title: "Analyze",
-                desc: "See your human score and exactly which patterns were detected across 24 signals.",
+                desc: `See your human score and exactly which patterns were detected across ${PATTERN_COUNT} signals.`,
               },
               {
                 Icon: Sparkles,
                 step: "03",
                 title: "Humanize",
-                desc: "One click rewrites your text to sound natural and pass every major detector.",
+                desc: "One click rewrites the flagged passages to sound natural, then re-scores the result so you can see what changed.",
               },
             ].map(({ Icon, step, title, desc }) => (
               <div key={title} style={{
@@ -698,7 +716,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 4: CHROME EXTENSION CTA ── */}
+      {/* ── SECTION 4: CHROME EXTENSION (COMING SOON) ──
+          Not released yet, so nothing here links to an install page: the CTAs
+          send people to the free web tools that work today. */}
       <section id="extension" style={{ padding: "72px 24px", borderTop: `1px solid ${THEME.border}`, scrollMarginTop: "110px", background: THEME.surface1 }}>
         <div className="panel" style={{
           maxWidth: "960px", margin: "0 auto",
@@ -723,38 +743,38 @@ export default function LandingPage() {
                 fontFamily: THEME.fontHeading,
                 display: "inline-flex", alignItems: "center", gap: "12px", flexWrap: "wrap",
               }}>
-                HumanizeIt is now a Chrome Extension
+                A Chrome extension is on the way
                 <span style={{
                   fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em",
                   color: "#ffffff", background: THEME.accent,
                   padding: "3px 10px", borderRadius: "999px",
                   fontFamily: THEME.fontSans, textTransform: "uppercase",
-                }}>New</span>
+                }}>Coming soon</span>
               </h2>
               <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "24px" }}>
-                Analyze and humanize text directly in Gmail, Google Docs, LinkedIn, and Notion &mdash; without leaving the page.
+                We&apos;re building an extension to check and polish text right inside Gmail, Google Docs, LinkedIn, and Notion. It isn&apos;t released yet &mdash; until it is, the free web tools do the same job in any browser, with no install and no signup.
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
-                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                <Link href="/free-ai-humanizer" style={{
                   display: "inline-flex", alignItems: "center", gap: "7px",
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   fontSize: "14px", textDecoration: "none",
                 }}>
-                  Install Chrome Extension <ArrowRight size={15} aria-hidden="true" />
-                </a>
-                <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+                  Use the free humanizer <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+                <Link href="/ai-detector" style={{
                   display: "inline-flex", alignItems: "center",
                   background: "transparent", color: THEME.textDim,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   border: `1px solid ${THEME.border}`,
                   fontSize: "14px", textDecoration: "none", fontWeight: 500,
                 }}>
-                  Learn more
-                </a>
+                  Check text with the AI detector
+                </Link>
               </div>
               <p style={{ fontSize: "13px", color: THEME.textMuted }}>
-                Works on Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
+                Planned for Gmail &middot; Google Docs &middot; LinkedIn &middot; Notion &middot; Substack &middot; WordPress
               </p>
             </div>
           </div>
@@ -768,7 +788,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: "720px", margin: "0 auto" }}>
           <div style={sectionLabelWrap}><span className="kicker">Comparison</span></div>
-          <h2 style={{ ...h2Style, marginBottom: "44px" }}>Beats every AI detector</h2>
+          <h2 style={{ ...h2Style, marginBottom: "44px" }}>How HumanizeIt compares</h2>
 
           <div className="panel" style={{
             borderRadius: THEME.radiusLg,
@@ -798,6 +818,11 @@ export default function LandingPage() {
               </tbody>
             </table>
           </div>
+          <p style={{ textAlign: "center", margin: "18px 0 0", fontSize: "14px" }}>
+            <Link href="/compare" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+              See detailed, side-by-side comparisons &rarr;
+            </Link>
+          </p>
         </div>
       </section>
 
@@ -950,7 +975,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── SECTION 8: EXTENSION MINI ── */}
+      {/* ── SECTION 8: WORKS WITH YOUR APPS (copy & paste, no extension needed) ── */}
       <section style={{
         padding: "60px 24px",
         borderTop: `1px solid ${THEME.border}`,
@@ -972,10 +997,10 @@ export default function LandingPage() {
             marginBottom: "12px", color: THEME.text,
             fontFamily: THEME.fontHeading,
           }}>
-            Use it anywhere you write
+            Use it with whatever you write in
           </h2>
           <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "24px" }}>
-            The HumanizeIt extension works in any text field on any website.
+            HumanizeIt runs in any browser, desktop or mobile. Paste a draft from your usual app, check it, polish it, and copy it back.
           </p>
           <div style={{
             display: "inline-flex", gap: "10px", flexWrap: "wrap", justifyContent: "center",
@@ -1129,15 +1154,15 @@ export default function LandingPage() {
                 Open Dashboard <ArrowRight size={17} aria-hidden="true" />
               </Link>
             </SignedIn>
-            <a href={EXTENSION_URL} target="_blank" rel="noopener noreferrer" style={{
+            <Link href="/free-ai-humanizer" style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
               background: "transparent", color: THEME.accentHi, fontWeight: 600,
               padding: "15px 18px", borderRadius: THEME.radius,
               border: `1px solid ${THEME.accent}33`,
               fontSize: "15px", textDecoration: "none",
             }}>
-              <Puzzle size={15} aria-hidden="true" /> Install Chrome Extension
-            </a>
+              <Sparkles size={15} aria-hidden="true" /> Try it without signing up
+            </Link>
           </div>
         </div>
       </section>
@@ -1168,7 +1193,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.7, maxWidth: "240px", margin: 0 }}>
-                The AI humanizer that actually works. Make your AI text undetectable in seconds.
+                Free AI detector and AI humanizer. Check your writing for AI patterns and polish it so it sounds like you.
               </p>
             </div>
 
@@ -1179,8 +1204,10 @@ export default function LandingPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
+                  { label: "Free AI Humanizer", href: "/free-ai-humanizer" },
+                  { label: "AI Detector", href: "/ai-detector" },
+                  { label: "GPTZero Checker", href: "/gptzero-checker" },
                   { label: "Dashboard", href: "/dashboard/editor" },
-                  { label: "Chrome Extension", href: EXTENSION_URL },
                   { label: "Pricing", href: "#pricing" },
                   { label: "Lifetime Deal", href: "/lifetime" },
                 ].map(({ label, href }) => (
@@ -1203,8 +1230,11 @@ export default function LandingPage() {
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
+                  { label: "Detector Guides", href: "/bypass" },
                   { label: "Compare", href: "/compare" },
+                  { label: "Alternatives", href: "/alternatives" },
                   { label: "Use Cases", href: "/use-cases" },
+                  { label: "FAQ", href: "/faq" },
                   { label: "API Docs", href: "/docs/api" },
                   { label: "Sign up", href: "/sign-up" },
                 ].map(({ label, href }) => (

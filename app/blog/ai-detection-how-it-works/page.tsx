@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
+import { getPostBySlug, formatPostDate } from "@/lib/blog";
+
+const POST = getPostBySlug("ai-detection-how-it-works")!;
 
 export const metadata: Metadata = {
-  title: "How AI Detection Works in 2025 — And How to Beat It | HumanizeIt",
+  title: "How AI Detection Works in 2026 — and Why It Flags Humans",
   description:
-    "A deep technical breakdown of how AI detectors like GPTZero and Turnitin identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
+    "How AI detectors like GPTZero and Turnitin use perplexity, burstiness and classifiers to spot AI text, why they flag human writing, and how to write naturally.",
   keywords: [
     "AI detection",
     "how AI detection works",
@@ -25,13 +29,14 @@ export const metadata: Metadata = {
     canonical: "https://humanizeit.app/blog/ai-detection-how-it-works",
   },
   openGraph: {
-    title: "How AI Detection Works in 2025 — And How to Beat It",
+    title: "How AI Detection Works in 2026 — and Why It Flags Humans",
     description:
-      "A deep technical breakdown of how AI detectors identify machine-generated text using perplexity, burstiness, and classifiers — and how to humanize AI text to avoid false flags.",
+      "How AI detectors use perplexity, burstiness and classifiers to spot AI text, why they still flag human writing, and how to keep your own writing natural.",
     url: "https://humanizeit.app/blog/ai-detection-how-it-works",
     siteName: "HumanizeIt",
     type: "article",
-    publishedTime: "2025-06-10T00:00:00Z",
+    publishedTime: POST.date,
+    modifiedTime: POST.dateModified,
   },
 };
 
@@ -59,7 +64,7 @@ export default function AiDetectionHowItWorksPage() {
         </Link>
         <span className="mx-2" style={{ color: THEME.border }}>/</span>
         <span style={{ color: THEME.textDim }}>
-          How AI Detection Works in 2025 — And How to Beat It
+          How AI Detection Works in 2026 — and Why It Flags Humans
         </span>
       </nav>
 
@@ -76,7 +81,7 @@ export default function AiDetectionHowItWorksPage() {
           letterSpacing: "-0.02em",
         }}
       >
-        How AI Detection Works in 2025 — And How to Beat It
+        How AI Detection Works in 2026 — and Why It Flags Humans
       </h1>
 
       <p
@@ -86,7 +91,9 @@ export default function AiDetectionHowItWorksPage() {
           marginBottom: "40px",
         }}
       >
-        Published June 10, 2025 &middot; 7 min read
+        Published {formatPostDate(POST.date)}
+        {POST.dateModified && <> &middot; Updated {formatPostDate(POST.dateModified)}</>} &middot;{" "}
+        {POST.readingTime} min read
       </p>
 
       <div className="blog-prose">
@@ -155,10 +162,7 @@ export default function AiDetectionHowItWorksPage() {
           &ldquo;expected&rdquo; next word. Low burstiness means every sentence
           looks structurally similar to the last. Combined, you get text that
           reads like it was produced by a machine running on autopilot — which it
-          was. A 2023 study from the University of Maryland found that
-          GPT-3.5-generated essays had an average perplexity 40% lower than human
-          essays on the same topics, and a burstiness index less than half that of
-          human writers.
+          often was.
         </p>
         <p>
           This is the fundamental signal that most first-generation detectors rely
@@ -236,10 +240,11 @@ export default function AiDetectionHowItWorksPage() {
         </p>
         <p>
           Multiple studies have shown that AI detectors disproportionately flag
-          writing by non-native speakers. A 2023 Stanford study found that
-          GPTZero flagged over 60% of TOEFL essays written by real humans as
-          AI-generated. This is not a minor edge case — it is a systemic flaw
-          baked into the metrics themselves. When your detection signal is
+          writing by non-native speakers. A 2023 Stanford study found that seven
+          popular detectors labeled more than half of a set of TOEFL essays
+          written by real people (61% on average) as AI-generated. This is not
+          a minor edge case — it is a systemic flaw baked into the metrics
+          themselves. When your detection signal is
           &ldquo;text that is too clean and too uniform,&rdquo; you will
           inevitably catch humans who write cleanly and uniformly.
         </p>
@@ -280,35 +285,48 @@ export default function AiDetectionHowItWorksPage() {
           organizational structure of a document carries its own statistical
           fingerprint.
         </p>
+        <p>
+          Each detector weighs these signals a little differently. Our{" "}
+          <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
+          cover how Turnitin, GPTZero, Originality.ai, and others score text.
+        </p>
 
         {/* HumanizeIt */}
         <h2>How HumanizeIt Does This Automatically</h2>
         <p>
           Doing all of this manually is tedious and time-consuming. That is
-          exactly why we built HumanizeIt. Our platform uses advanced algorithms
-          that target the same signals detectors look for — but in reverse.
+          exactly why we built HumanizeIt. It looks for the same kinds of signals
+          detectors do, then helps you change them. You can try it on a short
+          passage with the{" "}
+          <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link>,
+          no signup needed — or, if you are weighing tools, see how it compares in
+          our{" "}
+          <Link href="/alternatives" style={{ color: THEME.brandHi }}>alternatives hub</Link>.
         </p>
         <p>
-          HumanizeIt analyzes your text at the token, sentence, and paragraph
-          level. It identifies passages with suspiciously low perplexity and
-          injects controlled lexical variation — swapping predictable tokens for
-          contextually appropriate but less probable alternatives. It measures
-          sentence-level burstiness and restructures passages to introduce the
-          kind of natural rhythm that human writing exhibits: short bursts
-          followed by longer elaborations, rhetorical pivots, and tonal shifts.
+          HumanizeIt scores your text against {PATTERN_COUNT} patterns at the word,
+          sentence, and paragraph level — stock AI vocabulary, uniform sentence
+          length, formulaic transitions, low burstiness and more — and shows you
+          which ones triggered. Its rewrites then target those passages, varying
+          word choice and restructuring sentences to introduce the kind of
+          natural rhythm human writing has: short bursts followed by longer
+          elaborations, rhetorical pivots, and tonal shifts.
         </p>
         <p>
           Unlike simple paraphrasing tools that just swap synonyms (often
-          introducing errors or awkward phrasing), HumanizeIt preserves your
+          introducing errors or awkward phrasing), HumanizeIt aims to keep your
           original meaning, tone, and intent. The output is not &ldquo;spun&rdquo;
-          text — it is text that genuinely reads like a human wrote it, because
-          the statistical profile matches human writing patterns.
+          text — it reads more naturally because its statistical profile moves
+          closer to human writing.
         </p>
         <p>
-          The result? Text that passes GPTZero, Turnitin, Originality.ai, and
-          every other major detector — not by exploiting a loophole, but by
-          producing output that is statistically indistinguishable from
-          human-authored content.
+          What it can&apos;t do is promise a score. Detectors keep changing, the
+          same text can score differently from one tool to the next, and Turnitin
+          now also looks for text that has been run through humanizers. Check
+          anything that matters with a{" "}
+          <Link href="/ai-detector" style={{ color: THEME.brandHi }}>free AI detector</Link>,
+          read it yourself, and follow your school&apos;s or client&apos;s rules on AI
+          use.
         </p>
       </div>
 
@@ -334,7 +352,7 @@ export default function AiDetectionHowItWorksPage() {
             letterSpacing: "-0.01em",
           }}
         >
-          Ready to humanize your AI text?
+          See what detectors see in your text
         </h2>
         <p
           style={{
@@ -344,11 +362,11 @@ export default function AiDetectionHowItWorksPage() {
             color: THEME.textDim,
           }}
         >
-          Paste your text into HumanizeIt and get human-quality output in
-          seconds. No more false flags. No more detector anxiety.
+          Check your text for the patterns detectors flag, then polish it so it
+          reads like you wrote it. Free, no signup.
         </p>
         <Link
-          href="/sign-up"
+          href="/ai-detector"
           style={{
             display: "inline-block",
             background: THEME.brand,
@@ -361,7 +379,7 @@ export default function AiDetectionHowItWorksPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Get Started Free &rarr;
+          Check Your Text Free &rarr;
         </Link>
       </div>
 

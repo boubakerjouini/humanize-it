@@ -120,7 +120,7 @@ export default function ApiDocsPage() {
                 HumanizeIt API
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-                Make any text undetectable. Programmatically.
+                Score and humanize text. Programmatically.
               </p>
               <div className="flex gap-3 mt-6">
                 <a

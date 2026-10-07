@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
 
 export const metadata: Metadata = {
-  title: "Free AI Detector — Check Text for GPTZero & Turnitin Patterns",
+  title: "Free AI Detector: Check Text for GPTZero & Turnitin Patterns",
   description:
-    "Free, no-signup AI detector. Paste any text to see its AI-likelihood score and the exact patterns GPTZero, Turnitin, and Originality.ai flag — analyzed in your browser.",
+    "Free, no-signup AI detector. See your AI-likelihood score and which patterns make text read as AI-written, the signals GPTZero and Turnitin weigh.",
   keywords: ["ai detector", "ai checker", "free ai detector", "gptzero alternative", "ai content detector", "detect ai text"],
   openGraph: {
-    title: "Free AI Detector — Check Text for GPTZero & Turnitin Patterns",
+    title: "Free AI Detector: Check Text for GPTZero & Turnitin Patterns",
     description: "Paste any text to see its AI-likelihood score and the exact patterns detectors flag. Free, no signup.",
     url: "https://humanizeit.app/ai-detector",
     siteName: "HumanizeIt",
@@ -20,11 +21,11 @@ export const metadata: Metadata = {
 };
 
 const FAQS: Faq[] = [
-  { q: "Is this AI detector free?", a: "Yes — it's completely free with no signup. The analysis runs in your browser, so there's no limit and your text never leaves your device." },
-  { q: "How accurate is it?", a: "It scores text against 40+ of the same linguistic and statistical patterns detectors like GPTZero and Turnitin rely on — perplexity, burstiness, vocabulary diversity, and more. No detector is perfect, so treat the score as a strong signal, not a verdict." },
-  { q: "Does my text get stored?", a: "No. The detector analyzes text locally in your browser. Nothing is uploaded, logged, or stored." },
+  { q: "Is this AI detector free?", a: "Yes — it's completely free with no signup. The instant analysis runs in your browser with no limit; the optional AI deep scan has a daily allowance." },
+  { q: "How accurate is it?", a: `It scores text against ${PATTERN_COUNT} linguistic and statistical patterns associated with AI writing — the same kinds of signals detectors like GPTZero and Turnitin use, such as predictability, burstiness, and vocabulary diversity. No detector is perfect, ours included: treat the score as an estimate, not a verdict, and run the deep scan for a second opinion.` },
+  { q: "Does my text get stored?", a: "No. The instant score is calculated locally in your browser. If you run the optional deep scan, the text is sent to our server to be analyzed and is not stored." },
   { q: "What's the difference between detecting and humanizing?", a: "Detection scores your text and shows which AI patterns are present. Humanizing rewrites the text to reduce those patterns. You can humanize flagged text for free on our humanizer page." },
-  { q: "Will passing this detector mean I pass GPTZero or Turnitin?", a: "It strongly correlates because it measures the same signals, but each platform weights things differently. Use it to find and fix the patterns most likely to flag your text." },
+  { q: "Will passing this detector mean I pass GPTZero or Turnitin?", a: "Not necessarily. It looks for the same kinds of signals, but every detector is trained and weighted differently, and they update often. Use it to find the patterns most likely to get your text flagged, not as a guarantee." },
 ];
 
 export default function AiDetectorPage() {
@@ -33,7 +34,7 @@ export default function AiDetectorPage() {
       <SoftwareAppJsonLd
         name="HumanizeIt Free AI Detector"
         url="https://humanizeit.app/ai-detector"
-        description="Free AI detector that scores text against 40+ AI-detection patterns in the browser."
+        description={`Free AI detector that scores text against ${PATTERN_COUNT} AI-detection patterns in the browser.`}
       />
 
       <nav style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
@@ -56,25 +57,25 @@ export default function AiDetectorPage() {
       <h2 style={toolStyles.h2}>What this detector checks</h2>
       <p style={toolStyles.p}>
         Most AI detectors hand you a single &ldquo;human or AI&rdquo; verdict and hide their reasoning. This one shows the
-        full breakdown. It analyzes your text against 40+ patterns that distinguish machine-written from human writing —
+        full breakdown. It analyzes your text against {PATTERN_COUNT} patterns that distinguish machine-written from human writing —
         including <strong>perplexity</strong> (how predictable word choices are), <strong>burstiness</strong> (variation
         in sentence length and rhythm), vocabulary diversity, AI-favored phrasing, and structural uniformity. Each
         triggered pattern is listed so you know precisely what to fix.
       </p>
 
-      <h2 style={toolStyles.h2}>From detection to undetectable</h2>
+      <h2 style={toolStyles.h2}>From detection to natural writing</h2>
       <p style={toolStyles.p}>
         Spotting the patterns is half the battle. When your text scores high, our{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link> rewrites it to reduce
-        those exact signals while preserving your meaning. For a deeper walkthrough, read our guide on{" "}
-        <Link href="/blog/bypass-ai-detection" style={{ color: THEME.brandHi }}>how to bypass AI detection</Link>.
+        those exact signals while preserving your meaning. For how each detector works, see our{" "}
+        <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>.
       </p>
 
       <ToolFaq faqs={FAQS} />
 
       <ToolCta
         heading="Humanize flagged text for free"
-        body="Found AI patterns? Rewrite your text to read naturally and pass detection — no credit card required."
+        body="Found AI patterns? Rewrite your text so it reads naturally, then check it again — no credit card required."
       />
     </div>
   );
