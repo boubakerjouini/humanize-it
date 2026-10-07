@@ -22,7 +22,7 @@ afterAll(() => {
 const SENT_AT = new Date("2026-10-07T09:00:00Z");
 const IN_14_DAYS = "2026-10-21T09:00:00.000Z";
 
-type D1Key = Exclude<TemplateKey, "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm">;
+type D1Key = Exclude<TemplateKey, "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm" | "founding_confirm">;
 
 const SAMPLES: { [K in D1Key]: TemplateProps[K] } = {
   welcome: {},
@@ -125,7 +125,7 @@ describe("D1 email templates", () => {
     const { text } = await renderSample("what_paid_users_do");
     expect(text).toContain("$9 a month, or $79 for the year (about $6.58 a month)");
     expect(text).toContain("50,000 words a month");
-    expect(text).toContain("14-day money-back guarantee");
+    expect(text).toContain("14-day money-back guarantee, monthly or annual (30 days on Team annual)");
   });
 
   it("describes the Free reset as rolling, never midnight UTC", async () => {

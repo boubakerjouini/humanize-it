@@ -27,7 +27,7 @@ export const welcome: TemplateDef<"welcome"> = {
       </P>
       <P>Most people are surprised by what shows up in their own writing. That&apos;s normal, and it&apos;s fixable.</P>
       <P>
-        {`Your free plan gives you ${words(FREE_WORDS)} words a day and one rewrite a day. That's enough to check and fix a full page.`}
+        {`Checks are free and never use words. Your free plan adds ${words(FREE_WORDS)} words of rewriting a day (one rewrite a day). That's enough to fix a full page.`}
       </P>
       <P>If anything breaks or confuses you, just reply. I read every reply.</P>
       <CtaAndSignature href={ctx.link("/dashboard")}>Run your first check</CtaAndSignature>

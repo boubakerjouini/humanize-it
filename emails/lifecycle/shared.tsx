@@ -9,7 +9,7 @@
 // ===========================================================
 
 import type { ReactNode } from "react";
-import { PLANS } from "@/lib/plans";
+import { GUARANTEE_DAYS, PLANS, TEAM_ANNUAL_GUARANTEE_DAYS } from "@/lib/plans";
 import { BRAND, Button, Signature } from "@/emails/components/primitives";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -24,11 +24,10 @@ export const FREE_HISTORY_DOCS = 5;
 export const PLAN_NAMES = { FREE: "Free", PRO: "Pro", TEAM: "Team" } as const;
 
 /**
- * The refund promise, exactly as /refunds states it today (annual only). When
- * the 14-day guarantee is extended to every paid plan, change it here and in
- * /refunds in the same pull request.
+ * The refund promise, exactly as /refunds states it: one guarantee on every
+ * paid plan, longer on Team annual. Change it here and in /refunds together.
  */
-export const REFUND_LINE = "Annual plans come with a 14-day money-back guarantee, and monthly plans cancel any time.";
+export const REFUND_LINE = `Every paid plan comes with a ${GUARANTEE_DAYS}-day money-back guarantee, monthly or annual (${TEAM_ANNUAL_GUARANTEE_DAYS} days on Team annual).`;
 
 /** "$9" or "$6.58": whole dollars without decimals. */
 export function usd(amount: number): string {

@@ -46,7 +46,7 @@ export const grant_ending_notice: TemplateDef<"grant_ending_notice"> = {
         </P>
         <P>
           <strong>What you lose:</strong>
-          {` ${words(planWords(p.plan))} words a month, unlimited rewrites, the extra tones, older History, PDF and Word upload, and API access.`}
+          {` ${words(planWords(p.plan))} words a month, unlimited rewrites, all 5 tones and Voice Match, older History, PDF and Word upload, and API access.`}
         </P>
         <P>
           If HumanizeIt became part of your work, I&apos;d rather you keep it than lose your setup. I&apos;ll send the

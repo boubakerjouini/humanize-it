@@ -42,14 +42,14 @@ export const what_paid_users_do: TemplateDef<"what_paid_users_do"> = {
       <Greeting ctx={ctx} />
       <P>You&apos;ve had HumanizeIt for a week, so here&apos;s my honest take on Pro.</P>
       <P>
-        {`Stay on Free if you check a page now and then. ${words(FREE_WORDS)} words a day covers that, and the AI detector stays free.`}
+        {`Stay on Free if you check a page now and then: checks never use words, and ${words(FREE_WORDS)} words a day of rewriting covers a short piece.`}
       </P>
       <P>Pro is worth it if:</P>
       <Bullets
         items={[
           `you write long things (Pro handles ${words(PRO_WORDS)} words a month and lets you upload PDF and Word files),`,
           "you need more than one rewrite a day to get the wording right,",
-          `you want more tones, ${PRO_HISTORY_DAYS} days of history and no watermark.`,
+          `you want all 5 tones, Voice Match and ${PRO_HISTORY_DAYS} days of history.`,
         ]}
       />
       <P>
@@ -116,11 +116,11 @@ export const trial_offer: TemplateDef<"trial_offer"> = {
           {`Pro annual is ${usd(annual)}. Paying monthly for a year would cost ${usd(monthly * 12)}, so annual saves you ${usd(saving)}, which is more than three months free.`}
         </P>
         <P>
-          It also comes with a 14-day money-back guarantee. Use it on real work for two weeks. If it doesn&apos;t earn
-          its place, email me and you get a full refund.
+          It also comes with the 14-day money-back guarantee, monthly or annual. Use it on real work for two weeks. If
+          it doesn&apos;t earn its place, email me and you get a full refund.
         </P>
         <P>
-          {`You get ${words(PRO_WORDS)} words a month, unlimited rewrites, more tones, PDF and Word upload, and ${PRO_HISTORY_DAYS} days of history.`}
+          {`You get ${words(PRO_WORDS)} words a month, unlimited rewrites, all 5 tones, Voice Match, PDF and Word upload, and ${PRO_HISTORY_DAYS} days of history.`}
         </P>
         <P>
           {`Rather try it first? Here's a one-time code for ${p.days} days of Pro, no card needed: `}
