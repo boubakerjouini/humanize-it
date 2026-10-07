@@ -54,6 +54,8 @@ interface LsSubscriptionAttributes {
   renews_at: string | null;
   ends_at: string | null;
   updated_at?: string | null;
+  /** Present on Subscription Invoice objects (subscription_payment_* events). */
+  subscription_id?: number | string | null;
   urls: {
     update_payment_method: string;
     customer_portal: string;
@@ -322,10 +324,19 @@ export async function POST(req: Request) {
   }
 
   const { event_name, custom_data } = payload.meta;
-  const { id: lsSubscriptionId, attributes } = payload.data;
+  const { id: dataId, type: dataType, attributes } = payload.data;
+  // subscription_payment_* events carry a Subscription Invoice: its id is the
+  // invoice id, and the subscription it bills is attributes.subscription_id.
+  // Reading data.id there matched no Subscription row, so paid-cycle quota
+  // resets and past_due marking never ran.
+  const lsSubscriptionId =
+    dataType === "subscription-invoices" && attributes.subscription_id != null
+      ? String(attributes.subscription_id)
+      : dataId;
   const lsCustomerId = String(attributes.customer_id);
   const lsVariantId = String(attributes.variant_id);
-  const dedupeKey = `ls:${event_name}:${lsSubscriptionId}:${attributes.updated_at ?? ""}`;
+  // Keyed on the object's own id so two invoices of one subscription never collide.
+  const dedupeKey = `ls:${event_name}:${dataId}:${attributes.updated_at ?? ""}`;
 
   /** Record the branch's billing event once its DB write succeeded. Never throws. */
   const track = (userId: string, type: BillingEventType, plan: string | null, extra: Record<string, string> = {}) => {
