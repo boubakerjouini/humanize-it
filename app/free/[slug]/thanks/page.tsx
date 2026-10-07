@@ -50,6 +50,7 @@ export default async function MagnetThanksPage({ params, searchParams }: Props) 
       <ConfirmDownload
         token={state.token}
         canConfirm={tipsPending}
+        topic="tips"
         downloadUrl={magnetPdfPath(magnet.slug)}
         confirmPrompt="You asked for writing tips when you downloaded this. Want them? Nothing is sent until you click."
         confirmLabel="Yes, send me tips"
@@ -62,7 +63,7 @@ export default async function MagnetThanksPage({ params, searchParams }: Props) 
       <section
         style={{ marginTop: "40px", border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, background: THEME.surface1, padding: "24px" }}
       >
-        <h2 style={{ ...kitStyles.h2, marginTop: 0, fontSize: "20px" }}>Next: {magnet.nextStep.label.toLowerCase()}</h2>
+        <h2 style={{ ...kitStyles.h2, marginTop: 0, fontSize: "20px" }}>Next: {magnet.nextStep.label}</h2>
         <p style={kitStyles.p}>{magnet.nextStep.body}</p>
         <Link
           href={magnet.nextStep.href}

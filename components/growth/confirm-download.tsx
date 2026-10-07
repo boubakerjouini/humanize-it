@@ -10,6 +10,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { THEME, glow } from "@/lib/theme";
+import type { Topic } from "@/lib/growth/constants";
 
 type Props = {
   /** Signed confirm token from the email link; null when missing or invalid. */
@@ -23,6 +24,8 @@ type Props = {
   confirmedMessage: string;
   /** Explains what the button does, shown above it. */
   confirmPrompt?: string;
+  /** The one list the button confirms; other pending topics stay pending. Omit when the page names them all. */
+  topic?: Topic;
 };
 
 type State = { kind: "idle" } | { kind: "busy" } | { kind: "done" } | { kind: "error"; message: string };
@@ -50,7 +53,7 @@ const secondary: CSSProperties = {
   boxShadow: "none",
 };
 
-export function ConfirmDownload({ token, canConfirm, downloadUrl, confirmLabel, confirmedMessage, confirmPrompt }: Props) {
+export function ConfirmDownload({ token, canConfirm, downloadUrl, confirmLabel, confirmedMessage, confirmPrompt, topic }: Props) {
   const [state, setState] = useState<State>({ kind: "idle" });
 
   async function confirm() {
@@ -60,7 +63,7 @@ export function ConfirmDownload({ token, canConfirm, downloadUrl, confirmLabel, 
       const res = await fetch("/api/public/leads/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ t: token }),
+        body: JSON.stringify(topic ? { t: token, topic } : { t: token }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: { message?: string } } | null;
       if (!res.ok || !data?.ok) {

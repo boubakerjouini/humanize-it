@@ -17,7 +17,7 @@ import { recordEvent } from "@/lib/crm/events";
 import { recomputeContact } from "@/lib/crm/recompute";
 import { db } from "@/lib/db";
 import { verifyToken } from "@/lib/email/tokens";
-import { isTopic, type Topic } from "@/lib/growth/constants";
+import { TOPICS, isTopic, type Topic } from "@/lib/growth/constants";
 import { bumpDailyMetric } from "@/lib/growth/daily-metrics";
 import { magnetPdfPath } from "@/lib/growth/magnets";
 import { logGrowthError, runAfter } from "@/lib/growth/safe";
@@ -27,7 +27,8 @@ import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const bodySchema = z.object({ t: z.string().min(1).max(2048) }).strict();
+/** topic: the one list the pressed button named. Without it, every pending topic (the page listed them all). */
+const bodySchema = z.object({ t: z.string().min(1).max(2048), topic: z.enum(TOPICS).optional() }).strict();
 
 function errorJson(code: string, message: string, status: number, headers?: Record<string, string>) {
   return NextResponse.json({ error: { code, message } }, { status, headers });
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
       source: magnet ? `confirm:${magnet}` : "confirm",
       ip,
       userAgent: req.headers.get("user-agent"),
+      only: parsed.data.topic ? [parsed.data.topic] : undefined,
     });
     const current = await db.contact.findUnique({ where: { id: contactId }, select: { subscribedTopics: true } });
     const topicsConfirmed: Topic[] = (current?.subscribedTopics ?? []).filter(isTopic);

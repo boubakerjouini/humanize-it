@@ -138,17 +138,29 @@ export async function grantTopics(
  */
 export async function confirmPendingTopics(
   contactId: string,
-  meta: { source?: string | null; ip?: string | null; userAgent?: string | null } = {}
+  meta: {
+    source?: string | null;
+    ip?: string | null;
+    userAgent?: string | null;
+    /** Confirm only these (the one list the button named); the rest stay pending. Default: all. */
+    only?: readonly Topic[];
+  } = {}
 ): Promise<{ confirmed: Topic[] }> {
   let confirmed: Topic[] = [];
+  const { only, ...recordMeta } = meta;
   await updateTopics(contactId, ({ subscribed, pending }) => {
-    confirmed = uniqueTopics(pending).filter((t) => !subscribed.includes(t));
-    if (pending.length === 0) return null;
-    return { subscribed: [...subscribed, ...confirmed], pending: [], extra: confirmed.length > 0 ? { unsubscribedAt: null } : undefined };
+    const chosen = uniqueTopics(pending).filter((t) => !only || only.includes(t));
+    confirmed = chosen.filter((t) => !subscribed.includes(t));
+    if (chosen.length === 0) return null;
+    return {
+      subscribed: [...subscribed, ...confirmed],
+      pending: pending.filter((t) => !chosen.includes(t as Topic)),
+      extra: confirmed.length > 0 ? { unsubscribedAt: null } : undefined,
+    };
   });
   await db.contact.updateMany({ where: { id: contactId, emailVerifiedAt: null }, data: { emailVerifiedAt: new Date() } });
   if (confirmed.length > 0) {
-    await db.consentRecord.createMany({ data: consentRows(contactId, confirmed, "confirm", { ...meta, method: "doi" }) });
+    await db.consentRecord.createMany({ data: consentRows(contactId, confirmed, "confirm", { ...recordMeta, method: "doi" }) });
   }
   return { confirmed };
 }

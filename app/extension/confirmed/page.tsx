@@ -49,6 +49,7 @@ export default async function ExtensionConfirmedPage({ searchParams }: Props) {
       <ConfirmDownload
         token={state.token}
         canConfirm={pending}
+        topic="extension_launch"
         confirmLabel="Confirm my spot"
         confirmedMessage="You're on the list. Reply to our email with the one place you write most, and we'll make sure it works there first."
       />
