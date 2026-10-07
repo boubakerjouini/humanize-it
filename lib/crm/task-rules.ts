@@ -30,16 +30,6 @@ export const TASK_RULE_KEYS = [
 ] as const;
 export type TaskRuleKey = (typeof TASK_RULE_KEYS)[number];
 
-export const TASK_RULE_LABELS: Record<TaskRuleKey, string> = {
-  comped_expiring: "Comped plan ending",
-  paid_inactive: "Paying, inactive",
-  hot_lead: "Hot lead",
-  checkout_abandoned: "Abandoned checkout",
-  churned_recent: "Just churned",
-  quota_hitter: "Keeps hitting the limit",
-  testimonial_ask: "Testimonial ask",
-};
-
 export type TaskPriority = "low" | "normal" | "high";
 
 export type TaskRuleSnapshot = {

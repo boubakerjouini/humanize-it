@@ -23,3 +23,14 @@ export const TASK_KIND_LABELS: Record<TaskKind, string> = {
 
 export const TASK_PRIORITIES = ["high", "normal", "low"] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+/** Badge text for rule-generated tasks (keys match lib/crm/task-rules.ts, which imports the DB). */
+export const TASK_RULE_LABELS: Record<string, string> = {
+  comped_expiring: "Comped plan ending",
+  paid_inactive: "Paying, inactive",
+  hot_lead: "Hot lead",
+  checkout_abandoned: "Abandoned checkout",
+  churned_recent: "Just churned",
+  quota_hitter: "Keeps hitting the limit",
+  testimonial_ask: "Testimonial ask",
+};

@@ -20,6 +20,7 @@ import { contactLabel, humanizeKey, type ContactLike } from "./contact-bits";
 
 type LogTouchProps = {
   open: boolean;
+  /** Null shows a contact search. */
   contact: ContactLike | null;
   pipelineStage?: string | null;
   onClose: () => void;
@@ -37,6 +38,8 @@ function LogTouchForm({ open, contact, pipelineStage, onClose, onDone }: LogTouc
   const [outcome, setOutcome] = useState<string>("sent");
   const [script, setScript] = useState("");
   const [note, setNote] = useState("");
+  const [picked, setPicked] = useState<ContactLike | null>(null);
+  const target = contact ?? picked;
 
   const suggested = scriptsForStage((pipelineStage as PipelineStage | null) ?? null).map((s) => s.id);
   const scripts = [...SALES_SCRIPTS].sort((a, b) => Number(suggested.includes(b.id)) - Number(suggested.includes(a.id)));
@@ -45,13 +48,14 @@ function LogTouchForm({ open, contact, pipelineStage, onClose, onDone }: LogTouc
     <FormDialog
       open={open}
       title="Log a touch"
-      description={contact ? `With ${contactLabel(contact)}. Counts toward today's outreach goal.` : undefined}
+      description={target ? `With ${contactLabel(target)}. Counts toward today's outreach goal.` : "Counts toward today's outreach goal."}
       submitLabel="Log touch"
+      submitDisabled={!target}
       onClose={onClose}
       onSubmit={async () => {
-        if (!contact) return;
+        if (!target) return;
         try {
-          await sendJson(`/api/admin/contacts/${contact.id}/touch`, "POST", { channel, outcome, script: script || null, note: note.trim() || null });
+          await sendJson(`/api/admin/contacts/${target.id}/touch`, "POST", { channel, outcome, script: script || null, note: note.trim() || null });
           toast.success("Touch logged");
           onDone();
         } catch (err) {
@@ -59,6 +63,11 @@ function LogTouchForm({ open, contact, pipelineStage, onClose, onDone }: LogTouc
         }
       }}
     >
+      {contact ? null : (
+        <FormField label="Contact" htmlFor={`${id}-contact`}>
+          <ContactSearch id={`${id}-contact`} value={picked} onChange={setPicked} />
+        </FormField>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <FormField label="Channel" htmlFor={`${id}-ch`}>
           <select id={`${id}-ch`} value={channel} onChange={(e) => setChannel(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
