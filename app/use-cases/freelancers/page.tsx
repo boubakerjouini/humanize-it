@@ -9,7 +9,7 @@ const URL = `https://humanizeit.app${PATH}`;
 export const metadata: Metadata = {
   title: "AI Humanizer for Freelancers | HumanizeIt",
   description:
-    "Deliver client work that reads naturally and clears AI-detection checks. See how freelancers use HumanizeIt to protect their reputation, save time, and start free.",
+    "Deliver client work that reads naturally and check it for AI-like patterns first. See how freelancers use HumanizeIt to protect their reputation and save time.",
   keywords: [
     "AI humanizer for freelancers",
     "freelance AI writing",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Humanizer for Freelancers | HumanizeIt",
     description:
-      "Deliver client work that reads naturally and clears AI-detection checks. See how freelancers use HumanizeIt to protect their reputation and save time.",
+      "Deliver client work that reads naturally and check it for AI-like patterns first. See how freelancers use HumanizeIt to protect their reputation and save time.",
     url: URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -156,11 +156,11 @@ export default function FreelancersUseCasePage() {
         faqs={[
           {
             q: "Will humanized text pass the AI detectors my clients use?",
-            a: "HumanizeIt rewrites AI drafts to read more like natural human writing, which improves how they score on tools like GPTZero, Originality.ai, and Copyleaks. No humanizer can promise a perfect result on every detector, so the safe practice is to check the output yourself before you deliver it.",
+            a: "HumanizeIt rewrites AI drafts to read more like natural human writing, which reduces the patterns tools like GPTZero, Originality.ai, and Copyleaks react to. No humanizer can promise a perfect result on every detector, so the safe practice is to check the output yourself before you deliver it.",
           },
           {
             q: "Does HumanizeIt change the meaning of my draft?",
-            a: "No. It preserves your facts, arguments, and structure while adjusting phrasing, rhythm, and word choice so the text reads like a person wrote it. You should still review the output for accuracy and fit with the brief before sending it to a client.",
+            a: "It's designed not to: it keeps your facts, arguments, and structure while adjusting phrasing, rhythm, and word choice so the text reads like a person wrote it. You should still review the output for accuracy and fit with the brief before sending it to a client.",
           },
           {
             q: "Is using an AI humanizer on client work allowed?",

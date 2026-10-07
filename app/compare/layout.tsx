@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
+import { MarketingFooterLinks } from "@/components/marketing/marketing-shell";
 
 // Hub-level metadata. The detail/spoke pages (humanizeit-vs-*) export their own
 // title + canonical, which override these for their routes. Without this, the
@@ -10,12 +11,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
   title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
   description:
-    "See how HumanizeIt compares to Undetectable.ai, WriteHuman, and other AI humanizers on detection bypass, transparency, and price. Honest, side-by-side.",
+    "See how HumanizeIt compares to Undetectable.ai, WriteHuman, and other AI humanizers on output quality, transparency, and price. Honest, side-by-side.",
   alternates: { canonical: "https://humanizeit.app/compare" },
   openGraph: {
     title: "HumanizeIt vs Other AI Humanizers — Honest Comparison",
     description:
-      "Side-by-side comparison of HumanizeIt against the top AI humanizers on detection bypass, transparency, and price.",
+      "Side-by-side comparison of HumanizeIt against the top AI humanizers on output quality, transparency, and price.",
     url: "https://humanizeit.app/compare",
     siteName: "HumanizeIt",
     type: "website",
@@ -59,7 +60,7 @@ export default function CompareLayout({ children }: { children: React.ReactNode 
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
             <Link
-              href="/dashboard/editor"
+              href="/free-ai-humanizer"
               style={{
                 background: THEME.brand,
                 color: "#ffffff",
@@ -87,8 +88,9 @@ export default function CompareLayout({ children }: { children: React.ReactNode 
           color: THEME.textDim,
         }}
       >
-        <div style={{ maxWidth: "1140px", margin: "0 auto" }}>
-          © {new Date().getFullYear()} HumanizeIt. All rights reserved.
+        <div style={{ maxWidth: "1140px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <MarketingFooterLinks />
+          <div>© {new Date().getFullYear()} HumanizeIt. All rights reserved.</div>
         </div>
       </footer>
     </div>

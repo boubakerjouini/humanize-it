@@ -126,8 +126,8 @@ export default function QuillbotAlternativePage() {
       </p>
       <p style={kitStyles.p}>
         A practical way to test any tool, including this one, is to be your own skeptic: take a piece of AI text, run it
-        through the tool, then check the output in a detector you trust before you rely on it. Tools that are honest will
-        survive that test on most text; tools that overpromise usually do not. If you want to widen the field before
+        through the tool, then check the output in a detector you trust before you rely on it. That tells you far more than
+        any marketing claim, ours included. If you want to widen the field before
         deciding, our roundup of the{" "}
         <Link href="/blog/best-ai-humanizer-tools" style={{ color: THEME.brandHi }}>best AI humanizer tools</Link>{" "}
         walks through several options and what each is good and bad at.

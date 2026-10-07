@@ -50,6 +50,14 @@ const isPublicRoute = createRouteMatcher([
   "/terms",
   "/cookies",
   "/refunds",
+  // Next.js metadata routes (opengraph-image, twitter-image, icon, apple-icon)
+  // at any depth: crawlers and link unfurlers fetch them signed out. Route-group
+  // variants get a hash suffix (`/opengraph-image-1a2b3c`) and
+  // generateImageMetadata adds an `/<id>` segment. The app, admin and API areas
+  // are excluded so this can never open anything behind them.
+  /^(?!\/(?:dashboard|admin|api)(?:\/|$))(?:\/[^/]+)*\/(?:opengraph-image|twitter-image|icon|apple-icon)(?:-[0-9a-z]+)?(?:\/[^/]+)?$/,
+  "/manifest.json",
+  "/manifest.webmanifest",
 ]);
 
 // Standard Clerk middleware: runs on ALL routes so session cookies are always
@@ -75,7 +83,14 @@ export const config = {
     // Skip Next internals, static files, AND the Workflow DevKit's internal
     // routes (`/.well-known/workflow/*`) — Clerk must never intercept those or
     // the durable document pipeline can't enqueue/resume steps.
-    "/((?!_next|\\.well-known/workflow|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Also skipped: the PostHog reverse proxy (`/ingest/*`, rewritten in
+    // next.config.ts — signed-out analytics calls were being 404ed by
+    // auth.protect()) and the root crawler files: robots.txt, sitemap.xml and
+    // the IndexNow key (`/<32 hex>.txt`). They are named exactly rather than
+    // skipping every .txt/.xml path: a generic exclusion would also let
+    // `/admin/users/x.xml` bypass Clerk, and the admin layout then 500s instead
+    // of getting the protect 404.
+    "/((?!_next|ingest(?:/|$)|\\.well-known/workflow|(?:robots\\.txt|sitemap\\.xml|[0-9a-f]{32}\\.txt)$|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

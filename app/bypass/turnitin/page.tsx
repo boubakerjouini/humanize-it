@@ -125,22 +125,21 @@ export default function BypassTurnitinPage() {
         happens to lower an AI score.
       </p>
 
-      <h2 style={kitStyles.h2}>How HumanizeIt automates the rewrite</h2>
+      <h2 style={kitStyles.h2}>Check your own writing before you submit</h2>
       <p style={kitStyles.p}>
         Applying burstiness, perplexity, and register changes by hand across a full essay is tedious, and it is easy to
-        overcorrect into prose that reads worse than where you started. HumanizeIt automates the process: paste a draft,
-        choose a humanization level, and the model rewrites it to vary sentence length, diversify vocabulary, and
-        introduce natural cadence while preserving your argument, structure, and meaning. The{" "}
+        overcorrect into prose that reads worse than where you started. Start with the detector at the top of this page:
+        it names the patterns that make each passage read as machine-like, so you know which sentences to revise instead
+        of second-guessing all of them. If a passage of your own writing reads flat, edit it yourself or let the{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>
           free AI humanizer
         </Link>{" "}
-        lets you try this on a real document without an account.
+        suggest a more natural version, then read the result and keep only what still sounds like you.
       </p>
       <p style={kitStyles.p}>
-        The workflow we recommend is iterative rather than one-shot. Humanize the text, paste the result back into a
-        detector, read it yourself for accuracy, and repeat on any sections that still read flat. This loop keeps you in
-        control of the meaning &mdash; the tool changes the surface texture, not your ideas. Students writing longer work
-        will find the same approach laid out in more detail on the{" "}
+        Keep your drafts, notes, and version history as you go. A detector score is an indicator, not proof, and if your
+        work is ever questioned, your writing process is the evidence that matters. Students writing longer work will
+        find the same approach laid out in more detail on the{" "}
         <Link href="/use-cases/essays" style={{ color: THEME.brandHi }}>
           essays use-case page
         </Link>
@@ -151,9 +150,11 @@ export default function BypassTurnitinPage() {
       <p style={kitStyles.p}>
         No tool can promise a guaranteed Turnitin pass, and anyone who claims a fixed success rate is selling certainty
         that does not exist. Turnitin updates its model, your institution may run additional checkers, and the same text
-        can score differently across detectors and across re-runs. Our detector uses a transparent, pattern-based engine
-        that runs in your browser; it is a strong directional signal, but it is not Turnitin itself, so treat its score
-        as guidance rather than a verdict.
+        can score differently across detectors and across re-runs. Since August 2025 Turnitin has also flagged text it
+        believes was modified by AI humanizers and other &quot;bypasser&quot; tools, so running AI-written work through a
+        humanizer is not a way around it. Our detector uses a transparent, pattern-based engine that runs in your
+        browser; it is a useful directional signal, but it is not Turnitin itself, so treat its score as guidance rather
+        than a verdict.
       </p>
       <p style={kitStyles.p}>
         Expect to do a final human pass every time. The rewrite handles texture, but you are the only one who can confirm
@@ -164,14 +165,18 @@ export default function BypassTurnitinPage() {
       <h2 style={kitStyles.h2}>Using this responsibly</h2>
       <p style={kitStyles.p}>
         These techniques exist to protect honest work and to improve writing &mdash; not to misrepresent authorship of
-        ideas you did not develop. Follow your institution&apos;s academic-integrity policy, and where AI assistance is
-        disclosed or permitted, use these tools to make your own thinking read clearly rather than to fake effort you did
-        not put in. The most defensible position is always the one where you understand and can defend every sentence you
-        submit.
+        ideas you did not develop. Handing in AI-written work as your own breaks our{" "}
+        <Link href="/terms" style={{ color: THEME.brandHi }}>
+          Terms of Service
+        </Link>{" "}
+        and most academic-integrity policies. Follow your institution&apos;s rules, and where AI assistance is disclosed
+        or permitted, use these tools to make your own thinking read clearly rather than to fake effort you did not put
+        in. The most defensible position is always the one where you understand and can defend every sentence you submit.
       </p>
       <p style={kitStyles.p}>
-        Used this way, humanizing is closer to editing than to evasion: it takes a draft that happens to read robotically
-        and gives it the variation, specificity, and voice of a person who actually engaged with the material.
+        Used this way, a humanizer is closer to an editor than to an evasion tool: it helps the parts of your own draft
+        that happen to read robotically carry the variation, specificity, and voice of a person who actually engaged
+        with the material.
       </p>
 
       <FaqSection
@@ -186,7 +191,7 @@ export default function BypassTurnitinPage() {
           },
           {
             q: "Does paraphrasing beat Turnitin?",
-            a: "Light synonym-swapping paraphrasers usually do not, because they keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps is genuinely varying sentence length and word choice and adding real voice. A humanizer that rewrites for burstiness and perplexity is far more effective than a thesaurus swap.",
+            a: "Light synonym-swapping paraphrasers usually do not, because they keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
           },
           {
             q: "Will humanizing change my meaning?",
@@ -194,16 +199,16 @@ export default function BypassTurnitinPage() {
           },
           {
             q: "Can any tool guarantee I pass Turnitin?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. Tools meaningfully reduce the risk of reading as AI, but a guaranteed pass is not something any honest service can offer.",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
           },
         ]}
       />
 
       <PageCta
-        heading="Make your writing read human"
-        body="Paste a draft into the free humanizer to vary its rhythm, diversify its vocabulary, and restore a natural voice — no account required to try it."
-        href="/free-ai-humanizer"
-        cta="Try the Free Humanizer"
+        heading="Check your writing before you submit"
+        body="Run your draft through the free AI detector to see which passages read as machine-like and why — no signup, no credit card."
+        href="/ai-detector"
+        cta="Check My Writing Free"
       />
     </div>
   );

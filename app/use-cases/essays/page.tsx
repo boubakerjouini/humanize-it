@@ -6,23 +6,23 @@ import { THEME } from "@/lib/theme";
 const URL = "https://humanizeit.app/use-cases/essays";
 
 export const metadata: Metadata = {
-  title: "AI Humanizer for Essays — Pass Detection | HumanizeIt",
+  title: "AI Humanizer for Essays: Polish Your Own Drafts | HumanizeIt",
   description:
-    "Use an AI humanizer for essays to rewrite AI-assisted drafts so they read naturally and survive detector scans. Keep your citations, meaning, and voice intact.",
+    "Polish essay drafts so they read naturally, check them for the patterns AI detectors flag, and keep your citations, meaning, and voice intact.",
   keywords: [
     "AI humanizer for essays",
     "humanize essay text",
     "humanize AI essay",
     "essay AI detection",
-    "bypass Turnitin essay",
+    "essay flagged as AI",
     "AI essay rewriter",
-    "undetectable AI essay",
+    "Turnitin false positive essay",
     "humanize ChatGPT essay",
   ],
   openGraph: {
-    title: "AI Humanizer for Essays — Pass Detection | HumanizeIt",
+    title: "AI Humanizer for Essays: Polish Your Own Drafts | HumanizeIt",
     description:
-      "Use an AI humanizer for essays to rewrite AI-assisted drafts so they read naturally and survive detector scans. Keep citations, meaning, and voice intact.",
+      "Polish essay drafts so they read naturally, check them for the patterns AI detectors flag, and keep citations, meaning, and voice intact.",
     url: URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -48,14 +48,14 @@ export default function EssaysUseCasePage() {
       </div>
 
       <h1 style={kitStyles.h1}>
-        AI Humanizer for Essays: Make AI-Assisted Drafts Read Like You Wrote Them
+        AI Humanizer for Essays: Polish Your Own Drafts and Avoid False AI Flags
       </h1>
 
       <p style={{ ...kitStyles.p, fontSize: "17px" }}>
-        Essays are the format AI detectors scrutinize most. They are long enough for a model to leave a clear
-        statistical fingerprint, and they are exactly what schools scan when an assignment is submitted. An AI humanizer
-        for essays rewrites an AI-assisted draft so the prose carries the rhythm, variety, and small imperfections of
-        human writing &mdash; without changing the argument you set out to make.
+        Essays are the format AI detectors scrutinize most. They are long, formal, and exactly what schools scan when an
+        assignment is submitted &mdash; which is why careful essays that students wrote themselves get flagged too. An
+        AI humanizer for essays helps you protect your own writing: check which passages read as machine-like, smooth
+        the stiff ones into more natural prose, and keep the argument you set out to make.
       </p>
 
       <div
@@ -109,21 +109,25 @@ export default function EssaysUseCasePage() {
 
       <h2 style={kitStyles.h2}>How HumanizeIt helps with essays</h2>
       <p style={kitStyles.p}>
-        HumanizeIt rewrites your draft to restore the texture detectors look for. Paste the essay, choose a
-        humanization level, and the tool reworks phrasing, varies sentence rhythm, and breaks up the mechanical
-        uniformity that flags machine writing &mdash; while keeping your thesis, evidence, and conclusions in place. The
-        lighter levels make surgical edits; the stronger level restructures more aggressively when a draft reads heavily
-        like a model wrote it.
+        Start by checking the essay you wrote. Paste it into the free{" "}
+        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>
+          AI detector
+        </Link>{" "}
+        to see which passages read as machine-like and why &mdash; uniform sentence length, stock transitions,
+        predictable phrasing. If a passage of your own writing reads stiffly, edit it yourself or let HumanizeIt suggest
+        a more natural version: it reworks phrasing and varies sentence rhythm while keeping your thesis, evidence, and
+        conclusions in place. The lighter levels make surgical edits; the stronger level restructures more when a
+        passage is especially flat.
       </p>
       <p style={kitStyles.p}>
         Unlike basic synonym-swapping paraphrasers that mangle academic vocabulary, HumanizeIt is built to keep
-        scholarly prose readable. The result should sound like a careful human writer, not a thesaurus. If your essay is
-        being checked specifically by Turnitin, our{" "}
+        scholarly prose readable. Read every suggestion and keep only what still sounds like you. If your school checks
+        essays with Turnitin, our{" "}
         <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
           Turnitin guide
         </Link>{" "}
-        covers what that detector keys on and how to approach it. Students juggling several assignments at once may also
-        find our broader{" "}
+        covers what that detector keys on and what its score does and does not mean. Students juggling several
+        assignments at once may also find our broader{" "}
         <Link href="/use-cases/students" style={{ color: THEME.brandHi }}>
           students workflow page
         </Link>{" "}
@@ -147,28 +151,34 @@ export default function EssaysUseCasePage() {
 
       <h2 style={kitStyles.h2}>The free plan</h2>
       <p style={kitStyles.p}>
-        You can try this without paying. The{" "}
+        You can try this without paying. The AI detector is free with no signup, and the{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>
           free AI humanizer
         </Link>{" "}
-        lets you run a limited number of documents per day at no cost, which is plenty for a single essay or a short
-        assignment. It is a low-stakes way to see whether the rewritten output reads naturally and holds your meaning
-        before you commit to anything. If you write essays regularly across a term, a paid plan removes the daily cap,
-        but many students never need to upgrade.
+        polishes passages of up to 300 words without an account; a free account covers 500 words a day. That is
+        usually enough for the few paragraphs a detector flags in an essay. It is a low-stakes way to see whether the
+        rewritten output reads naturally and holds your meaning before you commit to anything. If you write essays
+        regularly across a term, a paid plan raises the cap, but many students never need to upgrade.
       </p>
 
       <h2 style={kitStyles.h2}>Using it responsibly</h2>
       <p style={kitStyles.p}>
-        The honest framing matters. An AI humanizer is a polishing step, not a substitute for doing the work. The
-        strongest use is the obvious one: do your own research, form your own argument, draft in your own words, and use
-        AI &mdash; and then HumanizeIt &mdash; to refine the expression so a flawed detector does not misjudge writing
-        you genuinely produced. That keeps you on the right side of both your conscience and your school&apos;s rules.
+        The honest framing matters. An AI humanizer is a polishing step, not a substitute for doing the work, and
+        handing in an essay you did not write breaks our{" "}
+        <Link href="/terms" style={{ color: THEME.brandHi }}>
+          Terms of Service
+        </Link>{" "}
+        and most academic-integrity policies. The right use is the obvious one: do your own research, form your own
+        argument, draft in your own words, use AI only in the ways your course allows, and then polish the expression
+        so a flawed detector does not misjudge writing you genuinely produced. That keeps you on the right side of both
+        your conscience and your school&apos;s rules.
       </p>
       <p style={kitStyles.p}>
         We will not pretend detector outcomes are guaranteed; these tools change constantly, and no humanizer can
-        promise a specific score on a specific scanner. What HumanizeIt offers is a reliable way to make AI-assisted
-        prose read like a human wrote it. Always review the final essay yourself &mdash; confirm it says what you mean,
-        cites what it should, and meets the assignment &mdash; before you submit.
+        promise a specific score on a specific scanner &mdash; and Turnitin now also looks for text that has been run
+        through AI humanizers. What HumanizeIt offers is a practical way to make stiff prose read more naturally. Always
+        review the final essay yourself &mdash; confirm it says what you mean, cites what it should, and meets the
+        assignment &mdash; before you submit.
       </p>
 
       <FaqSection
@@ -183,11 +193,11 @@ export default function EssaysUseCasePage() {
           },
           {
             q: "Can I humanize an essay for free?",
-            a: "Yes. The free plan lets you run a limited number of documents per day, which is usually enough for a single essay. You can test the output quality before deciding whether you need a paid plan.",
+            a: "Yes, for the passages that need it. The free humanizer handles up to 300 words at a time with no signup, and a free account covers 500 words a day, which is usually enough for the paragraphs a detector flags. You can test the output quality before deciding whether you need a paid plan.",
           },
           {
             q: "Will my essay definitely pass Turnitin or GPTZero?",
-            a: "No tool can guarantee a specific score, because detectors update frequently and judge probabilistically. HumanizeIt makes AI-assisted text read more naturally, which reduces the patterns detectors react to, but you should treat any detector result as a signal, not a verdict.",
+            a: "No. No tool can guarantee a specific score: detectors update frequently, judge probabilistically, and Turnitin now also looks for text that has been run through AI humanizers. HumanizeIt helps your own draft read more naturally, which reduces the patterns detectors react to, but you should treat any detector result as a signal, not a verdict.",
           },
           {
             q: "Is using an AI humanizer for essays allowed?",
@@ -197,8 +207,10 @@ export default function EssaysUseCasePage() {
       />
 
       <PageCta
-        heading="Humanize your essay for free"
-        body="Paste your draft, pick a level, and get prose that reads like you wrote it — without losing your argument. No credit card required to start."
+        heading="Check your essay before you submit"
+        body="Paste your draft into the free AI detector to see which passages could get it flagged, then polish the stiff ones without losing your argument. No signup, no credit card."
+        href="/ai-detector"
+        cta="Check My Essay Free"
       />
     </div>
   );

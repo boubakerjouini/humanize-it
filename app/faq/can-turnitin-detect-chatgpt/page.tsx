@@ -113,8 +113,8 @@ export default function CanTurnitinDetectChatGptPage() {
 
       <h2 style={kitStyles.h2}>What lowers your risk</h2>
       <p style={kitStyles.p}>
-        Because the detector keys on predictability, the most durable fix is to write with the variation humans
-        naturally produce. The first lever is burstiness &mdash; the variance in sentence length. Real paragraphs mix
+        Because the detector keys on predictability, the most durable protection for your own writing is the variation
+        humans naturally produce. The first lever is burstiness &mdash; the variance in sentence length. Real paragraphs mix
         long, clause-heavy sentences with short, blunt ones, while model output hovers around a uniform length.
         Deliberately alternating a twenty-five-word sentence with a five-word one restores the rhythm a detector expects
         from a person.
@@ -128,36 +128,46 @@ export default function CanTurnitinDetectChatGptPage() {
         to lower an AI score.
       </p>
 
-      <h2 style={kitStyles.h2}>How to avoid false flags and humanize ChatGPT text</h2>
+      <h2 style={kitStyles.h2}>How to check your own writing and avoid false flags</h2>
       <p style={kitStyles.p}>
         Applying burstiness, perplexity, and voice changes by hand across a full essay is tedious, and it is easy to
-        overcorrect into prose that reads worse than where you started. HumanizeIt automates the rewrite: paste a draft,
-        pick a humanization level, and the model varies sentence length, diversifies vocabulary, and adds natural cadence
-        while preserving your argument, structure, and meaning. You can try this on a real document with the{" "}
+        overcorrect into prose that reads worse than where you started. Start with the free{" "}
+        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>
+          AI detector
+        </Link>
+        : paste your draft and it names the patterns that make a passage read as machine-like &mdash; uniform sentence
+        length, stock transitions, predictable phrasing &mdash; so you know where to look instead of second-guessing every
+        sentence. If a passage of your own writing reads flat, revise it yourself or let the{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>
           free AI humanizer
         </Link>{" "}
-        without creating an account.
+        suggest a more natural version without creating an account, then read the result and keep only what still
+        sounds like you.
       </p>
       <p style={kitStyles.p}>
-        Treat it as a loop rather than a one-shot. Humanize the text, paste the result into a detector, read it yourself
-        for accuracy, and repeat on any sections that still read flat. If your concern is specifically the Turnitin
-        score, our guide on{" "}
+        Keep your drafts, notes, and version history as you write: a detector score is an indicator, not proof, and your
+        writing process is the evidence that settles a dispute. If your concern is specifically the Turnitin score, our
+        guide on{" "}
         <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
           how Turnitin&apos;s AI detector works
         </Link>{" "}
-        walks through the same techniques in the context of a graded submission. And remember the honest limit: no tool
-        can guarantee a pass, because Turnitin updates its model, your institution may run extra checkers, and the same
-        text can score differently across detectors and re-runs.
+        walks through what it keys on in the context of a graded submission. And remember the honest limit: no tool can
+        guarantee a pass, because Turnitin updates its model, your institution may run extra checkers, and the same text
+        can score differently across detectors and re-runs. Since August 2025 Turnitin also looks for text that has been
+        run through AI humanizers, so a humanizer is not a way to pass off ChatGPT output as your own.
       </p>
 
       <h2 style={kitStyles.h2}>Using this responsibly</h2>
       <p style={kitStyles.p}>
         These techniques exist to protect honest work and improve writing &mdash; not to misrepresent authorship of
-        ideas you did not develop. Follow your institution&apos;s academic-integrity policy, and where AI assistance is
-        disclosed or permitted, use a humanizer to make your own thinking read clearly rather than to fake effort you
-        did not put in. The most defensible position is always the one where you understand and can defend every sentence
-        you submit, regardless of what any detector reports.
+        ideas you did not develop. Handing in ChatGPT&apos;s writing as your own breaks our{" "}
+        <Link href="/terms" style={{ color: THEME.brandHi }}>
+          Terms of Service
+        </Link>{" "}
+        and most academic-integrity policies. Follow your institution&apos;s rules, and where AI assistance is disclosed
+        or permitted, use it to make your own thinking read clearly rather than to fake effort you did not put in. The
+        most defensible position is always the one where you understand and can defend every sentence you submit,
+        regardless of what any detector reports.
       </p>
 
       <FaqSection
@@ -176,7 +186,7 @@ export default function CanTurnitinDetectChatGptPage() {
           },
           {
             q: "Does paraphrasing ChatGPT text beat Turnitin?",
-            a: "Usually not on its own. Synonym-swapping paraphrasers keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps is genuinely varying sentence length and word choice and adding real voice, which a humanizer that rewrites for burstiness and perplexity does far more effectively than a thesaurus swap.",
+            a: "Usually not on its own. Synonym-swapping paraphrasers keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
           },
           {
             q: "Will humanizing change my meaning?",
@@ -184,16 +194,16 @@ export default function CanTurnitinDetectChatGptPage() {
           },
           {
             q: "Can any tool guarantee I pass Turnitin?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. Tools meaningfully reduce the risk of reading as AI, but a guaranteed pass is not something any honest service can offer.",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
           },
         ]}
       />
 
       <PageCta
-        heading="Stop reading like ChatGPT"
-        body="Paste a draft into the free humanizer to vary its rhythm, diversify its vocabulary, and restore a natural human voice — no account required to try it."
-        href="/free-ai-humanizer"
-        cta="Try the Free Humanizer"
+        heading="Check your writing before you submit"
+        body="Paste your draft into the free AI detector to see which patterns could get it flagged, and why — no signup, no credit card."
+        href="/ai-detector"
+        cta="Check My Writing Free"
       />
     </div>
   );

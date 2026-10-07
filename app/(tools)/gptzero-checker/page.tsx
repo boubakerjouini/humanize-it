@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
 
 export const metadata: Metadata = {
@@ -21,8 +22,8 @@ export const metadata: Metadata = {
 
 const FAQS: Faq[] = [
   { q: "Is this an official GPTZero tool?", a: "No — it's an independent, free checker that measures the same kinds of signals GPTZero uses (perplexity and burstiness). Use it to estimate risk and find what to fix before you run the real thing." },
-  { q: "How does GPTZero detect AI text?", a: "GPTZero scores two main signals: perplexity (how predictable your word choices are) and burstiness (how much sentence length and complexity vary). AI text tends to be low-perplexity and low-burstiness — smooth and uniform. This checker flags those same patterns." },
-  { q: "Is it free and private?", a: "Yes. There's no signup and the analysis runs locally in your browser, so your text is never uploaded or stored." },
+  { q: "How does GPTZero detect AI text?", a: "GPTZero is best known for two signals: perplexity (how predictable your word choices are) and burstiness (how much sentence length and complexity vary). AI text tends to be low-perplexity and low-burstiness — smooth and uniform. GPTZero also uses a trained classifier, so this checker estimates the same kinds of patterns rather than reproducing GPTZero's exact model." },
+  { q: "Is it free and private?", a: "Yes. There's no signup, and the instant check runs locally in your browser. The optional deep scan sends your text to our server to analyze it, and nothing is stored." },
   { q: "My text scored high — what now?", a: "Use our free humanizer to rewrite the flagged passages so they read more naturally, then re-check. The goal is to raise perplexity and burstiness back into the human range." },
 ];
 
@@ -49,34 +50,35 @@ export default function GptzeroCheckerPage() {
       </h1>
       <p style={{ ...toolStyles.p, fontSize: "17px" }}>
         Test your writing against the perplexity and burstiness patterns GPTZero looks for — before you submit. Free,
-        instant, and private: the check runs entirely in your browser.
+        instant, and private: the instant check runs in your browser.
       </p>
 
       <DetectorTool ctaHref="/free-ai-humanizer" />
 
       <h2 style={toolStyles.h2}>What GPTZero actually measures</h2>
       <p style={toolStyles.p}>
-        GPTZero relies on two signals. <strong>Perplexity</strong> measures how surprising your word choices are: language
+        GPTZero is best known for two signals. <strong>Perplexity</strong> measures how surprising your word choices are: language
         models pick the most statistically likely next word, which makes their output smooth but predictable.{" "}
         <strong>Burstiness</strong> measures variation — humans mix long, clause-heavy sentences with short, punchy ones,
-        while AI tends toward uniform length. This checker estimates both, along with 40+ related patterns, and lists
-        exactly what triggered so you can fix it.
+        while AI tends toward uniform length. GPTZero also runs a trained classifier, so no outside tool can reproduce its
+        exact score: this checker estimates both signals across {PATTERN_COUNT} related patterns and lists exactly what
+        triggered so you can fix it.
       </p>
 
       <h2 style={toolStyles.h2}>Lower your score the right way</h2>
       <p style={toolStyles.p}>
         When you score high, the fix is to add genuine variation rather than swap synonyms. Our{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free humanizer</Link> does this automatically,
-        and our guide on{" "}
-        <Link href="/blog/bypass-ai-detection" style={{ color: THEME.brandHi }}>bypassing AI detection</Link> covers the
-        manual techniques.
+        and our{" "}
+        <Link href="/bypass/gptzero" style={{ color: THEME.brandHi }}>GPTZero guide</Link> covers the manual
+        techniques.
       </p>
 
       <ToolFaq faqs={FAQS} />
 
       <ToolCta
-        heading="Beat GPTZero with one click"
-        body="Humanize flagged text for free so it reads naturally and scores in the human range — no credit card required."
+        heading="Rewrite flagged passages for free"
+        body="Humanize flagged text so it reads naturally, then re-check your score — no credit card required."
       />
     </div>
   );
