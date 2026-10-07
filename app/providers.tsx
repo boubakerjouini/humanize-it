@@ -5,29 +5,11 @@ import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AttributionCapture } from "@/components/growth/attribution-capture";
-import { scrubEvent } from "@/lib/url-scrub";
 
-// Initialize PostHog once
-function PostHogInit() {
-  const { user } = useUser();
-
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    if (!key || posthog.__loaded) return;
-
-    posthog.init(key, {
-      // Proxy through our domain — avoids adblockers
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "/ingest",
-      ui_host: "https://eu.posthog.com",
-      capture_pageview: false, // We handle this manually
-      capture_pageleave: true,
-      persistence: "localStorage",
-      autocapture: false, // Opt-in only — GDPR friendly
-      // Email links carry a signed token in ?t= ($current_url, $referrer,
-      // page-leave events): strip it from every event before it leaves.
-      before_send: (event) => (event ? scrubEvent(event) : event),
-    });
-  }, []);
+// PostHog itself is initialised in instrumentation-client.ts (before hydration).
+// This component only ties the PostHog identity to the Clerk session.
+function PostHogIdentity() {
+  const { user, isLoaded } = useUser();
 
   // Identify user when signed in
   useEffect(() => {
@@ -40,12 +22,14 @@ function PostHogInit() {
     });
   }, [user?.id]);
 
-  // Reset on signout
+  // Reset after sign-out only. Resetting whenever `user` was empty gave every
+  // anonymous page load a fresh distinct_id, which broke anonymous funnels.
+  // `$user_state` is PostHog's own persisted flag, so this also catches a
+  // sign-out followed by a full page load.
   useEffect(() => {
-    if (!user && posthog.__loaded) {
-      posthog.reset();
-    }
-  }, [user]);
+    if (!isLoaded || user || !posthog.__loaded) return;
+    if (posthog.get_property("$user_state") === "identified") posthog.reset();
+  }, [isLoaded, user]);
 
   return null;
 }
@@ -53,7 +37,7 @@ function PostHogInit() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <PostHogProvider client={posthog}>
-      <PostHogInit />
+      <PostHogIdentity />
       <AttributionCapture />
       {children}
     </PostHogProvider>
