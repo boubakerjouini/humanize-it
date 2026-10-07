@@ -17,11 +17,10 @@ import { recordEvent } from "@/lib/crm/events";
 import { canonicalHash } from "@/lib/email/address";
 import { REFERRAL_CODE_ALPHABET, REFERRAL_CODE_LENGTH, normalizeRef } from "@/lib/growth/attribution";
 import { appUrl, referralsEnabled } from "@/lib/growth/flags";
-import { REFERRAL_CAP_WINDOW_DAYS, evaluateReferral } from "@/lib/growth/referral-rules";
+import { REFERRAL_CAP_WINDOW_DAYS, REFERRAL_REWARD_WORDS, evaluateReferral } from "@/lib/growth/referral-rules";
 import { isUniqueViolation, logGrowthError } from "@/lib/growth/safe";
 
-/** Bonus words each side gets when a referral qualifies. */
-export const REFERRAL_REWARD_WORDS = 3000;
+export { REFERRAL_REWARD_WORDS };
 
 const CODE_ATTEMPTS = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;

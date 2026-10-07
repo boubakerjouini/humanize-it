@@ -8,6 +8,9 @@
 // and records the reason of any rejection.
 // ===========================================================
 
+/** Bonus words each side gets when a referral qualifies. Pure, so email templates can quote it. */
+export const REFERRAL_REWARD_WORDS = 3000;
+
 /** Rewarded referrals a referrer may earn per rolling REFERRAL_CAP_WINDOW_DAYS. */
 export const REFERRAL_CAP = 10;
 export const REFERRAL_CAP_WINDOW_DAYS = 30;
