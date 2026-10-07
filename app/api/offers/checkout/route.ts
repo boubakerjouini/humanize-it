@@ -21,6 +21,8 @@ import { foundingStatus } from "../shared";
 
 export const runtime = "nodejs";
 
+const FOUNDING_CHECKOUT_TTL_MS = 60 * 60 * 1000;
+
 function error(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
@@ -58,6 +60,9 @@ export async function POST(req: Request) {
         return error("ALREADY_MEMBER", "You're already a founding member.", 409);
       }
       const subscribed = !!user.subscription && user.subscription.status !== "expired";
+      if (!subscribed && user.plan === "PRO" && !user.planExpiresAt) {
+        return error("ALREADY_LIFETIME", "Your account already has Pro with no end date, so Founding 100 would add nothing.", 409);
+      }
       if (subscribed || effectivePlanId(user) === "TEAM") {
         return error(
           "HAS_SUBSCRIPTION",
@@ -90,7 +95,9 @@ export async function POST(req: Request) {
           offer === "founding" ? "Thank you for backing HumanizeIt as a founding member!" : "Thank you! Your words are on their way.",
         enabledVariants: [Number(variantId)],
       },
-      expiresAt: null,
+      // A founding checkout expires after an hour: the cap is checked when it
+      // opens, so a stale tab must not be able to buy a seat days later.
+      expiresAt: offer === "founding" ? new Date(Date.now() + FOUNDING_CHECKOUT_TTL_MS).toISOString() : null,
       preview: false,
       testMode: process.env.LEMONSQUEEZY_TEST_MODE === "true" || process.env.NODE_ENV !== "production",
     });

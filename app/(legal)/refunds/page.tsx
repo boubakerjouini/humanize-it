@@ -47,8 +47,8 @@ export default function RefundsPage() {
 
       <Section title={`3. Founding ${FOUNDING.seats} and word packs`}>
         <ul style={{ paddingLeft: '20px' }}>
-          <li style={li}><strong style={strong}>Founding {FOUNDING.seats}</strong> (${FOUNDING.priceUsd} once for {FOUNDING.months} months of Pro): the same {GUARANTEE_DAYS}-day full refund. Your account goes back to the Free plan.</li>
-          <li style={li}><strong style={strong}>Word packs</strong>: refunded in full within {GUARANTEE_DAYS} days if you haven&apos;t used any of the words.</li>
+          <li style={li}><strong style={strong}>Founding {FOUNDING.seats}</strong> (${FOUNDING.priceUsd} once for {FOUNDING.months} months of Pro): the same {GUARANTEE_DAYS}-day full refund. The founding Pro time comes off your account, which goes back to the plan it had before (for most people, Free).</li>
+          <li style={li}><strong style={strong}>Word packs</strong>: refunded in full within {GUARANTEE_DAYS} days if you haven&apos;t used any of the words. The pack&apos;s words come off your balance.</li>
         </ul>
       </Section>
 
