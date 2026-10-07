@@ -6,8 +6,11 @@ import { scrubEvent } from "@/lib/url-scrub";
 // effect, which ran after PostHogPageview's effect and silently dropped that
 // pageview (only in-app navigations were ever recorded).
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+// Only the real site reports: local dev, `next start` and Vercel previews all
+// carry the production key, and their traffic was most of the project's data.
+const isProductionHost = /(^|\.)humanizeit\.app$/.test(window.location.hostname);
 
-if (key) {
+if (key && isProductionHost) {
   posthog.init(key, {
     // Proxy through our domain — avoids adblockers
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "/ingest",
