@@ -13,6 +13,8 @@ import { db } from "@/lib/db";
 import { since, type DayPoint } from "@/lib/admin-metrics";
 import { MAGNET_SLUGS, PUBLIC_LEAD_SOURCES } from "@/lib/growth/constants";
 import { outreachDailyGoal } from "@/lib/growth/flags";
+import { FOUNDER_SERVICE_KINDS, monthStartUtc, type FounderService } from "@/lib/plans";
+import { foundingSold as countFoundingSold } from "@/app/api/offers/shared";
 
 const DAY_MS = 86_400_000;
 const ACTIVATION_DAYS = 7;
@@ -285,7 +287,10 @@ export async function getCompedExpiring(days = 30): Promise<CompedExpiringRow[]>
 export type MonthPoint = { month: string; signups: number; cancels: number };
 
 export type OfferStats = {
+  /** Same count as the public "{n} of 100 left" counter (survives account deletion). */
   foundingSold: number;
+  /** Founder-service requests since the 1st of this UTC month, per kind (each has a monthly cap). */
+  servicesThisMonth: Record<FounderService, number>;
   wordPacksSold: number;
   wordPacksInPeriod: number;
   /** Average words used this billing period by users with a paying subscription; null with none. */
@@ -303,8 +308,11 @@ function monthKey(d: Date): string {
 export async function getOfferStats(days: number, months = 6): Promise<OfferStats> {
   const now = new Date();
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1));
-  const [foundingSold, wordPacksSold, wordPacksInPeriod, paid, signups, cancels] = await Promise.all([
-    db.purchase.count({ where: { kind: "founding" } }).catch(() => 0),
+  const [foundingSold, services, wordPacksSold, wordPacksInPeriod, paid, signups, cancels] = await Promise.all([
+    countFoundingSold().catch(() => 0),
+    db.crmTask
+      .groupBy({ by: ["kind"], where: { kind: { in: FOUNDER_SERVICE_KINDS }, source: "request", createdAt: { gte: monthStartUtc(now) } }, _count: { _all: true } })
+      .catch(() => []),
     db.purchase.count({ where: { kind: "wordpack" } }).catch(() => 0),
     db.purchase.count({ where: { kind: "wordpack", createdAt: { gte: since(days) } } }).catch(() => 0),
     db.user.aggregate({ where: { subscription: { is: { status: { in: PAYING_STATUSES } } } }, _avg: { wordsUsed: true }, _count: { _all: true } }),
@@ -328,8 +336,14 @@ export async function getOfferStats(days: number, months = 6): Promise<OfferStat
     if (row) row.cancels++;
   }
 
+  const servicesThisMonth = Object.fromEntries(FOUNDER_SERVICE_KINDS.map((k) => [k, 0])) as Record<FounderService, number>;
+  for (const row of services) {
+    if (row.kind in servicesThisMonth) servicesThisMonth[row.kind as FounderService] = row._count._all;
+  }
+
   return {
     foundingSold,
+    servicesThisMonth,
     wordPacksSold,
     wordPacksInPeriod,
     wordsPerPaidUser: paid._count._all > 0 ? Math.round(paid._avg.wordsUsed ?? 0) : null,

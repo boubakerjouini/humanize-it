@@ -9,12 +9,13 @@
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BadgeCheck, Crown, Flame, Inbox, MailCheck, Package, UserPlus, Zap } from "lucide-react";
+import { BadgeCheck, Crown, Flame, Handshake, Inbox, MailCheck, Package, UserPlus, Zap } from "lucide-react";
 import { getAdminUser } from "@/lib/admin";
 import { getSignupSeries, type DayPoint } from "@/lib/admin-metrics";
 import { THEME } from "@/lib/theme";
 import { appUrl } from "@/lib/growth/flags";
 import { MAGNETS } from "@/lib/growth/magnets";
+import { FOUNDER_SERVICES, FOUNDER_SERVICE_KINDS } from "@/lib/plans";
 import {
   FOUNDING_CAP,
   cohortTotals,
@@ -235,6 +236,12 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
           sub={offer.paidUsers ? `average this billing period, ${offer.paidUsers} paying` : "no paying subscribers yet"}
         />
         <KpiCard icon={Zap} label="Passes per rewrite" value="—" sub="Not recorded yet: humanize passes aren't stored per rewrite." />
+        <KpiCard
+          icon={Handshake}
+          label="Founder services this month"
+          value={FOUNDER_SERVICE_KINDS.reduce((n, k) => n + offer.servicesThisMonth[k], 0).toLocaleString()}
+          sub={FOUNDER_SERVICE_KINDS.map((k) => `${offer.servicesThisMonth[k]}/${FOUNDER_SERVICES[k].monthlyCap} ${k === "founder_review" ? "reviews" : "setups"}`).join(" · ")}
+        />
       </div>
       <Panel title="Signups vs cancellations" description="By month (UTC)" flush style={{ marginTop: 12 }}>
         <table style={tableStyles.table}>
