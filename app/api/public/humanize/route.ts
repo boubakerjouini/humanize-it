@@ -12,6 +12,7 @@ import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { activeProvider } from "@/lib/llm";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/client-ip";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
 const MAX_CHARS = 2500;
@@ -21,13 +22,6 @@ const FREE_PER_DAY = 2; // rewrites per IP per day
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 const VALID_INTENSITIES: IntensityLevel[] = ["light", "medium", "heavy"];
-
-/** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */
-function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim();
-  return req.headers.get("x-real-ip")?.trim() || "unknown";
-}
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
