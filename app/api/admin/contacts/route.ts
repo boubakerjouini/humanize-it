@@ -62,6 +62,7 @@ export async function GET(req: Request) {
       page: query.page,
       totalPages: Math.max(1, Math.ceil(total / CONTACTS_PAGE_SIZE)),
       segmentName: resolved.segmentName,
+      campaignTarget: resolved.campaignTarget,
     });
   } catch (err) {
     return fail(err);

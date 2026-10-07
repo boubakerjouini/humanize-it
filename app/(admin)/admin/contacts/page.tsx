@@ -10,7 +10,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Download, Megaphone, Plus, RefreshCw, Search, X } from "lucide-react";
 import { THEME } from "@/lib/theme";
 import { CHANNELS, LEAD_SOURCES, PIPELINE_STAGES, TOPICS, TOPIC_LABELS } from "@/lib/growth/constants";
 import { STAGES, STAGE_LABELS } from "@/lib/crm/lifecycle";
@@ -54,7 +54,15 @@ type ContactRow = {
   plan: string | null;
 };
 
-type ListResponse = { items: ContactRow[]; total: number; page: number; totalPages: number; segmentName: string | null };
+type CampaignTarget = { segmentRef: string } | { filter: string };
+type ListResponse = { items: ContactRow[]; total: number; page: number; totalPages: number; segmentName: string | null; campaignTarget: CampaignTarget | null };
+
+/** /admin/campaigns opens a new draft for this audience (system segment or inline filter). */
+function campaignHref(target: CampaignTarget): string {
+  return "segmentRef" in target
+    ? `/admin/campaigns?segmentRef=${encodeURIComponent(target.segmentRef)}`
+    : `/admin/campaigns?filter=${encodeURIComponent(target.filter)}`;
+}
 type TagOption = { id: string; name: string; color: string };
 type SegmentOption = { id: string; name: string; count: number };
 
@@ -183,6 +191,11 @@ function ContactsView() {
             <a href={`/api/admin/contacts/export?${qs}`} style={ghostBtn} download>
               <Download size={14} aria-hidden="true" /> Export CSV
             </a>
+            {data?.campaignTarget ? (
+              <a href={campaignHref(data.campaignTarget)} style={ghostBtn} title="Start a campaign draft for the people matching these filters">
+                <Megaphone size={14} aria-hidden="true" /> Use in campaign
+              </a>
+            ) : null}
             <button type="button" onClick={() => setAdding(true)} style={primaryBtn}>
               <Plus size={14} aria-hidden="true" /> Add contact
             </button>
