@@ -106,6 +106,8 @@ export function ConfirmDialog({
       }}
       style={{
         width: "min(440px, calc(100vw - 32px))",
+        // Tailwind's preflight zeroes every margin, which drops the UA centering of a modal <dialog>.
+        margin: "auto",
         padding: 0,
         border: `1px solid ${THEME.border}`,
         borderRadius: THEME.radiusLg,
