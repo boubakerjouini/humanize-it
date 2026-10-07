@@ -133,7 +133,7 @@ export function HumanizerTool() {
                 </Link>{" "}
                 lists the tells to cut and what to write instead.
               </p>
-              <LeadCaptureForm source="blog_inline" magnet="linkedin-humanizer-checklist" variant="compact" ctaLabel="Get the checklist" />
+              <LeadCaptureForm source="tool_inline" magnet="linkedin-humanizer-checklist" variant="compact" ctaLabel="Get the checklist" />
             </div>
           )}
         </div>

@@ -19,6 +19,8 @@ export const LEAD_SOURCES = [
   "detector_report",
   "exit_intent",
   "blog_inline",
+  /** A magnet offered inside a free tool (the /ai-detector Appeal Kit box, the humanizer's limit message). */
+  "tool_inline",
   "extension_waitlist",
   "founding_waitlist",
   "manual",
@@ -35,6 +37,7 @@ export const PUBLIC_LEAD_SOURCES = [
   "detector_report",
   "exit_intent",
   "blog_inline",
+  "tool_inline",
   "extension_waitlist",
   "founding_waitlist",
 ] as const satisfies readonly LeadSource[];

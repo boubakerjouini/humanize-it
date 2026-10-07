@@ -30,7 +30,7 @@ export const MIN_FILL_MS = 1500;
 export const MX_TIMEOUT_MS = 1500;
 
 /** Sources whose capture is about a lead magnet (they must name one). */
-const MAGNET_SOURCES: ReadonlySet<PublicLeadSource> = new Set(["magnet_page", "exit_intent", "blog_inline"]);
+const MAGNET_SOURCES: ReadonlySet<PublicLeadSource> = new Set(["magnet_page", "exit_intent", "blog_inline", "tool_inline"]);
 
 export const reportContextSchema = z
   .object({

@@ -73,7 +73,7 @@ export default function AiDetectorPage() {
         <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>.
       </p>
 
-      <LeadMagnetInline slug="false-ai-flag-appeal-kit" source="blog_inline" />
+      <LeadMagnetInline slug="false-ai-flag-appeal-kit" source="tool_inline" />
 
       <ToolFaq faqs={FAQS} />
 

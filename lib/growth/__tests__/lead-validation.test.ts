@@ -30,7 +30,7 @@ describe("leadRequestSchema", () => {
   });
 
   it("requires a magnet for magnet sources", () => {
-    for (const source of ["magnet_page", "exit_intent", "blog_inline"]) {
+    for (const source of ["magnet_page", "exit_intent", "blog_inline", "tool_inline"]) {
       expect(leadRequestSchema.safeParse({ ...base, source }).success).toBe(false);
     }
   });
