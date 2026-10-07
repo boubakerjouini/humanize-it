@@ -1,11 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+// ===========================================================
+// components/ui/exit-intent.tsx — Exit-intent popups.
+//   signup (default)  the home page's "500 free words" nudge, unchanged
+//   magnet            a free PDF offer on tool and blog pages: desktop mouse
+//                     exit, or on touch devices after 45 s and 60% scroll;
+//                     at most once per 14 days, never after an email capture,
+//                     never while a scan or rewrite is running, one per page
+// ===========================================================
+
+import { useState, useEffect, useId, useRef } from "react";
 import Link from "next/link";
 import { Hand, X } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
+import { LeadCaptureForm, hasCapturedLead } from "@/components/growth/lead-capture-form";
+import { getMagnet } from "@/lib/growth/magnets";
+import type { MagnetSlug, PublicLeadSource } from "@/lib/growth/constants";
 
-export function ExitIntent() {
+type ExitIntentProps = {
+  variant?: "signup" | "magnet";
+  magnet?: MagnetSlug;
+  source?: PublicLeadSource;
+  /** True while a detection or rewrite is in flight: the popup must not cover the result. */
+  suppress?: boolean;
+};
+
+export function ExitIntent({ variant = "signup", magnet, source = "exit_intent", suppress = false }: ExitIntentProps = {}) {
+  if (variant === "magnet" && magnet) return <MagnetExitIntent magnet={magnet} source={source} suppress={suppress} />;
+  return <SignupExitIntent />;
+}
+
+function SignupExitIntent() {
   const [show, setShow] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -130,5 +155,155 @@ export function ExitIntent() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// ── Magnet variant ───────────────────────────────────────────────────────────
+
+const SHOWN_AT_KEY = "hz_exit_magnet_at";
+const FREQUENCY_MS = 14 * 24 * 60 * 60 * 1000;
+const MOBILE_MIN_MS = 45_000;
+const MOBILE_MIN_SCROLL = 0.6;
+
+declare global {
+  interface Window {
+    __hzExitMounted?: boolean;
+  }
+}
+
+function shownRecently(now: number): boolean {
+  try {
+    const at = Number(localStorage.getItem(SHOWN_AT_KEY) ?? "0");
+    return Number.isFinite(at) && now - at < FREQUENCY_MS;
+  } catch {
+    return false;
+  }
+}
+
+function rememberShown(now: number): void {
+  try {
+    localStorage.setItem(SHOWN_AT_KEY, String(now));
+  } catch {
+    // Storage blocked: the popup may show again on a later visit, nothing worse.
+  }
+}
+
+function MagnetExitIntent({ magnet, source, suppress }: { magnet: MagnetSlug; source: PublicLeadSource; suppress: boolean }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const suppressRef = useRef(suppress);
+  const titleId = useId();
+  const entry = getMagnet(magnet);
+
+  useEffect(() => {
+    suppressRef.current = suppress;
+  }, [suppress]);
+
+  useEffect(() => {
+    // One exit popup per page, even when several components mount one: only
+    // the first instance listens; the others stay closed forever.
+    if (window.__hzExitMounted) return;
+    window.__hzExitMounted = true;
+    const release = () => {
+      window.__hzExitMounted = false;
+    };
+    const startedAt = Date.now();
+    if (hasCapturedLead() || shownRecently(startedAt)) return release;
+
+    let done = false;
+    const open = () => {
+      if (done || suppressRef.current || hasCapturedLead()) return;
+      const dialog = dialogRef.current;
+      if (!dialog || dialog.open) return;
+      done = true;
+      rememberShown(Date.now());
+      dialog.showModal();
+      cleanup();
+    };
+
+    const onMouseOut = (e: MouseEvent) => {
+      if (e.clientY < 10 && !e.relatedTarget) open();
+    };
+    const onScroll = () => {
+      if (Date.now() - startedAt < MOBILE_MIN_MS) return;
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      if (scrollable > 0 && window.scrollY / scrollable >= MOBILE_MIN_SCROLL) open();
+    };
+
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    if (coarse) window.addEventListener("scroll", onScroll, { passive: true });
+    else document.addEventListener("mouseout", onMouseOut);
+
+    function cleanup() {
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("mouseout", onMouseOut);
+    }
+    return () => {
+      cleanup();
+      release();
+    };
+  }, []);
+
+  // Light dismiss for browsers without <dialog closedby> (Safari).
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || "closedBy" in HTMLDialogElement.prototype) return;
+    const onClick = (event: MouseEvent) => {
+      if (event.target !== dialog) return;
+      const rect = dialog.getBoundingClientRect();
+      const inside =
+        rect.top <= event.clientY && event.clientY <= rect.bottom && rect.left <= event.clientX && event.clientX <= rect.right;
+      if (!inside) dialog.close();
+    };
+    dialog.addEventListener("click", onClick);
+    return () => dialog.removeEventListener("click", onClick);
+  }, []);
+
+  if (!entry) return null;
+
+  return (
+    <dialog
+      ref={dialogRef}
+      closedby="any"
+      aria-labelledby={titleId}
+      className="hz-exit-dialog"
+      style={{
+        border: `1px solid ${THEME.border}`,
+        borderRadius: THEME.radiusXl,
+        padding: "32px 28px 28px",
+        maxWidth: "440px",
+        width: "calc(100% - 32px)",
+        // The global reset zeroes margins, which would pin the modal to the top-left corner.
+        margin: "auto",
+        background: THEME.surface2,
+        color: THEME.text,
+        boxShadow: "0 28px 70px -18px rgba(124,58,237,0.32), 0 10px 30px -14px rgba(29,23,38,0.14)",
+      }}
+    >
+      <style>{`.hz-exit-dialog::backdrop{background:rgba(29,23,38,0.36);backdrop-filter:blur(6px);}`}</style>
+      <form method="dialog" style={{ position: "absolute", top: "12px", right: "12px", margin: 0 }}>
+        <button
+          type="submit"
+          aria-label="Close"
+          style={{ background: "transparent", border: "none", color: THEME.textDim, cursor: "pointer", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: THEME.radius }}
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
+      </form>
+      <div style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: THEME.accent, marginBottom: "8px" }}>
+        Free {entry.noun} · {entry.pages} pages
+      </div>
+      <h2 id={titleId} style={{ fontSize: "21px", fontWeight: 700, lineHeight: 1.25, margin: "0 0 10px", letterSpacing: "-0.02em", fontFamily: THEME.fontHeading, color: THEME.text }}>
+        Before you go: the free {entry.shortTitle}
+      </h2>
+      <ul style={{ margin: "0 0 16px", paddingLeft: "18px", listStyle: "disc", color: THEME.textDim, fontSize: "14px", lineHeight: 1.6 }}>
+        {entry.bullets.slice(0, 2).map((b) => (
+          <li key={b} style={{ marginBottom: "4px" }}>
+            {b}
+          </li>
+        ))}
+      </ul>
+      <LeadCaptureForm source={source} magnet={entry.slug} variant="compact" ctaLabel="Get the PDF" />
+    </dialog>
   );
 }

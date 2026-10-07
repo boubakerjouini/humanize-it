@@ -32,6 +32,17 @@ const isPublicRoute = createRouteMatcher([
   "/api/detect(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
+  // Growth engine — public pages (magnets + PDFs, waitlist, email preferences, referral links).
+  // The matcher doesn't skip .pdf, so the lead-magnet files must be listed here.
+  "/free(.*)",
+  "/lead-magnets/(.*)",
+  "/extension",
+  "/extension/(.*)",
+  "/email/(.*)",
+  "/r/(.*)",
+  // Growth engine — token-authenticated email endpoints + Vercel Cron (CRON_SECRET checked in handler)
+  "/api/email/(.*)",
+  "/api/cron/(.*)",
   // Blog
   "/blog(.*)",
   // Legal pages

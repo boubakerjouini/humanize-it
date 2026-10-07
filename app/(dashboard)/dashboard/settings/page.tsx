@@ -3,9 +3,16 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink } from "lucide-react";
+import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink, Mail, Users, Award, Handshake } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { ApiKeysSection } from "@/components/workspace/api-keys-section";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
+import { CONSENT_WORDING, type Topic } from "@/lib/growth/constants";
+import { FOUNDING } from "@/lib/plans";
+import { FoundingBadge } from "@/components/growth/founding-badge";
+import { useOffers } from "@/components/growth/founding-offers";
+import { ServiceRequestCard } from "@/components/growth/service-request-card";
 
 interface UsageData {
   plan: string;
@@ -16,6 +23,14 @@ interface UsageData {
   quotaResetAt: string;
   subscriptionStatus: string | null;
   stripeCurrentPeriodEnd: string | null;
+  bonusWords?: number;
+}
+
+interface EmailPrefs {
+  email: string;
+  topics: string[];
+  pendingTopics: string[];
+  lifecycleEmails: boolean;
 }
 
 const PLAN_META: Record<string, { label: string; icon: typeof Crown; color: string }> = {
@@ -28,23 +43,37 @@ function fmt(iso: string | null): string {
   return iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
 }
 
+/** quotaResetAt is the last reset: Free resets 24 hours later, paid plans a month later (lib/quota.ts). */
+function nextReset(usage: UsageData): string {
+  const at = new Date(usage.quotaResetAt);
+  if (Number.isNaN(at.getTime())) return "—";
+  if (usage.plan === "FREE") {
+    at.setDate(at.getDate() + 1);
+    return at.toLocaleString("en-US", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+  at.setMonth(at.getMonth() + 1);
+  return fmt(at.toISOString());
+}
+
 export default function SettingsPage() {
   const { user } = useUser();
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [redeem, setRedeem] = useState("");
-  const [busy, setBusy] = useState<"checkout" | "portal" | "redeem" | null>(null);
+  const [busy, setBusy] = useState<"portal" | "redeem" | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const referral = useReferralInfo();
+  const founding = useOffers()?.founding.member ?? false;
+  // Back from the Founding 100 checkout (the webhook may land a moment later).
+  const [foundingWelcome, setFoundingWelcome] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("founding") === "welcome") setFoundingWelcome(true);
+  }, []);
 
   const loadUsage = () => fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d) => d && setUsage(d)).catch(() => {});
   useEffect(() => { void loadUsage(); }, []);
 
-  async function checkout() {
-    setBusy("checkout");
-    try {
-      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: "PRO" }) });
-      const d = await res.json();
-      if (d.url) window.location.href = d.url; else toast.error(d.error?.message ?? "Checkout failed.");
-    } catch { toast.error("Checkout failed."); } finally { setBusy(null); }
-  }
+  // The plan menu lets people pick monthly or annual (a straight checkout was monthly only).
+  const checkout = () => setUpgradeOpen(true);
   async function portal() {
     setBusy("portal");
     try {
@@ -83,6 +112,15 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {foundingWelcome && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: THEME.accentDim, border: `1px solid ${THEME.accent}55`, borderRadius: THEME.radius, padding: "12px 16px", marginBottom: 16 }}>
+          <Award size={16} color={THEME.accentHi} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          <span style={{ fontSize: 13, color: THEME.text, lineHeight: 1.6 }}>
+            {`Thank you for backing HumanizeIt. Your account switches to Pro for ${FOUNDING.months} months as soon as the payment confirms, usually within a minute (refresh if it still says Free). I read every email at support@humanizeit.app. Boubaker`}
+          </span>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Plan & usage */}
         <Section title="Plan & usage" icon={meta.icon} accent={meta.color}>
@@ -91,9 +129,11 @@ export default function SettingsPage() {
               <meta.icon size={13} color={meta.color} aria-hidden="true" />
               <span style={{ fontSize: 12, fontWeight: 700, color: isFree ? THEME.textDim : THEME.brandHi }}>{meta.label} plan</span>
             </span>
+            {founding && <FoundingBadge size="md" />}
+            <span style={{ flex: 1 }} />
             {isFree ? (
-              <button onClick={checkout} disabled={busy === "checkout"} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
-                {busy === "checkout" ? "Loading…" : <>Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" /></>}
+              <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
+                Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
               </button>
             ) : (
               <button onClick={portal} disabled={busy === "portal"} style={smallBtn}><CreditCard size={13} aria-hidden="true" /> Manage billing</button>
@@ -103,12 +143,25 @@ export default function SettingsPage() {
             <>
               <UsageBar label="Words" used={usage.wordsUsed} limit={usage.wordsLimit} />
               <UsageBar label="Rewrites" used={usage.rewriteCount} limit={usage.rewriteLimit} />
+              {(usage.bonusWords ?? 0) > 0 && (
+                <div className="tnum" style={{ fontSize: 12, color: THEME.accentHi, fontWeight: 600, marginTop: 2 }}>
+                  {`+${(usage.bonusWords ?? 0).toLocaleString("en-US")} bonus words, used once your plan's words run out`}
+                </div>
+              )}
               <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 10 }}>
-                Quota resets {fmt(usage.quotaResetAt)}{usage.stripeCurrentPeriodEnd ? ` · renews ${fmt(usage.stripeCurrentPeriodEnd)}` : ""}
+                Words reset {nextReset(usage)}{usage.stripeCurrentPeriodEnd ? ` · renews ${fmt(usage.stripeCurrentPeriodEnd)}` : ""}
               </div>
             </>
           )}
         </Section>
+
+        {/* Founder bonuses: real founder time, capped per month */}
+        {(plan === "PRO" || plan === "TEAM") && (
+          <Section title={plan === "PRO" ? "Founder's First-Document Review" : "30-minute Workflow Setup"} icon={Handshake} accent={THEME.accent}
+            sub={plan === "PRO" ? "A Pro bonus. You can also request it from any document's Before/After Report." : "A Team bonus."}>
+            <ServiceRequestCard kind={plan === "PRO" ? "founder_review" : "team_setup"} />
+          </Section>
+        )}
 
         {/* Redeem */}
         <Section title="Redeem a code" icon={Gift} accent={THEME.accent}>
@@ -119,6 +172,20 @@ export default function SettingsPage() {
               {busy === "redeem" ? "Redeeming…" : "Redeem"}
             </button>
           </div>
+        </Section>
+
+        {/* Invite friends (only while the referral program is on) */}
+        {referral && (
+          <div id="invite" style={{ scrollMarginTop: 24 }}>
+            <Section title="Invite friends" icon={Users} accent={THEME.accent} sub={`You both get ${referral.rewardWords.toLocaleString("en-US")} bonus words.`}>
+              <ReferralCard info={referral} compact />
+            </Section>
+          </div>
+        )}
+
+        {/* Email preferences */}
+        <Section title="Email preferences" icon={Mail} accent={THEME.brand} sub="Choose what we send you. Security and billing emails always go out.">
+          <EmailPreferences />
         </Section>
 
         {/* API keys */}
@@ -139,7 +206,79 @@ export default function SettingsPage() {
           </div>
         </Section>
       </div>
+
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={plan} />
     </div>
+  );
+}
+
+const TOPIC_ROWS: { topic: Topic; label: string }[] = [
+  { topic: "tips", label: CONSENT_WORDING["inapp-tips-v1"] },
+  { topic: "extension_launch", label: CONSENT_WORDING["ext-v1"] },
+];
+
+/** Each toggle saves at once, as a delta, so it can never touch a topic it doesn't show. */
+function EmailPreferences() {
+  const [prefs, setPrefs] = useState<EmailPrefs | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/me/email-preferences")
+      .then((r) => (r.ok ? (r.json() as Promise<EmailPrefs>) : null))
+      .then((d) => { if (alive && d) setPrefs(d); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  async function save(change: { subscribe?: Topic[]; unsubscribe?: Topic[]; lifecycleEmails?: boolean }) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/me/email-preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...change, source: "settings" }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setPrefs((await res.json()) as EmailPrefs);
+      toast.success("Email preferences saved");
+    } catch {
+      toast.error("Couldn't save your email preferences.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!prefs) return <div style={{ fontSize: 13, color: THEME.textMuted }}>Loading…</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {TOPIC_ROWS.map(({ topic, label }) => {
+        const on = prefs.topics.includes(topic);
+        const pending = !on && prefs.pendingTopics.includes(topic);
+        return (
+          <PrefRow key={topic} checked={on} disabled={saving} label={label}
+            hint={pending ? "Waiting for you to confirm from the email we sent. Ticking it here subscribes you now." : undefined}
+            onChange={(next) => save(next ? { subscribe: [topic] } : { unsubscribe: [topic] })} />
+        );
+      })}
+      <PrefRow checked={prefs.lifecycleEmails} disabled={saving}
+        label="Account emails: getting-started tips and notices about your plan, such as before complimentary access ends."
+        onChange={(next) => save({ lifecycleEmails: next })} />
+      <div style={{ fontSize: 12, color: THEME.textMuted }}>{`Emails go to ${prefs.email}.`}</div>
+    </div>
+  );
+}
+
+function PrefRow({ checked, disabled, label, hint, onChange }: { checked: boolean; disabled: boolean; label: string; hint?: string; onChange: (next: boolean) => void }) {
+  return (
+    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: THEME.text, cursor: disabled ? "wait" : "pointer", lineHeight: 1.5 }}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} style={{ marginTop: 3, accentColor: THEME.brand }} />
+      <span>
+        {label}
+        {hint && <span style={{ display: "block", fontSize: 12, color: THEME.textMuted }}>{hint}</span>}
+      </span>
+    </label>
   );
 }
 

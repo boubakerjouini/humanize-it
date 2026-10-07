@@ -8,6 +8,8 @@ import { createCheckout } from "@lemonsqueezy/lemonsqueezy.js";
 import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
+import { trackCheckoutStarted } from "@/lib/crm/hooks";
+import { runAfter } from "@/lib/growth/safe";
 
 export async function POST(req: Request) {
   configureLemonSqueezy();
@@ -66,6 +68,9 @@ export async function POST(req: Request) {
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+    // Feeds the checkout_abandoned sequence; it exits once a subscription starts.
+    runAfter("checkout-started", () => trackCheckoutStarted(user.id, planId, isAnnual));
 
     const { data, error } = await createCheckout(storeId, variantId, {
       checkoutOptions: {

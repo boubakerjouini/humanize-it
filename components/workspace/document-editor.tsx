@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Wand2, Copy, Download, Upload, Check, RotateCcw, Sparkles, ArrowRight,
-  Pencil, MoreHorizontal, Globe, ScanSearch, History as HistoryIcon,
+  Pencil, MoreHorizontal, Globe, ScanSearch, History as HistoryIcon, FileText,
 } from "lucide-react";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
@@ -13,10 +13,20 @@ import { UploadZone } from "@/components/ui/upload-zone";
 import { highlightChanges, sentenceDiff } from "@/lib/sentence-diff";
 import { AnalysisPanel } from "@/components/workspace/analysis-panel";
 import { HistoryDrawer } from "@/components/workspace/history-drawer";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { EmailConsentCard } from "@/components/growth/email-consent-card";
+import { ShareSuccessChip } from "@/components/growth/share-success-chip";
 import { THEME, glow, humanScore, humanScoreColor, humanScoreLabel } from "@/lib/theme";
+import { TONES as PLAN_TONES, isToneAllowed, type PlanId } from "@/lib/plans";
+import type { VoiceProfileRow } from "@/components/growth/voice-manager";
 
 type Lang = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
-const TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "professional"];
+const TONES: ToneOption[] = [...PLAN_TONES];
+const planIdOf = (plan: string): PlanId => (plan === "PRO" || plan === "TEAM" ? plan : "FREE");
+// Voice menu sentinels (never profile ids, which are cuids).
+const VOICE_NONE = "";
+const VOICE_NEW = "__new";
+const VOICE_LOCKED = "__locked";
 const INTENSITIES: IntensityLevel[] = ["light", "medium", "heavy"];
 const LANGS: Lang[] = ["English", "French", "Spanish", "Arabic", "German", "Italian"];
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -42,10 +52,30 @@ export function DocumentEditor() {
   const [quotaHit, setQuotaHit] = useState(false);
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // Opened by a locked tone, voice or report: the modal says "Part of Pro", not "Nice work".
+  const [lockedFeature, setLockedFeature] = useState(false);
+  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [voices, setVoices] = useState<VoiceProfileRow[]>([]);
+  const [voiceId, setVoiceId] = useState(VOICE_NONE);
+  // Growth asks wait for a finished rewrite (ask after value): the email
+  // opt-in first, and the referral chip only when the opt-in isn't showing.
+  const [consentVisible, setConsentVisible] = useState<boolean | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { fetch("/api/user-plan").then((r) => r.json()).then((d) => setPlan(d.plan ?? "FREE")).catch(() => {}); }, []);
+  useEffect(() => {
+    fetch("/api/voice-profiles").then((r) => (r.ok ? r.json() : null))
+      .then((d: { profiles?: VoiceProfileRow[] } | null) => setVoices((d?.profiles ?? []).filter((v) => v.usable)))
+      .catch(() => {});
+  }, []);
+  // Back from a Word Pack checkout: the webhook credits the words a moment later.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("wordpack") === "1") {
+      toast.success("Thanks! Your word pack is on its way. It shows under the usage meter within a minute.");
+    }
+  }, []);
   useEffect(() => { if (screen === "edit") taRef.current?.focus(); }, [screen]);
   useEffect(() => () => { if (analyzeTimer.current) clearTimeout(analyzeTimer.current); }, []);
 
@@ -56,14 +86,6 @@ export function DocumentEditor() {
   const afterScore = useMemo(() => (humanized ? analyzeText(humanized).score : null), [humanized]);
   const canRun = words >= 5 && !busy;
   const canDetect = words >= 15 && !busy;
-
-  async function checkout() {
-    try {
-      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: "PRO" }) });
-      const d = (await res.json()) as { url?: string };
-      if (d.url) window.location.href = d.url;
-    } catch { /* ignore */ }
-  }
 
   // The instant engine is synchronous; we stage the reveal over ~1.5s so the
   // detection reads as deliberate work (scan animation), then show the panel.
@@ -84,22 +106,39 @@ export function DocumentEditor() {
       if (!aRes.ok) return fail(aRes.status, await aRes.json().catch(() => null));
       const aData = (await aRes.json()) as { documentId: string | null };
       if (!aData.documentId) { toast.error("Could not start — please try again."); return; }
-      const hRes = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: aData.documentId, tone, intensity, language: language !== "English" ? language : undefined }) });
+      const hRes = await fetch("/api/humanize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ documentId: aData.documentId, tone, intensity, voiceProfileId: voiceId || undefined, language: language !== "English" ? language : undefined }) });
       if (!hRes.ok) return fail(hRes.status, await hRes.json().catch(() => null));
       const hData = (await hRes.json()) as { humanizedText?: string };
       if (!hData.humanizedText) { toast.error("The rewrite returned no text. Your original is unchanged."); return; }
-      setOriginal(text); setHumanized(hData.humanizedText); setScreen("result"); setView("humanized");
+      setOriginal(text); setHumanized(hData.humanizedText); setDocumentId(aData.documentId); setScreen("result"); setView("humanized");
       toast.success("Humanized ✓");
     } catch { toast.error("Something went wrong. Please try again."); } finally { setBusy(false); }
   }
   function fail(status: number, body: { error?: { code?: string; message?: string } } | null) {
-    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); return; }
+    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); setUpgradeOpen(true); return; }
+    if (body?.error?.code === "TONE_LOCKED" || body?.error?.code === "VOICE_LOCKED") { setTone("standard"); setVoiceId(VOICE_NONE); openLocked(); }
     toast.error(body?.error?.message ?? "Something went wrong.");
   }
 
+  const planId = planIdOf(plan);
+  function openLocked() { setLockedFeature(true); setUpgradeOpen(true); }
+  function pickTone(v: string) {
+    // Locked tones stay visible (that's the upsell) but open the plan menu instead.
+    if (!isToneAllowed(planId, v)) { openLocked(); return; }
+    setTone(v as ToneOption);
+  }
+  function pickVoice(v: string) {
+    if (v === VOICE_LOCKED) { openLocked(); return; }
+    if (v === VOICE_NEW) { window.location.href = "/dashboard/voice"; return; }
+    setVoiceId(v);
+  }
+  const voiceOptions: { value: string; label: string }[] = planId === "FREE"
+    ? [{ value: VOICE_NONE, label: "None" }, { value: VOICE_LOCKED, label: "My voice (Pro)" }]
+    : [{ value: VOICE_NONE, label: "None" }, ...voices.map((v) => ({ value: v.id, label: v.name })), { value: VOICE_NEW, label: voices.length ? "Manage voices…" : "Create my voice…" }];
+
   function backToEdit() { if (analyzeTimer.current) clearTimeout(analyzeTimer.current); setScreen("edit"); }
   function edit() { if (humanized) setText(humanized); setScreen("edit"); }
-  function reset() { setText(""); setOriginal(null); setHumanized(null); setAnalysis(null); setScreen("edit"); setQuotaHit(false); }
+  function reset() { setText(""); setOriginal(null); setHumanized(null); setDocumentId(null); setAnalysis(null); setScreen("edit"); setQuotaHit(false); }
   function loadFromHistory(t: string) { setText(t); setOriginal(null); setHumanized(null); setAnalysis(null); setScreen("edit"); }
   function copy() { navigator.clipboard?.writeText(humanized ?? text); setCopied(true); toast.success("Copied"); }
   function download() {
@@ -125,8 +164,9 @@ export function DocumentEditor() {
             </button>
           )}
 
-          <Pick label="Tone" value={tone} options={TONES} onChange={(v) => setTone(v as ToneOption)} />
-          <Pick label="Strength" value={intensity} options={INTENSITIES} onChange={(v) => setIntensity(v as IntensityLevel)} />
+          <Pick label="Tone" value={tone} options={TONES.map((t) => ({ value: t, label: isToneAllowed(planId, t) ? cap(t) : `${cap(t)} (Pro)` }))} onChange={pickTone} />
+          <Pick label="Voice" value={voiceId} options={voiceOptions} onChange={pickVoice} />
+          <Pick label="Strength" value={intensity} options={INTENSITIES.map((i) => ({ value: i, label: cap(i) }))} onChange={(v) => setIntensity(v as IntensityLevel)} />
 
           <div style={{ flex: 1 }} />
 
@@ -143,6 +183,12 @@ export function DocumentEditor() {
           {screen === "result" && <>
             <IconBtn onClick={copy} title="Copy">{copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}</IconBtn>
             <IconBtn onClick={download} title="Download"><Download size={15} aria-hidden="true" /></IconBtn>
+            {documentId && (
+              <IconBtn title="Before/After Report" onClick={() => {
+                if (planId === "FREE") { openLocked(); return; }
+                window.open(`/dashboard/documents/${documentId}/report`, "_blank", "noopener");
+              }}><FileText size={15} aria-hidden="true" /></IconBtn>
+            )}
             <button onClick={edit} style={ghostBtn}><Pencil size={14} aria-hidden="true" /> Edit</button>
           </>}
 
@@ -175,7 +221,7 @@ export function DocumentEditor() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: THEME.radius, padding: "12px 16px", flexWrap: "wrap" }}>
             <Sparkles size={18} color={THEME.brandHi} aria-hidden="true" />
             <span style={{ fontSize: 14, color: THEME.text, flex: 1, minWidth: 200 }}>You&apos;ve hit your plan&apos;s limit. Upgrade to Pro for 50,000 words/month and unlimited rewrites.</span>
-            <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Upgrade <ArrowRight size={14} aria-hidden="true" /></button>
+            <button onClick={() => setUpgradeOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>See plans <ArrowRight size={14} aria-hidden="true" /></button>
           </div>
         </div>
       )}
@@ -217,6 +263,13 @@ export function DocumentEditor() {
         )}
 
         {screen === "result" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+            <EmailConsentCard onVisibleChange={setConsentVisible} />
+            {consentVisible === false && <ShareSuccessChip />}
+          </div>
+        )}
+
+        {screen === "result" && (
           <div style={{ fontSize: 17, lineHeight: 1.85, color: THEME.text, whiteSpace: "pre-wrap", minHeight: "62vh" }}>
             {view === "original" && original}
             {view === "humanized" && highlightChanges(original ?? "", humanized ?? "").map((seg, i) => (
@@ -242,6 +295,7 @@ export function DocumentEditor() {
       </div>
 
       <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} onOpen={loadFromHistory} />
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => { setUpgradeOpen(false); setLockedFeature(false); }} currentPlan={plan} trigger={quotaHit ? "quota" : lockedFeature ? "feature" : "upgrade"} />
     </div>
   );
 }
@@ -259,13 +313,13 @@ function Dot({ delay }: { delay: string }) {
   return <span className="pulse-dot" style={{ width: 5, height: 5, borderRadius: 999, background: THEME.brand, animationDelay: delay }} />;
 }
 
-function Pick({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
+function Pick({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void }) {
   return (
     <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: THEME.textMuted }}>
       <span className="ws-pick-label">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}
         style={{ fontSize: 13, color: THEME.text, background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: 8, padding: "7px 10px", fontFamily: THEME.fontSans, cursor: "pointer" }}>
-        {options.map((o) => <option key={o} value={o}>{cap(o)}</option>)}
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </label>
   );

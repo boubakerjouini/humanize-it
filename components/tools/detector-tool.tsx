@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
+import { ReportCapture, buildReportContext } from "@/components/growth/report-capture";
 import { THEME, glow } from "@/lib/theme";
+
+const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
 const SEVERITY_COLOR: Record<string, string> = {
   high: THEME.warn,
@@ -25,9 +29,11 @@ interface DeepScan {
 const DEEP_MIN_WORDS = 25;
 
 /**
- * Free, no-signup AI detector. Runs the same 40-pattern analyzeText() engine
- * the product uses — entirely client-side, so there is zero server/LLM cost and
- * pasted text never leaves the browser. Shows the full transparent breakdown
+ * Free, no-signup AI detector. The instant check runs the same 40-pattern
+ * analyzeText() engine the product uses entirely client-side, so the pasted
+ * text stays in the browser. Only the optional deep scan sends the text to
+ * /api/detect (and on to the AI provider). The emailed report carries scores
+ * and pattern labels, never the text. Shows the full transparent breakdown
  * competitors hide, then converts to the humanizer / signup.
  */
 export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: string }) {
@@ -35,11 +41,18 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [deep, setDeep] = useState<DeepScan | null>(null);
   const [deepLoading, setDeepLoading] = useState(false);
-  const [deepError, setDeepError] = useState<string | null>(null);
+  const [deepError, setDeepError] = useState<{ message: string; code?: string } | null>(null);
 
   const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const canAnalyze = words >= 5;
   const triggered = result?.patterns.filter((p) => p.hits > 0) ?? [];
+  const reportContext = useMemo(
+    () =>
+      result
+        ? buildReportContext({ instantScore: result.score, patterns: result.patterns, wordCount: result.wordCount, deep })
+        : null,
+    [result, deep]
+  );
 
   function runInstant() {
     setDeep(null);
@@ -59,12 +72,12 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
       });
       const data = await res.json();
       if (!res.ok) {
-        setDeepError(data?.error?.message ?? "Deep scan failed. Please try again.");
+        setDeepError({ message: data?.error?.message ?? "Deep scan failed. Please try again.", code: data?.error?.code });
         return;
       }
       setDeep(data as DeepScan);
     } catch {
-      setDeepError("Couldn't reach the deep scan. Check your connection and try again.");
+      setDeepError({ message: "Couldn't reach the deep scan. Check your connection and try again." });
     } finally {
       setDeepLoading(false);
     }
@@ -156,7 +169,17 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
             )}
 
             {deepError && (
-              <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>{deepError}</p>
+              <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>
+                {deepError.message}
+                {deepError.code === "DAILY_LIMIT_REACHED" ? (
+                  <>
+                    {" "}
+                    <Link href="/sign-up" style={{ color: THEME.brandHi, fontWeight: 600 }}>
+                      Create a free account &rarr;
+                    </Link>
+                  </>
+                ) : null}
+              </p>
             )}
 
             {deep && (
@@ -215,8 +238,12 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
               </div>
             </div>
           )}
+
+          {reportContext && <ReportCapture context={reportContext} />}
         </div>
       )}
+
+      <ExitIntent variant="magnet" magnet="ai-detection-field-guide" suppress={deepLoading} />
     </div>
   );
 }

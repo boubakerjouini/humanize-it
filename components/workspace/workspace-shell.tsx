@@ -4,8 +4,13 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight } from "lucide-react";
+import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight, Gift, AudioLines } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
+import { FoundingBadge } from "@/components/growth/founding-badge";
+import { useOffers } from "@/components/growth/founding-offers";
 
 interface PlanInfo {
   plan: string;
@@ -17,6 +22,8 @@ interface Usage {
   wordsUsed: number;
   wordsLimit: number; // -1 = unlimited
   quotaResetAt: string | null;
+  /** Bonus words drawn after the plan allowance (referrals, word packs). */
+  bonusWords?: number;
 }
 
 const PLAN_META: Record<string, { label: string; icon: typeof Crown; }> = {
@@ -29,7 +36,11 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [info, setInfo] = useState<PlanInfo>({ plan: "FREE", isAdmin: false, organization: null });
   const [usage, setUsage] = useState<Usage | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  // Null while the referral program is off: the invite entry stays hidden.
+  const referral = useReferralInfo();
+  const founding = useOffers()?.founding.member ?? false;
 
   useEffect(() => {
     fetch("/api/user-plan").then((r) => r.json()).then((d) => setInfo({ plan: d.plan ?? "FREE", isAdmin: !!d.isAdmin, organization: d.organization ?? null })).catch(() => {});
@@ -38,6 +49,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/dashboard", label: "Humanize", icon: Wand2, exact: true },
+    { href: "/dashboard/voice", label: "Voice", icon: AudioLines },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
   if (info.plan === "TEAM" || info.organization) nav.push({ href: "/dashboard/organization", label: "Organization", icon: Building2, exact: false });
@@ -47,19 +59,15 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const planMeta = PLAN_META[info.plan] ?? PLAN_META.FREE;
   const isFree = info.plan === "FREE";
 
-  async function upgrade() {
-    setUpgrading(true);
-    try {
-      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: "PRO" }) });
-      const data = (await res.json()) as { url?: string };
-      if (data.url) window.location.href = data.url;
-    } catch { /* ignore */ } finally { setUpgrading(false); }
-  }
+  // The plan menu (monthly or annual) rather than a straight monthly checkout.
+  const upgrade = () => setUpgradeOpen(true);
+  const bonusWords = usage?.bonusWords ?? 0;
 
   const pct = usage && usage.wordsLimit > 0 ? Math.min(100, Math.round((usage.wordsUsed / usage.wordsLimit) * 100)) : 0;
   const wordsLeft = usage && usage.wordsLimit > 0 ? Math.max(0, usage.wordsLimit - usage.wordsUsed) : null;
 
-  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+  // Render helpers (not components): defining components inside render remounts them every time.
+  const renderNavLinks = (onNavigate?: () => void) => (
     <>
       {nav.map(({ href, label, icon: Icon, exact }) => {
         const active = isActive(href, exact);
@@ -80,7 +88,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     </>
   );
 
-  const PlanCard = () => (
+  const renderPlanCard = () => (
     <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
       {usage && (
         <div>
@@ -91,17 +99,32 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <div style={{ height: 5, background: THEME.surface3, borderRadius: 999 }}>
             <div style={{ height: 5, width: `${pct}%`, background: pct > 90 ? THEME.warn : THEME.brand, borderRadius: 999, transition: "width .4s ease" }} />
           </div>
+          {bonusWords > 0 && (
+            <div className="tnum" style={{ fontSize: 11, color: THEME.accentHi, fontWeight: 600, marginTop: 5 }}>
+              {`+${bonusWords.toLocaleString("en-US")} bonus words`}
+            </div>
+          )}
         </div>
       )}
+      {referral && (
+        <button onClick={() => setInviteOpen(true)}
+          style={{ display: "flex", alignItems: "center", gap: 8, background: THEME.accentDim, color: THEME.accentHi, border: `1px solid ${THEME.accent}33`, borderRadius: 9, padding: "8px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: THEME.fontSans, textAlign: "left" }}>
+          <Gift size={14} aria-hidden="true" />
+          {`Invite friends · +${referral.rewardWords.toLocaleString("en-US")} words`}
+        </button>
+      )}
       {isFree ? (
-        <button onClick={upgrade} disabled={upgrading}
+        <button onClick={upgrade}
           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28), fontFamily: THEME.fontSans }}>
-          {upgrading ? "Loading…" : <>Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" /></>}
+          Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
         </button>
       ) : (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
-          <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
+            <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+          </div>
+          {founding && <FoundingBadge />}
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 8px", borderRadius: 10, background: THEME.surface2, border: `1px solid ${THEME.border}` }}>
@@ -120,9 +143,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <span style={{ fontSize: 15, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>HumanizeIt</span>
         </Link>
         <nav style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
-          <NavLinks />
+          {renderNavLinks()}
         </nav>
-        <PlanCard />
+        {renderPlanCard()}
       </aside>
 
       {/* Mobile top bar */}
@@ -131,7 +154,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <span style={{ fontSize: 18, fontWeight: 800, color: THEME.brand, fontFamily: THEME.fontHeading }}>H<span style={{ color: THEME.accent }}>.</span></span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {isFree && <button onClick={upgrade} disabled={upgrading} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
+          {isFree && <button onClick={upgrade} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>
@@ -140,6 +163,19 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       <main style={{ flex: 1, minWidth: 0 }} className="ws-main-pad">
         {children}
       </main>
+
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={info.plan} />
+      {referral && (
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogContent style={{ background: THEME.surface2, fontFamily: THEME.fontSans }}>
+            <DialogTitle style={{ fontFamily: THEME.fontHeading, color: THEME.text }}>Invite friends</DialogTitle>
+            <DialogDescription style={{ color: THEME.textDim }}>
+              {`When a friend signs up with your link and runs their first check, you each get ${referral.rewardWords.toLocaleString("en-US")} bonus words.`}
+            </DialogDescription>
+            <ReferralCard info={referral} compact />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Mobile bottom tabs */}
       <nav className="ws-bottomnav" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40, height: 60, background: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)", borderTop: `1px solid ${THEME.border}` }}>

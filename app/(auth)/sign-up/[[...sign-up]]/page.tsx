@@ -1,6 +1,15 @@
+// ===========================================================
+// /sign-up — Clerk sign-up, plus what we'll email (account mail only; tips
+// are opt-in later) and, while the referral program is on, a note for
+// visitors who arrive with a valid ?ref= code.
+// ===========================================================
+
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { normalizeRef } from "@/lib/growth/attribution";
+import { referralsEnabled } from "@/lib/growth/flags";
+import { REFERRAL_REWARD_WORDS } from "@/lib/growth/referral-rules";
 
 const clerkAppearance = {
   variables: {
@@ -56,7 +65,11 @@ const clerkAppearance = {
   },
 };
 
-export default function SignUpPage() {
+type Props = { searchParams: Promise<{ ref?: string | string[] }> };
+
+export default async function SignUpPage({ searchParams }: Props) {
+  const { ref } = await searchParams;
+  const invited = referralsEnabled() && normalizeRef(typeof ref === "string" ? ref : null) !== undefined;
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -85,9 +98,28 @@ export default function SignUpPage() {
           fontFamily: THEME.fontHeading, letterSpacing: "-0.01em",
         }}>HumanizeIt</span>
       </div>
+      {invited ? (
+        <div
+          role="note"
+          style={{
+            position: "relative", zIndex: 1, maxWidth: "400px", margin: "0 16px 16px", padding: "12px 16px",
+            background: THEME.accentDim, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius,
+            fontSize: "14px", color: THEME.text, lineHeight: 1.5, textAlign: "center",
+          }}
+        >
+          {`You were invited: you and your friend each get ${REFERRAL_REWARD_WORDS.toLocaleString("en-US")} bonus words after your first document.`}
+        </div>
+      ) : null}
       <div style={{ position: "relative", zIndex: 1 }}>
         <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
       </div>
+      <p style={{
+        position: "relative", zIndex: 1, maxWidth: "400px", margin: "16px 16px 0", textAlign: "center",
+        fontSize: "13px", color: THEME.textDim, lineHeight: 1.5,
+      }}>
+        We&apos;ll email you about your account. Tips and offers are opt-in: you choose in your dashboard.{" "}
+        <Link href="/privacy" style={{ color: THEME.brandHi }}>Privacy Policy</Link>
+      </p>
       <Link href="/" style={{
         fontSize: "13px", color: THEME.textDim, textDecoration: "none", marginTop: "20px",
         position: "relative", zIndex: 1, fontWeight: 500,

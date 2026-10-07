@@ -1,5 +1,6 @@
 // ===========================================================
-// GET    /api/admin/users/[id]  — full customer 360 (admin only)
+// GET    /api/admin/users/[id]  — full customer 360 (admin only), with the CRM
+//                                 slice (contact, emails, enrollments, timeline)
 // PATCH  /api/admin/users/[id]  — actions: setPlan | grant | setRole | resetQuota
 // DELETE /api/admin/users/[id]  — delete a customer
 // ===========================================================
@@ -9,6 +10,9 @@ import { db } from "@/lib/db";
 import { requireAdmin, isAdminEmail } from "@/lib/admin";
 import { resolveIdentities } from "@/lib/clerk-identity";
 import { logAudit } from "@/lib/audit";
+import { runAfter } from "@/lib/growth/safe";
+import { onUserDeleted, trackAdminPlanChange } from "@/lib/crm/hooks";
+import { loadCustomerCrm } from "@/lib/crm/contact-360";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -39,10 +43,12 @@ export async function GET(_req: Request, { params }: Ctx) {
 
     // CRM extras live in newer tables that may not exist in every environment
     // yet — fetch defensively so a missing table degrades to empty, never a 500.
-    const [notes, tagRows, audit] = await Promise.all([
+    const [notes, tagRows, audit, crm] = await Promise.all([
       db.adminNote.findMany({ where: { subjectId: id }, orderBy: { createdAt: "desc" } }).catch(() => []),
       db.userTag.findMany({ where: { userId: id }, include: { tag: true } }).catch(() => []),
       db.auditLog.findMany({ where: { targetType: "user", targetId: id }, orderBy: { createdAt: "desc" }, take: 40 }).catch(() => []),
+      // Each CRM read is its own query with a fallback (loadCustomerCrm never throws).
+      loadCustomerCrm(id).catch(() => ({ contact: null, emails: [], enrollments: [], timeline: [], emailCounts: null })),
     ]);
 
     return NextResponse.json({
@@ -69,6 +75,11 @@ export async function GET(_req: Request, { params }: Ctx) {
       notes,
       tags: tagRows.map((t) => t.tag),
       audit,
+      contact: crm.contact,
+      emails: crm.emails,
+      enrollments: crm.enrollments,
+      timeline: crm.timeline,
+      emailCounts: crm.emailCounts,
     });
   } catch (err) {
     return adminError(err);
@@ -89,6 +100,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
         if (!body.plan || !["FREE", "PRO", "TEAM"].includes(body.plan)) return NextResponse.json({ error: { message: "Invalid plan." } }, { status: 400 });
         await db.user.update({ where: { id }, data: { plan: body.plan as "FREE" | "PRO" | "TEAM", planExpiresAt: null } });
         await logAudit({ actorEmail: admin.email, action: "user.plan.set", targetType: "user", targetId: id, summary: `Plan → ${body.plan} (no expiry)` });
+        const plan = body.plan;
+        runAfter("admin-plan-change", () => trackAdminPlanChange(id, { action: "setPlan", plan, actor: admin.email }));
         break;
       }
       case "grant": {
@@ -97,6 +110,8 @@ export async function PATCH(req: Request, { params }: Ctx) {
         const planExpiresAt = days ? new Date(Date.now() + days * 86_400_000) : null;
         await db.user.update({ where: { id }, data: { plan: body.plan as "PRO" | "TEAM", planExpiresAt } });
         await logAudit({ actorEmail: admin.email, action: "user.grant", targetType: "user", targetId: id, summary: `Granted ${body.plan}${days ? ` for ${days}d` : " (lifetime)"}` });
+        const plan = body.plan;
+        runAfter("admin-plan-change", () => trackAdminPlanChange(id, { action: "grant", plan, days, actor: admin.email }));
         break;
       }
       case "setRole": {
@@ -135,6 +150,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     if (!target) return NextResponse.json({ error: { message: "User not found." } }, { status: 404 });
     if (isAdminEmail(target.email)) return NextResponse.json({ error: { message: "Allow-listed admins can't be deleted here." } }, { status: 400 });
 
+    // Before the cascade removes the contact: keep hashed suppressions so the
+    // address is never emailed again (withdrawn consent, bounces, complaints).
+    await onUserDeleted({ userId: id, actor: admin.email });
     await db.user.delete({ where: { id } });
     await logAudit({ actorEmail: admin.email, action: "user.delete", targetType: "user", targetId: id, summary: `Deleted ${target.email}` });
     return NextResponse.json({ ok: true });

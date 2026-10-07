@@ -6,6 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
+import { trackRedemption } from "@/lib/crm/hooks";
+import { runAfter } from "@/lib/growth/safe";
 
 const PLAN_WORDS_LIMIT: Record<string, number> = {
   PRO: 50_000,
@@ -118,6 +120,10 @@ export async function POST(req: Request) {
         { status: 409 }
       );
     }
+
+    runAfter("redemption", () =>
+      trackRedemption(user.id, { code, plan: newPlan, planExpiresAt, grantDays: discountCode.grantDays ?? null })
+    );
 
     return NextResponse.json({
       success: true,
