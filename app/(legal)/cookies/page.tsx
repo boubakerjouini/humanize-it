@@ -6,6 +6,7 @@
 // ===========================================================
 
 import { THEME } from "@/lib/theme";
+import { AttributionOptOut } from "@/components/growth/attribution-opt-out";
 
 export const metadata = {
   title: 'Cookie Policy — HumanizeIt',
@@ -68,7 +69,9 @@ export default function CookiesPage() {
 
       <Section title="3. Attribution Cookies">
         <p style={{ marginBottom: '12px' }}>hz_ft and hz_lt are set by our own site and read only by it. They don&apos;t track you across other websites. When you sign up or give us your email on a form, their contents are copied to your record so we can see which pages and sources bring people to HumanizeIt (see the <a href="/privacy" style={{ color: THEME.brandHi }}>Privacy Policy</a>).</p>
-        <p>If your browser sends a Global Privacy Control signal, we don&apos;t set them.</p>
+        <p style={{ marginBottom: '12px' }}>We don&apos;t set them, and delete any set earlier, when your device&apos;s time zone is in the EU, the EEA, the UK or Switzerland, or when your browser sends a Global Privacy Control signal.</p>
+        <p>Anywhere else, you can refuse them on this browser with the button below. Signing in, the free tools and everything else work the same without them.</p>
+        <AttributionOptOut />
       </Section>
 
       <Section title="4. Browser Storage">

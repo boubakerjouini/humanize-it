@@ -373,3 +373,47 @@ export function touchToFirstTouchFields(t: Touch) {
     firstTouchAt: new Date(t.ts),
   };
 }
+
+// ── Consent region ──────────────────────────────────────────────────────────
+
+/**
+ * Time zones outside Europe/* that are in the EU, EEA, UK or Switzerland
+ * (islands and overseas regions). Europe/* also covers a few non-EU countries,
+ * which errs on the side of setting fewer cookies.
+ */
+const CONSENT_REGION_ZONES: ReadonlySet<string> = new Set([
+  "Arctic/Longyearbyen",
+  "Asia/Famagusta",
+  "Asia/Nicosia",
+  "Atlantic/Azores",
+  "Atlantic/Canary",
+  "Atlantic/Faroe",
+  "Atlantic/Madeira",
+  "Atlantic/Reykjavik",
+  "America/Cayenne",
+  "America/Guadeloupe",
+  "America/Marigot",
+  "America/Martinique",
+  "America/St_Barthelemy",
+  "Indian/Mayotte",
+  "Indian/Reunion",
+]);
+
+/**
+ * Is a device in the EU, EEA, UK or Switzerland, judged by its time zone?
+ * There, ePrivacy rules need opt-in consent for non-essential cookies and the
+ * site has no consent banner, so attribution cookies are not set at all. An
+ * unknown zone counts as yes (fewer cookies, never more).
+ */
+export function isConsentRegionTimeZone(timeZone: string | null | undefined): boolean {
+  if (!timeZone) return true;
+  return timeZone.startsWith("Europe/") || CONSENT_REGION_ZONES.has(timeZone);
+}
+
+/** localStorage key a visitor sets from /cookies to refuse attribution cookies. */
+export const ATTRIBUTION_OPT_OUT_KEY = "hz_attr_optout";
+
+/** A cookie string that deletes an attribution cookie. */
+export function clearTouchCookie(name: string, secure: boolean): string {
+  return `${name}=; Max-Age=0; Path=/; SameSite=Lax${secure ? "; Secure" : ""}`;
+}

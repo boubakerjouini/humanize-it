@@ -1,4 +1,5 @@
 import {
+  isConsentRegionTimeZone,
   buildTouch,
   classifyChannel,
   decodeTouch,
@@ -266,5 +267,19 @@ describe("cookie helpers and contact mapping", () => {
       refCode: "K7M2P9QR",
       firstTouchAt: new Date(NOW),
     });
+  });
+});
+
+describe("isConsentRegionTimeZone", () => {
+  it("covers Europe, the EU islands and overseas regions, and unknown zones", () => {
+    for (const tz of ["Europe/Paris", "Europe/London", "Europe/Zurich", "Atlantic/Canary", "Asia/Nicosia", "Indian/Reunion", null, ""]) {
+      expect(isConsentRegionTimeZone(tz)).toBe(true);
+    }
+  });
+
+  it("leaves the rest of the world alone", () => {
+    for (const tz of ["America/New_York", "Africa/Tunis", "Asia/Kolkata", "Australia/Sydney"]) {
+      expect(isConsentRegionTimeZone(tz)).toBe(false);
+    }
   });
 });
