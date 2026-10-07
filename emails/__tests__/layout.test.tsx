@@ -2,7 +2,8 @@ import { render } from "react-email";
 import { EmailLayout, PlainLayout } from "@/emails/components/layout";
 import { Button, Greeting, P } from "@/emails/components/primitives";
 import { TemplateNotImplementedError, buildRenderCtx, reasonFor, renderEmail } from "@/lib/email/render";
-import { TEMPLATE_KEYS } from "@/lib/email/catalog";
+import { TEMPLATE_KEYS, type TemplateKey } from "@/lib/email/catalog";
+import { getTemplate } from "@/emails/registry";
 
 const savedEnv = { ...process.env };
 
@@ -83,9 +84,14 @@ describe("render context", () => {
 });
 
 describe("renderEmail", () => {
-  it("throws TemplateNotImplementedError until a stream registers the template", async () => {
+  it("throws TemplateNotImplementedError for a key with no registered template", async () => {
     const ctx = buildRenderCtx({ contactId: "c1", template: "welcome" });
-    await expect(renderEmail("welcome", {}, ctx)).rejects.toBeInstanceOf(TemplateNotImplementedError);
+    await expect(renderEmail("not_a_template" as TemplateKey, {} as never, ctx)).rejects.toBeInstanceOf(TemplateNotImplementedError);
+  });
+
+  it("has a registered template for every catalog key", () => {
+    // A catalog key without a template would only fail at send time, as a deferred 'error'.
     expect(TEMPLATE_KEYS.length).toBeGreaterThan(20);
+    expect(TEMPLATE_KEYS.filter((key) => !getTemplate(key))).toEqual([]);
   });
 });

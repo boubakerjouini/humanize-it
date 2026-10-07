@@ -3,6 +3,8 @@ import type { Config } from "jest";
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
+  // tests/ holds the Playwright e2e suite (npx playwright test), which jest can't run.
+  testPathIgnorePatterns: ["/node_modules/", "<rootDir>/tests/", "<rootDir>/.next/"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
