@@ -49,6 +49,7 @@ function asProps(value: unknown): Props {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Props) : {};
 }
 
+const CHANNEL_NAMES: Record<string, string> = { whatsapp: "WhatsApp", linkedin: "LinkedIn", dm: "DM", in_person: "in person" };
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : null);
 const humanize = (s: string) => s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 const stageLabel = (s: unknown) => (isStage(s) ? STAGE_LABELS[s] : str(s) ?? "?");
@@ -86,7 +87,7 @@ export function describeEvent(type: string, rawProps: unknown): { title: string;
       return { title: `Pipeline: ${humanize(str(p.from) ?? "none")} → ${humanize(str(p.to) ?? "none")}`, detail: null };
     case "outreach_touch":
       return {
-        title: `Outreach touch via ${humanize(str(p.channel) ?? "unknown")}`,
+        title: `Outreach touch via ${CHANNEL_NAMES[str(p.channel) ?? ""] ?? humanize(str(p.channel) ?? "unknown")}`,
         detail: [str(p.outcome) && humanize(String(p.outcome)), str(p.script) && `script ${p.script}`, str(p.note)].filter(Boolean).join(" · ") || null,
       };
     case "note":
@@ -101,6 +102,9 @@ export function describeEvent(type: string, rawProps: unknown): { title: string;
       return { title: humanize(type), detail: propsDetail(p) };
   }
 }
+
+/** Admin actions the timeline already shows as their own event; their audit rows would be duplicates. */
+const AUDIT_SHOWN_AS_EVENT = new Set(["contact.touch", "contact.pipeline.set", "contact.stage.override", "note.add", "contact.bonus.grant"]);
 
 const CONSENT_ACTION: Record<string, string> = { grant: "Subscribed to", confirm: "Confirmed", withdraw: "Unsubscribed from" };
 
@@ -163,7 +167,7 @@ export async function loadTimeline(contactId: string, opts: { userId?: string | 
       detail: t.ruleKey ? `rule ${t.ruleKey}` : null,
       actor: t.completedBy,
     })),
-    ...audits.map((a) => ({ id: `au_${a.id}`, at: a.createdAt, kind: "audit" as const, type: a.action, title: a.summary || a.action, detail: a.action, actor: a.actorEmail })),
+    ...audits.filter((a) => !AUDIT_SHOWN_AS_EVENT.has(a.action)).map((a) => ({ id: `au_${a.id}`, at: a.createdAt, kind: "audit" as const, type: a.action, title: a.summary || a.action, detail: a.action, actor: a.actorEmail })),
   ];
   return items.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
 }
