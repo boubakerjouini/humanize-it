@@ -4,11 +4,13 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight, Gift } from "lucide-react";
+import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight, Gift, AudioLines } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
+import { FoundingBadge } from "@/components/growth/founding-badge";
+import { useOffers } from "@/components/growth/founding-offers";
 
 interface PlanInfo {
   plan: string;
@@ -38,6 +40,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   // Null while the referral program is off: the invite entry stays hidden.
   const referral = useReferralInfo();
+  const founding = useOffers()?.founding.member ?? false;
 
   useEffect(() => {
     fetch("/api/user-plan").then((r) => r.json()).then((d) => setInfo({ plan: d.plan ?? "FREE", isAdmin: !!d.isAdmin, organization: d.organization ?? null })).catch(() => {});
@@ -46,6 +49,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const nav = [
     { href: "/dashboard", label: "Humanize", icon: Wand2, exact: true },
+    { href: "/dashboard/voice", label: "Voice", icon: AudioLines },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];
   if (info.plan === "TEAM" || info.organization) nav.push({ href: "/dashboard/organization", label: "Organization", icon: Building2, exact: false });
@@ -115,9 +119,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
         </button>
       ) : (
-        <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
-          <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
-          <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
+            <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+          </div>
+          {founding && <FoundingBadge />}
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 8px", borderRadius: 10, background: THEME.surface2, border: `1px solid ${THEME.border}` }}>
