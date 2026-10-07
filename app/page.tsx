@@ -169,7 +169,7 @@ function planCards(annual: boolean): PlanCard[] {
         `PDF and Word upload (up to ${fmtInt(PRO_PLAN.uploadMaxWords)} words, ${PRO_PLAN.uploadMonthlyLimit} a month)`,
         "Before/After Report for every document",
         `${PRO_PLAN.historyDays}-day history, API access (${fmtInt(PRO_PLAN.apiRequestsLimit)} requests a month)`,
-        `Bonus: Founder's First-Document Review (${FOUNDER_SERVICES.founder_review.monthlyCap} a month)`,
+        `Bonus: one Founder's First-Document Review (open to ${FOUNDER_SERVICES.founder_review.monthlyCap} customers a month)`,
       ],
       cta: annual ? "Start Pro annual" : "Start Pro",
       pro: true,
@@ -184,8 +184,7 @@ function planCards(annual: boolean): PlanCard[] {
         `All ${TEAM_PLAN.toneOptions} tones, ${TEAM_PLAN.voiceProfiles} Voice Profiles (one per client)`,
         `Uploads up to ${fmtInt(TEAM_PLAN.uploadMaxWords)} words, ${TEAM_PLAN.uploadMonthlyLimit} a month`,
         `Unlimited history, API access (${fmtInt(TEAM_PLAN.apiRequestsLimit)} requests a month)`,
-        `Bonus: 30-minute Workflow Setup with the founder (${FOUNDER_SERVICES.team_setup.monthlyCap} a month)`,
-        `Seats for teammates: $${ORG_SEAT.pricePerSeatMonthly} each a month (${ORG_SEAT.minSeats} minimum), +${fmtInt(ORG_SEAT.wordsPerSeat)} pooled words per seat`,
+        `Bonus: one 30-minute Workflow Setup with the founder (open to ${FOUNDER_SERVICES.team_setup.monthlyCap} teams a month)`,
       ],
       cta: "Start Team",
       pro: false,
@@ -919,20 +918,7 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Beta badge */}
-          <div style={{ textAlign: "center", marginBottom: "28px" }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
-              fontSize: "12px", fontWeight: 500,
-              color: THEME.warn,
-              background: THEME.warnDim,
-              border: `1px solid ${THEME.warn}26`,
-              padding: "5px 14px", borderRadius: "999px",
-            }}>
-              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.warn, display: "inline-block" }} />
-              Currently in Beta — Paid plans coming soon
-            </span>
-          </div>
+          <div style={{ marginBottom: "28px" }} />
 
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", alignItems: "stretch" }}>
             {plans.map((plan, i) => (
@@ -1021,6 +1007,11 @@ export default function LandingPage() {
             ))}
           </div>
 
+          {/* Organizations are their own per-seat product, not a Team add-on (lib/plans.ts ORG_SEAT). */}
+          <p style={{ textAlign: "center", fontSize: "14px", color: THEME.textDim, lineHeight: 1.65, margin: "20px auto 0", maxWidth: "640px" }}>
+            <strong style={{ color: THEME.text }}>Teams of {ORG_SEAT.minSeats} or more:</strong> an organization at ${ORG_SEAT.pricePerSeatMonthly} per seat a month ({ORG_SEAT.minSeats} seats minimum), with {fmtInt(ORG_SEAT.wordsPerSeat)} pooled words per seat and Team features for every member.
+          </p>
+
           {/* Guarantee: one policy everywhere (lib/plans.ts, /refunds) */}
           <div className="panel" style={{ display: "flex", gap: "14px", alignItems: "flex-start", borderRadius: THEME.radiusLg, padding: "18px 20px", marginTop: "24px" }}>
             <ShieldCheck size={22} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0, marginTop: "2px" }} />
@@ -1039,7 +1030,7 @@ export default function LandingPage() {
               For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
             </p>
             <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
-              See how many are left <ArrowRight size={14} aria-hidden="true" />
+              See Founding {FOUNDING.seats} <ArrowRight size={14} aria-hidden="true" />
             </Link>
           </div>
         </div>
