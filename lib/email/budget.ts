@@ -5,7 +5,7 @@
 // (welcome, magnet delivery) may use the whole cap; bulk sends (cron,
 // campaigns) stop 20 short so a busy campaign day can't block a signup's
 // welcome email. Support mail forwarded to the founder (lib/email/inbound.ts)
-// goes through the same Resend account, so successful forwards count too.
+// goes through the same Resend account, so each forward's recipients count too.
 // ===========================================================
 
 import { db } from "@/lib/db";
@@ -20,7 +20,7 @@ export function utcMidnight(at: Date = new Date()): Date {
   return new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
 }
 
-/** Support-mail forwards that Resend accepted today (UTC). */
+/** Recipients of the support-mail forwards Resend accepted today (UTC): its quota counts recipients. */
 export async function forwardsToday(now: Date = new Date()): Promise<number> {
   const row = await db.dailyMetric.findUnique({
     where: { day_key: { day: utcMidnight(now), key: "inbound.forwarded" } },

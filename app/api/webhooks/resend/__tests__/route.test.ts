@@ -1,7 +1,8 @@
 // The Resend webhook end to end with a real svix signature: missing headers and
 // bad signatures are refused before any database work, a permanent bounce
-// suppresses the address and stops sequences, and a replayed delivery is a
-// no-op thanks to the WebhookEvent ledger.
+// suppresses the address and stops sequences, a replayed delivery is a no-op
+// thanks to the WebhookEvent ledger, and a support forward that bounces is
+// written on its task without touching any customer state.
 
 jest.mock("@/lib/db", () => {
   const state = {
@@ -57,14 +58,17 @@ jest.mock("@/lib/db", () => {
 jest.mock("@/lib/crm/consent", () => ({ withdrawTopics: jest.fn(async () => ({ withdrawn: [] })) }));
 jest.mock("@/lib/crm/recompute", () => ({ recomputeContact: jest.fn(async () => null) }));
 jest.mock("@/lib/growth/triggers", () => ({ onEmailBounced: jest.fn(async () => {}) }));
-jest.mock("@/lib/email/inbound", () => ({ forwardInbound: jest.fn(async () => ({ status: "forwarded", forwardId: "fwd_1" })) }));
+jest.mock("@/lib/email/inbound", () => ({
+  forwardInbound: jest.fn(async () => ({ status: "forwarded", forwardId: "fwd_1" })),
+  noteForwardNotDelivered: jest.fn(async () => {}),
+}));
 
 import { Webhook } from "svix";
 import * as dbModule from "@/lib/db";
 import { POST } from "@/app/api/webhooks/resend/route";
 import { onEmailBounced } from "@/lib/growth/triggers";
 import { withdrawTopics } from "@/lib/crm/consent";
-import { forwardInbound } from "@/lib/email/inbound";
+import { forwardInbound, noteForwardNotDelivered } from "@/lib/email/inbound";
 
 type State = {
   ledger: Set<string>;
@@ -141,8 +145,8 @@ describe("POST /api/webhooks/resend: email.received (support inbox)", () => {
     expect(forwardInbound).not.toHaveBeenCalled();
   });
 
-  it("forwards when from is missing (read from Resend) and accepts `to` as a string", async () => {
-    const res = await signed("msg_in6", { ...received, data: { email_id: "in_6", to: "support@humanizeit.app" } });
+  it("forwards when from and subject are missing (both are read from Resend)", async () => {
+    const res = await signed("msg_in6", { ...received, data: { email_id: "in_6" } });
     expect(res.status).toBe(200);
     expect(forwardInbound).toHaveBeenCalledWith({ emailId: "in_6", from: null, subject: null });
   });
@@ -173,6 +177,38 @@ describe("POST /api/webhooks/resend: delivery events of support forwards", () =>
     expect(state.calls).toEqual([]);
     expect(state.suppressions).toEqual([]);
     expect(withdrawTopics).not.toHaveBeenCalled();
+    expect(noteForwardNotDelivered).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["email.bounced", "bounced"],
+    ["email.failed", "failed"],
+    ["email.suppressed", "suppressed"],
+  ])("writes a %s forward back on its task, without touching customer state", async (type, failure) => {
+    const evt = {
+      type,
+      created_at: "2026-10-07T08:00:00.000Z",
+      data: { email_id: "fwd_1", to: ["founder@gmail.com"], tags: { stream: "inbound_forward", inbound: "in_1" }, bounce: { type: "Permanent" } },
+    };
+    const res = await signed(`msg_fwd_${failure}`, evt);
+    expect(res.status).toBe(200);
+    expect(noteForwardNotDelivered).toHaveBeenCalledWith("in_1", failure);
+    expect(state.calls).toEqual([]);
+    expect(state.suppressions).toEqual([]);
+    expect(onEmailBounced).not.toHaveBeenCalled();
+  });
+
+  it("still raises the alert when the inbound tag is missing or malformed", async () => {
+    const evt = { type: "email.bounced", data: { email_id: "fwd_1", tags: [{ name: "stream", value: "inbound_forward" }, { name: "inbound", value: "in_1\r\nx" }] } };
+    expect((await signed("msg_fwd_bad", evt)).status).toBe(200);
+    expect(noteForwardNotDelivered).toHaveBeenCalledWith(null, "bounced");
+  });
+
+  it("ignores a delivered forward", async () => {
+    const evt = { type: "email.delivered", data: { email_id: "fwd_1", tags: { stream: "inbound_forward", inbound: "in_1" } } };
+    expect((await signed("msg_fwd_ok", evt)).status).toBe(200);
+    expect(noteForwardNotDelivered).not.toHaveBeenCalled();
+    expect(state.calls).toEqual([]);
   });
 });
 

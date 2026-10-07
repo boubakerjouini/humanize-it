@@ -1,6 +1,7 @@
 // Pure rules of the support inbox: address parsing that a display name can't
-// fool, forward targets, machine-mail detection, and the DMARC verdict that
-// decides whether a sender is trusted.
+// fool, forward targets, machine-mail detection, the DMARC verdict that decides
+// whether a sender is trusted (read from raw headers a sender can't forge past),
+// unsafe attachments, threading and the quoted body.
 
 import {
   automatedReason,
@@ -9,12 +10,17 @@ import {
   forwardBanner,
   forwardFrom,
   forwardTargets,
+  hasRiskyAttachment,
   headerValue,
   inboundTaskBody,
   inboundTaskTitle,
   isOwnAddress,
   ownRecipients,
+  quotedText,
+  rawHeaderBlock,
   senderAuth,
+  threadingHeaders,
+  topHeader,
   UNVERIFIED_WARNING,
 } from "@/lib/email/inbound-rules";
 
@@ -89,6 +95,8 @@ describe("automatedReason", () => {
     expect(automatedReason({ "X-Autoreply": "yes" }, "jane@example.com")).toBe("autoreply_header");
     expect(automatedReason({ "X-Autorespond": "" }, "jane@example.com")).toBe("autoreply_header");
     expect(automatedReason({ "Content-Type": 'multipart/report; report-type="delivery-status"' }, "jane@example.com")).toBe("delivery_report");
+    expect(automatedReason({ "List-Id": "<news.example.com>" }, "jane@example.com")).toBe("list");
+    expect(automatedReason({ "list-unsubscribe": "<https://example.com/u>" }, "jane@example.com")).toBe("list");
     expect(automatedReason(null, "Mail Delivery <MAILER-DAEMON@example.com>")).toBe("role_sender");
     expect(automatedReason(null, "noreply@example.com")).toBe("role_sender");
   });
@@ -99,25 +107,92 @@ describe("automatedReason", () => {
   });
 });
 
-describe("senderAuth", () => {
-  it("verifies a DMARC pass aligned with the From domain", () => {
-    const auth = senderAuth({ "Authentication-Results": DMARC_PASS }, "Jane <jane@example.com>");
-    expect(auth).toEqual({ spf: "pass", dkim: "pass", dmarc: "pass", verified: true });
+describe("senderAuth (raw header block, pinned authserv-id)", () => {
+  const PIN = "mx.resend.com";
+  const UNCHECKED = { spf: "none", dkim: "none", dmarc: "none", checked: false, verified: false };
+  const FORGED_PASS = "Authentication-Results: mx.resend.com; dmarc=pass header.from=example.com";
+  // Raw messages as the receiving MX hands them on: its own header on top, then what the sender wrote.
+  const raw = (...headers: string[]) => rawHeaderBlock([...headers, "From: Jane <jane@example.com>", "Subject: Hi", "", "Body"].join("\r\n"));
+
+  it("verifies a DMARC pass aligned with the From domain, from the topmost header with the pinned id", () => {
+    const auth = senderAuth(raw(`Authentication-Results: ${DMARC_PASS}`), "Jane <jane@example.com>", PIN);
+    expect(auth).toEqual({ spf: "pass", dkim: "pass", dmarc: "pass", checked: true, verified: true });
   });
 
-  it("does not verify a DMARC fail or a missing header", () => {
-    expect(senderAuth({ "Authentication-Results": "mx; spf=softfail; dkim=none; dmarc=fail header.from=example.com" }, "jane@example.com")).toMatchObject({
-      spf: "fail",
-      dmarc: "fail",
-      verified: false,
-    });
-    expect(senderAuth(null, "jane@example.com")).toEqual({ spf: "none", dkim: "none", dmarc: "none", verified: false });
+  it("unfolds a header continued on several lines", () => {
+    const folded = "Authentication-Results: mx.resend.com;\r\n\tspf=pass smtp.mailfrom=example.com;\r\n dmarc=pass (p=NONE) header.from=example.com";
+    expect(senderAuth(raw(folded), "jane@example.com", PIN)).toMatchObject({ spf: "pass", dmarc: "pass", verified: true });
   });
 
-  it("refuses a forged pass: mixed results or a pass for another domain", () => {
-    const forged = `${DMARC_PASS}\nmx.resend.com; dmarc=fail header.from=example.com`;
-    expect(senderAuth({ "Authentication-Results": forged }, "jane@example.com")).toMatchObject({ dmarc: "mixed", verified: false });
-    expect(senderAuth({ "Authentication-Results": "mx; dmarc=pass header.from=attacker.com" }, "jane@example.com").verified).toBe(false);
+  it("ignores a forged pass placed below the real header", () => {
+    const real = "Authentication-Results: mx.resend.com; spf=fail smtp.mailfrom=example.com; dmarc=fail header.from=example.com";
+    expect(senderAuth(raw(real, FORGED_PASS), "jane@example.com", PIN)).toMatchObject({ dmarc: "fail", checked: true, verified: false });
+  });
+
+  it("ignores a forged pass below a real header that has no dmarc= clause", () => {
+    const real = "Authentication-Results: mx.resend.com; spf=pass smtp.mailfrom=example.com";
+    expect(senderAuth(raw(real, FORGED_PASS), "jane@example.com", PIN)).toMatchObject({ spf: "pass", dmarc: "none", verified: false });
+  });
+
+  it("refuses a forged header when it is the only one and names another authserv-id", () => {
+    const forged = "Authentication-Results: attacker.example; dmarc=pass header.from=example.com";
+    expect(senderAuth(raw(forged), "jane@example.com", PIN)).toEqual(UNCHECKED);
+  });
+
+  it("checks nothing without a pin, a header or a header block", () => {
+    expect(senderAuth(raw(`Authentication-Results: ${DMARC_PASS}`), "jane@example.com", undefined)).toEqual(UNCHECKED);
+    expect(senderAuth(raw(`Authentication-Results: ${DMARC_PASS}`), "jane@example.com", "  ")).toEqual(UNCHECKED);
+    expect(senderAuth(raw(), "jane@example.com", PIN)).toEqual(UNCHECKED);
+    expect(senderAuth(null, "jane@example.com", PIN)).toEqual(UNCHECKED);
+  });
+
+  it("reads only the header block: an Authentication-Results line in the body doesn't count", () => {
+    const block = rawHeaderBlock(`From: jane@example.com\r\n\r\nAuthentication-Results: ${DMARC_PASS}`);
+    expect(senderAuth(block, "jane@example.com", PIN)).toEqual(UNCHECKED);
+  });
+
+  it("refuses a pass for another domain, or one that doesn't name header.from", () => {
+    expect(senderAuth(raw("Authentication-Results: mx.resend.com; dmarc=pass header.from=attacker.com"), "jane@example.com", PIN).verified).toBe(false);
+    expect(senderAuth(raw("Authentication-Results: mx.resend.com; dmarc=pass"), "jane@example.com", PIN).verified).toBe(false);
+  });
+
+  it("finds the topmost instance of a header", () => {
+    expect(topHeader("X-A: 1\r\nx-a: 2", "X-A")).toBe("1");
+    expect(topHeader("X-B: 1", "X-A")).toBeNull();
+  });
+});
+
+describe("hasRiskyAttachment", () => {
+  it("flags programs, scripts, archives and HTML by name or type", () => {
+    expect(hasRiskyAttachment([{ filename: "invoice.pdf.exe", content_type: "application/octet-stream" }])).toBe(true);
+    expect(hasRiskyAttachment([{ filename: "files.ZIP", content_type: "application/octet-stream" }])).toBe(true);
+    expect(hasRiskyAttachment([{ filename: "page.html", content_type: "text/plain" }])).toBe(true);
+    expect(hasRiskyAttachment([{ filename: null, content_type: "application/x-msdownload" }])).toBe(true);
+    expect(hasRiskyAttachment([{ filename: "x", content_type: "text/html; charset=utf-8" }])).toBe(true);
+  });
+
+  it("lets ordinary attachments through", () => {
+    expect(hasRiskyAttachment([{ filename: "receipt.pdf", content_type: "application/pdf" }, { filename: "shot.png", content_type: "image/png" }])).toBe(false);
+    expect(hasRiskyAttachment([])).toBe(false);
+    expect(hasRiskyAttachment(undefined)).toBe(false);
+  });
+});
+
+describe("threadingHeaders and quotedText", () => {
+  it("threads only on a well-formed Message-ID", () => {
+    expect(threadingHeaders("<abc.123@mail.example.com>")).toEqual({ "In-Reply-To": "<abc.123@mail.example.com>", References: "<abc.123@mail.example.com>" });
+    expect(threadingHeaders("abc@x")).toEqual({});
+    expect(threadingHeaders("<a b@x>")).toEqual({});
+    expect(threadingHeaders("<a@x>\r\nBcc: evil@x.com")).toEqual({});
+    expect(threadingHeaders(null)).toEqual({});
+  });
+
+  it("quotes the plain text, strips control and bidi characters, and caps it", () => {
+    expect(quotedText("Hi\r\nthere\u0000‮")).toBe("> Hi\n> there");
+    expect(quotedText("  ")).toBeNull();
+    expect(quotedText(null)).toBeNull();
+    const long = quotedText("x".repeat(20), 10)!;
+    expect(long).toBe("> xxxxxxxxxx\n> [cut here: read the rest in Resend > Emails > Receiving]");
   });
 });
 
@@ -139,9 +214,10 @@ describe("task and banner text", () => {
   });
 
   it("warns in the task and the banner when the sender isn't verified", () => {
-    const failed = senderAuth(null, "jane@example.com");
+    const failed = senderAuth(null, "jane@example.com", "mx.resend.com");
     expect(inboundTaskBody({ receivedFor: ["support@humanizeit.app"], auth: failed })).toContain(UNVERIFIED_WARNING);
-    const passed = senderAuth({ "Authentication-Results": DMARC_PASS }, "jane@example.com");
+    expect(inboundTaskBody({ receivedFor: ["support@humanizeit.app"], auth: failed })).toContain("Sender check: not checked");
+    const passed = senderAuth(`Authentication-Results: ${DMARC_PASS}`, "jane@example.com", "mx.resend.com");
     expect(inboundTaskBody({ receivedFor: ["support@humanizeit.app"], auth: passed })).not.toContain(UNVERIFIED_WARNING);
 
     const banner = forwardBanner({
@@ -155,5 +231,20 @@ describe("task and banner text", () => {
     expect(banner).toContain(UNVERIFIED_WARNING);
     expect(banner).toContain("Hit Reply to answer jane@example.com");
     expect(banner).toContain("over 10 MB");
+    expect(banner).not.toContain("--- Original message");
+  });
+
+  it("says when attachments were withheld, and quotes the plain text under a marker", () => {
+    const banner = forwardBanner({
+      sender: "jane@example.com",
+      subject: "Refund",
+      auth: senderAuth(null, "jane@example.com", undefined),
+      receivedFor: [],
+      tasksUrl: "https://humanizeit.app/admin/tasks",
+      attachment: "withheld",
+      text: "Hello\nPlease refund",
+    });
+    expect(banner).toContain("attachments could be unsafe");
+    expect(banner).toContain("--- Original message (plain text, untrusted) ---\n> Hello\n> Please refund");
   });
 });

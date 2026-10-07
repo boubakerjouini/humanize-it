@@ -18,9 +18,12 @@
 //                              to the founder (lib/email/inbound.ts)
 //   anything else              acknowledged and ignored
 //
-// Delivery events of those forwards (tag stream=inbound_forward) are ignored:
-// their recipient is the founder, so a complaint or bounce on one must never
-// suppress the founder's address or touch a customer's message.
+// Delivery events of those forwards (tag stream=inbound_forward) never touch
+// message, contact or suppression state: their recipient is the founder, so a
+// complaint or bounce on one must never suppress the founder's address or
+// touch a customer's message. A bounced, failed or suppressed forward is still
+// written on the email's task (tag inbound=<received id>) with a high-priority
+// alert, so the task never claims "Forwarded" for mail that didn't arrive.
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -43,8 +46,8 @@ import {
 import { withdrawTopics } from "@/lib/crm/consent";
 import { recomputeContact } from "@/lib/crm/recompute";
 import { onEmailBounced } from "@/lib/growth/triggers";
-import { forwardInbound } from "@/lib/email/inbound";
-import { FORWARD_STREAM_TAG } from "@/lib/email/inbound-rules";
+import { forwardInbound, noteForwardNotDelivered, type ForwardFailure } from "@/lib/email/inbound";
+import { FORWARD_STREAM_TAG, INBOUND_ID_TAG } from "@/lib/email/inbound-rules";
 import { isUniqueViolation, logGrowthError, runAfter } from "@/lib/growth/safe";
 
 export const runtime = "nodejs";
@@ -55,6 +58,13 @@ export const maxDuration = 60;
 const MAX_BODY_BYTES = 256 * 1024;
 const MAX_ATTEMPTS = 3;
 const RESEND_ID = /^[A-Za-z0-9_-]{1,100}$/;
+
+/** Delivery events of a support forward that mean it never reached the founder. */
+const FORWARD_FAILURES = new Map<string, ForwardFailure>([
+  ["email.bounced", "bounced"],
+  ["email.failed", "failed"],
+  ["email.suppressed", "suppressed"],
+]);
 
 function fail(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status });
@@ -153,7 +163,14 @@ export async function POST(req: Request) {
   } catch {
     return fail("INVALID_SIGNATURE", "Invalid signature.", 400);
   }
-  if (eventTag(evt, FORWARD_STREAM_TAG.name) === FORWARD_STREAM_TAG.value) return NextResponse.json({ ok: true, ignored: true });
+  if (eventTag(evt, FORWARD_STREAM_TAG.name) === FORWARD_STREAM_TAG.value) {
+    const failure = FORWARD_FAILURES.get(evt.type ?? "");
+    if (!failure) return NextResponse.json({ ok: true, ignored: true });
+    const inboundId = eventTag(evt, INBOUND_ID_TAG);
+    // Idempotent on its own (one note per task, one alert per day): no ledger needed.
+    await noteForwardNotDelivered(inboundId && RESEND_ID.test(inboundId) ? inboundId : null, failure);
+    return NextResponse.json({ ok: true, noted: true });
+  }
 
   const eventId = `resend:${id}`;
   try {

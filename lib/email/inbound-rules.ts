@@ -14,8 +14,14 @@ import { emailDomain, isRoleAddress, normalizeEmail } from "@/lib/email/address"
 /** Domains we send from or receive on: forwarding mail from them could loop. */
 export const OWN_DOMAINS: readonly string[] = ["humanizeit.app", "mail.humanizeit.app"];
 
-/** Successful forwards per UTC day (Resend's free plan shares 100 sends a day with every other email). */
+/** Forward recipients per UTC day (Resend's free plan shares 100 sends a day with every other email). */
 export const INBOUND_DAILY_CAP = 40;
+
+/** New support emails tracked per UTC day: bounds the CRM tasks a spam run can open when nothing is being forwarded. */
+export const INBOUND_TASK_DAILY_CAP = 60;
+
+/** Inline sends a forward must leave free, so support mail (spam included) can't eat the welcome and magnet emails. */
+export const INBOUND_INLINE_RESERVE = 10;
 
 /** Forwards per sender per day: one sender can't flood the founder or the quota. */
 export const INBOUND_SENDER_DAILY_CAP = 5;
@@ -23,8 +29,14 @@ export const INBOUND_SENDER_DAILY_CAP = 5;
 /** Above this the original isn't attached: the banner points to Resend instead. */
 export const ORIGINAL_MAX_BYTES = 10 * 1024 * 1024;
 
-/** Resend tag on every forward, so the webhook can ignore their delivery events. */
+/** Resend tag on every forward, so the webhook keeps their delivery events off customer state. */
 export const FORWARD_STREAM_TAG = { name: "stream", value: "inbound_forward" } as const;
+
+/** Second tag on a forward: the received email's id, so a bounce can be written on its task. */
+export const INBOUND_ID_TAG = "inbound";
+
+/** Most of the plain-text body quoted in the forward (the full message stays in Resend). */
+export const QUOTED_TEXT_MAX_CHARS = 8000;
 
 /** Where the founder reads a message that wasn't forwarded. */
 export const RESEND_INBOX_HINT = "Resend > Emails > Receiving";
@@ -89,7 +101,7 @@ export function headerValue(headers: Record<string, string> | null | undefined, 
   return null;
 }
 
-export type AutomatedReason = "auto_submitted" | "precedence" | "autoreply_header" | "delivery_report" | "role_sender";
+export type AutomatedReason = "auto_submitted" | "precedence" | "autoreply_header" | "delivery_report" | "list" | "role_sender";
 
 /**
  * Why a message is machine-sent (out-of-office, bounce, list mail), or null for
@@ -103,6 +115,7 @@ export function automatedReason(headers: Record<string, string> | null | undefin
   if (precedence && ["bulk", "junk", "list", "auto_reply"].includes(precedence)) return "precedence";
   if (headerValue(headers, "X-Autoreply") !== null || headerValue(headers, "X-Autorespond") !== null) return "autoreply_header";
   if (/^\s*multipart\/report\b/i.test(headerValue(headers, "Content-Type") ?? "")) return "delivery_report";
+  if (headerValue(headers, "List-Id") !== null || headerValue(headers, "List-Unsubscribe") !== null) return "list";
   if (isRoleAddress(bareAddress(from))) return "role_sender";
   return null;
 }
@@ -113,9 +126,29 @@ export type SenderAuth = {
   spf: AuthVerdict;
   dkim: AuthVerdict;
   dmarc: AuthVerdict;
+  /** The verdicts come from our receiving server's header; false means nothing was checked. */
+  checked: boolean;
   /** DMARC passed for the From domain: only then is the sender treated as who they say. */
   verified: boolean;
 };
+
+const UNCHECKED: SenderAuth = { spf: "none", dkim: "none", dmarc: "none", checked: false, verified: false };
+
+/** The header block of a raw RFC 5322 message: everything before the first blank line. */
+export function rawHeaderBlock(raw: string): string {
+  const end = raw.search(/\r?\n\r?\n/);
+  return end === -1 ? raw : raw.slice(0, end);
+}
+
+/** The TOPMOST instance of a header in a raw header block, unfolded, or null. */
+export function topHeader(block: string, name: string): string | null {
+  const wanted = name.toLowerCase();
+  for (const line of block.replace(/\r?\n[ \t]+/g, " ").split(/\r?\n/)) {
+    const colon = line.indexOf(":");
+    if (colon > 0 && line.slice(0, colon).trim().toLowerCase() === wanted) return line.slice(colon + 1).trim();
+  }
+  return null;
+}
 
 function verdictOf(results: string[]): AuthVerdict {
   if (results.length === 0) return "none";
@@ -124,24 +157,31 @@ function verdictOf(results: string[]): AuthVerdict {
 }
 
 /**
- * SPF/DKIM/DMARC from the Authentication-Results header the receiving server
- * added. A sender can forge an extra Authentication-Results header, so DMARC
- * counts as verified only when every dmarc= result passes and each one that
- * names header.from names the sender's own domain.
+ * SPF/DKIM/DMARC as our receiving server saw them. A sender can add their own
+ * Authentication-Results headers, and the parsed headers Record may keep any
+ * one of several, so the verdict comes from the raw header block only: the
+ * TOPMOST Authentication-Results (a receiving MX prepends its own), and only
+ * when its authserv-id is the pinned one (INBOUND_AUTHSERV_ID). Another id, no
+ * header or no pin gives "not checked", never a pass.
  */
-export function senderAuth(headers: Record<string, string> | null | undefined, from: string): SenderAuth {
-  const raw = headerValue(headers, "Authentication-Results") ?? "";
+export function senderAuth(rawHeaders: string | null, from: string, authservId: string | null | undefined): SenderAuth {
+  const pinned = authservId?.trim().toLowerCase();
+  const header = rawHeaders ? topHeader(rawHeaders, "Authentication-Results") : null;
+  if (!pinned || !header) return UNCHECKED;
+  const [idPart, ...clauses] = header.split(";");
+  if (idPart.trim().split(/\s+/)[0]?.toLowerCase() !== pinned) return UNCHECKED;
+
   const found: Record<"spf" | "dkim" | "dmarc", string[]> = { spf: [], dkim: [], dmarc: [] };
   const senderDomain = emailDomain(bareAddress(from));
   let alignedFrom = true;
-  for (const clause of raw.split(/[;\n]/)) {
+  for (const clause of clauses) {
     const m = /^\s*(spf|dkim|dmarc)\s*=\s*([a-z]+)/i.exec(clause);
     if (!m) continue;
     const method = m[1].toLowerCase() as "spf" | "dkim" | "dmarc";
     found[method].push(m[2].toLowerCase());
     if (method === "dmarc") {
       const headerFrom = /header\.from\s*=\s*([^\s;]+)/i.exec(clause)?.[1]?.toLowerCase();
-      if (headerFrom && headerFrom !== senderDomain) alignedFrom = false;
+      if (headerFrom !== senderDomain) alignedFrom = false;
     }
   }
   const dmarc = verdictOf(found.dmarc);
@@ -149,12 +189,14 @@ export function senderAuth(headers: Record<string, string> | null | undefined, f
     spf: verdictOf(found.spf),
     dkim: verdictOf(found.dkim),
     dmarc,
+    checked: true,
     verified: dmarc === "pass" && alignedFrom && !!senderDomain,
   };
 }
 
-/** "SPF pass, DKIM pass, DMARC fail" */
+/** "SPF pass, DKIM pass, DMARC fail", or why nothing was checked. */
 export function describeAuth(auth: SenderAuth): string {
+  if (!auth.checked) return "not checked (no Authentication-Results from our receiving server)";
   return `SPF ${auth.spf}, DKIM ${auth.dkim}, DMARC ${auth.dmarc}`;
 }
 
@@ -180,6 +222,58 @@ export function ownRecipients(receivedFor: readonly string[] | null | undefined)
   return [...seen];
 }
 
+const RISKY_EXTENSION = /\.(exe|com|scr|pif|msi|bat|cmd|ps1|vbs|vbe|js|jse|wsf|hta|lnk|jar|zip|rar|7z|iso|img|html?)$/i;
+
+const RISKY_TYPES = new Set([
+  "application/x-msdownload",
+  "application/x-msdos-program",
+  "application/x-dosexec",
+  "application/x-executable",
+  "application/java-archive",
+  "application/javascript",
+  "text/javascript",
+  "application/zip",
+  "application/x-zip-compressed",
+  "application/vnd.rar",
+  "application/x-rar-compressed",
+  "application/x-7z-compressed",
+  "application/x-iso9660-image",
+  "text/html",
+]);
+
+/**
+ * True when an attachment is a program, script, archive or HTML file. Gmail
+ * bounces mail carrying those (inside a nested .eml too), and a bounce can get
+ * the founder's address suppressed for every later forward, so such an
+ * original is not attached.
+ */
+export function hasRiskyAttachment(
+  attachments: readonly { filename?: string | null; content_type?: string | null }[] | null | undefined
+): boolean {
+  return (attachments ?? []).some((a) => {
+    const type = (a.content_type ?? "").split(";")[0].trim().toLowerCase();
+    return RISKY_EXTENSION.test((a.filename ?? "").trim()) || RISKY_TYPES.has(type);
+  });
+}
+
+/** In-Reply-To/References to the original, so the founder's reply threads with it on the customer's side. */
+export function threadingHeaders(messageId: string | null | undefined): Record<string, string> {
+  const id = messageId?.trim();
+  return id && /^<[^<>\s]{1,250}>$/.test(id) ? { "In-Reply-To": id, References: id } : {};
+}
+
+// Control and invisible/bidi characters, except tab and newline.
+const UNSAFE_TEXT = /[\u0000-\u0008\u000b-\u001f\u007f​-‏‪-‮⁦-⁩]/g;
+
+/** The untrusted plain-text body as "> " quoted lines, capped; null when there is none. */
+export function quotedText(text: string | null | undefined, max = QUOTED_TEXT_MAX_CHARS): string | null {
+  const clean = (text ?? "").replace(/\r\n?/g, "\n").replace(UNSAFE_TEXT, "").trim();
+  if (!clean) return null;
+  const lines = clean.slice(0, max).split("\n").map((line) => `> ${line}`);
+  if (clean.length > max) lines.push(`> [cut here: read the rest in ${RESEND_INBOX_HINT}]`);
+  return lines.join("\n");
+}
+
 /** Base body of the per-email task. Status lines are appended as the forward progresses. */
 export function inboundTaskBody(input: { receivedFor: readonly string[]; auth: SenderAuth | null }): string {
   const at = input.receivedFor.length > 0 ? input.receivedFor.join(", ") : "an @humanizeit.app address";
@@ -192,8 +286,9 @@ export function inboundTaskBody(input: { receivedFor: readonly string[]; auth: S
 }
 
 /**
- * Plain-text banner of the forward. The original message travels only as an
- * attached original.eml, so its (untrusted) HTML is never shown as our mail.
+ * Plain-text banner of the forward, then the quoted plain-text body. The
+ * original's (untrusted) HTML is never shown as our mail: it travels only
+ * inside the attached original.eml.
  */
 export function forwardBanner(input: {
   sender: string;
@@ -201,7 +296,8 @@ export function forwardBanner(input: {
   auth: SenderAuth;
   receivedFor: readonly string[];
   tasksUrl: string;
-  attachment: "attached" | "too_large" | "unavailable";
+  attachment: "attached" | "too_large" | "unavailable" | "withheld";
+  text?: string | null;
 }): string {
   const lines = [
     `New email to ${input.receivedFor.length > 0 ? input.receivedFor.join(", ") : "@humanizeit.app"}.`,
@@ -214,7 +310,11 @@ export function forwardBanner(input: {
   lines.push("", `Hit Reply to answer ${input.sender} directly, then complete the task: ${input.tasksUrl}`, "");
   if (input.attachment === "attached") lines.push("The original message is attached as original.eml.");
   else if (input.attachment === "too_large") lines.push(`The original is over 10 MB, so it isn't attached: read it in ${RESEND_INBOX_HINT}.`);
+  else if (input.attachment === "withheld")
+    lines.push(`Its attachments could be unsafe (programs, scripts or archives), so they were withheld: read it in ${RESEND_INBOX_HINT}.`);
   else lines.push(`The original couldn't be attached: read it in ${RESEND_INBOX_HINT}.`);
   lines.push("It comes from outside: don't open links or attachments you weren't expecting.");
+  const quoted = quotedText(input.text);
+  if (quoted) lines.push("", "--- Original message (plain text, untrusted) ---", quoted);
   return lines.join("\n");
 }
