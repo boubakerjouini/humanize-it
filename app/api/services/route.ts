@@ -20,6 +20,7 @@ import { checkAndResetQuota, planConfigFor } from "@/lib/quota";
 import {
   FOUNDER_SERVICES,
   FOUNDER_SERVICE_KINDS,
+  PLANS,
   monthStartUtc,
   type FounderService,
   type PlanId,
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
     const def = FOUNDER_SERVICES[kind];
 
     if (!def.plans.includes(planId)) {
-      return error("PLAN_REQUIRED", `The ${def.name} is a ${def.plans.join(" / ")} bonus.`, 403);
+      return error("PLAN_REQUIRED", `The ${def.name} is a ${def.plans.map((p) => PLANS[p].name).join(" / ")} bonus.`, 403);
     }
 
     let document: { id: string; title: string | null; wordCount: number } | null = null;
@@ -116,7 +117,6 @@ export async function POST(req: Request) {
 
     const contactId = await getOrCreateContactForUser(user.id);
     const now = new Date();
-    const dueAt = new Date(now.getTime() + 3 * 86_400_000);
     const lines = [
       `Requested by ${user.email} (${planId}).`,
       document ? `Document: "${document.title ?? "Untitled"}" (${document.wordCount} words), /admin/documents/${document.id}` : null,
@@ -138,7 +138,7 @@ export async function POST(req: Request) {
             kind,
             priority: "high",
             status: "open",
-            dueAt,
+            dueAt: now, // in the founder's Today list, like rule tasks
             source: "request",
             dedupeKey: dedupeKeyFor(kind, user.id),
             createdBy: "request",
