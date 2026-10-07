@@ -3,17 +3,22 @@
 // ===========================================================
 // components/ui/upgrade-modal.tsx — The plan menu: opened from upgrade buttons
 // and, with trigger="quota", when a request hits the plan's limit. A
-// Monthly/Annual toggle sends { plan, annual } to /api/checkout; annual prices
-// are shown per month (≈$6.58/mo for Pro). Prices and limits come from
+// Monthly/Annual toggle (annual pre-selected) sends { plan, annual } to
+// /api/checkout; annual prices are shown per month (≈$6.58/mo for Pro).
+// On a quota hit, two cheaper ways out sit under the plans: the Word Pack
+// (only once its LemonSqueezy variant exists) and inviting a friend (only
+// while referrals are on). Prices, limits and the guarantee come from
 // lib/plans.ts.
 // ===========================================================
 
 import { useState, useEffect, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
 import { track } from "@vercel/analytics";
-import { Check, X } from "lucide-react";
+import { Check, X, Package, Gift, ShieldCheck } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
-import { PLANS as PLAN_CONFIG, type PlanConfig } from "@/lib/plans";
+import { GUARANTEE_DAYS, PLANS as PLAN_CONFIG, TEAM_ANNUAL_GUARANTEE_DAYS, type PlanConfig } from "@/lib/plans";
+import { startOfferCheckout, useOffers } from "@/components/growth/founding-offers";
+import { useReferralInfo } from "@/components/growth/referral-card";
 
 export type UpgradeTrigger = "upgrade" | "quota";
 type Billing = "monthly" | "annual";
@@ -49,10 +54,10 @@ function displayPrice(plan: PlanConfig, billing: Billing): { price: string; note
   return { price: fmtUsd(plan.price), note: "billed monthly" };
 }
 
-/** Annual saving vs 12 monthly payments for Pro, e.g. 27. */
-const ANNUAL_SAVING_PCT = (() => {
+/** Months of Pro an annual plan saves vs paying monthly, e.g. 3 ($108 vs $79). */
+const ANNUAL_FREE_MONTHS = (() => {
   const pro = PLAN_CONFIG.PRO;
-  return pro.priceAnnual ? Math.round((1 - pro.priceAnnual / (pro.price * 12)) * 100) : 0;
+  return pro.priceAnnual ? Math.round((pro.price * 12 - pro.priceAnnual) / pro.price) : 0;
 })();
 
 export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade" }: UpgradeModalProps) {
@@ -61,7 +66,13 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
-  const [billing, setBilling] = useState<Billing>("monthly");
+  // Annual first: lower churn, and it is the better deal for the buyer.
+  const [billing, setBilling] = useState<Billing>("annual");
+  const [packBusy, setPackBusy] = useState(false);
+  const [packError, setPackError] = useState<string | null>(null);
+  const offers = useOffers();
+  const referral = useReferralInfo();
+  const wordPack = trigger === "quota" && offers?.wordPack.available ? offers.wordPack : null;
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -114,6 +125,18 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
+  async function buyWordPack() {
+    if (packBusy) return;
+    setPackBusy(true);
+    setPackError(null);
+    posthog?.capture("wordpack_cta_clicked", { current_plan: currentPlan });
+    const message = await startOfferCheckout("wordpack");
+    if (message) {
+      setPackError(message);
+      setPackBusy(false);
+    }
+  }
+
   async function handleRedeem() {
     if (!code.trim()) return;
     setRedeeming(true);
@@ -160,8 +183,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%", maxWidth: "520px",
+          // Taller than short laptop screens and phones: scroll inside the panel.
+          maxHeight: "calc(100dvh - 32px)", overflowY: "auto",
           background: THEME.surface2, border: `1px solid ${THEME.border}`,
-          borderRadius: THEME.radiusXl, overflow: "hidden", position: "relative",
+          borderRadius: THEME.radiusXl, position: "relative",
           boxShadow: "0 28px 70px -18px rgba(124,58,237,0.32), 0 10px 30px -14px rgba(29,23,38,0.14)",
           outline: "none",
         }}
@@ -227,7 +252,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
                       boxShadow: active ? "0 1px 3px rgba(29,23,38,0.12)" : "none",
                     }}
                   >
-                    {b === "monthly" ? "Monthly" : `Annual · save ${ANNUAL_SAVING_PCT}%`}
+                    {b === "monthly" ? "Monthly" : `Annual · about ${ANNUAL_FREE_MONTHS} months free`}
                   </button>
                 );
               })}
@@ -311,7 +336,42 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
             })}
           </div>
 
-          <div style={{ marginBottom: "22px" }} />
+          {/* Cheaper ways out of a limit: a one-time pack, or a friend */}
+          {(wordPack || (trigger === "quota" && referral)) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "14px" }}>
+              <div style={{ fontSize: "12px", color: THEME.textMuted, textAlign: "center" }}>Not ready for a plan?</div>
+              {wordPack && (
+                <button onClick={buyWordPack} disabled={packBusy} style={altRow}>
+                  <Package size={16} color={THEME.brand} aria-hidden="true" style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1, textAlign: "left" }}>
+                    <strong style={{ color: THEME.text }}>{`Word Pack: ${wordPack.words.toLocaleString("en-US")} words for ${fmtUsd(wordPack.priceUsd)}`}</strong>
+                    <span style={{ display: "block", fontSize: "12px", color: THEME.textMuted }}>
+                      {`One payment, used after your plan's words, valid ${wordPack.days} days. It also lifts the daily rewrite cap.`}
+                    </span>
+                  </span>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: THEME.brandHi }}>{packBusy ? "Starting…" : "Buy"}</span>
+                </button>
+              )}
+              {packError && <div role="alert" style={{ fontSize: "12px", color: THEME.ai }}>{packError}</div>}
+              {trigger === "quota" && referral && (
+                <a href="/dashboard/settings#invite" style={{ ...altRow, textDecoration: "none" }}>
+                  <Gift size={16} color={THEME.accent} aria-hidden="true" style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1, textAlign: "left" }}>
+                    <strong style={{ color: THEME.text }}>{`Invite a friend: you both get ${referral.rewardWords.toLocaleString("en-US")} words`}</strong>
+                    <span style={{ display: "block", fontSize: "12px", color: THEME.textMuted }}>Once they sign up and run their first check.</span>
+                  </span>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: THEME.accentHi }}>Invite</span>
+                </a>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", margin: "16px 0 22px", fontSize: "12px", color: THEME.textDim, lineHeight: 1.5 }}>
+            <ShieldCheck size={15} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0, marginTop: "1px" }} />
+            <span>
+              {`${GUARANTEE_DAYS}-day "Sounds Like You" guarantee: if HumanizeIt doesn't make your writing clearer and more like you, email us for a full refund, monthly or annual (${TEAM_ANNUAL_GUARANTEE_DAYS} days on Team annual). We never promise a score on someone else's AI detector.`}
+            </span>
+          </div>
 
           {/* What you unlock */}
           <div style={{ marginBottom: "20px" }}>
@@ -324,9 +384,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
             <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
               {[
                 "Unlimited rewrites (within your plan's words)",
-                "More tones",
+                "All 5 tones",
+                "Voice Match: rewrites that follow how you write",
                 "PDF and Word upload",
-                "Saved history",
+                "Before/After Report and saved history",
               ].map((f) => (
                 <div key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
                   <span style={{
@@ -408,3 +469,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
     </div>
   );
 }
+
+const altRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: "12px", width: "100%",
+  background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius,
+  padding: "10px 12px", fontSize: "13px", color: THEME.textDim, cursor: "pointer",
+  fontFamily: THEME.fontSans,
+};
