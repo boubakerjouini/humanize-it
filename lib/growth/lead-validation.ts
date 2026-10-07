@@ -4,9 +4,12 @@
 // (role inboxes, throwaway domains, a domain that can't receive mail) and which
 // email flow a capture triggers. Everything except checkMailDomain() is pure.
 //
-// The schema is strict on purpose: a detector report carries scores and
-// pattern labels only, so a request that tries to send the user's text (or any
-// unknown field) is rejected rather than silently dropped.
+// The schema is strict on purpose: a detector report carries scores, a
+// confidence level and pattern ids only, so a request that tries to send the
+// user's text (or any unknown field) is rejected rather than silently dropped.
+// Nothing a visitor types reaches the report email: pattern labels are looked
+// up server-side, and the free-text deep-scan verdict is not accepted, so the
+// form can't be used to put someone else's words in our branded email.
 // ===========================================================
 
 import { promises as dns } from "node:dns";
@@ -32,18 +35,19 @@ export const MX_TIMEOUT_MS = 1500;
 /** Sources whose capture is about a lead magnet (they must name one). */
 const MAGNET_SOURCES: ReadonlySet<PublicLeadSource> = new Set(["magnet_page", "exit_intent", "blog_inline", "tool_inline"]);
 
+/** The deep scan's confidence levels (lib/detect-llm.ts). */
+export const REPORT_CONFIDENCE = ["low", "medium", "high"] as const;
+
 export const reportContextSchema = z
   .object({
     instantScore: z.number().min(0).max(100),
     deepScore: z.number().min(0).max(100).optional(),
-    verdict: z.string().trim().max(80).optional(),
-    confidence: z.string().trim().max(20).optional(),
+    confidence: z.enum(REPORT_CONFIDENCE).optional(),
     patterns: z
       .array(
         z
           .object({
             id: z.string().trim().min(1).max(60),
-            label: z.string().trim().min(1).max(80),
             hits: z.number().int().min(0).max(999),
           })
           .strict()

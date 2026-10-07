@@ -1,7 +1,8 @@
 // ===========================================================
 // emails/transactional/detector-report.tsx — The emailed AI-detector report.
-// Built from scores and pattern labels only: the person's text never reaches
-// our server for this email, so it can't appear in it.
+// Built from scores, a confidence level and catalog pattern labels only: the
+// person's text never reaches our server for this email, and no string the
+// requester typed is rendered in it.
 // ===========================================================
 
 import { Link, Text } from "react-email";
@@ -32,7 +33,7 @@ function DetectorReport({ p, ctx }: TemplateComponentProps<"detector_report">) {
         <Text style={scoreLine}>{`Instant check: ${Math.round(p.instantScore)}/100 AI-likelihood${words}`}</Text>
         {p.deepScore !== undefined ? (
           <Text style={scoreLine}>
-            {`Deep scan: ${Math.round(p.deepScore)}/100${p.confidence ? ` (${p.confidence} confidence)` : ""}${p.verdict ? `: ${p.verdict}` : ""}`}
+            {`Deep scan: ${Math.round(p.deepScore)}/100${p.confidence ? ` (${p.confidence} confidence)` : ""}`}
           </Text>
         ) : null}
       </Callout>

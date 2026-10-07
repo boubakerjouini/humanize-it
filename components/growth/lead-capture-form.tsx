@@ -20,9 +20,9 @@ import { CONSENT_WORDING, type MagnetSlug, type PublicLeadSource, type Topic } f
 export type ReportContext = {
   instantScore: number;
   deepScore?: number;
-  verdict?: string;
-  confidence?: string;
-  patterns: { id: string; label: string; hits: number }[];
+  confidence?: "low" | "medium" | "high";
+  /** Ids only: the server looks up each label itself. */
+  patterns: { id: string; hits: number }[];
   wordCount?: number;
 };
 

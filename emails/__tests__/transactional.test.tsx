@@ -34,7 +34,6 @@ const SAMPLES: { [K in "magnet_delivery" | "detector_report" | "waitlist_confirm
     {
       instantScore: 62.4,
       deepScore: 71,
-      verdict: "Likely AI-assisted",
       confidence: "medium",
       wordCount: 340,
       patterns: [
@@ -101,7 +100,7 @@ describe("detector_report", () => {
     const out = await renderSample("detector_report", SAMPLES.detector_report[0]);
     expect(out.subject).toBe("Your AI-detection report: 71/100 AI-likelihood");
     expect(out.text).toContain("Instant check: 62/100 AI-likelihood (340 words)");
-    expect(out.text).toContain("Deep scan: 71/100 (medium confidence): Likely AI-assisted");
+    expect(out.text).toContain("Deep scan: 71/100 (medium confidence)");
     expect(out.text).toContain("Low Burstiness");
     expect(out.text).toContain("Something New");
     expect(out.text).not.toContain("Hedging Language");

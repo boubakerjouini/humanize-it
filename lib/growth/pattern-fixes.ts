@@ -6,6 +6,15 @@
 // Pure: safe in client and server code.
 // ===========================================================
 
+import { PATTERNS_CONFIG } from "@/lib/algorithms/patterns";
+
+const LABELS: ReadonlyMap<string, string> = new Map(PATTERNS_CONFIG.map((p) => [p.id, p.label]));
+
+/** The detector's own label for a pattern id, or null for an id it doesn't know. */
+export function patternLabel(id: string): string | null {
+  return LABELS.get(id) ?? null;
+}
+
 const FIXES: Record<string, string> = {
   "ai-vocab-t1": "Swap showy words like \"delve\" or \"tapestry\" for the plain word you'd say out loud.",
   "ai-vocab-t2": "Replace stock words such as \"crucial\" or \"robust\" with something more specific.",

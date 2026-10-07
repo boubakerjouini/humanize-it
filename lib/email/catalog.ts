@@ -21,8 +21,8 @@ export type TemplateProps = {
   detector_report: Base & {
     instantScore: number;
     deepScore?: number;
-    verdict?: string;
-    confidence?: string;
+    confidence?: "low" | "medium" | "high";
+    /** Labels come from the detector's pattern catalog, never from the request. */
     patterns: PatternHit[];
     wordCount?: number;
     confirmUrl?: string;

@@ -1,3 +1,4 @@
+import { patternLabel } from "@/lib/growth/pattern-fixes";
 import {
   MIN_FILL_MS,
   checkEmailQuality,
@@ -37,14 +38,22 @@ describe("leadRequestSchema", () => {
 
   it("requires the report context for detector reports, and never accepts the text", () => {
     expect(leadRequestSchema.safeParse({ ...base, source: "detector_report" }).success).toBe(false);
-    const ok = { ...base, source: "detector_report", context: { instantScore: 62, patterns: [{ id: "filler", label: "Filler Phrases", hits: 3 }] } };
+    const ok = { ...base, source: "detector_report", context: { instantScore: 62, confidence: "high", patterns: [{ id: "filler", hits: 3 }] } };
     expect(leadRequestSchema.safeParse(ok).success).toBe(true);
     expect(leadRequestSchema.safeParse({ ...ok, text: "my essay" }).success).toBe(false);
     expect(leadRequestSchema.safeParse({ ...ok, context: { ...ok.context, text: "my essay" } }).success).toBe(false);
   });
 
+  it("accepts no visitor-written text for the report email", () => {
+    const ctx = { instantScore: 62, patterns: [{ id: "filler", hits: 3 }] };
+    const req = (context: unknown) => leadRequestSchema.safeParse({ ...base, source: "detector_report", context }).success;
+    expect(req({ ...ctx, verdict: "Account flagged. Verify now at http://evil.example/login" })).toBe(false);
+    expect(req({ ...ctx, confidence: "verify at evil.example" })).toBe(false);
+    expect(req({ ...ctx, patterns: [{ id: "filler", label: "Urgent: reset password at evil.example", hits: 1 }] })).toBe(false);
+  });
+
   it("bounds the report context", () => {
-    const patterns = Array.from({ length: 13 }, (_, i) => ({ id: `p${i}`, label: "x", hits: 1 }));
+    const patterns = Array.from({ length: 13 }, (_, i) => ({ id: `p${i}`, hits: 1 }));
     const ctx = { instantScore: 50, patterns };
     expect(leadRequestSchema.safeParse({ ...base, source: "detector_report", context: ctx }).success).toBe(false);
     expect(
@@ -164,5 +173,12 @@ describe("pattern fixes", () => {
   it("has a fix for every detector pattern, and a generic fallback", () => {
     for (const p of PATTERNS_CONFIG) expect(hasPatternFix(p.id)).toBe(true);
     expect(fixForPattern("made-up")).toBe(GENERIC_FIX);
+  });
+});
+
+describe("patternLabel", () => {
+  it("returns the catalog label for known ids and null for anything else", () => {
+    expect(patternLabel("filler")).toBe("Filler Phrases");
+    expect(patternLabel("Urgent: reset password at evil.example")).toBeNull();
   });
 });

@@ -2,9 +2,9 @@
 
 // ===========================================================
 // components/growth/report-capture.tsx — "Email me this report" under the
-// AI detector result. The report is built from the scores and the pattern
-// labels only: the pasted text is never sent for it, which keeps the instant
-// check's "runs in your browser" promise true.
+// AI detector result. The report is built from the scores, the confidence
+// level and the pattern ids only: the pasted text is never sent for it, which
+// keeps the instant check's "runs in your browser" promise true.
 // ===========================================================
 
 import { useState } from "react";
@@ -12,26 +12,30 @@ import Link from "next/link";
 import { LeadCaptureForm, type ReportContext } from "@/components/growth/lead-capture-form";
 import { THEME } from "@/lib/theme";
 
-type PatternLike = { id: string; label: string; hits: number; weight: number };
+type PatternLike = { id: string; hits: number; weight: number };
+
+function isConfidence(v: string | undefined): v is "low" | "medium" | "high" {
+  return v === "low" || v === "medium" || v === "high";
+}
 
 /** Strongest triggered patterns first, capped to what the API accepts. */
 export function buildReportContext(input: {
   instantScore: number;
   patterns: PatternLike[];
   wordCount: number;
-  deep?: { aiLikelihood: number; confidence: string; verdict: string } | null;
+  deep?: { aiLikelihood: number; confidence: string } | null;
 }): ReportContext {
+  const confidence = input.deep?.confidence;
   return {
     instantScore: Math.max(0, Math.min(100, Math.round(input.instantScore))),
     deepScore: input.deep ? Math.max(0, Math.min(100, Math.round(input.deep.aiLikelihood))) : undefined,
-    verdict: input.deep?.verdict.slice(0, 80),
-    confidence: input.deep?.confidence.slice(0, 20),
+    confidence: isConfidence(confidence) ? confidence : undefined,
     patterns: input.patterns
       .filter((p) => p.hits > 0)
       .slice()
       .sort((a, b) => b.weight * b.hits - a.weight * a.hits)
       .slice(0, 12)
-      .map((p) => ({ id: p.id.slice(0, 60), label: p.label.slice(0, 80), hits: Math.min(999, p.hits) })),
+      .map((p) => ({ id: p.id.slice(0, 60), hits: Math.min(999, p.hits) })),
     wordCount: Math.min(20000, input.wordCount),
   };
 }
