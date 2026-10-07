@@ -5,12 +5,14 @@
 // missing EmailFlowSetting row means OFF. Toggles are cached per instance for
 // 60s (call invalidateFlowCache after writing one). Enrollment is idempotent:
 // one row per (contact, sequence, cycle), so a retried trigger can't enroll
-// anyone twice.
+// anyone twice. A new enrollment's nextRunAt is its first step's due time, so
+// one anchored ahead (grant_expiry) isn't picked up by every run until then.
 // ===========================================================
 
 import { db } from "@/lib/db";
 import type { Prisma, SequenceEnrollment } from "@/app/generated/prisma/client";
 import type { FlowKey, SequenceKey } from "@/lib/email/catalog";
+import { dueAt, type SequenceStep } from "@/lib/email/schedule";
 import { isUniqueViolation, logGrowthError } from "@/lib/growth/safe";
 
 const FLOW_CACHE_TTL_MS = 60_000;
@@ -43,14 +45,14 @@ export function invalidateFlowCache(key?: FlowKey): void {
 export type EnrollOptions = {
   /** Step offsets are relative to this; may be in the future (grant expiry). */
   anchorAt: Date;
+  /** The sequence's steps (its SequenceDef.steps): nextRunAt becomes the first step's due time. */
+  steps: readonly Pick<SequenceStep<unknown>, "offsetHours">[];
   /** Distinguishes repeat enrollments (e.g. the UTC date, a grant's expiry). */
   cycle?: string;
   context?: Prisma.InputJsonValue;
   actor?: string;
   /** Refuse when this sequence was entered within the last N days, whatever the cycle. */
   cooldownDays?: number;
-  /** When the engine should first look at it: pass the first step's due time. Defaults to now. */
-  nextRunAt?: Date;
 };
 
 /**
@@ -76,7 +78,8 @@ export async function enroll(contactId: string, key: SequenceKey, opts: EnrollOp
         status: "active",
         stepIndex: 0,
         anchorAt: opts.anchorAt,
-        nextRunAt: opts.nextRunAt ?? now,
+        // A first step already past due is picked up right away (and skipped as late if too old).
+        nextRunAt: opts.steps.length > 0 ? dueAt(opts.steps[0], opts.anchorAt) : now,
         context: opts.context,
         enrolledBy: opts.actor ?? "system",
       },
