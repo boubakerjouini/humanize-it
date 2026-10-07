@@ -20,8 +20,19 @@ import {
   Menu,
   X as XIcon,
   Linkedin,
+  ShieldCheck,
+  Award,
 } from "lucide-react";
 import { PricingButton } from "@/components/pricing-button";
+import {
+  FOUNDING,
+  FOUNDER_SERVICES,
+  GUARANTEE_DAYS,
+  ORG_SEAT,
+  PLANS as PLAN_CONFIG,
+  PRO_ANNUAL_VOICE_PROFILES,
+  TEAM_ANNUAL_GUARANTEE_DAYS,
+} from "@/lib/plans";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, humanScore, humanScoreColor, humanScoreLabel, glow } from "@/lib/theme";
 
@@ -41,7 +52,7 @@ const VARIANT_IDS = {
 const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   {
     q: "Is HumanizeIt actually free?",
-    a: "Yes — the free tier gives you 500 words per day with 1 humanization. No credit card required. Pro plan ($9/mo) gives 50,000 words/month.",
+    a: `Yes. Checking text for AI patterns is free and never uses words, in the free tools and in your account. The Free plan adds ${PLAN_CONFIG.FREE.wordsLimit} words of rewriting a day (${PLAN_CONFIG.FREE.rewriteLimit} rewrite a day, Standard tone). No credit card required. Pro ($${PLAN_CONFIG.PRO.price} a month) gives you ${PLAN_CONFIG.PRO.wordsLimit.toLocaleString("en-US")} words a month.`,
   },
   {
     q: "How does the AI detection work?",
@@ -61,7 +72,7 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Is my text stored or shared?",
-    a: "The free tools don't keep your text: the instant AI-detector score is calculated in your browser, and the optional deep scan and the no-signup humanizer process text without saving it. When you're signed in, the documents you check or humanize are saved to your account so they can appear in your history, and you can delete them at any time. We never sell your text or use it to train AI models.",
+    a: "The free tools don't keep your text: the instant AI-detector score is calculated in your browser, and the optional deep scan and the no-signup humanizer process text without saving it. When you're signed in, the documents you check or humanize are saved to your account so they appear in your History (the Free plan shows your 5 most recent). They stay until you delete them or your account, and you can delete any of them at any time. Voice Match keeps a short description of your style, not your writing samples. We never sell your text or use it to train AI models.",
   },
   {
     q: "What's the difference between detecting and humanizing?",
@@ -81,83 +92,107 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "What is your refund policy?",
-    a: "Annual plans come with a 14-day money-back guarantee — no questions asked. Monthly plans can be cancelled at any time and stay active until the end of the billing period. Billing errors are always refunded; see our refund policy for the details.",
+    a: `Every paid plan comes with our ${GUARANTEE_DAYS}-day "Sounds Like You" guarantee: if HumanizeIt doesn't make your writing clearer and more like you, email support@humanizeit.app within ${GUARANTEE_DAYS} days for a full refund, monthly or annual (${TEAM_ANNUAL_GUARANTEE_DAYS} days on Team annual). We never promise a score on someone else's AI detector; no honest tool can. Our refund policy has the details.`,
   },
   {
     q: "Is there a free plan?",
-    a: "Yes — the free plan gives you 500 words per day, forever. No credit card required, no trial period. Upgrade to Pro anytime for higher limits.",
+    a: `Yes, forever: free AI checks plus ${PLAN_CONFIG.FREE.wordsLimit} words of rewriting a day. No credit card required, no trial period. Upgrade to Pro anytime for more words, all 5 tones and Voice Match.`,
   },
   {
-    q: "Do you offer lifetime deals?",
-    a: "Yes! We offer a one-time payment option for lifetime access. Visit our lifetime deals page at /lifetime for current pricing and availability.",
+    q: "Do you offer a lifetime deal?",
+    a: `No. Every rewrite has a real cost for us, so "forever" would be a promise we couldn't keep honestly. While it lasts, Founding ${FOUNDING.seats} gives the first ${FOUNDING.seats} backers ${FOUNDING.months / 12} years of Pro for $${FOUNDING.priceUsd}, paid once. See humanizeit.app/lifetime.`,
+  },
+  {
+    q: "What counts as a word?",
+    a: "Words you send to be rewritten. Checking text for AI patterns is free and never uses words.",
+  },
+  {
+    q: "What happens when I reach my limit?",
+    a: "Free words reset 24 hours after your last reset. Pro and Team words reset with each billing month. If you need more before then, you can move up a plan.",
+  },
+  {
+    q: "My own writing was flagged as AI. Can you help?",
+    a: "Yes. Run it through the free AI detector to see which patterns triggered the flag, and get the free False AI Flag Appeal Kit for an email template and an evidence checklist. Research shows detectors misclassify non-native English writing more often (Liang et al., 2023).",
   },
 ];
 
-const PLANS_MONTHLY = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    desc: "For curious minds",
-    features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
-    cta: "Get Started Free",
-    pro: false,
-    planId: null as "PRO" | "TEAM" | null,
-  },
-  {
-    name: "Pro",
-    price: "$9",
-    period: "/month",
-    desc: "For serious writers",
-    features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Upgrade to Pro",
-    pro: true,
-    planId: "PRO" as "PRO" | "TEAM" | null,
-  },
-  {
-    name: "Team",
-    price: "$29",
-    period: "/month",
-    desc: "For teams & agencies",
-    features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Upgrade to Team",
-    pro: false,
-    planId: "TEAM" as "PRO" | "TEAM" | null,
-  },
-];
+// Plan cards are built from lib/plans.ts so the numbers can't drift from what
+// the code enforces. Annual prices are shown per month and say what is billed.
+type PlanCard = {
+  name: string;
+  price: string;
+  period: string;
+  note: string | null;
+  desc: string;
+  features: string[];
+  cta: string;
+  pro: boolean;
+  planId: "PRO" | "TEAM" | null;
+};
 
-const PLANS_ANNUAL = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    desc: "For curious minds",
-    features: ["500 words / day", "1 rewrite / day", "Standard tone", "Basic history"],
-    cta: "Get Started Free",
-    pro: false,
-    planId: null as "PRO" | "TEAM" | null,
-  },
-  {
-    name: "Pro",
-    price: "$7",
-    period: "/month",
-    desc: "For serious writers",
-    features: ["50,000 words / month", "Unlimited rewrites", "All 4 tone modes", "30-day history", "No watermark"],
-    cta: "Upgrade to Pro",
-    pro: true,
-    planId: "PRO" as "PRO" | "TEAM" | null,
-  },
-  {
-    name: "Team",
-    price: "$24",
-    period: "/month",
-    desc: "For teams & agencies",
-    features: ["200,000 words / month", "Unlimited rewrites", "API access", "Unlimited history", "Priority support"],
-    cta: "Upgrade to Team",
-    pro: false,
-    planId: "TEAM" as "PRO" | "TEAM" | null,
-  },
-];
+const fmtUsd = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
+const fmtInt = (n: number) => n.toLocaleString("en-US");
+const { FREE: FREE_PLAN, PRO: PRO_PLAN, TEAM: TEAM_PLAN } = PLAN_CONFIG;
+/** Months an annual plan saves vs paying monthly ($108 vs $79 for Pro → about 3). */
+const ANNUAL_FREE_MONTHS = Math.round((PRO_PLAN.price * 12 - (PRO_PLAN.priceAnnual ?? 0)) / PRO_PLAN.price);
+
+function planCards(annual: boolean): PlanCard[] {
+  const paid = (monthly: number, yearly: number | undefined) =>
+    annual && yearly
+      ? { price: `≈${fmtUsd(Math.round((yearly / 12) * 100) / 100)}`, period: "/month", note: `${fmtUsd(yearly)} billed yearly` }
+      : { price: fmtUsd(monthly), period: "/month", note: annual ? null : "billed monthly" };
+  return [
+    {
+      name: "Free",
+      price: "$0",
+      period: "forever",
+      note: null,
+      desc: "For checking your writing",
+      features: [
+        `AI checks that never use words, ${PATTERN_COUNT} patterns explained`,
+        `${fmtInt(FREE_PLAN.wordsLimit)} words a day of rewriting`,
+        `${FREE_PLAN.rewriteLimit} rewrite a day, Standard tone`,
+        "History of your 5 most recent documents",
+      ],
+      cta: "Start free",
+      pro: false,
+      planId: null,
+    },
+    {
+      name: "Pro",
+      ...paid(PRO_PLAN.price, PRO_PLAN.priceAnnual),
+      desc: "Check before you submit, in your own voice. For students, job seekers and professionals.",
+      features: [
+        `${fmtInt(PRO_PLAN.wordsLimit)} words a month, unlimited rewrites`,
+        `All ${PRO_PLAN.toneOptions} tones`,
+        `Voice Match: ${PRO_PLAN.voiceProfiles} voice (${PRO_ANNUAL_VOICE_PROFILES} on annual)`,
+        `PDF and Word upload (up to ${fmtInt(PRO_PLAN.uploadMaxWords)} words, ${PRO_PLAN.uploadMonthlyLimit} a month)`,
+        "Before/After Report for every document",
+        `${PRO_PLAN.historyDays}-day history, API access (${fmtInt(PRO_PLAN.apiRequestsLimit)} requests a month)`,
+        `Bonus: Founder's First-Document Review (${FOUNDER_SERVICES.founder_review.monthlyCap} a month)`,
+      ],
+      cta: annual ? "Start Pro annual" : "Start Pro",
+      pro: true,
+      planId: "PRO",
+    },
+    {
+      name: "Team",
+      ...paid(TEAM_PLAN.price, TEAM_PLAN.priceAnnual),
+      desc: "Client voices, checked before delivery. For agencies and content teams.",
+      features: [
+        `${fmtInt(TEAM_PLAN.wordsLimit)} words a month, unlimited rewrites`,
+        `All ${TEAM_PLAN.toneOptions} tones, ${TEAM_PLAN.voiceProfiles} Voice Profiles (one per client)`,
+        `Uploads up to ${fmtInt(TEAM_PLAN.uploadMaxWords)} words, ${TEAM_PLAN.uploadMonthlyLimit} a month`,
+        `Unlimited history, API access (${fmtInt(TEAM_PLAN.apiRequestsLimit)} requests a month)`,
+        `Bonus: 30-minute Workflow Setup with the founder (${FOUNDER_SERVICES.team_setup.monthlyCap} a month)`,
+        `Seats for teammates: $${ORG_SEAT.pricePerSeatMonthly} each a month (${ORG_SEAT.minSeats} minimum), +${fmtInt(ORG_SEAT.wordsPerSeat)} pooled words per seat`,
+      ],
+      cta: "Start Team",
+      pro: false,
+      planId: "TEAM",
+    },
+  ];
+}
 
 
 // Only rows we can stand behind. No per-detector "passes" ticks: there is no
@@ -224,7 +259,7 @@ export default function LandingPage() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  const plans = billingAnnual ? PLANS_ANNUAL : PLANS_MONTHLY;
+  const plans = planCards(billingAnnual);
 
   // ── Shared inline style helpers (token-driven) ───────────────────────────
   // Centered eyebrow wrapper for section headers (uses the .kicker pill).
@@ -755,13 +790,22 @@ export default function LandingPage() {
                 We&apos;re building an extension to check and polish text right inside Gmail, Google Docs, LinkedIn, and Notion. It isn&apos;t released yet &mdash; until it is, the free web tools do the same job in any browser, with no install and no signup.
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
-                <Link href="/free-ai-humanizer" style={{
+                <Link href="/extension" style={{
                   display: "inline-flex", alignItems: "center", gap: "7px",
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   fontSize: "14px", textDecoration: "none",
                 }}>
-                  Use the free humanizer <ArrowRight size={15} aria-hidden="true" />
+                  Join the waitlist <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+                <Link href="/free-ai-humanizer" style={{
+                  display: "inline-flex", alignItems: "center",
+                  background: "transparent", color: THEME.textDim,
+                  padding: "12px 24px", borderRadius: THEME.radius,
+                  border: `1px solid ${THEME.border}`,
+                  fontSize: "14px", textDecoration: "none", fontWeight: 500,
+                }}>
+                  Use the free humanizer
                 </Link>
                 <Link href="/ai-detector" style={{
                   display: "inline-flex", alignItems: "center",
@@ -835,7 +879,10 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: "960px", margin: "0 auto" }}>
           <div style={sectionLabelWrap}><span className="kicker">Pricing</span></div>
-          <h2 style={{ ...h2Style, marginBottom: "12px" }}>Start free. Upgrade when ready.</h2>
+          <h2 style={{ ...h2Style, marginBottom: "12px" }}>Write naturally. Check before you submit.</h2>
+          <p style={{ textAlign: "center", fontSize: "16px", color: THEME.textDim, maxWidth: "560px", margin: "0 auto", lineHeight: 1.6 }}>
+            See exactly which sentences read as AI and why, then rewrite them in your own voice. Start free, no card needed.
+          </p>
 
           {/* Billing toggle */}
           <div className="pricing-toggle-row" style={{
@@ -867,7 +914,7 @@ export default function LandingPage() {
                 background: THEME.accent,
                 padding: "3px 10px", borderRadius: "999px", letterSpacing: "0.02em",
               }}>
-                Save 20%
+                About {ANNUAL_FREE_MONTHS} months free
               </span>
             )}
           </div>
@@ -916,15 +963,16 @@ export default function LandingPage() {
                 <div style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "4px", fontWeight: 500 }}>{plan.desc}</div>
                 <div style={{ fontSize: "16px", fontWeight: 700, color: THEME.text, marginBottom: "16px", fontFamily: THEME.fontHeading }}>{plan.name}</div>
 
-                <div style={{ display: "flex", alignItems: "baseline", gap: "3px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "3px", marginBottom: plan.note ? "2px" : "20px" }}>
                   <span className="tnum" style={{ fontFamily: THEME.fontHeading, fontSize: "42px", fontWeight: 800, color: THEME.text, letterSpacing: "-0.03em" }}>{plan.price}</span>
                   <span style={{ fontSize: "14px", color: THEME.textMuted, fontWeight: 500 }}>{plan.period}</span>
                 </div>
+                {plan.note && <div className="tnum" style={{ fontSize: "12px", color: THEME.textMuted, marginBottom: "18px" }}>{plan.note}</div>}
 
                 <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   {plan.features.map((f) => (
-                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "9px", fontSize: "13px", color: THEME.textDim }}>
-                      <Check size={14} color={plan.pro ? THEME.human : THEME.brandHi} style={{ flexShrink: 0 }} aria-hidden="true" />
+                    <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: "9px", fontSize: "13px", color: THEME.textDim, lineHeight: 1.45 }}>
+                      <Check size={14} color={plan.pro ? THEME.human : THEME.brandHi} style={{ flexShrink: 0, marginTop: "2px" }} aria-hidden="true" />
                       {f}
                     </li>
                   ))}
@@ -971,6 +1019,28 @@ export default function LandingPage() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Guarantee: one policy everywhere (lib/plans.ts, /refunds) */}
+          <div className="panel" style={{ display: "flex", gap: "14px", alignItems: "flex-start", borderRadius: THEME.radiusLg, padding: "18px 20px", marginTop: "24px" }}>
+            <ShieldCheck size={22} color={THEME.human} aria-hidden="true" style={{ flexShrink: 0, marginTop: "2px" }} />
+            <p style={{ margin: 0, fontSize: "14px", color: THEME.textDim, lineHeight: 1.65 }}>
+              <strong style={{ color: THEME.text }}>{GUARANTEE_DAYS}-day &ldquo;Sounds Like You&rdquo; guarantee.</strong>{" "}
+              If HumanizeIt doesn&apos;t make your writing clearer and more like you, email us within {GUARANTEE_DAYS} days for a full refund, monthly or annual ({TEAM_ANNUAL_GUARANTEE_DAYS} days on Team annual). We never promise a score on someone else&apos;s AI detector. Nobody honest can.{" "}
+              <Link href="/refunds" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>Refund policy</Link>
+            </p>
+          </div>
+
+          {/* Founding 100: the live count is on /lifetime (this page is static) */}
+          <div style={{ display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap", background: THEME.accentDim, border: `1px solid ${THEME.accent}44`, borderRadius: THEME.radiusLg, padding: "18px 20px", marginTop: "14px" }}>
+            <Award size={22} color={THEME.accentHi} aria-hidden="true" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: "14px", color: THEME.textDim, lineHeight: 1.65, flex: "1 1 320px" }}>
+              <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: {FOUNDING.months / 12} years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
+              For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
+            </p>
+            <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
+              See how many are left <ArrowRight size={14} aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>
@@ -1209,7 +1279,7 @@ export default function LandingPage() {
                   { label: "GPTZero Checker", href: "/gptzero-checker" },
                   { label: "Dashboard", href: "/dashboard/editor" },
                   { label: "Pricing", href: "#pricing" },
-                  { label: "Lifetime Deal", href: "/lifetime" },
+                  { label: "Founding 100", href: "/lifetime" },
                 ].map(({ label, href }) => (
                   <a key={label} href={href} style={{ fontSize: "14px", color: THEME.textDim, textDecoration: "none" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = THEME.text; }}
