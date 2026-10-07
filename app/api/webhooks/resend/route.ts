@@ -14,9 +14,13 @@
 //                              suppression, every topic withdrawn, exit sequences
 //   email.failed               message failed (not retried: Resend gave up)
 //   email.suppressed           message suppressed, "all" suppression (provider)
-//   email.received             mail sent to @humanizeit.app: forwarded to the
-//                              founder + reply task (lib/email/inbound.ts)
+//   email.received             mail sent to @humanizeit.app: reply task + forward
+//                              to the founder (lib/email/inbound.ts)
 //   anything else              acknowledged and ignored
+//
+// Delivery events of those forwards (tag stream=inbound_forward) are ignored:
+// their recipient is the founder, so a complaint or bounce on one must never
+// suppress the founder's address or touch a customer's message.
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -28,6 +32,7 @@ import { getResend } from "@/lib/email/resend-client";
 import {
   classifyEvent,
   contactEffect,
+  eventTag,
   eventTime,
   messageRef,
   nextContactStatus,
@@ -39,13 +44,17 @@ import { withdrawTopics } from "@/lib/crm/consent";
 import { recomputeContact } from "@/lib/crm/recompute";
 import { onEmailBounced } from "@/lib/growth/triggers";
 import { forwardInbound } from "@/lib/email/inbound";
+import { FORWARD_STREAM_TAG } from "@/lib/email/inbound-rules";
 import { isUniqueViolation, logGrowthError, runAfter } from "@/lib/growth/safe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// An inbound forward reads the message, downloads the original and sends it.
+export const maxDuration = 60;
 
 const MAX_BODY_BYTES = 256 * 1024;
 const MAX_ATTEMPTS = 3;
+const RESEND_ID = /^[A-Za-z0-9_-]{1,100}$/;
 
 function fail(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status });
@@ -144,6 +153,7 @@ export async function POST(req: Request) {
   } catch {
     return fail("INVALID_SIGNATURE", "Invalid signature.", 400);
   }
+  if (eventTag(evt, FORWARD_STREAM_TAG.name) === FORWARD_STREAM_TAG.value) return NextResponse.json({ ok: true, ignored: true });
 
   const eventId = `resend:${id}`;
   try {
@@ -155,19 +165,23 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === "email.received") {
-    const data = evt.data as { email_id?: string; from?: string; to?: string[] | string; subject?: string } | undefined;
+    const data = evt.data as { email_id?: unknown; from?: unknown; subject?: unknown } | undefined;
+    const emailId = typeof data?.email_id === "string" && RESEND_ID.test(data.email_id) ? data.email_id : null;
+    if (!emailId) {
+      // Nothing to look up: acknowledge so Resend doesn't retry a malformed event.
+      logGrowthError("resend-inbound", new Error("email.received without a usable email_id"));
+      return NextResponse.json({ ok: true });
+    }
     try {
-      if (data?.email_id && data.from) {
-        await forwardInbound({
-          emailId: data.email_id,
-          from: data.from,
-          to: Array.isArray(data.to) ? data.to : data.to ? [data.to] : [],
-          subject: data.subject ?? null,
-        });
-      }
+      await forwardInbound({
+        emailId,
+        from: typeof data?.from === "string" ? data.from : null,
+        subject: typeof data?.subject === "string" ? data.subject : null,
+      });
     } catch (err) {
       logGrowthError("resend-inbound", err);
-      // Same idempotency key on the retry, so the forward can't be doubled.
+      // The reply task already exists, and the retry reuses the send's
+      // idempotency key, so the forward can't be doubled.
       await db.webhookEvent.deleteMany({ where: { eventId } }).catch(() => {});
       return fail("INTERNAL_ERROR", "Could not forward the email.", 500);
     }

@@ -129,13 +129,22 @@ describe("POST /api/webhooks/resend: email.received (support inbox)", () => {
   it("forwards the email and never touches delivery state", async () => {
     const res = await signed("msg_in1", received);
     expect(res.status).toBe(200);
-    expect(forwardInbound).toHaveBeenCalledWith({
-      emailId: "in_1",
-      from: "Jane <jane@example.com>",
-      to: ["support@humanizeit.app"],
-      subject: "Refund please",
-    });
+    expect(forwardInbound).toHaveBeenCalledWith({ emailId: "in_1", from: "Jane <jane@example.com>", subject: "Refund please" });
     expect(state.calls).not.toContain("emailMessage.findUnique");
+  });
+
+  it("acknowledges an event without a usable email_id and forwards nothing", async () => {
+    const noId = await signed("msg_in4", { ...received, data: { from: "Jane <jane@example.com>", subject: "Hi" } });
+    expect(noId.status).toBe(200);
+    const badId = await signed("msg_in5", { ...received, data: { ...received.data, email_id: "in_1\r\nX-Evil: 1" } });
+    expect(badId.status).toBe(200);
+    expect(forwardInbound).not.toHaveBeenCalled();
+  });
+
+  it("forwards when from is missing (read from Resend) and accepts `to` as a string", async () => {
+    const res = await signed("msg_in6", { ...received, data: { email_id: "in_6", to: "support@humanizeit.app" } });
+    expect(res.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledWith({ emailId: "in_6", from: null, subject: null });
   });
 
   it("answers 500 and releases the ledger when the forward fails, so Resend retries", async () => {
@@ -150,6 +159,20 @@ describe("POST /api/webhooks/resend: email.received (support inbox)", () => {
     const replay = await signed("msg_in3", received);
     expect(replay.status).toBe(200);
     expect(forwardInbound).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("POST /api/webhooks/resend: delivery events of support forwards", () => {
+  it.each([
+    ["object", { m: "msg_1", stream: "inbound_forward" }],
+    ["array", [{ name: "stream", value: "inbound_forward" }]],
+  ])("ignores a complaint on a forward (tags as %s): the founder's address is never suppressed", async (_form, tags) => {
+    const complaint = { type: "email.complained", created_at: "2026-10-07T08:00:00.000Z", data: { email_id: "fwd_1", to: ["founder@gmail.com"], tags } };
+    const res = await signed("msg_fwd", complaint);
+    expect(res.status).toBe(200);
+    expect(state.calls).toEqual([]);
+    expect(state.suppressions).toEqual([]);
+    expect(withdrawTopics).not.toHaveBeenCalled();
   });
 });
 

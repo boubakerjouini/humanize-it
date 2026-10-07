@@ -16,6 +16,11 @@ import type { User } from "@/app/generated/prisma/client";
 /** Hard-coded founder admin — always allowed even with no env configured. */
 const FOUNDER_ADMIN = "boubakerseddik.jouini@gmail.com";
 
+/** The founder's address: the one inbox that must always receive support mail. */
+export function founderEmail(): string {
+  return FOUNDER_ADMIN;
+}
+
 /** Normalized set of allowlisted admin emails. */
 export function adminEmails(): Set<string> {
   const fromEnv = (process.env.ADMIN_EMAILS ?? "")
