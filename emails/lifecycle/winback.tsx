@@ -10,17 +10,22 @@ import { PlainLayout } from "@/emails/components/layout";
 import { Greeting, P } from "@/emails/components/primitives";
 import type { TemplateDef } from "@/emails/registry";
 
+// followUp: the tips email (winback_one_thing) went out before this one.
+// moreToCome: the bonus-words email (winback_bonus) still follows.
 export const winback_ask: TemplateDef<"winback_ask"> = {
   subject: () => "Should I stop emailing you?",
-  Component: ({ ctx }) => (
+  Component: ({ p, ctx }) => (
     <PlainLayout ctx={ctx} preview="No hard feelings either way.">
       <Greeting ctx={ctx} />
       <P>
-        I&apos;ve sent you a couple of emails and haven&apos;t heard back, which is completely fine. Inboxes are full.
+        {p.followUp
+          ? "I've sent you a couple of emails and haven't heard back, which is completely fine. Inboxes are full."
+          : "It's been a few weeks since you last used HumanizeIt, which is completely fine. Inboxes and calendars are full."}
       </P>
       <P>
-        I don&apos;t want to be one more sender you ignore, so this is the last one in this series. Your account stays
-        open, and the free detector is there whenever you need it.
+        {p.moreToCome
+          ? "I don't want to be one more sender you ignore, so after this there's one more short email, then I go quiet. Your account stays open, and the free detector is there whenever you need it."
+          : "I don't want to be one more sender you ignore, so this is the last one in this series. Your account stays open, and the free detector is there whenever you need it."}
       </P>
       <P>
         One question before I go quiet, and no pitch: was it the free limits, the quality, or did you just not need it?

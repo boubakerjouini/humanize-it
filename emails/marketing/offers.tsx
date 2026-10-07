@@ -30,7 +30,7 @@ import {
   usd,
   words,
 } from "@/emails/lifecycle/shared";
-import { PLANS } from "@/lib/plans";
+import { GUARANTEE_DAYS, PLANS } from "@/lib/plans";
 import { referralsEnabled } from "@/lib/growth/flags";
 import { REFERRAL_REWARD_WORDS } from "@/lib/growth/referral-rules";
 
@@ -66,14 +66,14 @@ export const what_paid_users_do: TemplateDef<"what_paid_users_do"> = {
 
 // quota_hit.1 — Two ways to get more (the referral line only while referrals are on)
 export const limit_hit_menu: TemplateDef<"limit_hit_menu"> = {
-  subject: () => "You hit today's limit. Two ways to get more",
+  subject: () => "You hit the free limit. Two ways to get more",
   Component: ({ p, ctx }) => {
     const referrals = referralsEnabled();
     return (
       <EmailLayout ctx={ctx} preview="One of them is free.">
         <Greeting ctx={ctx} />
         <P>
-          You used your free words for today. That usually means you&apos;re in the middle of something, so here&apos;s
+          You recently used up your free words. That usually means you were in the middle of something, so here&apos;s
           how to keep going.
         </P>
         <P>
@@ -89,8 +89,8 @@ export const limit_hit_menu: TemplateDef<"limit_hit_menu"> = {
         </P>
         <P>
           {referrals
-            ? "If you're on a deadline today, Pro is the faster fix. If not, the next reset and a referral may be all you need. Both are fine with me."
-            : "If you're on a deadline today, Pro is the faster fix. If not, the next reset may be all you need. Both are fine with me."}
+            ? "If you're on a deadline, Pro is the faster fix. If not, the next reset and a referral may be all you need. Both are fine with me."
+            : "If you're on a deadline, Pro is the faster fix. If not, the next reset may be all you need. Both are fine with me."}
         </P>
         <CtaAndSignature href={ctx.link("/dashboard/settings")}>See what Pro includes</CtaAndSignature>
       </EmailLayout>
@@ -116,8 +116,7 @@ export const trial_offer: TemplateDef<"trial_offer"> = {
           {`Pro annual is ${usd(annual)}. Paying monthly for a year would cost ${usd(monthly * 12)}, so annual saves you ${usd(saving)}, which is more than three months free.`}
         </P>
         <P>
-          It also comes with the 14-day money-back guarantee, monthly or annual. Use it on real work for two weeks. If
-          it doesn&apos;t earn its place, email me and you get a full refund.
+          {`It also comes with the ${GUARANTEE_DAYS}-day money-back guarantee, monthly or annual. Use it on real work first. If it doesn't earn its place, email me within ${GUARANTEE_DAYS} days and you get a full refund.`}
         </P>
         <P>
           {`You get ${words(PRO_WORDS)} words a month, unlimited rewrites, all 5 tones, Voice Match, PDF and Word upload, and ${PRO_HISTORY_DAYS} days of history.`}

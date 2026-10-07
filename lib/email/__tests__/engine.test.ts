@@ -25,7 +25,7 @@ describe("planEnrollmentStep", () => {
 
   it("sends a due step and waits for a future one (12h look-ahead for the cron, none inline)", () => {
     expect(planEnrollmentStep(onboarding, { status: "active", stepIndex: 0, anchorAt: now }, ctx("onboarding"), now, 0).kind).toBe("send");
-    const anchor = new Date(now.getTime() - 14 * H); // first_run_nudge due in 10h
+    const anchor = new Date(now.getTime() - 14 * H); // check_before_submit due in 10h
     const enr = { status: "active", stepIndex: 1, anchorAt: anchor };
     expect(planEnrollmentStep(onboarding, enr, ctx("onboarding"), now, 12).kind).toBe("send");
     expect(planEnrollmentStep(onboarding, enr, ctx("onboarding"), now, 0)).toEqual({ kind: "wait", nextRunAt: new Date(anchor.getTime() + 24 * H) });
@@ -38,7 +38,7 @@ describe("planEnrollmentStep", () => {
 
   it("maps a failed condition to a condition skip", () => {
     const c = ctx("onboarding", (x) => (x.contact.firstDocumentAt = now));
-    const plan = planEnrollmentStep(onboarding, { status: "active", stepIndex: 1, anchorAt: new Date(now.getTime() - 24 * H) }, c, now, 12);
+    const plan = planEnrollmentStep(onboarding, { status: "active", stepIndex: 2, anchorAt: new Date(now.getTime() - 72 * H) }, c, now, 12);
     expect(plan).toMatchObject({ kind: "skip", reason: "condition" });
     expect(plan.kind === "skip" && plan.step.key).toBe("first_run_nudge");
   });
@@ -163,7 +163,7 @@ describe("hasDeliverableStepsLeft", () => {
 describe("lateStepsAt", () => {
   it("counts the steps a backfill would skip as too late", () => {
     const anchor = new Date(now.getTime() - 100 * H);
-    // welcome (+0, 100h ago) is late; first_run_nudge (+24h, 76h ago) is late; check_before_submit (+72h, 28h ago) is not.
+    // welcome (+0, 100h ago) is late; check_before_submit (+24h, 76h ago) is late; first_run_nudge (+72h, 28h ago) is not.
     expect(lateStepsAt(SEQUENCES.onboarding, anchor, now)).toBe(2);
     expect(lateStepsAt(SEQUENCES.onboarding, now, now)).toBe(0);
   });

@@ -151,16 +151,17 @@ const onboarding = def(
   "user",
   "Signup (welcome goes out right away)",
   [
+    // Playbook order: welcome.2 (the habits) on day 1, welcome.3 (the nudge) on day 3.
     step({ key: "welcome", offsetHours: 0, template: "welcome", props: () => ({}) }),
+    step({ key: "check_before_submit", offsetHours: 24, template: "check_before_submit", props: () => ({}) }),
     step({
       key: "first_run_nudge",
-      offsetHours: 24,
+      offsetHours: 72,
       template: "first_run_nudge",
       when: (c) => sendIf(c.contact.firstDocumentAt === null),
       condition: "Only if they haven't run a first document",
       props: () => ({}),
     }),
-    step({ key: "check_before_submit", offsetHours: 72, template: "check_before_submit", props: () => ({}) }),
     step({
       key: "what_paid_users_do",
       offsetHours: 168,
@@ -279,7 +280,16 @@ const winbackInactive = def(
       template: "winback_one_thing",
       props: () => ({ headline: WHATS_NEW.headline, body: WHATS_NEW.body, ctaLabel: WHATS_NEW.ctaLabel, ctaUrl: WHATS_NEW.ctaUrl }),
     }),
-    step({ key: "winback_ask", offsetHours: 168, template: "winback_ask", props: () => ({}) }),
+    step({
+      key: "winback_ask",
+      offsetHours: 168,
+      template: "winback_ask",
+      // winback_one_thing and winback_bonus are marketing: only tips subscribers get them.
+      props: (c) => {
+        const tips = c.contact.subscribedTopics.includes("tips");
+        return { followUp: tips, moreToCome: tips && referralsEnabled() };
+      },
+    }),
     step({
       key: "winback_bonus",
       offsetHours: 336,

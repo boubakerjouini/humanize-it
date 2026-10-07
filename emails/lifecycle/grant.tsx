@@ -49,8 +49,8 @@ export const grant_ending_notice: TemplateDef<"grant_ending_notice"> = {
           {` ${words(planWords(p.plan))} words a month, unlimited rewrites, all 5 tones and Voice Match, older History, PDF and Word upload, and API access.`}
         </P>
         <P>
-          If HumanizeIt became part of your work, I&apos;d rather you keep it than lose your setup. I&apos;ll send the
-          options before it ends.
+          If HumanizeIt became part of your work, I&apos;d rather you keep it than lose your setup. The options are on
+          your plan page.
         </P>
         <P>And if it didn&apos;t, I&apos;d really like to know why. Reply with one line and I&apos;ll read it myself.</P>
         <CtaAndSignature href={ctx.link("/dashboard/settings")}>Review your plan</CtaAndSignature>
@@ -72,19 +72,14 @@ export const grant_ends_tomorrow: TemplateDef<"grant_ends_tomorrow"> = {
           Thank you for giving HumanizeIt a real try. For something built by one person, that matters a lot.
         </P>
         <P>
-          {p.plan === "TEAM"
-            ? "If you want to keep it, the options are on your plan page: Team monthly or annual, or Pro if it's just you."
-            : "If you want to keep it, the options are on your plan page: Pro monthly or annual."}
-        </P>
-        <P>
-          If you don&apos;t, could you answer one question by replying?{" "}
+          Could you answer one question by replying?{" "}
           <strong>What would HumanizeIt need to do for you to pay for it?</strong> One line is plenty. I read every
           answer, and the next version gets built from them.
         </P>
         <P>
           {`Either way, your account stays open on the Free plan, with your newest ${FREE_HISTORY_DOCS} documents in History.`}
         </P>
-        <CtaAndSignature href={ctx.link("/dashboard/settings")}>Keep my plan</CtaAndSignature>
+        <CtaAndSignature href={ctx.link("/dashboard/settings")}>Review your plan</CtaAndSignature>
       </EmailLayout>
     );
   },

@@ -55,7 +55,8 @@ export type TemplateProps = {
   grant_feedback: Base & { plan: PaidPlan };
   // Win-back
   winback_one_thing: Base & { headline: string; body: string; ctaLabel: string; ctaUrl: string };
-  winback_ask: Base;
+  /** followUp: winback_one_thing (tips) was sent first; moreToCome: winback_bonus follows. */
+  winback_ask: Base & { followUp?: boolean; moreToCome?: boolean };
   winback_bonus: Base & { words: number };
   // Checkout abandoned
   checkout_help: Base & { plan: PaidPlan; monthly: number; annual: number };

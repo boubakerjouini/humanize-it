@@ -69,10 +69,11 @@ export function EmailLayout({ ctx, preview, children }: LayoutProps) {
       <Section style={{ margin: "0 0 24px" }}>
         <Row>
           <Column style={{ width: 36, verticalAlign: "middle" }}>
-            <Img src={`${ctx.appUrl}/icon.png`} width="28" height="28" alt="HumanizeIt logo" style={{ borderRadius: 6 }} />
+            {/* Decorative: the wordmark next to it names the product. */}
+            <Img src={`${ctx.appUrl}/icon.png`} width="28" height="28" alt="" style={{ borderRadius: 6 }} />
           </Column>
           <Column style={{ verticalAlign: "middle" }}>
-            <Text style={{ fontSize: 18, fontWeight: 800, color: BRAND.color, margin: 0, letterSpacing: "-0.02em" }}>H.</Text>
+            <Text style={{ fontSize: 18, fontWeight: 800, color: BRAND.color, margin: 0, letterSpacing: "-0.02em" }}>HumanizeIt</Text>
           </Column>
         </Row>
       </Section>
