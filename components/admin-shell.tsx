@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -83,10 +84,16 @@ export function AdminShell({ email, children }: { email: string; children: React
   const pathname = usePathname();
   const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
 
+  // On narrow screens the nav is one scrolling row: keep the current page's link in view.
+  useEffect(() => {
+    document.querySelector('.admin-nav [aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [pathname]);
+
   return (
-    <div style={{ display: "flex", minHeight: "100dvh", background: THEME.bg, fontFamily: THEME.fontSans }}>
+    // Below 768px the sidebar becomes a top bar with a scrolling nav row (app/globals.css, .admin-*).
+    <div className="admin-shell" style={{ display: "flex", minHeight: "100dvh", background: THEME.bg, fontFamily: THEME.fontSans }}>
       {/* Sidebar */}
-      <aside style={{ width: 240, flexShrink: 0, borderRight: `1px solid ${THEME.border}`, background: THEME.surface1, display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100dvh" }}>
+      <aside className="admin-aside" style={{ width: 240, flexShrink: 0, borderRight: `1px solid ${THEME.border}`, background: THEME.surface1, display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100dvh" }}>
         <div style={{ padding: "20px 18px 16px", borderBottom: `1px solid ${THEME.border}`, display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{ width: 30, height: 30, borderRadius: 9, background: THEME.gradient, display: "grid", placeItems: "center", boxShadow: glow(THEME.brand, 0.22) }}>
             <ShieldCheck size={16} color="#fff" aria-hidden="true" />
@@ -97,18 +104,18 @@ export function AdminShell({ email, children }: { email: string; children: React
           </div>
         </div>
 
-        <nav aria-label="Admin" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <nav aria-label="Admin" className="admin-nav" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "14px 10px", display: "flex", flexDirection: "column", gap: 2 }}>
           {ADMIN_NAV.map((group) => (
-            <div key={group.title ?? "main"} role="group" aria-label={group.title ?? undefined} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <div key={group.title ?? "main"} role="group" aria-label={group.title ?? undefined} className="admin-nav-group" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {group.title ? (
-                <div style={{ padding: "14px 12px 6px", fontSize: 10, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <div className="admin-nav-title" style={{ padding: "14px 12px 6px", fontSize: 10, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   {group.title}
                 </div>
               ) : null}
               {group.items.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActive(href, exact);
                 return (
-                  <Link key={href} href={href} aria-current={active ? "page" : undefined} style={{
+                  <Link key={href} href={href} aria-current={active ? "page" : undefined} className="admin-nav-link" style={{
                     display: "flex", alignItems: "center", gap: 11, padding: "9px 12px", borderRadius: 8, textDecoration: "none",
                     background: active ? THEME.brandDim : "transparent",
                     color: active ? THEME.brandHi : THEME.textDim,
@@ -124,7 +131,7 @@ export function AdminShell({ email, children }: { email: string; children: React
           ))}
         </nav>
 
-        <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}` }}>
+        <div className="admin-aside-foot" style={{ padding: 12, borderTop: `1px solid ${THEME.border}` }}>
           <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, color: THEME.textDim, textDecoration: "none", marginBottom: 8 }}>
             <ArrowLeft size={14} aria-hidden="true" /> Back to app
           </Link>
@@ -139,7 +146,7 @@ export function AdminShell({ email, children }: { email: string; children: React
       </aside>
 
       {/* Content */}
-      <main style={{ flex: 1, minWidth: 0, overflow: "auto" }}>{children}</main>
+      <main className="admin-main" style={{ flex: 1, minWidth: 0, overflow: "auto" }}>{children}</main>
     </div>
   );
 }

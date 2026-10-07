@@ -56,7 +56,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
             {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="desktop-only" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>
+              <Link key={n.href} href={n.href} className="mkt-nav-link" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>
                 {n.label}
               </Link>
             ))}

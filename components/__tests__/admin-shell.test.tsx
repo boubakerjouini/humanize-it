@@ -75,6 +75,6 @@ describe("AdminShell navigation", () => {
   });
 
   it("lets the sidebar scroll when it overflows", () => {
-    expect(html).toMatch(/<nav aria-label="Admin" style="[^"]*overflow-y:auto/);
+    expect(html).toMatch(/<nav aria-label="Admin"[^>]* style="[^"]*overflow-y:auto/);
   });
 });
