@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { FLOW_KEYS, FLOW_META, TEMPLATES, isTemplateKey } from "@/lib/email/catalog";
 import { getSequence } from "@/lib/email/sequences";
+import { SWEPT_SEQUENCES } from "@/lib/email/sweeps";
 import { handleError } from "../email/_lib/respond";
 
 export const runtime = "nodejs";
@@ -35,8 +36,12 @@ export async function GET() {
       const count = (status: string) => enrollments.find((e) => e.sequenceKey === key && e.status === status)?._count._all ?? 0;
       return {
         key,
-        ...FLOW_META[key],
-        playbook: undefined,
+        name: FLOW_META[key].name,
+        kind: FLOW_META[key].kind,
+        description: FLOW_META[key].description,
+        audience: FLOW_META[key].audience,
+        // Swept sequences enroll everyone who qualifies at the next daily run once switched on.
+        swept: (SWEPT_SEQUENCES as readonly string[]).includes(key),
         trigger: seq?.trigger ?? "Sent right away when someone asks",
         steps: seq?.steps.length ?? 1,
         enabled: setting?.enabled === true,

@@ -15,6 +15,7 @@ import { logAudit } from "@/lib/audit";
 import { FLOW_META, TEMPLATES, isFlowKey, templatesOfFlow } from "@/lib/email/catalog";
 import { invalidateFlowCache } from "@/lib/email/enroll";
 import { getSequence } from "@/lib/email/sequences";
+import { SWEPT_SEQUENCES } from "@/lib/email/sweeps";
 import { fail, handleError, readJson } from "../../email/_lib/respond";
 
 export const runtime = "nodejs";
@@ -71,8 +72,9 @@ export async function GET(req: Request, { params }: Ctx) {
     });
 
     const where = { sequenceKey: key, ...(statusFilter && ENROLLMENT_STATUSES.includes(statusFilter) ? { status: statusFilter } : {}) };
-    const [setting, total, enrollments] = await Promise.all([
+    const [setting, active, total, enrollments] = await Promise.all([
       db.emailFlowSetting.findUnique({ where: { key } }),
+      seq ? db.sequenceEnrollment.count({ where: { sequenceKey: key, status: "active" } }) : Promise.resolve(0),
       seq ? db.sequenceEnrollment.count({ where }) : Promise.resolve(0),
       seq
         ? db.sequenceEnrollment.findMany({
@@ -91,6 +93,8 @@ export async function GET(req: Request, { params }: Ctx) {
       key,
       ...meta,
       isSequence: !!seq,
+      swept: (SWEPT_SEQUENCES as readonly string[]).includes(key),
+      active,
       trigger: seq?.trigger ?? "Sent right away when someone asks",
       enabled: setting?.enabled === true,
       updatedBy: setting?.updatedBy ?? null,
