@@ -26,7 +26,21 @@ function encodeRaw(value: unknown): string {
 
 describe("classifyChannel rules, in order", () => {
   it("1. a referral code wins over everything, even paid UTMs", () => {
-    expect(touch("/?ref=abc123&utm_medium=cpc").ch).toBe("referral_program");
+    expect(touch("/?ref=k7m2p9qr&utm_medium=cpc").ch).toBe("referral_program");
+  });
+
+  it("does not take launch-directory ?ref= tags for referral codes", () => {
+    const producthunt = touch("/?ref=producthunt", "https://www.producthunt.com/posts/humanizeit");
+    expect(producthunt.ref).toBeUndefined();
+    expect(producthunt.ch).toBe("social");
+    for (const [tag, referrer] of [
+      ["betalist", "https://betalist.com/startups/humanizeit"],
+      ["futurepedia", "https://www.futurepedia.io/tool/humanizeit"],
+    ]) {
+      const t = touch(`/?ref=${tag}`, referrer);
+      expect(t.ref).toBeUndefined();
+      expect(t.ch).toBe("referral");
+    }
   });
 
   it("2. paid mediums and ad click ids are paid", () => {
@@ -156,18 +170,24 @@ describe("buildTouch fields and caps", () => {
 
 describe("ref normalization", () => {
   it("upper-cases valid codes and drops invalid ones", () => {
-    expect(normalizeRef("abc123")).toBe("ABC123");
+    expect(normalizeRef("abc12345")).toBe("ABC12345");
     expect(normalizeRef(" k7m2p9qr ")).toBe("K7M2P9QR");
     expect(normalizeRef("ab12")).toBeUndefined();
-    expect(normalizeRef("abc-123")).toBeUndefined();
-    expect(normalizeRef("A".repeat(13))).toBeUndefined();
+    expect(normalizeRef("abc-1234")).toBeUndefined();
+    expect(normalizeRef("K7M2P9QR1")).toBeUndefined();
     expect(touch("/sign-up?ref=bad!").ref).toBeUndefined();
+  });
+
+  it("accepts only 8 Crockford base32 characters (no I, L, O or U)", () => {
+    expect(normalizeRef("ABC123")).toBeUndefined();
+    for (const letter of ["I", "L", "O", "U"]) expect(normalizeRef(`K7M2P9Q${letter}`)).toBeUndefined();
+    for (const tag of ["producthunt", "betalist", "futurepedia", "hackernews"]) expect(normalizeRef(tag)).toBeUndefined();
   });
 });
 
 describe("encode / decode", () => {
   it("round-trips a full touch", () => {
-    const t = touch("/blog/x?utm_source=quora&utm_medium=community&utm_campaign=launch&utm_term=t&utm_content=v2&ref=ABC123", "https://www.quora.com/");
+    const t = touch("/blog/x?utm_source=quora&utm_medium=community&utm_campaign=launch&utm_term=t&utm_content=v2&ref=K7M2P9QR", "https://www.quora.com/");
     expect(decodeTouch(encodeTouch(t))).toEqual(t);
   });
 
@@ -214,7 +234,7 @@ describe("last-touch overwrite rules", () => {
   });
 
   it("overwrites on a UTM, a ref, a click id or an external referrer", () => {
-    for (const next of [touch("/?utm_source=x"), touch("/?ref=ABC123"), touch("/?msclkid=1"), touch("/", "https://news.ycombinator.com/")]) {
+    for (const next of [touch("/?utm_source=x"), touch("/?ref=K7M2P9QR"), touch("/?msclkid=1"), touch("/", "https://news.ycombinator.com/")]) {
       expect(mergeLastTouch(earlier, next)).toBe(next);
     }
   });
@@ -233,7 +253,7 @@ describe("cookie helpers and contact mapping", () => {
   });
 
   it("maps a touch onto the contact first-touch columns", () => {
-    const t = touch("/free?utm_source=reddit&utm_medium=community&ref=ABC123", "https://www.reddit.com/");
+    const t = touch("/free?utm_source=reddit&utm_medium=community&ref=K7M2P9QR", "https://www.reddit.com/");
     expect(touchToFirstTouchFields(t)).toEqual({
       channel: "referral_program",
       referrerHost: "reddit.com",
@@ -243,7 +263,7 @@ describe("cookie helpers and contact mapping", () => {
       utmCampaign: null,
       utmTerm: null,
       utmContent: null,
-      refCode: "ABC123",
+      refCode: "K7M2P9QR",
       firstTouchAt: new Date(NOW),
     });
   });

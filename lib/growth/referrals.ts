@@ -3,7 +3,9 @@
 // implements the referral program behind REFERRALS_ENABLED (default off):
 // codes on Contact.referralCode, pending referrals at signup, and the reward
 // (bonus words for both sides) when the referee runs a first document. The
-// signatures are what lib/crm/hooks.ts already calls: keep them.
+// signatures are what lib/crm/hooks.ts already calls: keep them. Build codes
+// from REFERRAL_CODE_ALPHABET and REFERRAL_CODE_LENGTH (lib/growth/attribution.ts):
+// `?ref=` capture drops anything else.
 // ===========================================================
 /* eslint-disable @typescript-eslint/no-unused-vars -- stub bodies; stream D implements them */
 

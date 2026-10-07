@@ -53,7 +53,15 @@ const CLICK_ID_PARAMS: ReadonlyArray<readonly [string, ClickIdKind]> = [
 ];
 const CLICK_ID_KINDS: readonly ClickIdKind[] = ["g", "m", "f", "t"];
 
-const REF_PATTERN = /^[A-Z0-9]{6,12}$/;
+/**
+ * Referral-program codes are 8 Crockford base32 characters (no I, L, O or U).
+ * lib/growth/referrals.ts issues them from these constants and /r/[code]
+ * checks them with normalizeRef. Anything looser would read the `?ref=` tags
+ * launch directories append (producthunt, betalist, futurepedia) as codes.
+ */
+export const REFERRAL_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+export const REFERRAL_CODE_LENGTH = 8;
+const REF_PATTERN = new RegExp(`^[${REFERRAL_CODE_ALPHABET}]{${REFERRAL_CODE_LENGTH}}$`);
 
 /**
  * Hosts that are never a referrer: our own domains, previews, checkout returns
@@ -155,7 +163,7 @@ function clip(value: string | null | undefined, max: number): string | undefined
   return v ? v.slice(0, max) : undefined;
 }
 
-/** Upper-cased referral code, or undefined unless it matches ^[A-Z0-9]{6,12}$. */
+/** Upper-cased referral code, or undefined unless it has the referral-code format. */
 export function normalizeRef(raw: string | null | undefined): string | undefined {
   const v = raw?.trim().toUpperCase();
   return v && REF_PATTERN.test(v) ? v : undefined;
