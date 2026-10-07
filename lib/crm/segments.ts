@@ -135,7 +135,19 @@ function compileDate(field: DateField, op: DateOp, value: number | undefined, no
   if (op === "is_null") return onNullableDate(field, null);
   if (op === "not_null") return onNullableDate(field, { not: null });
   if (op === "within_days") return onNullableDate(field, { gte: cutoff });
-  // "Inactive 14 days" must include people who were never active at all.
+  if (field === "lastActiveAt") {
+    // "Inactive 14 days" includes people never active, but only once they have
+    // been around that long (signup, or capture for a lead), the fallback
+    // computeStage uses. Nothing sets lastActiveAt at signup, so without the
+    // age check yesterday's signups would already count as inactive.
+    return {
+      OR: [
+        { lastActiveAt: { lt: cutoff } },
+        { lastActiveAt: null, OR: [{ userId: null, createdAt: { lt: cutoff } }, { user: { is: { createdAt: { lt: cutoff } } } }] },
+      ],
+    };
+  }
+  // No date at all counts as older ("not emailed in 30 days" includes never emailed).
   return { OR: [onNullableDate(field, { lt: cutoff }), onNullableDate(field, null)] };
 }
 
@@ -251,7 +263,7 @@ const pastUsersInactive: SegmentRule[] = [
 const SYSTEM_SEGMENT_DEFS = {
   past_users_inactive: {
     name: "Past users, inactive 14d",
-    description: "Free users with no activity for 14 days (or never active).",
+    description: "Free users with no activity for 14 days (or none since signing up 14+ days ago).",
     filter: { match: "all", rules: pastUsersInactive },
   },
   past_users_tips: {

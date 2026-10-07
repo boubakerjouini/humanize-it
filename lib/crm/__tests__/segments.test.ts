@@ -31,6 +31,43 @@ const PAYING = {
 };
 const EFFECTIVE_FREE = { OR: [{ plan: "FREE" }, { plan: { not: "FREE" }, planExpiresAt: { lt: NOW } }] };
 const EFFECTIVE_NOT_FREE = { plan: { not: "FREE" }, OR: [{ planExpiresAt: null }, { planExpiresAt: { gte: NOW } }] };
+const INACTIVE_14D = {
+  OR: [
+    { lastActiveAt: { lt: ago(14) } },
+    { lastActiveAt: null, OR: [{ userId: null, createdAt: { lt: ago(14) } }, { user: { is: { createdAt: { lt: ago(14) } } } }] },
+  ],
+};
+
+type Row = Record<string, unknown>;
+
+/** Evaluates the subset of Prisma's where syntax these segments compile to against a plain row. */
+function matches(where: Row, row: Row): boolean {
+  return Object.entries(where).every(([key, cond]) => {
+    if (key === "AND") return (cond as Row[]).every((w) => matches(w, row));
+    if (key === "OR") return (cond as Row[]).some((w) => matches(w, row));
+    if (key === "NOT") return !matches(cond as Row, row);
+    const value = row[key];
+    if (cond === null || typeof cond !== "object") return value === cond;
+    return Object.entries(cond as Row).every(([op, arg]) => {
+      switch (op) {
+        case "not":
+          return value !== arg;
+        case "in":
+          return (arg as unknown[]).includes(value);
+        case "lt":
+          return value instanceof Date && value < (arg as Date);
+        case "gte":
+          return value instanceof Date && value >= (arg as Date);
+        case "is":
+          return value != null && matches(arg as Row, value as Row);
+        case "some":
+          return (value as Row[]).some((r) => matches(arg as Row, r));
+        default:
+          throw new Error(`unsupported operator ${op} on ${key}`);
+      }
+    });
+  });
+}
 
 describe("compileRule", () => {
   it("type", () => {
@@ -120,11 +157,9 @@ describe("compileRule", () => {
     });
   });
 
-  it("nullable activity dates: older_than includes contacts never active", () => {
+  it("nullable activity dates: older_than includes contacts never active once they are that old", () => {
     expect(compile({ field: "lastActiveAt", op: "within_days", value: 7 })).toEqual({ lastActiveAt: { gte: ago(7) } });
-    expect(compile({ field: "lastActiveAt", op: "older_than_days", value: 14 })).toEqual({
-      OR: [{ lastActiveAt: { lt: ago(14) } }, { lastActiveAt: null }],
-    });
+    expect(compile({ field: "lastActiveAt", op: "older_than_days", value: 14 })).toEqual(INACTIVE_14D);
     expect(compile({ field: "lastEmailedAt", op: "older_than_days", value: 3 })).toEqual({
       OR: [{ lastEmailedAt: { lt: ago(3) } }, { lastEmailedAt: null }],
     });
@@ -260,10 +295,45 @@ describe("system segments", () => {
     expect(compileSegment(SYSTEM_SEGMENTS.past_users_tips.filter, NOW)).toEqual({
       AND: [
         { userId: { not: null } },
-        { OR: [{ lastActiveAt: { lt: ago(14) } }, { lastActiveAt: null }] },
+        INACTIVE_14D,
         { user: { is: { AND: [EFFECTIVE_FREE, { NOT: PAYING }] } } },
         { subscribedTopics: { has: "tips" } },
       ],
+    });
+  });
+
+  describe("past_users_inactive membership", () => {
+    const where = compileSegment(SYSTEM_SEGMENTS.past_users_inactive.filter, NOW);
+    const freeUser = (signedUpDaysAgo: number, lastActiveDaysAgo: number | null): Row => ({
+      userId: "user_1",
+      createdAt: ago(signedUpDaysAgo),
+      lastActiveAt: lastActiveDaysAgo === null ? null : ago(lastActiveDaysAgo),
+      user: { createdAt: ago(signedUpDaysAgo), plan: "FREE", planExpiresAt: null, subscription: null, memberships: [] },
+    });
+
+    it("leaves out a user who signed up yesterday and hasn't been active yet", () => {
+      expect(matches(where, freeUser(1, null))).toBe(false);
+    });
+
+    it("includes users inactive for 14 days, or never active since signing up 14+ days ago", () => {
+      expect(matches(where, freeUser(30, null))).toBe(true);
+      expect(matches(where, freeUser(60, 20))).toBe(true);
+      expect(matches(where, freeUser(60, 3))).toBe(false);
+      // A contact created later (backfill) still dates from the account's signup.
+      expect(matches(where, { ...freeUser(30, null), createdAt: ago(0) })).toBe(true);
+    });
+
+    it("leaves out paying users", () => {
+      const paying = freeUser(60, 20);
+      (paying.user as Row).subscription = { status: "active" };
+      expect(matches(where, paying)).toBe(false);
+    });
+
+    it("ages a never-active lead from its capture date", () => {
+      const inactive = compile({ field: "lastActiveAt", op: "older_than_days", value: 14 });
+      const lead = (capturedDaysAgo: number): Row => ({ userId: null, createdAt: ago(capturedDaysAgo), lastActiveAt: null, user: null });
+      expect(matches(inactive, lead(1))).toBe(false);
+      expect(matches(inactive, lead(30))).toBe(true);
     });
   });
 
