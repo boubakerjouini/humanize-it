@@ -5,7 +5,9 @@ let _client: PostHog | null = null;
 
 export function getPostHogClient(): PostHog | null {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  if (!key) return null;
+  // Production deployments only: local dev and previews carry the same key
+  // and would otherwise mix test traffic into the real analytics.
+  if (!key || process.env.VERCEL_ENV !== "production") return null;
 
   if (!_client) {
     _client = new PostHog(key, {
