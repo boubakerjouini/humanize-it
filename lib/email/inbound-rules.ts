@@ -150,11 +150,23 @@ export function topHeader(block: string, name: string): string | null {
   return null;
 }
 
-function verdictOf(results: string[]): AuthVerdict {
+/** An RFC 8601 result word: only an explicit fail fails; none, neutral and errors decide nothing. */
+function resultOf(word: string): "pass" | "fail" | null {
+  if (word === "pass") return "pass";
+  return word === "fail" || word === "softfail" ? "fail" : null;
+}
+
+function verdictOf(words: string[]): AuthVerdict {
+  const results = words.map(resultOf).filter((r) => r !== null);
   if (results.length === 0) return "none";
   if (results.every((r) => r === "pass")) return "pass";
   return results.some((r) => r === "pass") ? "mixed" : "fail";
 }
+
+// SES writes sender-controlled values (envelope-from, helo) between the clauses,
+// and a quoted local part or an address literal can carry ";": drop quoted
+// strings, comments and address literals before splitting on it.
+const OPAQUE_TEXT = /"(?:[^"\\]|\\.)*"|\((?:[^()\\]|\\.)*\)|\[[^\]]*\]/g;
 
 /**
  * SPF/DKIM/DMARC as our receiving server saw them. A sender can add their own
@@ -168,7 +180,7 @@ export function senderAuth(rawHeaders: string | null, from: string, authservId: 
   const pinned = authservId?.trim().toLowerCase();
   const header = rawHeaders ? topHeader(rawHeaders, "Authentication-Results") : null;
   if (!pinned || !header) return UNCHECKED;
-  const [idPart, ...clauses] = header.split(";");
+  const [idPart, ...clauses] = header.replace(OPAQUE_TEXT, " ").split(";");
   if (idPart.trim().split(/\s+/)[0]?.toLowerCase() !== pinned) return UNCHECKED;
 
   const found: Record<"spf" | "dkim" | "dmarc", string[]> = { spf: [], dkim: [], dmarc: [] };
@@ -184,13 +196,15 @@ export function senderAuth(rawHeaders: string | null, from: string, authservId: 
       if (headerFrom !== senderDomain) alignedFrom = false;
     }
   }
-  const dmarc = verdictOf(found.dmarc);
+  // Any explicit DMARC fail wins, and a pass counts only as the header's one
+  // dmarc clause: our server writes exactly one.
+  const dmarc = found.dmarc.some((w) => resultOf(w) === "fail") ? "fail" : verdictOf(found.dmarc);
   return {
     spf: verdictOf(found.spf),
     dkim: verdictOf(found.dkim),
     dmarc,
     checked: true,
-    verified: dmarc === "pass" && alignedFrom && !!senderDomain,
+    verified: dmarc === "pass" && found.dmarc.length === 1 && alignedFrom && !!senderDomain,
   };
 }
 

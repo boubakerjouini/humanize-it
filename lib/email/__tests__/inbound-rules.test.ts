@@ -162,6 +162,73 @@ describe("senderAuth (raw header block, pinned authserv-id)", () => {
   });
 });
 
+describe("senderAuth on Resend's receiving server (Amazon SES)", () => {
+  const PIN = "amazonses.com";
+  const SPF = (from: string) =>
+    ` spf=pass (spfCheck: domain of ${from} designates 54.240.3.27 as permitted sender) client-ip=54.240.3.27;` +
+    ` envelope-from=0102-abc@${from}; helo=a3-27.smtp-out.eu-west-1.amazonses.com;`;
+  // Shape of a real message received on humanizeit.app (a probe sent 2026-10-07):
+  // SES prepends its own Authentication-Results and keeps a forged one, even one
+  // that claims its authserv-id, further down.
+  const ses = (results: string[], spf = SPF("send.example.com")) =>
+    rawHeaderBlock(
+      [
+        "Return-Path: <0102-abc@send.example.com>",
+        "Received: from a3-27.smtp-out.eu-west-1.amazonses.com (a3-27.smtp-out.eu-west-1.amazonses.com [54.240.3.27])",
+        " by inbound-smtp.eu-west-1.amazonaws.com with SMTP id abc123",
+        " for support@humanizeit.app;",
+        " Wed, 07 Oct 2026 09:09:15 +0000 (UTC)",
+        "X-SES-Spam-Verdict: PASS",
+        "X-SES-Virus-Verdict: PASS",
+        `Received-SPF: pass (spfCheck: domain of send.example.com designates 54.240.3.27 as permitted sender) client-ip=54.240.3.27;`,
+        "Authentication-Results: amazonses.com;",
+        spf,
+        ...results.map((r) => ` ${r};`),
+        "X-SES-RECEIPT: AEFBQUFB",
+        "Authentication-Results: amazonses.com; spf=pass; dkim=pass;",
+        " dmarc=pass header.from=paypal.com",
+        "From: Probe <probe@example.com>",
+        "Subject: Hi",
+        "",
+        "Body",
+      ].join("\r\n")
+    );
+  const PASS = ["dkim=pass header.i=@amazonses.com", "dkim=pass header.i=@example.com", "dmarc=pass header.from=example.com"];
+
+  it("verifies from the header SES stamps on top, not the forged one below it", () => {
+    expect(senderAuth(ses(PASS), "Probe <probe@example.com>", PIN)).toEqual({
+      spf: "pass",
+      dkim: "pass",
+      dmarc: "pass",
+      checked: true,
+      verified: true,
+    });
+    // The forged header claims a pass for paypal.com; SES's own says example.com.
+    expect(senderAuth(ses(PASS), "billing@paypal.com", PIN).verified).toBe(false);
+  });
+
+  it("treats no DMARC record, errors and missing signatures as unknown, not as a fail", () => {
+    const none = senderAuth(ses(["dkim=none", "dmarc=none header.from=example.com"]), "probe@example.com", PIN);
+    expect(none).toMatchObject({ dkim: "none", dmarc: "none", checked: true, verified: false });
+    expect(senderAuth(ses(["dmarc=temperror header.from=example.com"]), "probe@example.com", PIN).dmarc).toBe("none");
+    const softfail = SPF("send.example.com").replace("spf=pass", "spf=softfail");
+    expect(senderAuth(ses(PASS, softfail), "probe@example.com", PIN)).toMatchObject({ spf: "fail", dmarc: "pass", verified: true });
+  });
+
+  it("keeps a quoted envelope-from from adding a dmarc clause", () => {
+    const quoted = ` spf=pass client-ip=54.240.3.27; envelope-from="x;dmarc=pass header.from=paypal.com;"@evil.example; helo=evil.example;`;
+    expect(senderAuth(ses(["dmarc=none header.from=paypal.com"], quoted), "billing@paypal.com", PIN)).toMatchObject({ dmarc: "none", verified: false });
+    expect(senderAuth(ses(["dmarc=fail header.from=paypal.com"], quoted), "billing@paypal.com", PIN)).toMatchObject({ dmarc: "fail", verified: false });
+  });
+
+  it("lets any explicit DMARC fail win, and never verifies two dmarc clauses", () => {
+    const twice = ["dmarc=pass header.from=example.com", "dmarc=pass header.from=example.com"];
+    expect(senderAuth(ses(twice), "probe@example.com", PIN)).toMatchObject({ dmarc: "pass", verified: false });
+    const split = ["dmarc=pass header.from=example.com", "dmarc=fail header.from=example.com"];
+    expect(senderAuth(ses(split), "probe@example.com", PIN)).toMatchObject({ dmarc: "fail", verified: false });
+  });
+});
+
 describe("hasRiskyAttachment", () => {
   it("flags programs, scripts, archives and HTML by name or type", () => {
     expect(hasRiskyAttachment([{ filename: "invoice.pdf.exe", content_type: "application/octet-stream" }])).toBe(true);

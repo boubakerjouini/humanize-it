@@ -323,9 +323,7 @@ export async function forwardInbound(envelope: InboundEnvelope): Promise<Inbound
 
   const original = await downloadOriginal(email.raw?.download_url);
   const auth = senderAuth(headerBlockOf(original), from, process.env.INBOUND_AUTHSERV_ID);
-  // Never linked to a contact yet: the sender check rests on INBOUND_AUTHSERV_ID,
-  // which must first be confirmed against a real received message. Once it is,
-  // link only when auth.verified.
+  // Not linked to a contact yet; if that is added, link only when auth.verified.
   const base = inboundTaskBody({ receivedFor, auth });
   await updateTask(taskKey, { title, body: base, contactId: null, claimed: true });
 
