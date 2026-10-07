@@ -1,7 +1,8 @@
 // The Resend webhook end to end with a real svix signature: missing headers and
 // bad signatures are refused before any database work, a permanent bounce
-// suppresses the address and stops sequences, and a replayed delivery is a
-// no-op thanks to the WebhookEvent ledger.
+// suppresses the address and stops sequences, a replayed delivery is a no-op
+// thanks to the WebhookEvent ledger, and a support forward that bounces is
+// written on its task without touching any customer state.
 
 jest.mock("@/lib/db", () => {
   const state = {
@@ -57,12 +58,17 @@ jest.mock("@/lib/db", () => {
 jest.mock("@/lib/crm/consent", () => ({ withdrawTopics: jest.fn(async () => ({ withdrawn: [] })) }));
 jest.mock("@/lib/crm/recompute", () => ({ recomputeContact: jest.fn(async () => null) }));
 jest.mock("@/lib/growth/triggers", () => ({ onEmailBounced: jest.fn(async () => {}) }));
+jest.mock("@/lib/email/inbound", () => ({
+  forwardInbound: jest.fn(async () => ({ status: "forwarded", forwardId: "fwd_1" })),
+  noteForwardNotDelivered: jest.fn(async () => {}),
+}));
 
 import { Webhook } from "svix";
 import * as dbModule from "@/lib/db";
 import { POST } from "@/app/api/webhooks/resend/route";
 import { onEmailBounced } from "@/lib/growth/triggers";
 import { withdrawTopics } from "@/lib/crm/consent";
+import { forwardInbound, noteForwardNotDelivered } from "@/lib/email/inbound";
 
 type State = {
   ledger: Set<string>;
@@ -115,6 +121,95 @@ beforeEach(() => {
 
 afterAll(() => {
   process.env = savedEnv;
+});
+
+describe("POST /api/webhooks/resend: email.received (support inbox)", () => {
+  const received = {
+    type: "email.received",
+    created_at: "2026-10-07T09:00:00.000Z",
+    data: { email_id: "in_1", from: "Jane <jane@example.com>", to: ["support@humanizeit.app"], subject: "Refund please" },
+  };
+
+  it("forwards the email and never touches delivery state", async () => {
+    const res = await signed("msg_in1", received);
+    expect(res.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledWith({ emailId: "in_1", from: "Jane <jane@example.com>", subject: "Refund please" });
+    expect(state.calls).not.toContain("emailMessage.findUnique");
+  });
+
+  it("acknowledges an event without a usable email_id and forwards nothing", async () => {
+    const noId = await signed("msg_in4", { ...received, data: { from: "Jane <jane@example.com>", subject: "Hi" } });
+    expect(noId.status).toBe(200);
+    const badId = await signed("msg_in5", { ...received, data: { ...received.data, email_id: "in_1\r\nX-Evil: 1" } });
+    expect(badId.status).toBe(200);
+    expect(forwardInbound).not.toHaveBeenCalled();
+  });
+
+  it("forwards when from and subject are missing (both are read from Resend)", async () => {
+    const res = await signed("msg_in6", { ...received, data: { email_id: "in_6" } });
+    expect(res.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledWith({ emailId: "in_6", from: null, subject: null });
+  });
+
+  it("answers 500 and releases the ledger when the forward fails, so Resend retries", async () => {
+    (forwardInbound as jest.Mock).mockRejectedValueOnce(new Error("resend down"));
+    const res = await signed("msg_in2", received);
+    expect(res.status).toBe(500);
+    expect(state.ledger.has("resend:msg_in2")).toBe(false);
+  });
+
+  it("a replayed delivery of the same event forwards once", async () => {
+    await signed("msg_in3", received);
+    const replay = await signed("msg_in3", received);
+    expect(replay.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("POST /api/webhooks/resend: delivery events of support forwards", () => {
+  it.each([
+    ["object", { m: "msg_1", stream: "inbound_forward" }],
+    ["array", [{ name: "stream", value: "inbound_forward" }]],
+  ])("ignores a complaint on a forward (tags as %s): the founder's address is never suppressed", async (_form, tags) => {
+    const complaint = { type: "email.complained", created_at: "2026-10-07T08:00:00.000Z", data: { email_id: "fwd_1", to: ["founder@gmail.com"], tags } };
+    const res = await signed("msg_fwd", complaint);
+    expect(res.status).toBe(200);
+    expect(state.calls).toEqual([]);
+    expect(state.suppressions).toEqual([]);
+    expect(withdrawTopics).not.toHaveBeenCalled();
+    expect(noteForwardNotDelivered).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["email.bounced", "bounced"],
+    ["email.failed", "failed"],
+    ["email.suppressed", "suppressed"],
+  ])("writes a %s forward back on its task, without touching customer state", async (type, failure) => {
+    const evt = {
+      type,
+      created_at: "2026-10-07T08:00:00.000Z",
+      data: { email_id: "fwd_1", to: ["founder@gmail.com"], tags: { stream: "inbound_forward", inbound: "in_1" }, bounce: { type: "Permanent" } },
+    };
+    const res = await signed(`msg_fwd_${failure}`, evt);
+    expect(res.status).toBe(200);
+    expect(noteForwardNotDelivered).toHaveBeenCalledWith("in_1", failure);
+    expect(state.calls).toEqual([]);
+    expect(state.suppressions).toEqual([]);
+    expect(onEmailBounced).not.toHaveBeenCalled();
+  });
+
+  it("still raises the alert when the inbound tag is missing or malformed", async () => {
+    const evt = { type: "email.bounced", data: { email_id: "fwd_1", tags: [{ name: "stream", value: "inbound_forward" }, { name: "inbound", value: "in_1\r\nx" }] } };
+    expect((await signed("msg_fwd_bad", evt)).status).toBe(200);
+    expect(noteForwardNotDelivered).toHaveBeenCalledWith(null, "bounced");
+  });
+
+  it("ignores a delivered forward", async () => {
+    const evt = { type: "email.delivered", data: { email_id: "fwd_1", tags: { stream: "inbound_forward", inbound: "in_1" } } };
+    expect((await signed("msg_fwd_ok", evt)).status).toBe(200);
+    expect(noteForwardNotDelivered).not.toHaveBeenCalled();
+    expect(state.calls).toEqual([]);
+  });
 });
 
 describe("POST /api/webhooks/resend", () => {
