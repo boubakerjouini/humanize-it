@@ -28,7 +28,7 @@ import { compileSegment, parseSegmentFilter, type SegmentFilter } from "@/lib/cr
 import { resolveSegment } from "@/lib/crm/segment-resolve";
 import { getOrCreateContactForUser, upsertLeadContact } from "@/lib/crm/contacts";
 import { TOPICS, isTopic, type Topic } from "@/lib/growth/constants";
-import { effectiveAllowlist, emailSendingMode, isAllowlisted, postalAddress, type EmailSendingMode } from "@/lib/growth/flags";
+import { effectiveAllowlist, emailSendingMode, isAllowlisted, parseEmailList, postalAddress, type EmailSendingMode } from "@/lib/growth/flags";
 import { withJobLock } from "@/lib/growth/locks";
 import { logGrowthError } from "@/lib/growth/safe";
 
@@ -327,14 +327,17 @@ export async function previewCampaign(id: string, admin: Pick<User, "email" | "n
 /**
  * Where a test may go: only allowlisted inboxes (EMAIL_ALLOWLIST plus
  * ADMIN_EMAILS) ever receive one, in every mode. The admin's own address
- * comes first when it is on that list.
+ * comes first when it is on that list, then the EMAIL_ALLOWLIST test inboxes
+ * in the order EMAIL_ALLOWLIST lists them, then other admins, so the default
+ * pick never lands in someone else's real inbox.
  */
 export function testRecipients(adminEmail: string): { own: string; ownAllowed: boolean; choices: string[] } {
   const own = normalizeEmail(adminEmail) ?? "";
-  const allowed = effectiveAllowlist(adminEmails());
   const ownAllowed = !!own && isAllowlisted(own, adminEmails());
-  const others = [...allowed].filter((e) => e !== own).sort();
-  return { own, ownAllowed, choices: ownAllowed ? [own, ...others] : others };
+  // Configured order: list delivered@resend.dev first so the default isn't a simulated bounce.
+  const testInboxes = [...new Set(parseEmailList(process.env.EMAIL_ALLOWLIST))].filter((e) => e !== own);
+  const otherAdmins = [...effectiveAllowlist(adminEmails())].filter((e) => e !== own && !testInboxes.includes(e)).sort();
+  return { own, ownAllowed, choices: [...(ownAllowed ? [own] : []), ...testInboxes, ...otherAdmins] };
 }
 
 /**

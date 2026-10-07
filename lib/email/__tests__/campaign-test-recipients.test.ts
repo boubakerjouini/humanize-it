@@ -20,12 +20,12 @@ it("puts an allowlisted admin first", () => {
   expect(testRecipients("Founder@Example.com")).toEqual({
     own: "founder@example.com",
     ownAllowed: true,
-    choices: ["founder@example.com", "bounced@resend.dev", "delivered@resend.dev"],
+    choices: ["founder@example.com", "delivered@resend.dev", "bounced@resend.dev"],
   });
 });
 
-it("offers only the allowlist to an admin who isn't on it", () => {
+it("offers test inboxes before other admins to an admin who isn't on the list", () => {
   const r = testRecipients("claude-admin+clerk_test@example.com");
   expect(r.ownAllowed).toBe(false);
-  expect(r.choices).toEqual(["bounced@resend.dev", "delivered@resend.dev", "founder@example.com"]);
+  expect(r.choices).toEqual(["delivered@resend.dev", "bounced@resend.dev", "founder@example.com"]);
 });
