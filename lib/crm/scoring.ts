@@ -88,3 +88,18 @@ export function computeScore(i: ScoreInput): ScoreResult {
   const score = Math.max(0, Math.min(100, raw));
   return { score, grade: gradeFor(score), breakdown: lines };
 }
+
+/**
+ * Does a stored breakdown (Contact.scoreBreakdown, null when never scored)
+ * equal this one? Compared field by field: jsonb reorders object keys
+ * (shortest first), so a stored line reads back as {key, label, detail,
+ * points} and a JSON string compare would never match.
+ */
+export function sameBreakdown(stored: unknown, next: readonly ScoreLine[]): boolean {
+  const lines = stored ?? [];
+  if (!Array.isArray(lines) || lines.length !== next.length) return false;
+  return next.every((line, i) => {
+    const s = lines[i] as Partial<ScoreLine> | null;
+    return !!s && s.key === line.key && s.label === line.label && s.points === line.points && s.detail === line.detail;
+  });
+}

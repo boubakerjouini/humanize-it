@@ -12,7 +12,7 @@ import { db } from "@/lib/db";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { effectivePlanId } from "@/lib/quota";
 import { computeStage, type Stage, type StageInput } from "@/lib/crm/lifecycle";
-import { computeScore, type ScoreInput, type ScoreResult } from "@/lib/crm/scoring";
+import { computeScore, sameBreakdown, type ScoreInput, type ScoreResult } from "@/lib/crm/scoring";
 import { syncMissingContacts } from "@/lib/crm/contacts";
 import { recordEvent } from "@/lib/crm/events";
 import { logGrowthError } from "@/lib/growth/safe";
@@ -130,8 +130,7 @@ export function evaluate(input: ScoringInput): Evaluation {
 async function persist(contact: ScoringContact, result: Evaluation, now: Date): Promise<{ updated: boolean; stageChanged: boolean }> {
   const breakdown = result.score.breakdown as unknown as Prisma.InputJsonValue;
   const stageChanged = contact.stage !== result.stage;
-  const scoreChanged =
-    contact.score !== result.score.score || JSON.stringify(contact.scoreBreakdown ?? []) !== JSON.stringify(result.score.breakdown);
+  const scoreChanged = contact.score !== result.score.score || !sameBreakdown(contact.scoreBreakdown, result.score.breakdown);
   if (!stageChanged && !scoreChanged) return { updated: false, stageChanged: false };
 
   await db.contact.update({

@@ -1,4 +1,4 @@
-import { computeScore, gradeFor, type ScoreInput } from "@/lib/crm/scoring";
+import { computeScore, gradeFor, sameBreakdown, type ScoreInput, type ScoreLine } from "@/lib/crm/scoring";
 
 function input(over: Partial<ScoreInput> = {}): ScoreInput {
   return {
@@ -140,5 +140,29 @@ describe("breakdown", () => {
   it("explains each line", () => {
     const line = computeScore(input({ docsLast14d: 1 })).breakdown[0];
     expect(line).toEqual({ key: "recent_docs", label: "Recent documents", points: 2, detail: "1 doc in 14d" });
+  });
+});
+
+describe("sameBreakdown", () => {
+  const breakdown = computeScore(input({ hasEmail: true, isUser: true, docsLast14d: 3 })).breakdown;
+  /** What Postgres jsonb hands back: object keys shortest first, so detail before points. */
+  const fromJsonb = (lines: ScoreLine[]) => lines.map(({ key, label, detail, points }) => ({ key, label, detail, points }));
+
+  it("matches a breakdown read back from jsonb with its keys reordered", () => {
+    expect(JSON.stringify(fromJsonb(breakdown))).not.toBe(JSON.stringify(breakdown));
+    expect(sameBreakdown(fromJsonb(breakdown), breakdown)).toBe(true);
+  });
+
+  it("treats a contact never scored as an empty breakdown", () => {
+    expect(sameBreakdown(null, [])).toBe(true);
+    expect(sameBreakdown(null, breakdown)).toBe(false);
+  });
+
+  it("notices a changed, added or missing line", () => {
+    const changed = fromJsonb(breakdown).map((l) => (l.key === "recent_docs" ? { ...l, detail: "4 docs in 14d", points: 8 } : l));
+    expect(sameBreakdown(changed, breakdown)).toBe(false);
+    expect(sameBreakdown(fromJsonb(breakdown).slice(1), breakdown)).toBe(false);
+    expect(sameBreakdown([...fromJsonb(breakdown), { key: "x", label: "x", detail: "x", points: 1 }], breakdown)).toBe(false);
+    expect(sameBreakdown("not a breakdown", breakdown)).toBe(false);
   });
 });
