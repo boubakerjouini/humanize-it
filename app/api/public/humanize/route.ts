@@ -5,6 +5,7 @@
 // and abuse are bounded by: a hard per-request word cap, a per-IP burst limit
 // (per minute), and a small per-IP daily limit. Real users who want more are
 // pushed to sign up. This is the only place anonymous LLM calls are allowed.
+// Tones follow the Free plan (Standard only), so signing up is never a step down.
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -13,6 +14,7 @@ import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algori
 import { activeProvider } from "@/lib/llm";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/client-ip";
+import { isToneAllowed } from "@/lib/plans";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
 const MAX_CHARS = 2500;
@@ -67,6 +69,12 @@ export async function POST(req: Request) {
     typeof body.tone === "string" && VALID_TONES.includes(body.tone as ToneOption)
       ? (body.tone as ToneOption)
       : "standard";
+  if (!isToneAllowed("FREE", tone)) {
+    return NextResponse.json(
+      { error: { code: "TONE_LOCKED", message: "The free humanizer uses the Standard tone. The other tones are part of Pro." } },
+      { status: 403 }
+    );
+  }
   const intensity: IntensityLevel =
     typeof body.intensity === "string" && VALID_INTENSITIES.includes(body.intensity as IntensityLevel)
       ? (body.intensity as IntensityLevel)

@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
+import { isToneAllowed } from "@/lib/plans";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
@@ -28,6 +29,7 @@ interface HumanizeResponse {
 export function HumanizerTool() {
   const [text, setText] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("standard");
+  const [lockedTone, setLockedTone] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<HumanizeResponse | null>(null);
   const [copied, setCopied] = useState(false);
@@ -77,7 +79,16 @@ export function HumanizerTool() {
             </span>
             <select
               value={tone}
-              onChange={(e) => setTone(e.target.value as (typeof TONES)[number])}
+              onChange={(e) => {
+                const next = e.target.value as (typeof TONES)[number];
+                // Free (and this tool) is Standard only: a locked pick shows the hint instead.
+                if (isToneAllowed("FREE", next)) {
+                  setTone(next);
+                  setLockedTone(null);
+                } else {
+                  setLockedTone(next);
+                }
+              }}
               aria-label="Tone"
               style={{
                 fontSize: "13px", color: THEME.textDim, background: THEME.surface1,
@@ -86,7 +97,9 @@ export function HumanizerTool() {
               }}
             >
               {TONES.map((t) => (
-                <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)} tone</option>
+                <option key={t} value={t}>
+                  {t[0].toUpperCase() + t.slice(1)} tone{isToneAllowed("FREE", t) ? "" : " (Pro)"}
+                </option>
               ))}
             </select>
           </div>
@@ -102,6 +115,12 @@ export function HumanizerTool() {
             {loading ? "Humanizing…" : "Humanize free →"}
           </button>
         </div>
+        {lockedTone && (
+          <p role="status" style={{ fontSize: "13px", color: THEME.textDim, margin: "10px 0 0" }}>
+            The {lockedTone} tone is part of Pro. The free humanizer and the Free plan use the Standard tone.{" "}
+            <Link href="/#pricing" style={{ color: THEME.brandHi }}>See Pro</Link>
+          </p>
+        )}
         {overCap && (
           <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>
             The free humanizer is capped at {MAX_WORDS} words.{" "}
