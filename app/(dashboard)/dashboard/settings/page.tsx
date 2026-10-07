@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink, Mail, Users } from "lucide-react";
+import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink, Mail, Users, Award, Handshake } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { ApiKeysSection } from "@/components/workspace/api-keys-section";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
 import { CONSENT_WORDING, type Topic } from "@/lib/growth/constants";
+import { FOUNDING } from "@/lib/plans";
+import { FoundingBadge } from "@/components/growth/founding-badge";
+import { useOffers } from "@/components/growth/founding-offers";
+import { ServiceRequestCard } from "@/components/growth/service-request-card";
 
 interface UsageData {
   plan: string;
@@ -58,6 +62,12 @@ export default function SettingsPage() {
   const [busy, setBusy] = useState<"portal" | "redeem" | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const referral = useReferralInfo();
+  const founding = useOffers()?.founding.member ?? false;
+  // Back from the Founding 100 checkout (the webhook may land a moment later).
+  const [foundingWelcome, setFoundingWelcome] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("founding") === "welcome") setFoundingWelcome(true);
+  }, []);
 
   const loadUsage = () => fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d) => d && setUsage(d)).catch(() => {});
   useEffect(() => { void loadUsage(); }, []);
@@ -102,6 +112,15 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {foundingWelcome && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: THEME.accentDim, border: `1px solid ${THEME.accent}55`, borderRadius: THEME.radius, padding: "12px 16px", marginBottom: 16 }}>
+          <Award size={16} color={THEME.accentHi} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+          <span style={{ fontSize: 13, color: THEME.text, lineHeight: 1.6 }}>
+            {`Thank you for backing HumanizeIt. Your account switches to Pro for ${FOUNDING.months} months as soon as the payment confirms, usually within a minute (refresh if it still says Free). I read every email at support@humanizeit.app. Boubaker`}
+          </span>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Plan & usage */}
         <Section title="Plan & usage" icon={meta.icon} accent={meta.color}>
@@ -110,6 +129,8 @@ export default function SettingsPage() {
               <meta.icon size={13} color={meta.color} aria-hidden="true" />
               <span style={{ fontSize: 12, fontWeight: 700, color: isFree ? THEME.textDim : THEME.brandHi }}>{meta.label} plan</span>
             </span>
+            {founding && <FoundingBadge size="md" />}
+            <span style={{ flex: 1 }} />
             {isFree ? (
               <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
                 Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
@@ -133,6 +154,14 @@ export default function SettingsPage() {
             </>
           )}
         </Section>
+
+        {/* Founder bonuses: real founder time, capped per month */}
+        {(plan === "PRO" || plan === "TEAM") && (
+          <Section title={plan === "PRO" ? "Founder's First-Document Review" : "30-minute Workflow Setup"} icon={Handshake} accent={THEME.accent}
+            sub={plan === "PRO" ? "A Pro bonus. You can also request it from any document's Before/After Report." : "A Team bonus."}>
+            <ServiceRequestCard kind={plan === "PRO" ? "founder_review" : "team_setup"} />
+          </Section>
+        )}
 
         {/* Redeem */}
         <Section title="Redeem a code" icon={Gift} accent={THEME.accent}>
