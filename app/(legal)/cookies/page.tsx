@@ -1,3 +1,10 @@
+// ===========================================================
+// /cookies — Cookie policy: every cookie and browser-storage key the site
+// sets, including the first-party attribution cookies (hz_ft, hz_lt). Keep it
+// in step with components/growth/attribution-capture.tsx and the lead forms.
+// Changes here need the founder's approval before release.
+// ===========================================================
+
 import { THEME } from "@/lib/theme";
 
 export const metadata = {
@@ -19,7 +26,7 @@ export default function CookiesPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Cookie Policy</h1>
-        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: March 5, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 7, 2026</p>
       </div>
 
       <Section title="1. What Are Cookies">
@@ -41,7 +48,10 @@ export default function CookiesPage() {
               {[
                 { name: '__session', provider: 'Clerk', purpose: 'Keeps you signed in', required: 'Yes' },
                 { name: '__client_uat', provider: 'Clerk', purpose: 'Verifies session integrity', required: 'Yes' },
+                { name: 'hz_ft', provider: 'HumanizeIt (first-party)', purpose: 'Remembers how you first arrived (referring site, landing page, campaign tags) so we know which pages and sources work. Kept 180 days.', required: 'No' },
+                { name: 'hz_lt', provider: 'HumanizeIt (first-party)', purpose: 'Same as hz_ft, for your most recent visit. Kept 30 days.', required: 'No' },
                 { name: 'ph_*', provider: 'PostHog', purpose: 'Anonymous analytics (page views, feature usage)', required: 'No' },
+                { name: '_ga, _ga_*', provider: 'Google Analytics', purpose: 'Website analytics (page views and traffic sources)', required: 'No' },
                 { name: 'ls_*', provider: 'Lemon Squeezy', purpose: 'Checkout session (payment flow only)', required: 'Checkout only' },
               ].map((row, i) => (
                 <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : THEME.surface2 }}>
@@ -56,11 +66,20 @@ export default function CookiesPage() {
         </div>
       </Section>
 
-      <Section title="3. No Advertising Cookies">
-        <p>We do not use any advertising, tracking, or marketing cookies. We do not sell your data to third parties or use cookies for ad targeting.</p>
+      <Section title="3. Attribution Cookies">
+        <p style={{ marginBottom: '12px' }}>hz_ft and hz_lt are set by our own site and read only by it. They don&apos;t track you across other websites. When you sign up or give us your email on a form, their contents are copied to your record so we can see which pages and sources bring people to HumanizeIt (see the <a href="/privacy" style={{ color: THEME.brandHi }}>Privacy Policy</a>).</p>
+        <p>If your browser sends a Global Privacy Control signal, we don&apos;t set them.</p>
       </Section>
 
-      <Section title="4. How to Manage Cookies">
+      <Section title="4. Browser Storage">
+        <p>A few small values are kept in your browser&apos;s local storage, not in cookies: hz_lead (remembers that you already gave us your email, so we stop showing email popups) hz_exit_magnet_at (when we last showed a free-guide popup, so it appears at most once every 14 days) and humanizeit_exit_shown (the home page popup was already shown). They never leave your device.</p>
+      </Section>
+
+      <Section title="5. No Advertising Cookies">
+        <p>We do not use any advertising cookies. We do not sell your data to third parties or use cookies for ad targeting.</p>
+      </Section>
+
+      <Section title="6. How to Manage Cookies">
         <p style={{ marginBottom: '12px' }}>You can control cookies through your browser settings. Note that disabling required cookies (Clerk session cookies) will prevent you from signing in.</p>
         <ul style={{ paddingLeft: '20px' }}>
           <li style={{ marginBottom: '6px' }}><strong style={{ color: THEME.text }}>Chrome:</strong> Settings → Privacy and security → Cookies</li>
@@ -69,7 +88,7 @@ export default function CookiesPage() {
         </ul>
       </Section>
 
-      <Section title="5. Contact">
+      <Section title="7. Contact">
         <p>Questions about cookies? Email us at <strong style={{ color: THEME.text }}>support@humanizeit.app</strong></p>
       </Section>
     </>
