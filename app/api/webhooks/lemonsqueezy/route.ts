@@ -7,6 +7,13 @@
 //   subscription_cancelled       → downgrade to FREE
 //   subscription_payment_success → reset usage quota (new billing cycle)
 //   subscription_payment_failed  → mark status past_due
+//   order_created (one-time)     → Founding 100 (Pro for 730 days) or a Word
+//                                  Pack (bonus words). Any other order is the
+//                                  first payment of a subscription, which
+//                                  subscription_created provisions.
+//
+// One-time orders are idempotent on Purchase.lsOrderId (unique) and on the
+// bonus grant's dedupe key, so a LemonSqueezy retry never grants twice.
 //
 // Each branch also records a CRM billing event after its DB write (runAfter,
 // so the response never waits). The dedupe key includes updated_at, so a
@@ -16,10 +23,15 @@
 
 import crypto from "crypto";
 import { db } from "@/lib/db";
-import { getPlanByVariantId } from "@/lib/plans";
+import { FOUNDING, foundingExpiry, getPlanByVariantId, oneTimeOfferForVariant, wordPackConfig } from "@/lib/plans";
 import type { Plan } from "@/app/generated/prisma/client";
 import { trackBillingEvent, type BillingEventType } from "@/lib/crm/hooks";
-import { runAfter } from "@/lib/growth/safe";
+import { recordEvent } from "@/lib/crm/events";
+import { getOrCreateContactForUser } from "@/lib/crm/contacts";
+import { grantBonusWords } from "@/lib/crm/bonus";
+import { effectivePlanId } from "@/lib/quota";
+import { isUniqueViolation, runAfter } from "@/lib/growth/safe";
+import { FOUNDING_AUDIT_ACTION, WORDPACK_AUDIT_ACTION } from "@/app/api/offers/shared";
 
 // ---------------------------------------------------------------------------
 // Types — Lemon Squeezy webhook payload
@@ -44,6 +56,7 @@ interface LsWebhookPayload {
       clerk_id?: string;
       plan_id?: string;
       annual?: string;
+      offer?: string;
     };
   };
   data: {
@@ -51,6 +64,108 @@ interface LsWebhookPayload {
     type: string;
     attributes: LsSubscriptionAttributes;
   };
+}
+
+/** The parts of an Order object (data.type "orders") the one-time branch reads. */
+interface LsOrderAttributes {
+  status: string;
+  total?: number;
+  first_order_item?: { variant_id?: number | string } | null;
+}
+
+const DAY_MS = 86_400_000;
+
+// ---------------------------------------------------------------------------
+// One-time offers
+// ---------------------------------------------------------------------------
+
+/**
+ * Founding 100: Pro until foundingExpiry(), in one transaction with the
+ * Purchase row (its unique order id is the idempotency key) and the AuditLog
+ * entry that keeps the public counter from ever going back down.
+ * Returns the new expiry, or null when this order was already fulfilled.
+ */
+async function fulfilFounding(userId: string, orderId: string, variantId: string, amountCents: number | null): Promise<Date | null> {
+  try {
+    return await db.$transaction(async (tx) => {
+      await tx.purchase.create({ data: { userId, kind: "founding", lsOrderId: orderId, lsVariantId: variantId, amountCents } });
+      const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { plan: true, planExpiresAt: true } });
+      const now = new Date();
+      const planExpiresAt = foundingExpiry(user, now);
+      // Coming from Free, start a fresh monthly meter instead of carrying the daily one.
+      const fromFree = effectivePlanId(user) === "FREE";
+      await tx.user.update({
+        where: { id: userId },
+        data: { plan: "PRO", planExpiresAt, ...(fromFree ? { wordsUsed: 0, rewriteCount: 0, quotaResetAt: now } : {}) },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorEmail: "lemonsqueezy",
+          action: FOUNDING_AUDIT_ACTION,
+          targetType: "user",
+          targetId: userId,
+          summary: `Founding 100 order ${orderId}: Pro until ${planExpiresAt.toISOString().slice(0, 10)}`,
+          meta: { orderId, variantId, amountCents },
+        },
+      });
+      const sold = await tx.purchase.count({ where: { kind: "founding" } });
+      if (sold > FOUNDING.seats) {
+        // Two checkouts raced past the cap. The buyer paid, so honor it and leave a trace.
+        console.warn(`[ls/webhook] Founding 100 oversold: ${sold} of ${FOUNDING.seats} (order ${orderId})`);
+      }
+      return planExpiresAt;
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) return null;
+    throw err;
+  }
+}
+
+/**
+ * Word Pack: bonus words with an expiry. The grant is idempotent on its dedupe
+ * key and runs first, so a crash before the Purchase row is written is
+ * repaired by LemonSqueezy's retry. Returns false when already fulfilled.
+ */
+async function fulfilWordPack(userId: string, orderId: string, variantId: string, amountCents: number | null): Promise<boolean> {
+  const pack = wordPackConfig();
+  if (!pack) throw new Error("word pack variant matched but its config is gone");
+  const contactId = await getOrCreateContactForUser(userId);
+  if (!contactId) throw new Error(`no contact for user ${userId}`);
+
+  const dedupeKey = `wordpack:${orderId}`;
+  const granted = await grantBonusWords(contactId, pack.words, "wordpack", dedupeKey, {
+    expiresAt: new Date(Date.now() + pack.days * DAY_MS),
+    actor: "lemonsqueezy",
+    props: { orderId },
+  });
+  // grantBonusWords returns false for a duplicate AND for an error. Only a
+  // duplicate left its event behind; anything else fails the delivery so
+  // LemonSqueezy retries it.
+  if (!granted && !(await db.contactEvent.findUnique({ where: { dedupeKey }, select: { id: true } }))) {
+    throw new Error(`word pack grant failed for order ${orderId}`);
+  }
+
+  try {
+    await db.purchase.create({
+      data: { userId, kind: "wordpack", lsOrderId: orderId, lsVariantId: variantId, amountCents, words: pack.words },
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) return false;
+    throw err;
+  }
+  await db.auditLog
+    .create({
+      data: {
+        actorEmail: "lemonsqueezy",
+        action: WORDPACK_AUDIT_ACTION,
+        targetType: "user",
+        targetId: userId,
+        summary: `Word Pack order ${orderId}: +${pack.words} words for ${pack.days} days`,
+        meta: { orderId, variantId, amountCents, words: pack.words },
+      },
+    })
+    .catch(() => {});
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,9 +235,11 @@ export async function POST(req: Request) {
 
         const plan = getPlanByVariantId(lsVariantId);
 
+        // A paid subscription has no end date: clear any grant expiry left by
+        // a redeem code, or checkAndResetQuota would downgrade a paying user.
         const user = await db.user.update({
           where: { clerkId },
-          data: { plan: (plan?.id ?? "PRO") as Plan },
+          data: { plan: (plan?.id ?? "PRO") as Plan, planExpiresAt: null },
         });
 
         await db.subscription.upsert({
@@ -295,6 +412,55 @@ export async function POST(req: Request) {
           (sub.lsVariantId ? getPlanByVariantId(sub.lsVariantId)?.id : null) ?? null
         );
         console.warn(`[ls/webhook] Payment ${event_name} for userId=${sub.userId} → ${newStatus}`);
+        break;
+      }
+
+      // -----------------------------------------------------------------------
+      // One-time orders: Founding 100 and Word Packs
+      // -----------------------------------------------------------------------
+      case "order_created": {
+        const order = payload.data.attributes as unknown as LsOrderAttributes;
+        const orderId = payload.data.id;
+        const variantId = String(order.first_order_item?.variant_id ?? "");
+        const offer = oneTimeOfferForVariant(variantId);
+        if (!offer) break; // a subscription's first order: subscription_created provisions it
+        if (order.status !== "paid") {
+          console.warn(`[ls/webhook] order ${orderId} (${offer}) has status ${order.status}; nothing granted`);
+          break;
+        }
+        const clerkId = custom_data?.clerk_id;
+        const user = clerkId ? await db.user.findUnique({ where: { clerkId }, select: { id: true } }) : null;
+        if (!user) {
+          // Checkout always sends clerk_id; without a user there is nobody to credit.
+          console.error(`[ls/webhook] order ${orderId} (${offer}): no user for custom_data.clerk_id`);
+          break;
+        }
+        const amountCents = typeof order.total === "number" ? order.total : null;
+
+        if (offer === "founding") {
+          const planExpiresAt = await fulfilFounding(user.id, orderId, variantId, amountCents);
+          if (planExpiresAt) {
+            runAfter("founding-purchased", () =>
+              recordEvent({
+                userId: user.id,
+                type: "founding_purchased",
+                props: { orderId, amountCents, planExpiresAt: planExpiresAt.toISOString() },
+                dedupeKey: `founding_purchased:${orderId}`,
+              })
+            );
+            console.log(`[ls/webhook] Founding 100 granted to userId=${user.id} until ${planExpiresAt.toISOString()}`);
+          }
+        } else if (await fulfilWordPack(user.id, orderId, variantId, amountCents)) {
+          runAfter("wordpack-purchased", () =>
+            recordEvent({
+              userId: user.id,
+              type: "wordpack_purchased",
+              props: { orderId, amountCents, words: wordPackConfig()?.words ?? null },
+              dedupeKey: `wordpack_purchased:${orderId}`,
+            })
+          );
+          console.log(`[ls/webhook] Word Pack credited to userId=${user.id}`);
+        }
         break;
       }
 
