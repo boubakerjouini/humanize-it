@@ -6,12 +6,12 @@ import { THEME } from "@/lib/theme";
 export const metadata: Metadata = {
   title: "Blog — AI Writing & Detection Guides | HumanizeIt",
   description:
-    "Expert guides on AI detection, humanizing AI text, and bypassing GPTZero, Turnitin, and Originality.ai.",
+    "Guides on how AI detectors like GPTZero and Turnitin work, why they flag human writing, and how to make AI-assisted drafts read naturally.",
   alternates: { canonical: "https://humanizeit.app/blog" },
   openGraph: {
     title: "Blog — AI Writing & Detection Guides",
     description:
-      "Expert guides on AI detection, humanizing AI text, and bypassing GPTZero, Turnitin, and Originality.ai.",
+      "Guides on how AI detectors like GPTZero and Turnitin work, why they flag human writing, and how to make AI-assisted drafts read naturally.",
     url: "https://humanizeit.app/blog",
     siteName: "HumanizeIt",
     type: "website",
@@ -54,7 +54,7 @@ export default function BlogPage() {
           </span>
         </h1>
         <p style={{ fontSize: "16px", color: THEME.textDim, lineHeight: 1.6, maxWidth: "520px", margin: "0 auto" }}>
-          Expert guides on AI detection, humanizing AI text, and writing that passes every detector.
+          Guides on AI detection, false positives, and making AI-assisted writing sound like you.
         </p>
       </div>
 

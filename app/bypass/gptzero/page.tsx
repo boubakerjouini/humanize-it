@@ -8,7 +8,7 @@ const PAGE_PATH = "/bypass/gptzero";
 const ABSOLUTE_URL = `https://humanizeit.app${PAGE_PATH}`;
 
 export const metadata: Metadata = {
-  title: "How to Bypass GPTZero (2026) — Methods That Work",
+  title: "How to Bypass GPTZero (2026) — Honest Guide",
   description:
     "Learn how GPTZero scores perplexity, burstiness, and sentence highlights — why it false-flags human writing, and the practical ways to bypass GPTZero in 2026.",
   keywords: [
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "humanize AI text",
   ],
   openGraph: {
-    title: "How to Bypass GPTZero (2026) — Methods That Work",
+    title: "How to Bypass GPTZero (2026) — Honest Guide",
     description:
       "How GPTZero scores perplexity and burstiness, why it false-flags human writing, and the practical ways to bypass GPTZero in 2026.",
     url: ABSOLUTE_URL,

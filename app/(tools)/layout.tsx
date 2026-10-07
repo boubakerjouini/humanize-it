@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
+import { MarketingFooterLinks } from "@/components/marketing/marketing-shell";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
@@ -42,13 +43,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
 
       <footer style={{ borderTop: `1px solid ${THEME.border}`, padding: "32px 24px", textAlign: "center", fontSize: "13px", color: THEME.textDim }}>
         <div style={{ maxWidth: "1140px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ display: "flex", gap: "18px", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/ai-detector" style={{ color: THEME.textDim, textDecoration: "none" }}>AI Detector</Link>
-            <Link href="/free-ai-humanizer" style={{ color: THEME.textDim, textDecoration: "none" }}>Free Humanizer</Link>
-            <Link href="/compare" style={{ color: THEME.textDim, textDecoration: "none" }}>Compare</Link>
-            <Link href="/use-cases" style={{ color: THEME.textDim, textDecoration: "none" }}>Use Cases</Link>
-            <Link href="/blog" style={{ color: THEME.textDim, textDecoration: "none" }}>Blog</Link>
-          </div>
+          <MarketingFooterLinks />
           <div>© {new Date().getFullYear()} HumanizeIt. All rights reserved.</div>
         </div>
       </footer>
