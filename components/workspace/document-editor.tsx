@@ -13,6 +13,9 @@ import { UploadZone } from "@/components/ui/upload-zone";
 import { highlightChanges, sentenceDiff } from "@/lib/sentence-diff";
 import { AnalysisPanel } from "@/components/workspace/analysis-panel";
 import { HistoryDrawer } from "@/components/workspace/history-drawer";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { EmailConsentCard } from "@/components/growth/email-consent-card";
+import { ShareSuccessChip } from "@/components/growth/share-success-chip";
 import { THEME, glow, humanScore, humanScoreColor, humanScoreLabel } from "@/lib/theme";
 
 type Lang = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
@@ -42,6 +45,10 @@ export function DocumentEditor() {
   const [quotaHit, setQuotaHit] = useState(false);
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // Growth asks wait for a finished rewrite (ask after value): the email
+  // opt-in first, and the referral chip only when the opt-in isn't showing.
+  const [consentVisible, setConsentVisible] = useState<boolean | null>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -56,14 +63,6 @@ export function DocumentEditor() {
   const afterScore = useMemo(() => (humanized ? analyzeText(humanized).score : null), [humanized]);
   const canRun = words >= 5 && !busy;
   const canDetect = words >= 15 && !busy;
-
-  async function checkout() {
-    try {
-      const res = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan: "PRO" }) });
-      const d = (await res.json()) as { url?: string };
-      if (d.url) window.location.href = d.url;
-    } catch { /* ignore */ }
-  }
 
   // The instant engine is synchronous; we stage the reveal over ~1.5s so the
   // detection reads as deliberate work (scan animation), then show the panel.
@@ -93,7 +92,7 @@ export function DocumentEditor() {
     } catch { toast.error("Something went wrong. Please try again."); } finally { setBusy(false); }
   }
   function fail(status: number, body: { error?: { code?: string; message?: string } } | null) {
-    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); return; }
+    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); setUpgradeOpen(true); return; }
     toast.error(body?.error?.message ?? "Something went wrong.");
   }
 
@@ -175,7 +174,7 @@ export function DocumentEditor() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: THEME.radius, padding: "12px 16px", flexWrap: "wrap" }}>
             <Sparkles size={18} color={THEME.brandHi} aria-hidden="true" />
             <span style={{ fontSize: 14, color: THEME.text, flex: 1, minWidth: 200 }}>You&apos;ve hit your plan&apos;s limit. Upgrade to Pro for 50,000 words/month and unlimited rewrites.</span>
-            <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Upgrade <ArrowRight size={14} aria-hidden="true" /></button>
+            <button onClick={() => setUpgradeOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>See plans <ArrowRight size={14} aria-hidden="true" /></button>
           </div>
         </div>
       )}
@@ -217,6 +216,13 @@ export function DocumentEditor() {
         )}
 
         {screen === "result" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+            <EmailConsentCard onVisibleChange={setConsentVisible} />
+            {consentVisible === false && <ShareSuccessChip />}
+          </div>
+        )}
+
+        {screen === "result" && (
           <div style={{ fontSize: 17, lineHeight: 1.85, color: THEME.text, whiteSpace: "pre-wrap", minHeight: "62vh" }}>
             {view === "original" && original}
             {view === "humanized" && highlightChanges(original ?? "", humanized ?? "").map((seg, i) => (
@@ -242,6 +248,7 @@ export function DocumentEditor() {
       </div>
 
       <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} onOpen={loadFromHistory} />
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={plan} trigger={quotaHit ? "quota" : "upgrade"} />
     </div>
   );
 }
