@@ -104,7 +104,7 @@ export function VoiceManager() {
         </p>
       )}
 
-      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={data?.plan ?? "FREE"} />
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={data?.plan ?? "FREE"} trigger="feature" />
     </div>
   );
 }

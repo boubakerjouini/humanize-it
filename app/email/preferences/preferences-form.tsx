@@ -117,7 +117,7 @@ export function PreferencesForm({ token, initial, highlightUnsubscribe }: Props)
             aria-describedby={statusId}
             style={{ ...button, border: "none", background: THEME.brand, color: "#fff", opacity: busy ? 0.6 : 1 }}
           >
-            {busy ? "Saving…" : "Unsubscribe from everything except account and billing notices"}
+            {busy ? "Saving…" : "Unsubscribe from all tips, updates and account emails"}
           </button>
         </div>
       ) : null}

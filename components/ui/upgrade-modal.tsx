@@ -20,14 +20,17 @@ import { GUARANTEE_DAYS, PLANS as PLAN_CONFIG, TEAM_ANNUAL_GUARANTEE_DAYS, type 
 import { startOfferCheckout, useOffers } from "@/components/growth/founding-offers";
 import { useReferralInfo } from "@/components/growth/referral-card";
 
-export type UpgradeTrigger = "upgrade" | "quota";
+/** quota: a request hit the plan's limit. feature: a locked tone, voice or report was picked. */
+export type UpgradeTrigger = "upgrade" | "quota" | "feature";
+
+const KICKER: Record<UpgradeTrigger, string> = { upgrade: "Upgrade", quota: "Limit reached", feature: "Part of Pro" };
 type Billing = "monthly" | "annual";
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: string;
-  /** "quota": opened because a request hit the plan's limit (changes the header copy). */
+  /** Why the modal opened; changes the header copy (see UpgradeTrigger). */
   trigger?: UpgradeTrigger;
 }
 
@@ -212,7 +215,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
             <X size={18} aria-hidden="true" />
           </button>
 
-          <div className="kicker" style={{ marginBottom: "10px" }}>{trigger === "quota" ? "Limit reached" : "Nice work"}</div>
+          <div className="kicker" style={{ marginBottom: "10px" }}>{KICKER[trigger]}</div>
           <h2
             id="upgrade-modal-title"
             style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading, letterSpacing: "-0.02em" }}
@@ -294,7 +297,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
                   <div style={{ fontSize: "13px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, marginBottom: "6px", fontFamily: THEME.fontSans }}>
                     {plan.name}
                   </div>
-                  <div className="tnum" style={{ fontSize: "26px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1 }}>
+                  <div className="tnum" style={{ fontSize: "clamp(20px, 6vw, 26px)", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1.1, overflowWrap: "anywhere" }}>
                     {price}
                     {!isFree && <span className="tnum" style={{ fontSize: "13px", fontWeight: 400, color: THEME.textMuted }}>/mo</span>}
                   </div>

@@ -53,6 +53,8 @@ export function DocumentEditor() {
   const [copied, setCopied] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // Opened by a locked tone, voice or report: the modal says "Part of Pro", not "Nice work".
+  const [lockedFeature, setLockedFeature] = useState(false);
   const [documentId, setDocumentId] = useState<string | null>(null);
   const [voices, setVoices] = useState<VoiceProfileRow[]>([]);
   const [voiceId, setVoiceId] = useState(VOICE_NONE);
@@ -114,18 +116,19 @@ export function DocumentEditor() {
   }
   function fail(status: number, body: { error?: { code?: string; message?: string } } | null) {
     if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); setUpgradeOpen(true); return; }
-    if (body?.error?.code === "TONE_LOCKED" || body?.error?.code === "VOICE_LOCKED") { setTone("standard"); setVoiceId(VOICE_NONE); setUpgradeOpen(true); }
+    if (body?.error?.code === "TONE_LOCKED" || body?.error?.code === "VOICE_LOCKED") { setTone("standard"); setVoiceId(VOICE_NONE); openLocked(); }
     toast.error(body?.error?.message ?? "Something went wrong.");
   }
 
   const planId = planIdOf(plan);
+  function openLocked() { setLockedFeature(true); setUpgradeOpen(true); }
   function pickTone(v: string) {
     // Locked tones stay visible (that's the upsell) but open the plan menu instead.
-    if (!isToneAllowed(planId, v)) { setUpgradeOpen(true); return; }
+    if (!isToneAllowed(planId, v)) { openLocked(); return; }
     setTone(v as ToneOption);
   }
   function pickVoice(v: string) {
-    if (v === VOICE_LOCKED) { setUpgradeOpen(true); return; }
+    if (v === VOICE_LOCKED) { openLocked(); return; }
     if (v === VOICE_NEW) { window.location.href = "/dashboard/voice"; return; }
     setVoiceId(v);
   }
@@ -182,7 +185,7 @@ export function DocumentEditor() {
             <IconBtn onClick={download} title="Download"><Download size={15} aria-hidden="true" /></IconBtn>
             {documentId && (
               <IconBtn title="Before/After Report" onClick={() => {
-                if (planId === "FREE") { setUpgradeOpen(true); return; }
+                if (planId === "FREE") { openLocked(); return; }
                 window.open(`/dashboard/documents/${documentId}/report`, "_blank", "noopener");
               }}><FileText size={15} aria-hidden="true" /></IconBtn>
             )}
@@ -292,7 +295,7 @@ export function DocumentEditor() {
       </div>
 
       <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} onOpen={loadFromHistory} />
-      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={plan} trigger={quotaHit ? "quota" : "upgrade"} />
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => { setUpgradeOpen(false); setLockedFeature(false); }} currentPlan={plan} trigger={quotaHit ? "quota" : lockedFeature ? "feature" : "upgrade"} />
     </div>
   );
 }
