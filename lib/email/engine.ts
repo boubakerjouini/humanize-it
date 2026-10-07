@@ -25,7 +25,7 @@ import { TEMPLATES, type TemplateKey, type TemplateProps } from "@/lib/email/cat
 import type { SkipReason } from "@/lib/email/eligibility";
 import { isFlowEnabled } from "@/lib/email/enroll";
 import { CRON_LOOKAHEAD_HOURS, dueAt } from "@/lib/email/schedule";
-import { deliverBatch, deliverOne, prepareEmail, type Prepared, type SendOutcome } from "@/lib/email/send";
+import { checkSendable, deliverBatch, deliverOne, prepareEmail, type Prepared, type SendOutcome } from "@/lib/email/send";
 import {
   TRIAL_PASS_DAYS,
   TRIAL_PASS_REDEEM_HOURS,
@@ -343,6 +343,18 @@ async function stepEnrollment(enr: SequenceEnrollment, o: StepOpts, stats: Engin
         return { kind: "done" };
       }
       if (plan.step.effect) {
+        // The effect (a trial pass, bonus words) exists only to be announced by
+        // this email: run the send gates first, so a contact the email can't
+        // reach (no consent, unverified, outside the allowlist) is never handed
+        // a pass that burns the monthly cap, or words nobody tells them about.
+        const gate = await checkSendable({ contactId: enr.contactId, template: plan.step.template });
+        if (!gate.ok) {
+          if (gate.outcome.status !== "skipped") return { kind: "outcome", enr, seq, outcome: gate.outcome };
+          await recordStepSkip(enr, plan.step, loaded.email, gate.outcome.reason);
+          bump(stats.skipped, gate.outcome.reason);
+          if (await advance(enr, seq, o.now)) stats.advanced++;
+          return { kind: "done" };
+        }
         const effect = await runEffect(plan.step.effect, enr, loaded.ctx, o.now);
         if (!effect.ok) {
           await recordStepSkip(enr, plan.step, loaded.email, effect.reason);

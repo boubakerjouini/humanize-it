@@ -223,11 +223,19 @@ async function markFailed(messageId: string, error: string, retryable: boolean, 
   return { status: "failed", messageId, error, retryable, ...(extra.quotaExceeded ? { quotaExceeded: true } : {}) };
 }
 
-export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): Promise<PrepareResult> {
+type GateInput = Pick<PrepareInput, "contactId" | "template" | "topicOverride" | "isTest">;
+type ContactRow = { id: string; email: string | null; name: string | null };
+type GateResult =
+  | { ok: true; contact: ContactRow; email: string; stream: EmailStream; topic: Topic | null; isTest: boolean }
+  | { ok: false; defer: DeferReason }
+  | { ok: false; skip: SkipReason; email: string | null; stream: EmailStream; topic: Topic | null };
+
+/** Steps 1-5 of prepareEmail, with no writes. */
+async function runGates(i: GateInput): Promise<GateResult> {
   // 1. Kill switch first: with sending off, nothing below touches the database.
   const mode = emailSendingMode();
-  if (mode === "off") return deferred("disabled");
-  if (!getResend()) return deferred("not_configured");
+  if (mode === "off") return { ok: false, defer: "disabled" };
+  if (!getResend()) return { ok: false, defer: "not_configured" };
 
   const meta = TEMPLATES[i.template];
   const stream = meta.stream;
@@ -248,18 +256,17 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
       emailStatus: true,
     },
   });
-  if (!contact) return { ok: false, outcome: { status: "skipped", reason: "contact_missing" } };
+  if (!contact) return { ok: false, skip: "contact_missing", email: null, stream, topic };
   const email = normalizeEmail(contact.email);
 
   // 3. Outside production (or while EMAIL_ALLOWLIST is set) only allowlisted inboxes get mail.
   //    A test send skips consent, so it may only ever reach an allowlisted inbox, live mode included.
-  if ((mode === "allowlist" || isTest) && !isAllowlisted(email, adminEmails())) return deferred("allowlist");
+  if ((mode === "allowlist" || isTest) && !isAllowlisted(email, adminEmails())) return { ok: false, defer: "allowlist" };
 
   // 4. Flow toggle (campaigns, personal notes and tests have none to check).
-  if (meta.flow && !isTest && !(await isFlowEnabled(meta.flow))) return deferred("flow_off");
+  if (meta.flow && !isTest && !(await isFlowEnabled(meta.flow))) return { ok: false, defer: "flow_off" };
 
-  // 5. Eligibility; a skip is recorded so the step isn't retried forever.
-  const fields = messageFields(i, email, stream, topic);
+  // 5. Eligibility.
   const verdict = checkEligibility({
     contact: { ...contact, email },
     stream,
@@ -269,8 +276,34 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
     postalAddressConfigured: postalAddress() !== null,
     isTest,
   });
-  if (!verdict.ok) return { ok: false, outcome: await recordSkip(i, fields, verdict.reason) };
-  if (!email) return { ok: false, outcome: await recordSkip(i, fields, "no_email") };
+  if (!verdict.ok) return { ok: false, skip: verdict.reason, email, stream, topic };
+  if (!email) return { ok: false, skip: "no_email", email, stream, topic };
+  return { ok: true, contact, email, stream, topic, isTest };
+}
+
+/**
+ * Would prepareEmail get past its gates (kill switch, contact, allowlist, flow
+ * toggle, eligibility) right now? No writes and no budget check. The sequence
+ * engine calls it before a step's side effect (a trial pass, bonus words), so
+ * nothing is handed out for an email that would then be skipped.
+ */
+export async function checkSendable(i: GateInput): Promise<{ ok: true } | { ok: false; outcome: SendOutcome }> {
+  const gate = await runGates(i);
+  if (gate.ok) return { ok: true };
+  if ("defer" in gate) return { ok: false, outcome: { status: "deferred", reason: gate.defer } };
+  return { ok: false, outcome: { status: "skipped", reason: gate.skip } };
+}
+
+export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): Promise<PrepareResult> {
+  const gate = await runGates(i);
+  if (!gate.ok) {
+    if ("defer" in gate) return deferred(gate.defer);
+    if (gate.skip === "contact_missing") return { ok: false, outcome: { status: "skipped", reason: "contact_missing" } };
+    // A skip is recorded so the step isn't retried forever.
+    return { ok: false, outcome: await recordSkip(i, messageFields(i, gate.email, gate.stream, gate.topic), gate.skip) };
+  }
+  const { contact, email, stream, topic, isTest } = gate;
+  const fields = messageFields(i, email, stream, topic);
 
   // 6. Daily budget.
   if ((await remainingBudget(i.pool)) <= 0) return deferred("budget");
