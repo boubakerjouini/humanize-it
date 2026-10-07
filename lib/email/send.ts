@@ -79,6 +79,8 @@ export type Prepared = {
   stream: EmailStream;
   pool: SendPool;
   isTest: boolean;
+  /** A retry of a claimed row (attempts > 1): always sent alone, under its own idempotency key. */
+  retry: boolean;
   idempotencyKey: string;
   payload: EmailPayload;
 };
@@ -170,7 +172,7 @@ async function recordSkip(i: PrepareInput, fields: MessageFields, reason: SkipRe
   return { status: "duplicate", messageId: existing.id };
 }
 
-type Claim = { kind: "claimed"; messageId: string; queuedAt: Date } | { kind: "duplicate"; messageId: string };
+type Claim = { kind: "claimed"; messageId: string; queuedAt: Date; retry: boolean } | { kind: "duplicate"; messageId: string };
 
 /** Create the row in "sending", or take over a queued/failed one with attempts left. */
 async function claimMessage(i: PrepareInput, fields: MessageFields): Promise<Claim> {
@@ -180,7 +182,7 @@ async function claimMessage(i: PrepareInput, fields: MessageFields): Promise<Cla
       data: { ...fields, dedupeKey: i.dedupeKey, status: "sending", attempts: 1, props },
       select: { id: true, queuedAt: true },
     });
-    return { kind: "claimed", messageId: row.id, queuedAt: row.queuedAt };
+    return { kind: "claimed", messageId: row.id, queuedAt: row.queuedAt, retry: false };
   } catch (err) {
     if (!isUniqueViolation(err)) throw err;
   }
@@ -196,20 +198,24 @@ async function claimMessage(i: PrepareInput, fields: MessageFields): Promise<Cla
       ...(props !== undefined ? { props } : {}),
     },
   });
-  const row = await db.emailMessage.findUnique({ where: { dedupeKey: i.dedupeKey }, select: { id: true, queuedAt: true } });
+  const row = await db.emailMessage.findUnique({ where: { dedupeKey: i.dedupeKey }, select: { id: true, queuedAt: true, attempts: true } });
   if (!row) throw new Error("email message vanished during claim");
-  return res.count === 1 ? { kind: "claimed", messageId: row.id, queuedAt: row.queuedAt } : { kind: "duplicate", messageId: row.id };
+  // A pre-queued campaign row is claimed for the first time at attempts 1.
+  return res.count === 1
+    ? { kind: "claimed", messageId: row.id, queuedAt: row.queuedAt, retry: row.attempts > 1 }
+    : { kind: "duplicate", messageId: row.id };
 }
 
 /**
  * Mark a message failed. A non-retryable failure pins attempts to the maximum,
  * so neither a re-claim nor the daily retry (status failed, attempts < 3) picks
- * it up again.
+ * it up again. Only a row still in "sending" changes: a delivery webhook that
+ * got there first (the send went through after all) is never overwritten.
  */
 async function markFailed(messageId: string, error: string, retryable: boolean, extra: { quotaExceeded?: boolean; subject?: string } = {}): Promise<SendOutcome> {
   try {
-    await db.emailMessage.update({
-      where: { id: messageId },
+    await db.emailMessage.updateMany({
+      where: { id: messageId, status: "sending" },
       data: {
         status: "failed",
         error: error.slice(0, 500),
@@ -350,6 +356,7 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
       stream,
       pool: i.pool,
       isTest,
+      retry: claim.retry,
       idempotencyKey: idempotencyKeyFor(i.dedupeKey),
       payload: {
         from: fromFor(stream),
@@ -369,12 +376,16 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
   };
 }
 
+/** Conditional like markFailed: a status the webhook already advanced (delivered, bounced...) stays. */
 async function markSent(p: Prepared, resendId: string | null): Promise<void> {
   const now = new Date();
-  await db.emailMessage.update({
-    where: { id: p.messageId },
+  const res = await db.emailMessage.updateMany({
+    where: { id: p.messageId, status: "sending" },
     data: { status: "sent", resendId, sentAt: now, subject: p.payload.subject, error: null },
   });
+  if (res.count === 0 && resendId) {
+    await db.emailMessage.updateMany({ where: { id: p.messageId, resendId: null }, data: { resendId, subject: p.payload.subject } });
+  }
   try {
     await db.contact.update({ where: { id: p.contactId }, data: { lastEmailedAt: now } });
   } catch (err) {
@@ -417,16 +428,34 @@ export async function deliverOne(p: Prepared): Promise<SendOutcome> {
  * email; an ambiguous failure (5xx, network) is marked retryable instead, since
  * resending per item under new idempotency keys could deliver twice. A quota
  * error stops the rest of the run.
+ *
+ * Retries (attempts > 1) never join a batch: a batch's idempotency key covers
+ * its exact set of messages, so a retried row is sent alone under its own
+ * dedupe key, which stays the same on every later attempt.
  */
 export async function deliverBatch(ps: Prepared[]): Promise<SendOutcome[]> {
   const outcomes: SendOutcome[] = new Array(ps.length);
   const resend = getResend();
   let quotaExceeded = false;
 
-  for (let start = 0; start < ps.length; start += BATCH_SIZE) {
-    const chunk = ps.slice(start, start + BATCH_SIZE);
+  for (let k = 0; k < ps.length; k++) {
+    if (!ps[k].retry) continue;
+    if (!resend || quotaExceeded) {
+      const reason = quotaExceeded ? "quota_exceeded" : "not_configured";
+      outcomes[k] = await markFailed(ps[k].messageId, reason, true, { quotaExceeded, subject: ps[k].payload.subject });
+      continue;
+    }
+    outcomes[k] = await deliverOne(ps[k]);
+    const o = outcomes[k];
+    if (o.status === "failed" && o.quotaExceeded) quotaExceeded = true;
+  }
+
+  const fresh = ps.map((p, k) => ({ p, k })).filter((x) => !x.p.retry);
+  for (let start = 0; start < fresh.length; start += BATCH_SIZE) {
+    const slice = fresh.slice(start, start + BATCH_SIZE);
+    const chunk = slice.map((x) => x.p);
     const settle = (j: number, outcome: SendOutcome) => {
-      outcomes[start + j] = outcome;
+      outcomes[slice[j].k] = outcome;
     };
 
     if (!resend || quotaExceeded) {
