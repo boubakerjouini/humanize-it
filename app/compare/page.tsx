@@ -376,7 +376,7 @@ export default function ComparePage() {
                       { label: "Confidence band (Likely Human / AI)", vals: [true, false, false, false] },
                       { label: "Per-word highlighting", vals: [true, true, false, false] },
                       { label: "Humanize rewrite", vals: [true, true, true, true] },
-                      { label: "4 tone modes", vals: [true, false, false, false] },
+                      { label: "5 tones", vals: [true, false, false, false] },
                       { label: "History / saved documents", vals: [true, true, false, false] },
                       { label: "Free tier", vals: [true, true, true, true] },
                       { label: "Pro price", vals: ["$9/mo", "$9.99/mo", "$9.99/mo", "Free"] },

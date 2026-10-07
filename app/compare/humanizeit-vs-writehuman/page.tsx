@@ -161,13 +161,13 @@ export default function HumanizeItVsWriteHuman() {
         opt-in rather than pre-selected.
       </p>
       <p style={kitStyles.p}>
-        HumanizeIt also offers a one-time{" "}
+        While it lasts, HumanizeIt also has the{" "}
         <Link href="/lifetime" style={{ color: THEME.brandHi }}>
-          lifetime option
+          Founding 100
         </Link>{" "}
-        for people who would rather not manage a recurring subscription at all &mdash; a structure
-        WriteHuman does not currently match. If a predictable, no-renewal cost matters to you, that is
-        a concrete point of difference rather than a marketing line.
+        offer: two years of Pro for one $99 payment, limited to 100 people, for anyone who would
+        rather not manage a recurring subscription. WriteHuman does not currently offer anything like
+        it. If a predictable, no-renewal cost matters to you, that is a concrete point of difference.
       </p>
 
       <h2 style={kitStyles.h2}>The verdict</h2>
@@ -175,7 +175,7 @@ export default function HumanizeItVsWriteHuman() {
         If you want the simplest possible paste-and-rewrite box and nothing more, WriteHuman is a
         perfectly reasonable, well-known choice. If you want the same rewrite plus a built-in detector,
         a documented API, bulk-friendly workflow, a free tier you can actually use before paying, and a
-        lifetime option, HumanizeIt covers more ground. Neither tool can guarantee permanent detection
+        one-time Founding 100 offer while it lasts, HumanizeIt covers more ground. Neither tool can guarantee permanent detection
         bypass, so whichever you pick, always verify output against a real detector before you submit.
         The most reliable way to choose is to run both on your own text &mdash; the result on your
         writing beats any comparison page, including this one.
@@ -185,7 +185,7 @@ export default function HumanizeItVsWriteHuman() {
         faqs={[
           {
             q: "Is HumanizeIt a good WriteHuman alternative?",
-            a: "Yes. HumanizeIt does the same core paste-and-rewrite job as WriteHuman and adds a built-in AI detector, a documented API, bulk-friendly processing, a usable free tier, and a one-time lifetime option. Whether it is better for you depends on whether you value those extras or prefer WriteHuman's minimal interface.",
+            a: "Yes. HumanizeIt does the same core paste-and-rewrite job as WriteHuman and adds a built-in AI detector, a documented API, bulk-friendly processing, a usable free tier, and a Founding 100 offer (two years of Pro for $99, while it lasts). Whether it is better for you depends on whether you value those extras or prefer WriteHuman's minimal interface.",
           },
           {
             q: "Can either tool guarantee I will bypass AI detectors?",
@@ -193,7 +193,7 @@ export default function HumanizeItVsWriteHuman() {
           },
           {
             q: "Which one is cheaper, HumanizeIt or WriteHuman?",
-            a: "Both use subscription tiers based on volume and prices change often, so check each company's live pricing page on the day you buy. Beyond the headline price, compare value per dollar: word limits, whether an API is included, and whether annual billing is opt-in. HumanizeIt also offers a one-time lifetime plan that WriteHuman does not currently match.",
+            a: "Both use subscription tiers based on volume and prices change often, so check each company's live pricing page on the day you buy. Beyond the headline price, compare value per dollar: word limits, whether an API is included, and whether annual billing is opt-in. While it lasts, HumanizeIt also has a Founding 100 offer: two years of Pro for one $99 payment, which WriteHuman does not currently match.",
           },
           {
             q: "Will humanizing change the meaning of my text?",

@@ -209,7 +209,8 @@ export default function HumanizeItVsStealthGpt() {
       <p style={pStyle}>
         You can manage and cancel your subscription from your dashboard — no emailing support, no
         maze of &ldquo;are you sure?&rdquo; screens. If you cancel before your renewal date, you are
-        simply not charged again, and annual plans come with a 14-day money-back guarantee.
+        simply not charged again, and every paid plan, monthly or annual, comes with a 14-day
+        money-back guarantee (30 days on Team annual).
       </p>
 
       {/* Pricing */}
