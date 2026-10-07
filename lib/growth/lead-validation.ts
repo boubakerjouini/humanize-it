@@ -207,5 +207,6 @@ export function firstIssueMessage(error: z.ZodError): string {
   const issue = error.issues[0];
   if (!issue) return "Invalid request.";
   if (issue.path[0] === "email") return "Please enter a valid email address.";
-  return issue.message || "Invalid request.";
+  // Our own rules carry user-facing copy; zod's built-in messages are for developers.
+  return issue.code === "custom" && issue.message ? issue.message : "Invalid request.";
 }

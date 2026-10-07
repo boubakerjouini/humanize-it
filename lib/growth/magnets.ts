@@ -63,7 +63,7 @@ export const MAGNETS: Record<MagnetSlug, Magnet> = {
       "Job seekers and employees asked whether they used AI",
     ],
     pages: 15,
-    firstSection: "the 24-hour plan at the start",
+    firstSection: "the 24-hour plan",
     guardrail:
       "This kit helps you show your real writing process. It won't help you hide AI use, and we don't recommend trying.",
     relatedPostSlugs: [],
@@ -128,7 +128,7 @@ export const MAGNETS: Record<MagnetSlug, Magnet> = {
       "Anyone writing in a second language",
     ],
     pages: 12,
-    firstSection: "\"The short version\" at the start",
+    firstSection: "\"The short version\" page",
     relatedPostSlugs: ["ai-detection-how-it-works", "best-ai-humanizer-tools"],
     seo: {
       title: "AI Detection Field Guide 2026: How Detectors Work (Free PDF)",
@@ -186,7 +186,7 @@ export const MAGNETS: Record<MagnetSlug, Magnet> = {
       "Anyone who starts from an AI draft and wants it to sound like them",
     ],
     pages: 8,
-    firstSection: "the table of tells near the start",
+    firstSection: "the table of tells",
     relatedPostSlugs: ["humanize-chatgpt-text"],
     seo: {
       title: "LinkedIn & Cover Letter Humanizing Checklist (Free PDF)",
