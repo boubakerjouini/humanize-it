@@ -141,7 +141,7 @@ export function PreferencesForm({ token, initial, highlightUnsubscribe }: Props)
                   style={{ width: 20, height: 20, marginTop: 2, accentColor: THEME.brand, flexShrink: 0 }}
                 />
                 <span>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 600, textTransform: "capitalize" }}>{t.label}</span>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 600 }}>{t.label.charAt(0).toUpperCase() + t.label.slice(1)}</span>
                   <span style={{ display: "block", fontSize: 14, color: THEME.textDim, marginTop: 2 }}>
                     {TOPIC_HELP[t.topic]}
                     {t.pending ? " Waiting for your confirmation: ticking it here confirms it." : ""}

@@ -95,7 +95,9 @@ describe("step conditions and props", () => {
       x.enrollment.context.plan = "TEAM";
       x.user = { plan: "FREE", effectivePlan: "FREE", planExpiresAt: null, createdAt: now };
     });
-    expect(findStep("grant_expiry", "grant_ended")!.props!(c)).toEqual({ plan: "TEAM", expiresAt: emailDate(c.enrollment.anchorAt) });
+    expect(findStep("grant_expiry", "grant_ended")!.props!(c)).toEqual({ plan: "TEAM", expiresAt: c.enrollment.anchorAt.toISOString() });
+    // Templates format dates themselves (in UTC), so they get ISO timestamps.
+    expect(emailDate(new Date("2026-10-21T00:30:00Z"))).toBe("2026-10-21T00:30:00.000Z");
   });
 
   it("grant_keep_offer recommends Team only above Pro's monthly allowance", () => {

@@ -103,10 +103,13 @@ function step<K extends TemplateKey>(s: StepInput<K>): EngineStep {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-/** "October 21, 2026" (UTC), the form every template shows dates in. */
+/**
+ * Dates go to templates as ISO timestamps; the templates format them (in UTC).
+ * Pre-formatting here would make them re-parse "October 21, 2026" in the
+ * server's local zone and print the day before.
+ */
 export function emailDate(value: Date | string): string {
-  const d = value instanceof Date ? value : new Date(value);
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+  return (value instanceof Date ? value : new Date(value)).toISOString();
 }
 
 export function parseEnrollmentContext(raw: unknown): EnrollmentContext {

@@ -120,15 +120,15 @@ async function applyEvent(evt: ResendEventLike): Promise<{ contactId: string | n
 }
 
 export async function POST(req: Request) {
+  const id = req.headers.get("svix-id");
+  const timestamp = req.headers.get("svix-timestamp");
+  const signature = req.headers.get("svix-signature");
+  if (!id || !timestamp || !signature) return fail("INVALID_SIGNATURE", "Missing signature headers.", 400);
   const secret = process.env.RESEND_WEBHOOK_SECRET?.trim();
   if (!secret) {
     logGrowthError("resend-webhook", new Error("RESEND_WEBHOOK_SECRET is not set"));
     return fail("NOT_CONFIGURED", "Webhook secret is not configured.", 500);
   }
-  const id = req.headers.get("svix-id");
-  const timestamp = req.headers.get("svix-timestamp");
-  const signature = req.headers.get("svix-signature");
-  if (!id || !timestamp || !signature) return fail("INVALID_SIGNATURE", "Missing signature headers.", 400);
 
   const payload = await req.text();
   if (payload.length > MAX_BODY_BYTES) return fail("INVALID_INPUT", "Payload too large.", 413);
