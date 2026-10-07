@@ -1,5 +1,9 @@
 // ===========================================================
 // POST /api/humanize — Rewrite text with Claude (Anthropic)
+//
+// Plan gates enforced here, not just in the editor: Free rewrites use the
+// Standard tone only (TONE_LOCKED otherwise), and Voice Match needs a usable
+// stored profile (`voiceProfileId`, see app/api/voice-profiles/shared.ts).
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -16,6 +20,8 @@ import { getClerkIdFromRequest } from "@/lib/extension-auth";
 import { trackDocumentEvent, trackQuotaHit } from "@/lib/crm/hooks";
 import { recordEvent } from "@/lib/crm/events";
 import { runAfter } from "@/lib/growth/safe";
+import { isToneAllowed } from "@/lib/plans";
+import { toFingerprint, usableProfileIds, voiceAllowance } from "@/app/api/voice-profiles/shared";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 
@@ -32,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse body
-    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; language?: unknown; aggressiveHint?: unknown };
+    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; voiceProfileId?: unknown; language?: unknown; aggressiveHint?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -42,7 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { documentId, tone, intensity, styleFingerprint, language, aggressiveHint } = body;
+    const { documentId, tone, intensity, styleFingerprint, voiceProfileId, language, aggressiveHint } = body;
 
     if (typeof documentId !== "string" || !documentId) {
       return NextResponse.json(
@@ -77,6 +83,36 @@ export async function POST(req: Request) {
         { error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
         { status: 429, headers: { ...rlHeaders, "Retry-After": String(rl.retryAfterSeconds) } }
       );
+    }
+
+    // 3d. Plan gates: the tone, then the voice profile (both before any charge)
+    if (!isToneAllowed(plan.id, toneValue)) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "TONE_LOCKED",
+            message: "Free rewrites use the Standard tone. Upgrade to Pro for all 5 tones.",
+          },
+        },
+        { status: 403, headers: rlHeaders }
+      );
+    }
+
+    let voiceFingerprint: Record<string, string> | undefined;
+    if (typeof voiceProfileId === "string" && voiceProfileId) {
+      const allowance = await voiceAllowance(freshUser.id, plan.id);
+      const usable = await usableProfileIds(freshUser.id, allowance.limit);
+      if (!usable.has(voiceProfileId)) {
+        const exists = await db.voiceProfile.count({ where: { id: voiceProfileId, userId: freshUser.id } });
+        return NextResponse.json(
+          exists
+            ? { error: { code: "VOICE_LOCKED", message: "This voice profile isn't included in your current plan." } }
+            : { error: { code: "NOT_FOUND", message: "Voice profile not found." } },
+          { status: exists ? 403 : 404, headers: rlHeaders }
+        );
+      }
+      const profile = await db.voiceProfile.findUnique({ where: { id: voiceProfileId }, select: { fingerprint: true } });
+      voiceFingerprint = toFingerprint(profile?.fingerprint) ?? undefined;
     }
 
     // 4. Load document and verify ownership
@@ -137,9 +173,11 @@ export async function POST(req: Request) {
 
     // 6. Call humanizeText() — refund the reserved words on any failure
     const analysisResult = document.analysisResult as unknown as AnalysisResult;
-    const styleData = typeof styleFingerprint === "object" && styleFingerprint !== null
+    // A stored voice wins over a raw fingerprint (kept for older clients, and
+    // like Voice Match only on plans that include it).
+    const styleData = voiceFingerprint ?? (plan.voiceProfiles > 0 && typeof styleFingerprint === "object" && styleFingerprint !== null
       ? (styleFingerprint as Record<string, string>)
-      : undefined;
+      : undefined);
     const langValue = typeof language === "string" && language ? language : undefined;
     const hintValue = typeof aggressiveHint === "string" ? aggressiveHint : undefined;
 
@@ -207,6 +245,7 @@ export async function POST(req: Request) {
       tokens_used: tokensUsed,
       word_count: document.wordCount,
       plan: plan.id,
+      voice: !!voiceFingerprint,
     });
     runAfter("document-humanized", async () => {
       if (pool === "bonus") {
