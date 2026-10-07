@@ -11,6 +11,8 @@ import { checkAndResetQuota, planConfigFor, consumeWordQuota } from "@/lib/quota
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
+import { trackDocumentEvent, trackFirstDocument, trackQuotaHit } from "@/lib/crm/hooks";
+import { runAfter } from "@/lib/growth/safe";
 
 export async function POST(req: Request) {
   try {
@@ -102,6 +104,7 @@ export async function POST(req: Request) {
 
     const reserved = await consumeWordQuota(freshUser.id, wordCount, plan);
     if (!reserved) {
+      runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "analyze_words", plan.id));
       return NextResponse.json(
         {
           error: {
@@ -143,6 +146,16 @@ export async function POST(req: Request) {
       pattern_count: analysisResult.patterns.length,
       word_count: analysisResult.wordCount,
       plan: freshUser.plan,
+    });
+    // One task, in order: the first-document write creates the contact the event then reuses.
+    const savedDocument = document !== null;
+    runAfter("document-analyzed", async () => {
+      if (savedDocument) await trackFirstDocument(freshUser.id);
+      await trackDocumentEvent(freshUser.id, "analyzed", {
+        words: analysisResult.wordCount,
+        plan: plan.id,
+        score: analysisResult.score,
+      });
     });
 
     // 10. Return response

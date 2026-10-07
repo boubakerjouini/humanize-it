@@ -8,10 +8,14 @@ import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algori
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
-import { checkAndResetQuota, planConfigFor, consumeWordQuota, refundWordQuota } from "@/lib/quota";
+import { checkAndResetQuota, planConfigFor, hasBonusWords, refundWords, reserveWords, type WordPool } from "@/lib/quota";
+import { consumeBonusWords } from "@/lib/crm/bonus";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
+import { trackDocumentEvent, trackQuotaHit } from "@/lib/crm/hooks";
+import { recordEvent } from "@/lib/crm/events";
+import { runAfter } from "@/lib/growth/safe";
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 
@@ -87,12 +91,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. Secondary FREE rewrite-count gate (rate of distinct rewrites/day)
-    if (
+    // 5. Secondary FREE rewrite-count gate (rate of distinct rewrites/day).
+    // Bonus words lift it: past the limit, the rewrite is paid from the bonus
+    // pool only (step 5b), never from the plan allowance.
+    const words = document.wordCount || 0;
+    const overRewriteLimit =
       plan.id === "FREE" &&
       plan.rewriteLimit !== -1 &&
-      freshUser.rewriteCount >= plan.rewriteLimit
-    ) {
+      freshUser.rewriteCount >= plan.rewriteLimit;
+    const bonusOnly = overRewriteLimit && words > 0 && (await hasBonusWords(freshUser.id, words));
+    if (overRewriteLimit && !bonusOnly) {
+      runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "humanize_rewrites", plan.id));
       return NextResponse.json(
         {
           error: {
@@ -106,10 +115,15 @@ export async function POST(req: Request) {
 
     // 5b. Atomically reserve the word quota for ALL plans (the real cost gate
     // on the expensive Claude path). Reserve before calling the model so two
-    // concurrent requests can never both exceed the limit.
-    const words = document.wordCount || 0;
-    const reserved = await consumeWordQuota(freshUser.id, words, plan);
-    if (!reserved) {
+    // concurrent requests can never both exceed the limit. Plan allowance
+    // first, then the bonus pool; `pool` remembers which one paid.
+    const pool: WordPool | false = bonusOnly
+      ? (await consumeBonusWords(freshUser.id, words)) ? "bonus" : false
+      : await reserveWords(freshUser.id, words, plan);
+    if (!pool) {
+      runAfter("quota-hit", () =>
+        trackQuotaHit(freshUser.id, bonusOnly ? "humanize_rewrites" : "humanize_words", plan.id)
+      );
       return NextResponse.json(
         {
           error: {
@@ -146,7 +160,7 @@ export async function POST(req: Request) {
       tokensUsed = result.tokensUsed;
       modelUsed = result.model;
     } catch (modelErr) {
-      await refundWordQuota(freshUser.id, words);
+      await refundWords(freshUser.id, words, pool);
       console.error("[humanize] model call failed:", modelErr);
       return NextResponse.json(
         { error: { code: "REWRITE_FAILED", message: "The rewrite could not be completed. Please try again." } },
@@ -156,7 +170,7 @@ export async function POST(req: Request) {
 
     // 6b. Guard against an empty/refusal response silently destroying user text
     if (!humanizedText || humanizedText.trim().length === 0) {
-      await refundWordQuota(freshUser.id, words);
+      await refundWords(freshUser.id, words, pool);
       return NextResponse.json(
         { error: { code: "EMPTY_RESULT", message: "The rewrite returned no usable text. Your original is unchanged." } },
         { status: 502, headers: rlHeaders }
@@ -193,6 +207,12 @@ export async function POST(req: Request) {
       tokens_used: tokensUsed,
       word_count: document.wordCount,
       plan: plan.id,
+    });
+    runAfter("document-humanized", async () => {
+      if (pool === "bonus") {
+        await recordEvent({ userId: freshUser.id, type: "bonus_used", props: { words, via: "humanize" } });
+      }
+      await trackDocumentEvent(freshUser.id, "humanized", { words, plan: plan.id, tone: toneValue });
     });
 
     // 10. Return

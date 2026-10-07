@@ -13,11 +13,14 @@ import { NextResponse } from "next/server";
 import { start } from "workflow/api";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
-import { checkAndResetQuota, planConfigFor, consumeWordQuota, refundWordQuota } from "@/lib/quota";
+import { checkAndResetQuota, planConfigFor, refundWords, reserveWords } from "@/lib/quota";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { extractFromBuffer } from "@/lib/extract-server";
 import { activeProvider } from "@/lib/llm";
 import { trackServer } from "@/lib/posthog";
+import { trackDocumentEvent, trackQuotaHit } from "@/lib/crm/hooks";
+import { recordEvent } from "@/lib/crm/events";
+import { runAfter } from "@/lib/growth/safe";
 import {
   humanizeDocumentWorkflow,
   type PipelineOptions,
@@ -51,6 +54,7 @@ export async function POST(req: Request) {
 
     // Document pipeline is a paid feature.
     if (!plan.uploadEnabled) {
+      runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "upload_plan", plan.id));
       return NextResponse.json(
         { error: { code: "UPGRADE_REQUIRED", message: "Document review is available on Pro and Team plans." } },
         { status: 402 }
@@ -146,9 +150,11 @@ export async function POST(req: Request) {
       truncated = true;
     }
 
-    // Atomically reserve the word quota (refunded by the workflow on failure).
-    const reserved = await consumeWordQuota(freshUser.id, wordCount, plan);
-    if (!reserved) {
+    // Atomically reserve the word quota, plan allowance first, then bonus words
+    // (refunded by the workflow on failure; it always refunds the plan pool).
+    const pool = await reserveWords(freshUser.id, wordCount, plan);
+    if (!pool) {
+      runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "upload_words", plan.id));
       return NextResponse.json(
         { error: { code: "QUOTA_EXCEEDED", message: `You've used your ${plan.wordsLimitPeriod}ly word allowance. Upgrade for more.` } },
         { status: 402, headers: rlHeaders }
@@ -176,7 +182,7 @@ export async function POST(req: Request) {
       });
     } catch (createErr) {
       console.error("[documents/process] failed to create document:", createErr);
-      await refundWordQuota(freshUser.id, wordCount);
+      await refundWords(freshUser.id, wordCount, pool);
       return NextResponse.json(
         { error: { code: "DB_ERROR", message: "Could not start processing. Please try again." } },
         { status: 500, headers: rlHeaders }
@@ -192,7 +198,7 @@ export async function POST(req: Request) {
       runId = run.runId;
     } catch (startErr) {
       console.error("[documents/process] failed to start workflow:", startErr);
-      await refundWordQuota(freshUser.id, wordCount);
+      await refundWords(freshUser.id, wordCount, pool);
       await db.document.update({
         where: { id: document.id },
         data: { status: "error", stage: "error", errorMessage: "Could not start processing." },
@@ -212,6 +218,17 @@ export async function POST(req: Request) {
     }
 
     trackServer(clerkId, "document_pipeline_started", { source_type: sourceType, word_count: wordCount, plan: plan.id });
+    runAfter("document-uploaded", async () => {
+      if (pool === "bonus") {
+        await recordEvent({ userId: freshUser.id, type: "bonus_used", props: { words: wordCount, via: "upload" } });
+      }
+      await trackDocumentEvent(freshUser.id, "uploaded", {
+        words: wordCount,
+        plan: plan.id,
+        sourceType,
+        pages: pageCount ?? null,
+      });
+    });
 
     return NextResponse.json(
       { documentId: document.id, runId, sourceType, pageCount: pageCount ?? null, wordCount, truncated },

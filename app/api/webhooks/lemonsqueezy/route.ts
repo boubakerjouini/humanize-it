@@ -7,12 +7,19 @@
 //   subscription_cancelled       → downgrade to FREE
 //   subscription_payment_success → reset usage quota (new billing cycle)
 //   subscription_payment_failed  → mark status past_due
+//
+// Each branch also records a CRM billing event after its DB write (runAfter,
+// so the response never waits). The dedupe key includes updated_at, so a
+// LemonSqueezy retry of the same delivery is a no-op while a later real
+// change to the same subscription is still recorded.
 // ===========================================================
 
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { getPlanByVariantId } from "@/lib/plans";
 import type { Plan } from "@/app/generated/prisma/client";
+import { trackBillingEvent, type BillingEventType } from "@/lib/crm/hooks";
+import { runAfter } from "@/lib/growth/safe";
 
 // ---------------------------------------------------------------------------
 // Types — Lemon Squeezy webhook payload
@@ -23,6 +30,7 @@ interface LsSubscriptionAttributes {
   status: string;
   renews_at: string | null;
   ends_at: string | null;
+  updated_at?: string | null;
   urls: {
     update_payment_method: string;
     customer_portal: string;
@@ -82,6 +90,19 @@ export async function POST(req: Request) {
   const { id: lsSubscriptionId, attributes } = payload.data;
   const lsCustomerId = String(attributes.customer_id);
   const lsVariantId = String(attributes.variant_id);
+  const dedupeKey = `ls:${event_name}:${lsSubscriptionId}:${attributes.updated_at ?? ""}`;
+
+  /** Record the branch's billing event once its DB write succeeded. Never throws. */
+  const track = (userId: string, type: BillingEventType, plan: string | null, extra: Record<string, string> = {}) => {
+    runAfter(`billing-${type}`, () =>
+      trackBillingEvent(
+        userId,
+        type,
+        { plan, variantId: lsVariantId, subscriptionId: lsSubscriptionId, status: attributes.status, ...extra },
+        dedupeKey
+      )
+    );
+  };
 
   console.log(`[ls/webhook] Event: ${event_name} | subscription: ${lsSubscriptionId}`);
 
@@ -123,6 +144,7 @@ export async function POST(req: Request) {
           },
         });
 
+        track(user.id, "subscription_started", plan?.id ?? "PRO");
         console.log(`[ls/webhook] Provisioned ${plan?.id ?? "PRO"} for clerkId=${clerkId}`);
         break;
       }
@@ -161,6 +183,13 @@ export async function POST(req: Request) {
           console.log(`[ls/webhook] Updated plan → ${plan.id} for userId=${sub.userId}`);
         }
 
+        if (event_name !== "subscription_updated") {
+          track(sub.userId, "subscription_resumed", plan?.id ?? null);
+        } else if (sub.lsVariantId !== lsVariantId) {
+          // A variant switch (plan or monthly/annual); plain renewals keep the variant.
+          track(sub.userId, "subscription_plan_changed", plan?.id ?? null, { previousVariantId: sub.lsVariantId ?? "" });
+        }
+
         break;
       }
 
@@ -192,6 +221,17 @@ export async function POST(req: Request) {
           });
           console.log(`[ls/webhook] Downgraded userId=${sub.userId} to FREE (${event_name})`);
         }
+
+        const plan = getPlanByVariantId(lsVariantId);
+        track(
+          sub.userId,
+          event_name === "subscription_cancelled"
+            ? "subscription_cancelled"
+            : event_name === "subscription_expired"
+              ? "subscription_expired"
+              : "subscription_paused",
+          plan?.id ?? null
+        );
 
         break;
       }
@@ -249,6 +289,11 @@ export async function POST(req: Request) {
           data: { status: newStatus },
         });
 
+        track(
+          sub.userId,
+          event_name === "subscription_payment_recovered" ? "payment_recovered" : "payment_failed",
+          (sub.lsVariantId ? getPlanByVariantId(sub.lsVariantId)?.id : null) ?? null
+        );
         console.warn(`[ls/webhook] Payment ${event_name} for userId=${sub.userId} → ${newStatus}`);
         break;
       }
