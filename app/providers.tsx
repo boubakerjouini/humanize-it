@@ -5,6 +5,7 @@ import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { AttributionCapture } from "@/components/growth/attribution-capture";
+import { scrubEvent } from "@/lib/url-scrub";
 
 // Initialize PostHog once
 function PostHogInit() {
@@ -22,6 +23,9 @@ function PostHogInit() {
       capture_pageleave: true,
       persistence: "localStorage",
       autocapture: false, // Opt-in only — GDPR friendly
+      // Email links carry a signed token in ?t= ($current_url, $referrer,
+      // page-leave events): strip it from every event before it leaves.
+      before_send: (event) => (event ? scrubEvent(event) : event),
     });
   }, []);
 
