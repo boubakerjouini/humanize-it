@@ -4,7 +4,8 @@
 // document whether its day is a calendar UTC day or rolling 24h. Inline sends
 // (welcome, magnet delivery) may use the whole cap; bulk sends (cron,
 // campaigns) stop 20 short so a busy campaign day can't block a signup's
-// welcome email.
+// welcome email. Support mail forwarded to the founder (lib/email/inbound.ts)
+// goes through the same Resend account, so each forward's recipients count too.
 // ===========================================================
 
 import { db } from "@/lib/db";
@@ -19,9 +20,22 @@ export function utcMidnight(at: Date = new Date()): Date {
   return new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
 }
 
-/** Messages that left today (UTC), any status since. */
+/** Recipients of the support-mail forwards Resend accepted today (UTC): its quota counts recipients. */
+export async function forwardsToday(now: Date = new Date()): Promise<number> {
+  const row = await db.dailyMetric.findUnique({
+    where: { day_key: { day: utcMidnight(now), key: "inbound.forwarded" } },
+    select: { count: true },
+  });
+  return row?.count ?? 0;
+}
+
+/** Messages that left today (UTC), any status since, plus today's support forwards. */
 export async function sentToday(now: Date = new Date()): Promise<number> {
-  return db.emailMessage.count({ where: { sentAt: { gte: utcMidnight(now) } } });
+  const [messages, forwards] = await Promise.all([
+    db.emailMessage.count({ where: { sentAt: { gte: utcMidnight(now) } } }),
+    forwardsToday(now),
+  ]);
+  return messages + forwards;
 }
 
 /** Pure: what a pool may still send given today's count and the cap. */

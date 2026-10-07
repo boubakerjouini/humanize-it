@@ -89,13 +89,21 @@ export function classifyEvent(evt: ResendEventLike): WebhookAction {
   }
 }
 
+/** A tag's value on the event (Resend sends tags as an object or as a name/value array). */
+export function eventTag(evt: ResendEventLike, name: string): string | null {
+  const tags = evt.data?.tags;
+  if (Array.isArray(tags)) {
+    const value = tags.find((t) => t?.name === name)?.value;
+    return typeof value === "string" ? value : null;
+  }
+  if (tags && typeof tags === "object") return typeof tags[name] === "string" ? tags[name] : null;
+  return null;
+}
+
 /** Our message id from the "m" tag (object or array form), and Resend's id as the fallback key. */
 export function messageRef(evt: ResendEventLike): { messageId: string | null; resendId: string | null; to: string | null } {
   const d = evt.data ?? {};
-  let messageId: string | null = null;
-  const tags = d.tags;
-  if (Array.isArray(tags)) messageId = tags.find((t) => t?.name === "m")?.value ?? null;
-  else if (tags && typeof tags === "object") messageId = typeof tags.m === "string" ? tags.m : null;
+  let messageId = eventTag(evt, "m");
   if (messageId && !/^[A-Za-z0-9_-]{1,64}$/.test(messageId)) messageId = null;
   const to = Array.isArray(d.to) ? (d.to[0] ?? null) : typeof d.to === "string" ? d.to : null;
   return { messageId, resendId: typeof d.email_id === "string" ? d.email_id : null, to };
