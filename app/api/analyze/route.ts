@@ -1,5 +1,9 @@
 // ===========================================================
 // POST /api/analyze — Analyze text for AI patterns
+//
+// Checks are free: the analysis is local pattern matching with no model call,
+// so it never draws on the word quota (only rewrites do). The per-user rate
+// limit is what keeps it from being abused.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -7,11 +11,11 @@ import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
-import { checkAndResetQuota, planConfigFor, consumeWordQuota } from "@/lib/quota";
+import { checkAndResetQuota, planConfigFor } from "@/lib/quota";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { trackServer } from "@/lib/posthog";
 import { getClerkIdFromRequest } from "@/lib/extension-auth";
-import { trackDocumentEvent, trackFirstDocument, trackQuotaHit } from "@/lib/crm/hooks";
+import { trackDocumentEvent, trackFirstDocument } from "@/lib/crm/hooks";
 import { runAfter } from "@/lib/growth/safe";
 
 export async function POST(req: Request) {
@@ -89,9 +93,8 @@ export async function POST(req: Request) {
       freshUser = user; // continue with stale quota rather than failing
     }
 
-    // 5. Resolve plan, rate-limit, then atomically reserve the word quota
+    // 5. Resolve plan and rate-limit. No word charge: checks are free.
     const plan = planConfigFor(freshUser);
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
 
     const rl = await checkRateLimit(`analyze:${freshUser.id}`, plan.rateLimit);
     const rlHeaders = rateLimitHeaders(rl);
@@ -99,20 +102,6 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: { code: "RATE_LIMITED", message: "Too many requests. Please slow down." } },
         { status: 429, headers: { ...rlHeaders, "Retry-After": String(rl.retryAfterSeconds) } }
-      );
-    }
-
-    const reserved = await consumeWordQuota(freshUser.id, wordCount, plan);
-    if (!reserved) {
-      runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "analyze_words", plan.id));
-      return NextResponse.json(
-        {
-          error: {
-            code: "QUOTA_EXCEEDED",
-            message: `You have reached your ${plan.wordsLimitPeriod}ly analysis limit. Upgrade to Pro for more.`,
-          },
-        },
-        { status: 402, headers: rlHeaders }
       );
     }
 
@@ -136,8 +125,6 @@ export async function POST(req: Request) {
     } catch (dbErr) {
       console.error("[analyze] failed to save document (table may not exist):", dbErr);
     }
-
-    // 8. (Word quota was already atomically reserved in step 5.)
 
     // 9. Track event
     trackServer(clerkId, "text_analyzed", {
