@@ -28,11 +28,21 @@ function lastTouchJson(snapshot: AttributionSnapshot | null | undefined): Prisma
   return snapshot?.last ? (snapshot.last as unknown as Prisma.InputJsonValue) : undefined;
 }
 
-async function writeConvertedEvent(contactId: string, userId: string): Promise<void> {
+/**
+ * A lead now belongs to this account (linked or merged into its contact):
+ * record it once, then let the triggers exit lead-only flows such as
+ * lead_nurture, which would otherwise keep asking an account holder to sign up.
+ */
+async function markConverted(contactId: string, userId: string): Promise<void> {
   try {
     await db.contactEvent.create({ data: { contactId, type: "converted", dedupeKey: `converted:${userId}`, props: { userId } } });
   } catch (err) {
     if (!isUniqueViolation(err)) logGrowthError("converted-event", err);
+  }
+  try {
+    await onContactConverted(contactId);
+  } catch (err) {
+    logGrowthError("trigger-converted", err);
   }
 }
 
@@ -67,8 +77,7 @@ async function syncOnce(user: UserIdentity, attribution: AttributionSnapshot | n
     const data: Prisma.ContactUpdateInput = {};
     if (email && byUser.email !== email) {
       if (byEmail && byEmail.id !== byUser.id && byEmail.userId === null) {
-        await mergeContacts(byUser.id, byEmail.id, { actor: "system" });
-        merged = true;
+        merged = await mergeContacts(byUser.id, byEmail.id, { actor: "system" });
       }
       // An address still held by another account's contact is stale data; leave ours as is.
       if (!byEmail || byEmail.id === byUser.id || byEmail.userId === null) {
@@ -78,6 +87,8 @@ async function syncOnce(user: UserIdentity, attribution: AttributionSnapshot | n
     }
     if (!byUser.name && user.name) data.name = user.name;
     if (Object.keys(data).length > 0) await db.contact.update({ where: { id: byUser.id }, data });
+    // The account took over a lead's address (and its enrollments): same as linking in (2).
+    if (merged) await markConverted(byUser.id, user.id);
     if (attribution) await applyFirstTouch(byUser.id, attribution);
     return { contactId: byUser.id, created: false, linked: false, merged };
   }
@@ -94,12 +105,7 @@ async function syncOnce(user: UserIdentity, attribution: AttributionSnapshot | n
     });
     if (res.count === 1) {
       await moveContactTagsToUser(byEmail.id, user.id);
-      await writeConvertedEvent(byEmail.id, user.id);
-      try {
-        await onContactConverted(byEmail.id);
-      } catch (err) {
-        logGrowthError("trigger-converted", err);
-      }
+      await markConverted(byEmail.id, user.id);
       if (attribution) await applyFirstTouch(byEmail.id, attribution);
       return { contactId: byEmail.id, created: false, linked: true, merged: false };
     }
