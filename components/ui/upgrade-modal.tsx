@@ -1,42 +1,81 @@
 "use client";
 
+// ===========================================================
+// components/ui/upgrade-modal.tsx — The plan menu: opened from upgrade buttons
+// and, with trigger="quota", when a request hits the plan's limit. A
+// Monthly/Annual toggle sends { plan, annual } to /api/checkout; annual prices
+// are shown per month (≈$6.58/mo for Pro). Prices and limits come from
+// lib/plans.ts.
+// ===========================================================
+
 import { useState, useEffect, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
 import { track } from "@vercel/analytics";
 import { Check, X } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
+import { PLANS as PLAN_CONFIG, type PlanConfig } from "@/lib/plans";
+
+export type UpgradeTrigger = "upgrade" | "quota";
+type Billing = "monthly" | "annual";
 
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPlan: string;
+  /** "quota": opened because a request hit the plan's limit (changes the header copy). */
+  trigger?: UpgradeTrigger;
 }
 
-const PLANS = [
-  { id: "FREE", name: "Free", price: "$0", period: "", words: "500w/d", popular: false },
-  { id: "PRO",  name: "Pro",  price: "$9", period: "/mo", words: "50k w/mo", popular: true },
-  { id: "TEAM", name: "Team", price: "$29", period: "/mo", words: "200k w/mo", popular: false },
-];
+const PLAN_IDS = ["FREE", "PRO", "TEAM"] as const;
 
-export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps) {
+function fmtUsd(amount: number): string {
+  return Number.isInteger(amount) ? `$${amount}` : `$${amount.toFixed(2)}`;
+}
+
+function fmtWords(plan: PlanConfig): string {
+  const n = plan.wordsLimit >= 1000 ? `${plan.wordsLimit / 1000}k` : String(plan.wordsLimit);
+  return `${n} words/${plan.wordsLimitPeriod === "day" ? "day" : "mo"}`;
+}
+
+/** Price shown on a card: the annual price spread per month (checkout bills it once a year). */
+function displayPrice(plan: PlanConfig, billing: Billing): { price: string; note: string | null } {
+  if (plan.price === 0) return { price: "$0", note: null };
+  if (billing === "annual" && plan.priceAnnual) {
+    return {
+      price: `≈${fmtUsd(Math.round((plan.priceAnnual / 12) * 100) / 100)}`,
+      note: `${fmtUsd(plan.priceAnnual)} billed yearly`,
+    };
+  }
+  return { price: fmtUsd(plan.price), note: "billed monthly" };
+}
+
+/** Annual saving vs 12 monthly payments for Pro, e.g. 27. */
+const ANNUAL_SAVING_PCT = (() => {
+  const pro = PLAN_CONFIG.PRO;
+  return pro.priceAnnual ? Math.round((1 - pro.priceAnnual / (pro.price * 12)) * 100) : 0;
+})();
+
+export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade" }: UpgradeModalProps) {
   const posthog = usePostHog();
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [billing, setBilling] = useState<Billing>("monthly");
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
   async function handleUpgrade(planId: string) {
     if (checkingOut) return;
     setCheckingOut(planId);
-    posthog?.capture("upgrade_cta_clicked", { plan: planId, current_plan: currentPlan });
-    track("upgrade_cta_clicked", { plan: planId });
+    const annual = billing === "annual";
+    posthog?.capture("upgrade_cta_clicked", { plan: planId, current_plan: currentPlan, annual, trigger });
+    track("upgrade_cta_clicked", { plan: planId, annual });
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planId }),
+        body: JSON.stringify({ plan: planId, annual }),
       });
       const data = (await res.json()) as { url?: string; error?: { message: string } };
       if (res.ok && data.url) {
@@ -56,7 +95,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
     if (isOpen) {
       previouslyFocused.current = document.activeElement as HTMLElement | null;
       document.body.style.overflow = "hidden";
-      posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan });
+      posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger });
       requestAnimationFrame(() => panelRef.current?.focus());
       return () => {
         document.body.style.overflow = "";
@@ -148,23 +187,58 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
             <X size={18} aria-hidden="true" />
           </button>
 
-          <div className="kicker" style={{ marginBottom: "10px" }}>Nice work</div>
+          <div className="kicker" style={{ marginBottom: "10px" }}>{trigger === "quota" ? "Limit reached" : "Nice work"}</div>
           <h2
             id="upgrade-modal-title"
             style={{ fontSize: "22px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading, letterSpacing: "-0.02em" }}
           >
-            Keep that human score{" "}
-            <span style={{ color: THEME.accent }}>climbing</span>
+            {trigger === "quota" ? (
+              <>Keep going <span style={{ color: THEME.accent }}>today</span></>
+            ) : (
+              <>Keep your writing <span style={{ color: THEME.accent }}>sounding like you</span></>
+            )}
           </h2>
           <p style={{ fontSize: "14px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
-            Upgrade for unlimited passes, every tone, and saved history.
+            {trigger !== "quota"
+              ? "More words, unlimited rewrites, document upload and saved history."
+              : currentPlan.toUpperCase() === "FREE"
+                ? "Free words reset 24 hours after your last reset. Need more now? Pick monthly or annual."
+                : "You've used this month's words. They reset with your next billing month, or you can move up a plan."}
           </p>
         </div>
 
         <div style={{ padding: "24px 32px 32px" }}>
+          {/* Billing toggle */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "18px" }}>
+            <div role="radiogroup" aria-label="Billing period" style={{ display: "inline-flex", background: THEME.surface3, borderRadius: "999px", padding: "3px", gap: "2px" }}>
+              {(["monthly", "annual"] as const).map((b) => {
+                const active = billing === b;
+                return (
+                  <button
+                    key={b}
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setBilling(b)}
+                    style={{
+                      border: "none", cursor: "pointer", borderRadius: "999px", padding: "6px 14px",
+                      fontSize: "12px", fontWeight: active ? 700 : 500, fontFamily: THEME.fontSans,
+                      background: active ? THEME.surface2 : "transparent",
+                      color: active ? THEME.text : THEME.textDim,
+                      boxShadow: active ? "0 1px 3px rgba(29,23,38,0.12)" : "none",
+                    }}
+                  >
+                    {b === "monthly" ? "Monthly" : `Annual · save ${ANNUAL_SAVING_PCT}%`}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Plan cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "8px" }}>
-            {PLANS.map((plan) => {
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "14px 10px", marginBottom: "8px" }}>
+            {PLAN_IDS.map((id) => {
+              const plan = { ...PLAN_CONFIG[id], popular: id === "PRO" };
+              const { price, note } = displayPrice(plan, billing);
               const isCurrent = currentPlan.toUpperCase() === plan.id;
               const isPro = plan.id === "PRO";
               const isFree = plan.id === "FREE";
@@ -172,6 +246,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                 <div
                   key={plan.id}
                   style={{
+                    flex: "1 1 130px", minWidth: 0,
                     background: isPro ? THEME.brandDim : THEME.surface2,
                     border: `1px solid ${isPro ? THEME.brand : THEME.border}`,
                     borderRadius: THEME.radius, padding: "16px 12px", textAlign: "center",
@@ -194,12 +269,15 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
                   <div style={{ fontSize: "13px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, marginBottom: "6px", fontFamily: THEME.fontSans }}>
                     {plan.name}
                   </div>
-                  <div className="tnum" style={{ fontSize: "28px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1 }}>
-                    {plan.price}
-                    <span className="tnum" style={{ fontSize: "13px", fontWeight: 400, color: THEME.textMuted }}>{plan.period}</span>
+                  <div className="tnum" style={{ fontSize: "26px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1 }}>
+                    {price}
+                    {!isFree && <span className="tnum" style={{ fontSize: "13px", fontWeight: 400, color: THEME.textMuted }}>/mo</span>}
                   </div>
-                  <div className="tnum" style={{ fontSize: "12px", color: THEME.textDim, margin: "8px 0 12px" }}>
-                    {plan.words}
+                  <div className="tnum" style={{ fontSize: "11px", color: THEME.textMuted, marginTop: "4px", minHeight: "14px" }}>
+                    {note}
+                  </div>
+                  <div className="tnum" style={{ fontSize: "12px", color: THEME.textDim, margin: "6px 0 12px" }}>
+                    {fmtWords(plan)}
                   </div>
                   {isCurrent ? (
                     <div style={{
@@ -233,19 +311,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
             })}
           </div>
 
-          {/* Annual savings hint */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: "6px",
-              fontSize: "12px", fontWeight: 600, fontFamily: THEME.fontSans,
-              color: THEME.accentHi, background: THEME.accentDim,
-              border: `1px solid ${THEME.accent}33`,
-              padding: "5px 12px", borderRadius: "999px",
-            }}>
-              <span aria-hidden="true" style={{ width: "6px", height: "6px", borderRadius: "50%", background: THEME.accent }} />
-              Save ~20% with annual billing
-            </span>
-          </div>
+          <div style={{ marginBottom: "22px" }} />
 
           {/* What you unlock */}
           <div style={{ marginBottom: "20px" }}>
@@ -257,10 +323,10 @@ export function UpgradeModal({ isOpen, onClose, currentPlan }: UpgradeModalProps
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
               {[
-                "Unlimited humanizations (within plan)",
-                "4 tone modes",
-                "History & saved documents",
-                "Priority processing",
+                "Unlimited rewrites (within your plan's words)",
+                "More tones",
+                "PDF and Word upload",
+                "Saved history",
               ].map((f) => (
                 <div key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: THEME.textDim, fontFamily: THEME.fontSans }}>
                   <span style={{
