@@ -3,7 +3,7 @@
 //
 // prepareEmail() runs the gates in a fixed order:
 //   1. kill switch (EMAIL_SENDING_ENABLED): off means NO database access at all
-//   2. contact lookup              3. allowlist mode (non-production, EMAIL_ALLOWLIST)
+//   2. contact lookup              3. allowlist (non-production, EMAIL_ALLOWLIST, test sends)
 //   4. flow toggle                 5. eligibility (skips are recorded with the dedupe key)
 //   6. daily budget                7. claim the EmailMessage row by its dedupe key
 //   8. render                      9. payload: from, reply-to, RFC 8058 headers, tags
@@ -51,7 +51,12 @@ export type PrepareInput<K extends TemplateKey = TemplateKey> = {
   campaignId?: string;
   /** Marketing topic for templates without a fixed one (campaigns). */
   topicOverride?: Topic;
-  /** Admin test send: skips the flow toggle and eligibility, prefixes the subject. */
+  /**
+   * Admin test send: delivered only to an allowlisted inbox (EMAIL_ALLOWLIST or
+   * an admin) in every mode, else deferred "allowlist". Skips the flow toggle
+   * and the consent and lifecycle rules, never suppressions or a bad status;
+   * prefixes the subject.
+   */
   isTest?: boolean;
 };
 
@@ -247,7 +252,8 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
   const email = normalizeEmail(contact.email);
 
   // 3. Outside production (or while EMAIL_ALLOWLIST is set) only allowlisted inboxes get mail.
-  if (mode === "allowlist" && !isAllowlisted(email, adminEmails())) return deferred("allowlist");
+  //    A test send skips consent, so it may only ever reach an allowlisted inbox, live mode included.
+  if ((mode === "allowlist" || isTest) && !isAllowlisted(email, adminEmails())) return deferred("allowlist");
 
   // 4. Flow toggle (campaigns, personal notes and tests have none to check).
   if (meta.flow && !isTest && !(await isFlowEnabled(meta.flow))) return deferred("flow_off");

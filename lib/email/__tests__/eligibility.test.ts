@@ -112,11 +112,22 @@ describe("reason order", () => {
 });
 
 describe("test sends", () => {
-  it("bypass every check except having an address", () => {
-    const blocked = { userId: null, lifecycleEmails: false, subscribedTopics: [], emailVerifiedAt: null, emailStatus: "complained" };
-    for (const stream of ["transactional", "lifecycle", "marketing", "personal"] as const) {
-      expect(check(stream, blocked, { suppressions: ["all"], postalAddressConfigured: false, isTest: true })).toEqual(OK);
+  const STREAMS = ["transactional", "lifecycle", "marketing", "personal"] as const;
+
+  it("skip the consent, verification, account, lifecycle and postal-address rules", () => {
+    const unconsented = { userId: null, lifecycleEmails: false, subscribedTopics: [], emailVerifiedAt: null };
+    for (const stream of STREAMS) {
+      expect(check(stream, unconsented, { topic: null, postalAddressConfigured: false, isTest: true })).toEqual(OK);
     }
+  });
+
+  it("still respect suppressions, a bad status and a missing address", () => {
+    for (const stream of STREAMS) {
+      expect(check(stream, {}, { suppressions: ["all"], isTest: true })).toEqual(no("suppressed"));
+      expect(check(stream, { emailStatus: "bounced" }, { isTest: true })).toEqual(no("bad_status"));
+    }
+    expect(check("marketing", {}, { suppressions: ["marketing"], isTest: true })).toEqual(no("suppressed"));
+    expect(check("lifecycle", { emailStatus: "complained" }, { isTest: true })).toEqual(no("bad_status"));
     expect(check("marketing", { email: null }, { isTest: true })).toEqual(no("no_email"));
   });
 });

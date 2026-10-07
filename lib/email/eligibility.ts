@@ -45,7 +45,11 @@ export type EligibilityInput = {
   suppressions: readonly SuppressionScope[];
   now: Date;
   postalAddressConfigured: boolean;
-  /** Admin test send to their own inbox: only an address is required. */
+  /**
+   * Admin test send (send.ts only delivers it to an allowlisted inbox): skips
+   * the consent, verification, lifecycle and postal-address rules, never
+   * suppressions or a bad status.
+   */
   isTest?: boolean;
 };
 
@@ -68,12 +72,12 @@ function statusBlocks(stream: EmailStream, status: string): boolean {
 export function checkEligibility(input: EligibilityInput): EligibilityResult {
   const { contact, stream } = input;
   if (!contact.email) return { ok: false, reason: "no_email" };
-  if (input.isTest) return { ok: true };
 
   if (input.suppressions.some((scope) => BLOCKING_SCOPES[stream].includes(scope))) {
     return { ok: false, reason: "suppressed" };
   }
   if (statusBlocks(stream, contact.emailStatus)) return { ok: false, reason: "bad_status" };
+  if (input.isTest) return { ok: true };
 
   switch (stream) {
     case "transactional":
