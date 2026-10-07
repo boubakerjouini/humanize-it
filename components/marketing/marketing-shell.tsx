@@ -25,6 +25,8 @@ const SITE_LINKS = [
   { label: "Use Cases", href: "/use-cases" },
   { label: "FAQ", href: "/faq" },
   { label: "Blog", href: "/blog" },
+  { label: "Free Guides", href: "/free" },
+  { label: "Chrome Extension", href: "/extension" },
 ];
 
 export function MarketingFooterLinks() {
