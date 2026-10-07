@@ -113,7 +113,6 @@ export async function POST(req: Request) {
     } else {
       let body: {
         text?: unknown; tone?: unknown; intensity?: unknown; language?: unknown;
-        styleFingerprint?: unknown;
       };
       try {
         body = await req.json();
@@ -135,10 +134,6 @@ export async function POST(req: Request) {
         tone: typeof body.tone === "string" && VALID_TONES.includes(body.tone as ToneOption) ? (body.tone as ToneOption) : "standard",
         intensity: typeof body.intensity === "string" && VALID_INTENSITIES.includes(body.intensity as IntensityLevel) ? (body.intensity as IntensityLevel) : "medium",
         language: typeof body.language === "string" && body.language ? body.language : undefined,
-        styleFingerprint:
-          typeof body.styleFingerprint === "object" && body.styleFingerprint !== null
-            ? (body.styleFingerprint as Record<string, string>)
-            : undefined,
       };
     }
 

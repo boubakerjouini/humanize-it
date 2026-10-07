@@ -2,7 +2,7 @@
 // app/api/voice-profiles/shared.ts — Voice Match helpers shared by the
 // voice-profile routes and /api/humanize.
 //
-// A profile is the style fingerprint /api/style-clone has always produced,
+// A profile is the style fingerprint the retired /api/style-clone produced,
 // now stored per user. Limits come from lib/plans.ts (Free 0, Pro 1, Pro
 // annual and Founding 3, Team 10). After a downgrade the extra profiles are
 // kept but locked: only the oldest `limit` ones stay usable, so nothing the
@@ -19,7 +19,7 @@ export const MIN_SAMPLE_CHARS = 50;
 export const MAX_SAMPLE_CHARS = 6_000;
 export const MAX_NAME_CHARS = 60;
 
-/** The fingerprint keys the humanizer prompt expects (same as /api/style-clone). */
+/** The fingerprint keys the humanizer prompt expects (the format the retired /api/style-clone used). */
 const FINGERPRINT_KEYS = [
   "sentencePatterns",
   "vocabularyLevel",
@@ -84,7 +84,7 @@ export function countWords(text: string): number {
 
 /**
  * Ask the model for a style fingerprint of the samples. Same prompt as
- * /api/style-clone, through lib/llm so it follows the configured provider.
+ * the retired /api/style-clone, through lib/llm so it follows the configured provider.
  * Throws when the model fails or returns something that isn't a fingerprint.
  */
 export async function extractFingerprint(samples: string[]): Promise<Fingerprint> {

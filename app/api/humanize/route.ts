@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse body
-    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; styleFingerprint?: unknown; voiceProfileId?: unknown; language?: unknown; aggressiveHint?: unknown };
+    let body: { documentId?: unknown; tone?: unknown; intensity?: unknown; voiceProfileId?: unknown; language?: unknown; aggressiveHint?: unknown };
     try {
       body = await req.json();
     } catch {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { documentId, tone, intensity, styleFingerprint, voiceProfileId, language, aggressiveHint } = body;
+    const { documentId, tone, intensity, voiceProfileId, language, aggressiveHint } = body;
 
     if (typeof documentId !== "string" || !documentId) {
       return NextResponse.json(
@@ -173,11 +173,9 @@ export async function POST(req: Request) {
 
     // 6. Call humanizeText() — refund the reserved words on any failure
     const analysisResult = document.analysisResult as unknown as AnalysisResult;
-    // A stored voice wins over a raw fingerprint (kept for older clients, and
-    // like Voice Match only on plans that include it).
-    const styleData = voiceFingerprint ?? (plan.voiceProfiles > 0 && typeof styleFingerprint === "object" && styleFingerprint !== null
-      ? (styleFingerprint as Record<string, string>)
-      : undefined);
+    // Voice Match only through a stored profile the plan allows: a raw
+    // fingerprint in the request would bypass the 1- and 3-profile limits.
+    const styleData = voiceFingerprint;
     const langValue = typeof language === "string" && language ? language : undefined;
     const hintValue = typeof aggressiveHint === "string" ? aggressiveHint : undefined;
 
