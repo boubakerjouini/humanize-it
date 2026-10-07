@@ -100,7 +100,7 @@ const HOMEPAGE_FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do you offer a lifetime deal?",
-    a: `No. Every rewrite has a real cost for us, so "forever" would be a promise we couldn't keep honestly. While it lasts, Founding ${FOUNDING.seats} gives the first ${FOUNDING.seats} backers ${FOUNDING.months / 12} years of Pro for $${FOUNDING.priceUsd}, paid once. See humanizeit.app/lifetime.`,
+    a: `No. Every rewrite has a real cost for us, so "forever" would be a promise we couldn't keep honestly. While it lasts, Founding ${FOUNDING.seats} gives the first ${FOUNDING.seats} backers two years of Pro for $${FOUNDING.priceUsd}, paid once. See humanizeit.app/lifetime.`,
   },
   {
     q: "What counts as a word?",
@@ -1035,7 +1035,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap", background: THEME.accentDim, border: `1px solid ${THEME.accent}44`, borderRadius: THEME.radiusLg, padding: "18px 20px", marginTop: "14px" }}>
             <Award size={22} color={THEME.accentHi} aria-hidden="true" style={{ flexShrink: 0 }} />
             <p style={{ margin: 0, fontSize: "14px", color: THEME.textDim, lineHeight: 1.65, flex: "1 1 320px" }}>
-              <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: {FOUNDING.months / 12} years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
+              <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: two years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
               For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
             </p>
             <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
