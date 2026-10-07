@@ -39,6 +39,9 @@ export type Candidate = {
 };
 
 const notPaying: Prisma.UserWhereInput = { NOT: { subscription: { is: { status: { in: PAYING_STATUSES } } } } };
+// Founding 100 buyers hold Pro with a two-year planExpiresAt. That is a purchase,
+// not a comped grant, so the grant_expiry copy ("complimentary access") is wrong for them.
+const notFounding: Prisma.UserWhereInput = { purchases: { none: { kind: "founding" } } };
 const ago = (now: Date, ms: number) => new Date(now.getTime() - ms);
 
 function magnetContext(magnets: readonly string[]): EnrollmentContext {
@@ -55,6 +58,7 @@ async function grantExpiryCandidates(now: Date): Promise<Candidate[]> {
       plan: { not: "FREE" },
       planExpiresAt: { gte: ago(now, 6 * DAY_MS), lte: new Date(now.getTime() + GRANT_EXPIRY_WINDOW_DAYS * DAY_MS) },
       ...notPaying,
+      ...notFounding,
     },
     select: { id: true, plan: true, planExpiresAt: true, contact: { select: { id: true } } },
     take: MAX_CANDIDATES,
@@ -69,7 +73,7 @@ async function grantExpiryCandidates(now: Date): Promise<Candidate[]> {
   // checkAndResetQuota sets FREE and clears planExpiresAt on the first request
   // after a lapse, so those users only show up through their grant_expired event.
   const lapsed = await db.contactEvent.findMany({
-    where: { type: "grant_expired", occurredAt: { gte: ago(now, 6 * DAY_MS) }, contact: { user: { is: { plan: "FREE", planExpiresAt: null } } } },
+    where: { type: "grant_expired", occurredAt: { gte: ago(now, 6 * DAY_MS) }, contact: { user: { is: { plan: "FREE", planExpiresAt: null, ...notFounding } } } },
     select: { occurredAt: true, props: true, contact: { select: { id: true, userId: true } } },
     orderBy: { occurredAt: "desc" },
     take: MAX_CANDIDATES,

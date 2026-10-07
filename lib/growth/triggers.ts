@@ -172,11 +172,21 @@ export async function onGrantApplied(contactId: string, planExpiresAt: Date | nu
     if (!planExpiresAt || planExpiresAt.getTime() - now.getTime() > GRANT_EXPIRY_WINDOW_DAYS * DAY_MS) return;
     const contact = await db.contact.findUnique({
       where: { id: contactId },
-      select: { user: { select: { plan: true, subscription: { select: { status: true } } } } },
+      select: {
+        user: {
+          select: {
+            plan: true,
+            subscription: { select: { status: true } },
+            purchases: { where: { kind: "founding" }, select: { id: true }, take: 1 },
+          },
+        },
+      },
     });
     const user = contact?.user;
     if (!user || user.plan === "FREE") return;
     if (user.subscription && PAYING_STATUSES.includes(user.subscription.status)) return;
+    // Founding 100 is a purchase, not a comped grant: the grant_expiry copy doesn't fit it.
+    if (user.purchases.length > 0) return;
     await enrollGrantExpiry(contactId, planExpiresAt, { plan: user.plan, grantDays: grantDays ?? DEFAULT_GRANT_DAYS });
   });
 }
