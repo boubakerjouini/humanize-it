@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
+import { testRecipients } from "@/lib/email/campaigns";
 import { logAudit } from "@/lib/audit";
 import { campaignContentHash, campaignDraftSchema, campaignStats, deleteCampaign, resolveTarget, updateCampaign } from "@/lib/email/campaigns";
 import { fail, handleError, readJson } from "../../email/_lib/respond";
@@ -20,7 +21,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Ctx) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const { id } = await params;
     const campaign = await db.emailCampaign.findUnique({ where: { id } });
     if (!campaign) return fail("NOT_FOUND", "Campaign not found.", 404);
@@ -31,6 +32,7 @@ export async function GET(_req: Request, { params }: Ctx) {
       stats: stats.get(id) ?? null,
       // Lets the editor show "changed since the test" without another request.
       testIsCurrent: !!campaign.contentHash && campaign.contentHash === campaignContentHash(campaign),
+      testRecipients: testRecipients(admin.email),
     });
   } catch (err) {
     return handleError("admin-campaign", err);

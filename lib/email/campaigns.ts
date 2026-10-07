@@ -26,9 +26,9 @@ import { TemplateNotImplementedError, buildRenderCtx, firstNameFrom, renderEmail
 import { deliverBatch, prepareEmail, sendEmail, type Prepared, type SendOutcome } from "@/lib/email/send";
 import { compileSegment, parseSegmentFilter, type SegmentFilter } from "@/lib/crm/segments";
 import { resolveSegment } from "@/lib/crm/segment-resolve";
-import { getOrCreateContactForUser } from "@/lib/crm/contacts";
+import { getOrCreateContactForUser, upsertLeadContact } from "@/lib/crm/contacts";
 import { TOPICS, isTopic, type Topic } from "@/lib/growth/constants";
-import { emailSendingMode, isAllowlisted, postalAddress, type EmailSendingMode } from "@/lib/growth/flags";
+import { effectiveAllowlist, emailSendingMode, isAllowlisted, postalAddress, type EmailSendingMode } from "@/lib/growth/flags";
 import { withJobLock } from "@/lib/growth/locks";
 import { logGrowthError } from "@/lib/growth/safe";
 
@@ -324,13 +324,41 @@ export async function previewCampaign(id: string, admin: Pick<User, "email" | "n
   };
 }
 
-/** Send the campaign to the admin's own inbox ("[TEST]" subject). A delivered test marks it tested. */
-export async function testSendCampaign(id: string, admin: Pick<User, "id" | "email" | "name">): Promise<SendOutcome> {
+/**
+ * Where a test may go: only allowlisted inboxes (EMAIL_ALLOWLIST plus
+ * ADMIN_EMAILS) ever receive one, in every mode. The admin's own address
+ * comes first when it is on that list.
+ */
+export function testRecipients(adminEmail: string): { own: string; ownAllowed: boolean; choices: string[] } {
+  const own = normalizeEmail(adminEmail) ?? "";
+  const allowed = effectiveAllowlist(adminEmails());
+  const ownAllowed = !!own && isAllowlisted(own, adminEmails());
+  const others = [...allowed].filter((e) => e !== own).sort();
+  return { own, ownAllowed, choices: ownAllowed ? [own, ...others] : others };
+}
+
+/**
+ * Send the campaign with "[TEST]" in the subject, to the admin's own inbox or
+ * another allowlisted test inbox (`to`). A delivered test marks it tested.
+ */
+export async function testSendCampaign(
+  id: string,
+  admin: Pick<User, "id" | "email" | "name">,
+  opts: { to?: string } = {}
+): Promise<SendOutcome> {
   if (emailSendingMode() === "off") throw new CampaignError("SENDING_OFF", "Email sending is switched off (EMAIL_SENDING_ENABLED).", 409);
   const c = await loadCampaign(id);
   if (!EDITABLE.includes(c.status)) throw new CampaignError("LOCKED", "This campaign has already been sent.", 409);
-  const contactId = await getOrCreateContactForUser(admin.id);
-  if (!contactId) throw new CampaignError("NO_CONTACT", "Your admin account has no contact record yet.", 409);
+  const to = (opts.to ? normalizeEmail(opts.to) : null) ?? "";
+  const toOther = !!to && to !== normalizeEmail(admin.email);
+  if (toOther && !testRecipients(admin.email).choices.includes(to)) {
+    throw new CampaignError("NOT_ALLOWLISTED", "Tests only go to allowlisted inboxes (EMAIL_ALLOWLIST or ADMIN_EMAILS).", 400);
+  }
+  // A test inbox such as delivered@resend.dev gets a plain contact row, like any address we email.
+  const contactId = toOther
+    ? ((await upsertLeadContact({ email: to, source: "manual" }))?.contactId ?? null)
+    : await getOrCreateContactForUser(admin.id);
+  if (!contactId) throw new CampaignError("NO_CONTACT", "No contact record for the test inbox.", 409);
   const firstName = firstNameFrom(admin.name);
   const hash = campaignContentHash(c);
   const outcome = await sendEmail({
@@ -345,7 +373,7 @@ export async function testSendCampaign(id: string, admin: Pick<User, "id" | "ema
   if (outcome.status === "sent" || outcome.status === "duplicate") {
     await db.emailCampaign.updateMany({
       where: { id, status: { in: [...EDITABLE] }, updatedAt: c.updatedAt },
-      data: { status: "tested", contentHash: hash, testSentAt: new Date(), testSentTo: admin.email },
+      data: { status: "tested", contentHash: hash, testSentAt: new Date(), testSentTo: toOther ? to : admin.email },
     });
   }
   return outcome;

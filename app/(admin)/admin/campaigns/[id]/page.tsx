@@ -4,7 +4,8 @@
 // /admin/campaigns/[id] (and /admin/campaigns/new) — The campaign editor in
 // four steps: 1 Draft (audience, topic, subject, markdown body), 2 Preview
 // (desktop, mobile, text, and who receives it), 3 Test send to your own
-// inbox, 4 Send, confirmed by typing the recipient count. Any edit after the
+// inbox or another allowlisted test inbox, 4 Send, confirmed by typing the
+// recipient count. Any edit after the
 // test drops the campaign back to draft; the server enforces every rule.
 // After sending: progress, results and Cancel.
 // ===========================================================
@@ -52,7 +53,14 @@ type Campaign = {
   completedAt: string | null;
 };
 type Stats = { queued: number; sent: number; delivered: number; bounced: number; complained: number; skipped: number; failed: number; cancelled: number };
-type Loaded = { campaign: Campaign; target: { name: string; description: string | null } | null; stats: Stats | null; testIsCurrent: boolean };
+type TestRecipients = { own: string; ownAllowed: boolean; choices: string[] };
+type Loaded = {
+  campaign: Campaign;
+  target: { name: string; description: string | null } | null;
+  stats: Stats | null;
+  testIsCurrent: boolean;
+  testRecipients?: TestRecipients;
+};
 type Target = { id: string; name: string; description: string | null; count: number };
 type Recipients = { total: number; eligible: number; excluded: Record<string, number>; truncated: boolean };
 type Preview = RenderedEmail & { recipients: Recipients };
@@ -154,6 +162,7 @@ function Editor() {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testTo, setTestTo] = useState("");
   const [confirm, setConfirm] = useState<{ eligible: number } | null>(null);
   const [preparingSend, setPreparingSend] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -201,6 +210,7 @@ function Editor() {
   }, [draft.segmentRef, isSystemRef]);
 
   const campaign = loaded?.campaign ?? null;
+  const testChoices = loaded?.testRecipients?.choices ?? [];
   const status = campaign?.status ?? "draft";
   const editable = isNew || status === "draft" || status === "tested";
   const dirty = useMemo(() => {
@@ -259,7 +269,8 @@ function Editor() {
 
   const testSend = async () => {
     setTesting(true);
-    const res = await api<{ ok: boolean; message: string }>(`/api/admin/campaigns/${id}/test`, { method: "POST" });
+    const to = testTo || testChoices[0];
+    const res = await api<{ ok: boolean; message: string }>(`/api/admin/campaigns/${id}/test`, { method: "POST", json: to ? { to } : {} });
     setTesting(false);
     if (!res.ok) return void toast.error(res.message);
     toast.success(res.data.message);
@@ -512,10 +523,36 @@ function Editor() {
       ) : null}
 
       {!isNew && editable ? (
-        <Panel title="3. Test send" description="Sends to your own inbox with [TEST] in the subject. A test that arrives unlocks sending." style={{ marginBottom: 20 }}>
+        <Panel title="3. Test send" description="Sends with [TEST] in the subject to an allowlisted inbox. A test that arrives unlocks sending." style={{ marginBottom: 20 }}>
+          {loaded?.testRecipients && !loaded.testRecipients.ownAllowed ? (
+            <p style={{ fontSize: 12, color: THEME.textMuted, margin: "0 0 10px" }}>
+              {`Your address (${loaded.testRecipients.own}) isn't on the allowlist (EMAIL_ALLOWLIST or ADMIN_EMAILS), so pick a test inbox from it.`}
+            </p>
+          ) : null}
           <Row gap={12}>
-            <button type="button" onClick={() => void testSend()} disabled={testing || dirty || sendingOff} style={disabledStyle(ghostBtn, testing || dirty || sendingOff)}>
-              <TestTube2 size={14} aria-hidden="true" /> {testing ? "Sending…" : "Send me a test"}
+            {testChoices.length > 0 ? (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, color: THEME.textDim }}>
+                Send to
+                <select
+                  value={testTo || testChoices[0]}
+                  onChange={(e) => setTestTo(e.target.value)}
+                  style={{ ...input, width: "auto", padding: "7px 10px" }}
+                >
+                  {testChoices.map((email) => (
+                    <option key={email} value={email}>
+                      {email === loaded?.testRecipients?.own ? `${email} (you)` : email}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => void testSend()}
+              disabled={testing || dirty || sendingOff || testChoices.length === 0}
+              style={disabledStyle(ghostBtn, testing || dirty || sendingOff || testChoices.length === 0)}
+            >
+              <TestTube2 size={14} aria-hidden="true" /> {testing ? "Sending…" : "Send a test"}
             </button>
             <span style={{ fontSize: 12, color: THEME.textMuted }}>
               {sendingOff
