@@ -203,8 +203,9 @@ export default function HumanizeItVsStealthGpt() {
       <h2 style={h2Style}>Billing Transparency: Night and Day</h2>
       <p style={pStyle}>
         HumanizeIt&apos;s billing is designed to be obvious. When you select a plan, you see the
-        amount you will be charged and whether it renews monthly or yearly. There are no pre-selected
-        annual toggles, no hidden up-charges, and no confusing plan names that obscure the real price.
+        amount you will be charged and whether it renews monthly or yearly, and you can switch between
+        the two before you pay. There are no hidden up-charges and no confusing plan names that obscure
+        the real price.
       </p>
       <p style={pStyle}>
         You can manage and cancel your subscription from your dashboard — no emailing support, no

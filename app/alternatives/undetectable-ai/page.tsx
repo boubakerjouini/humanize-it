@@ -100,7 +100,8 @@ export default function UndetectableAiAlternativePage() {
         HumanizeIt was built around the gaps people describe most often. The free plan lets you
         humanize real text and read the full output &mdash; there is no &ldquo;pay to see the result&rdquo;
         wall. Pricing is straightforward, the renewal date and cancellation link live in your dashboard,
-        and there are no pre-checked annual toggles or hidden upsells designed to keep you subscribed.
+        monthly or annual is a visible choice before you pay, and there are no hidden upsells designed
+        to keep you subscribed.
         If transparency is the reason you are leaving, that is exactly the part we treat as a feature
         rather than an afterthought.
       </p>

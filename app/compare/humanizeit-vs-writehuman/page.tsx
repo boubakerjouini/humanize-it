@@ -157,8 +157,8 @@ export default function HumanizeItVsWriteHuman() {
         and both have offered entry-level monthly plans plus a free allowance. Because exact prices
         shift, the only number you should trust is the one on each company&apos;s live pricing page on
         the day you buy. What is worth comparing beyond the headline figure is value per dollar: how
-        many words or documents you get, whether API access is included, and whether annual billing is
-        opt-in rather than pre-selected.
+        many words or documents you get, whether API access is included, and whether you can see and
+        switch between monthly and annual billing before you pay.
       </p>
       <p style={kitStyles.p}>
         While it lasts, HumanizeIt also has the{" "}
@@ -193,7 +193,7 @@ export default function HumanizeItVsWriteHuman() {
           },
           {
             q: "Which one is cheaper, HumanizeIt or WriteHuman?",
-            a: "Both use subscription tiers based on volume and prices change often, so check each company's live pricing page on the day you buy. Beyond the headline price, compare value per dollar: word limits, whether an API is included, and whether annual billing is opt-in. While it lasts, HumanizeIt also has a Founding 100 offer: two years of Pro for one $99 payment, which WriteHuman does not currently match.",
+            a: "Both use subscription tiers based on volume and prices change often, so check each company's live pricing page on the day you buy. Beyond the headline price, compare value per dollar: word limits, whether an API is included, and whether you can switch between monthly and annual billing before you pay. While it lasts, HumanizeIt also has a Founding 100 offer: two years of Pro for one $99 payment, which WriteHuman does not currently match.",
           },
           {
             q: "Will humanizing change the meaning of my text?",

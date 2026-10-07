@@ -124,8 +124,8 @@ export default function HumanizeItVsQuillbotPage() {
       </p>
       <p style={kitStyles.p}>
         HumanizeIt&apos;s free tier is built so you can test the actual humanized output before paying,
-        rather than only seeing a teaser. Pricing is published up front with no pre-checked annual
-        toggles or hard-to-find cancellation, and while it lasts the{" "}
+        rather than only seeing a teaser. Pricing is published up front, monthly or annual is a visible
+        choice before you pay, cancellation is easy to find, and while it lasts the{" "}
         <Link href="/lifetime" style={{ color: THEME.brandHi }}>Founding 100</Link> offer gives two years
         of Pro for one $99 payment if you would rather not deal with a recurring bill. Pricing changes over time on both products, so check each site
         for current numbers &mdash; the durable difference is what you are paying for: Quillbot bundles a
