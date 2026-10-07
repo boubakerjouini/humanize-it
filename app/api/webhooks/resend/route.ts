@@ -14,6 +14,8 @@
 //                              suppression, every topic withdrawn, exit sequences
 //   email.failed               message failed (not retried: Resend gave up)
 //   email.suppressed           message suppressed, "all" suppression (provider)
+//   email.received             mail sent to @humanizeit.app: forwarded to the
+//                              founder + reply task (lib/email/inbound.ts)
 //   anything else              acknowledged and ignored
 // ===========================================================
 
@@ -36,6 +38,7 @@ import {
 import { withdrawTopics } from "@/lib/crm/consent";
 import { recomputeContact } from "@/lib/crm/recompute";
 import { onEmailBounced } from "@/lib/growth/triggers";
+import { forwardInbound } from "@/lib/email/inbound";
 import { isUniqueViolation, logGrowthError, runAfter } from "@/lib/growth/safe";
 
 export const runtime = "nodejs";
@@ -149,6 +152,26 @@ export async function POST(req: Request) {
     if (isUniqueViolation(err)) return NextResponse.json({ ok: true, duplicate: true });
     logGrowthError("resend-webhook-ledger", err);
     return fail("DB_ERROR", "Could not record the event.", 500);
+  }
+
+  if (evt.type === "email.received") {
+    const data = evt.data as { email_id?: string; from?: string; to?: string[] | string; subject?: string } | undefined;
+    try {
+      if (data?.email_id && data.from) {
+        await forwardInbound({
+          emailId: data.email_id,
+          from: data.from,
+          to: Array.isArray(data.to) ? data.to : data.to ? [data.to] : [],
+          subject: data.subject ?? null,
+        });
+      }
+    } catch (err) {
+      logGrowthError("resend-inbound", err);
+      // Same idempotency key on the retry, so the forward can't be doubled.
+      await db.webhookEvent.deleteMany({ where: { eventId } }).catch(() => {});
+      return fail("INTERNAL_ERROR", "Could not forward the email.", 500);
+    }
+    return NextResponse.json({ ok: true });
   }
 
   try {

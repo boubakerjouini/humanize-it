@@ -57,12 +57,14 @@ jest.mock("@/lib/db", () => {
 jest.mock("@/lib/crm/consent", () => ({ withdrawTopics: jest.fn(async () => ({ withdrawn: [] })) }));
 jest.mock("@/lib/crm/recompute", () => ({ recomputeContact: jest.fn(async () => null) }));
 jest.mock("@/lib/growth/triggers", () => ({ onEmailBounced: jest.fn(async () => {}) }));
+jest.mock("@/lib/email/inbound", () => ({ forwardInbound: jest.fn(async () => ({ status: "forwarded", forwardId: "fwd_1" })) }));
 
 import { Webhook } from "svix";
 import * as dbModule from "@/lib/db";
 import { POST } from "@/app/api/webhooks/resend/route";
 import { onEmailBounced } from "@/lib/growth/triggers";
 import { withdrawTopics } from "@/lib/crm/consent";
+import { forwardInbound } from "@/lib/email/inbound";
 
 type State = {
   ledger: Set<string>;
@@ -115,6 +117,40 @@ beforeEach(() => {
 
 afterAll(() => {
   process.env = savedEnv;
+});
+
+describe("POST /api/webhooks/resend: email.received (support inbox)", () => {
+  const received = {
+    type: "email.received",
+    created_at: "2026-10-07T09:00:00.000Z",
+    data: { email_id: "in_1", from: "Jane <jane@example.com>", to: ["support@humanizeit.app"], subject: "Refund please" },
+  };
+
+  it("forwards the email and never touches delivery state", async () => {
+    const res = await signed("msg_in1", received);
+    expect(res.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledWith({
+      emailId: "in_1",
+      from: "Jane <jane@example.com>",
+      to: ["support@humanizeit.app"],
+      subject: "Refund please",
+    });
+    expect(state.calls).not.toContain("emailMessage.findUnique");
+  });
+
+  it("answers 500 and releases the ledger when the forward fails, so Resend retries", async () => {
+    (forwardInbound as jest.Mock).mockRejectedValueOnce(new Error("resend down"));
+    const res = await signed("msg_in2", received);
+    expect(res.status).toBe(500);
+    expect(state.ledger.has("resend:msg_in2")).toBe(false);
+  });
+
+  it("a replayed delivery of the same event forwards once", async () => {
+    await signed("msg_in3", received);
+    const replay = await signed("msg_in3", received);
+    expect(replay.status).toBe(200);
+    expect(forwardInbound).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("POST /api/webhooks/resend", () => {
