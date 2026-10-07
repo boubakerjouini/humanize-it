@@ -11,9 +11,9 @@ import { AttributionCapture } from "@/components/growth/attribution-capture";
 function PostHogIdentity() {
   const { user, isLoaded } = useUser();
 
-  // Identify user when signed in
+  // Identify user when signed in (PostHog only runs on the production host)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !posthog.__loaded) return;
     posthog.identify(user.id, {
       email: user.emailAddresses[0]?.emailAddress,
       name: user.fullName,

@@ -124,7 +124,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
               </div>
               <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.6, margin: "0 0 14px" }}>
                 {triggered.length === 0
-                  ? "No strong AI patterns detected in the instant scan. For a precise verdict, run a deep scan."
+                  ? "No strong AI patterns found by the instant check. Run a deep scan for a second opinion."
                   : `Found ${triggered.length} AI-pattern ${triggered.length === 1 ? "signal" : "signals"}. Humanize to reduce them.`}
               </p>
               <Link
@@ -140,7 +140,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
             </div>
           </div>
 
-          {/* Deep scan — the precise LLM verdict for the uncertain cases the
+          {/* Deep scan — a second opinion from an LLM for the uncertain cases the
               instant heuristic can't separate (adversarial / creative AI). */}
           <div style={{ marginTop: "22px", borderTop: `1px solid ${THEME.border}`, paddingTop: "18px" }}>
             {!deep && (
@@ -148,7 +148,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
                 <div style={{ flex: "1 1 260px" }}>
                   <div style={{ fontSize: "14px", fontWeight: 600, color: THEME.text }}>Deep scan</div>
                   <div style={{ fontSize: "13px", color: THEME.textMuted, lineHeight: 1.5 }}>
-                    The instant score is a heuristic preview. Run an AI-powered deep scan for a precise, calibrated verdict.
+                    The instant score is an estimate. Run a deep scan for a second opinion from an AI model.
                   </div>
                 </div>
                 <button

@@ -13,7 +13,8 @@ export function PostHogPageview() {
   const posthog = usePostHog();
 
   useEffect(() => {
-    if (!pathname || !posthog) return;
+    // posthog.__loaded is false off the production host (see instrumentation-client.ts)
+    if (!pathname || !posthog || !posthog.__loaded) return;
     const url = scrubUrl(
       window.location.origin + pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "")
     );

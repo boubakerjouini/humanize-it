@@ -158,7 +158,7 @@ describe("D1 email templates", () => {
 
   it("writes the referral notice for each side without naming the other person", async () => {
     const referrer = await renderSample("referral_reward");
-    expect(referrer.subject).toBe("3,000 bonus words added to your account");
+    expect(referrer.subject).toBe(`${REFERRAL_REWARD_WORDS.toLocaleString("en-US")} bonus words added to your account`);
     expect(referrer.text).toContain("A friend you invited");
     const referee = await renderSample("referral_reward", null, { words: 3000, role: "referee" });
     expect(referee.text).toContain("because a friend invited you");
