@@ -1,9 +1,21 @@
 // ===========================================================
 // lib/quota.ts — Quota reset, plan resolution & atomic metering
+//
+// Words come from two pools: the plan allowance (User.wordsUsed) and, only
+// once that is spent, the contact's bonus-word pool (lib/crm/bonus.ts:
+// referral rewards, word packs). reserveWords() reports which pool paid so a
+// failed rewrite refunds the right one.
 // ===========================================================
 
 import { db } from "@/lib/db";
 import { PLANS, type PlanId, type PlanConfig } from "@/lib/plans";
+import { consumeBonusWords, hasBonusWords, refundBonusWords } from "@/lib/crm/bonus";
+import { runAfter } from "@/lib/growth/safe";
+
+export { hasBonusWords };
+
+/** The pool a word charge was taken from. */
+export type WordPool = "plan" | "bonus";
 
 type QuotaUser = {
   id: string;
@@ -48,11 +60,19 @@ export async function checkAndResetQuota<T extends QuotaUser>(user: T): Promise<
     current.planExpiresAt &&
     new Date(current.planExpiresAt).getTime() < Date.now()
   ) {
+    // Captured before the downgrade: the grant_expired event needs the plan that lapsed.
+    const previousPlan = current.plan;
+    const userId = current.id;
     const updated = await db.user.update({
       where: { id: current.id },
       data: { plan: "FREE", planExpiresAt: null, wordsUsed: 0, rewriteCount: 0, quotaResetAt: new Date() },
     });
     current = { ...current, ...updated } as T;
+    // Lazy import: lib/crm/hooks → recompute imports this module.
+    runAfter("grant-expired", async () => {
+      const { trackGrantExpired } = await import("@/lib/crm/hooks");
+      await trackGrantExpired(userId, previousPlan);
+    });
   }
 
   const plan = PLANS[current.plan as PlanId];
@@ -123,4 +143,21 @@ export async function refundWordQuota(userId: string, words: number): Promise<vo
   } catch {
     // Best-effort refund — never throw from cleanup.
   }
+}
+
+/**
+ * Reserve `words` from the plan allowance, then from the bonus pool when the
+ * plan can't cover them. Returns the pool that paid, or false (caller 402s).
+ * The bonus pool is all-or-nothing: a request is never split across pools.
+ */
+export async function reserveWords(userId: string, words: number, plan: PlanConfig): Promise<false | WordPool> {
+  if (await consumeWordQuota(userId, words, plan)) return "plan";
+  // consumeBonusWords never throws: a missing Contact table just means no bonus.
+  return (await consumeBonusWords(userId, words)) ? "bonus" : false;
+}
+
+/** Give back a reserveWords() charge to the pool that paid it. Never throws. */
+export async function refundWords(userId: string, words: number, pool: WordPool): Promise<void> {
+  if (pool === "bonus") await refundBonusWords(userId, words);
+  else await refundWordQuota(userId, words);
 }

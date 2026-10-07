@@ -106,8 +106,8 @@ export default function StealthGptAlternativePage() {
         experience is designed so you are never surprised by what lands on your card.
       </p>
       <p style={kitStyles.p}>
-        On billing, what you select is what you are charged. There are no pre-checked annual toggles
-        and no plan names engineered to obscure the real cost. Cancellation happens in your dashboard
+        On billing, what you select is what you are charged. Monthly or annual is a visible toggle
+        you can switch before you pay, and no plan names are engineered to obscure the real cost. Cancellation happens in your dashboard
         in one click, and if you cancel before your renewal date you are simply not billed again. We
         built it this way specifically because the StealthGPT billing stories are so common &mdash;
         avoiding that experience was a design goal, not an afterthought.
@@ -177,7 +177,7 @@ export default function StealthGptAlternativePage() {
           },
           {
             q: "Is HumanizeIt cheaper than StealthGPT?",
-            a: "HumanizeIt plans start lower than StealthGPT's base paid tier, and the price you see at checkout is the price you pay. There are no pre-selected annual upgrades or hidden enterprise charges. See the full comparison for a feature-by-feature breakdown.",
+            a: "HumanizeIt plans start lower than StealthGPT's base paid tier, and the price you see at checkout is the price you pay. Monthly or annual is a visible choice before you pay, and there are no hidden enterprise charges. See the full comparison for a feature-by-feature breakdown.",
           },
         ]}
       />

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
+import { LeadMagnetInline } from "@/components/growth/lead-magnet-inline";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
 
@@ -21,9 +22,9 @@ export const metadata: Metadata = {
 };
 
 const FAQS: Faq[] = [
-  { q: "Is this AI detector free?", a: "Yes — it's completely free with no signup. The instant analysis runs in your browser with no limit; the optional AI deep scan has a daily allowance." },
+  { q: "Is this AI detector free?", a: "Yes, it's completely free with no signup. The instant check runs in your browser with no limit; the optional AI deep scan has a daily allowance." },
   { q: "How accurate is it?", a: `It scores text against ${PATTERN_COUNT} linguistic and statistical patterns associated with AI writing — the same kinds of signals detectors like GPTZero and Turnitin use, such as predictability, burstiness, and vocabulary diversity. No detector is perfect, ours included: treat the score as an estimate, not a verdict, and run the deep scan for a second opinion.` },
-  { q: "Does my text get stored?", a: "No. The instant score is calculated locally in your browser. If you run the optional deep scan, the text is sent to our server to be analyzed and is not stored." },
+  { q: "Does my text get stored?", a: "No. The instant check runs in your browser, so your text stays on your device. The optional deep scan sends your text to our AI provider (Anthropic) for a one-time analysis; we don't store it. If you ask us to email your report, it contains your scores and fix list, never your text." },
   { q: "What's the difference between detecting and humanizing?", a: "Detection scores your text and shows which AI patterns are present. Humanizing rewrites the text to reduce those patterns. You can humanize flagged text for free on our humanizer page." },
   { q: "Will passing this detector mean I pass GPTZero or Turnitin?", a: "Not necessarily. It looks for the same kinds of signals, but every detector is trained and weighted differently, and they update often. Use it to find the patterns most likely to get your text flagged, not as a guarantee." },
 ];
@@ -48,8 +49,9 @@ export default function AiDetectorPage() {
         Free AI Detector
       </h1>
       <p style={{ ...toolStyles.p, fontSize: "17px" }}>
-        Paste any text to see how likely it is to be flagged as AI-generated — and exactly which patterns trigger it.
-        No signup, no limits, and your text never leaves your browser.
+        Paste any text to see how likely it is to be flagged as AI-generated, and exactly which patterns trigger it.
+        No signup and no limits. The instant check runs in your browser; the optional deep scan sends your text to our
+        AI provider (Anthropic) for a one-time analysis that we don&apos;t store.
       </p>
 
       <DetectorTool ctaHref="/free-ai-humanizer" />
@@ -70,6 +72,8 @@ export default function AiDetectorPage() {
         those exact signals while preserving your meaning. For how each detector works, see our{" "}
         <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>.
       </p>
+
+      <LeadMagnetInline slug="false-ai-flag-appeal-kit" source="tool_inline" />
 
       <ToolFaq faqs={FAQS} />
 

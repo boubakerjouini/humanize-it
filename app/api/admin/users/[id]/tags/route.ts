@@ -17,7 +17,7 @@ export async function POST(req: Request, { params }: Ctx) {
     const { tagId, name } = (await req.json()) as { tagId?: string; name?: string };
 
     // Accept either an existing tagId or a name to create-then-attach.
-    let tag = tagId
+    const tag = tagId
       ? await db.tag.findUnique({ where: { id: tagId } })
       : name?.trim()
         ? await db.tag.upsert({ where: { name: name.trim() }, update: {}, create: { name: name.trim() } })

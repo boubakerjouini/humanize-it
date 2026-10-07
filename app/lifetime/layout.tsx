@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 
-// Metadata-only wrapper. app/lifetime/page.tsx is a "use client" component and
-// can't export metadata itself, so without this it inherited the root canonical
-// (https://humanizeit.app) and self-canonicalized into a duplicate of the
-// homepage. This gives /lifetime its own title + canonical. No visual change.
+// Metadata-only wrapper for /lifetime (kept as the URL: it is linked from the
+// home page, the footer and the sitemap). The page now sells Founding 100,
+// two years of Pro paid once, instead of a lifetime deal.
 export const metadata: Metadata = {
   metadataBase: new URL("https://humanizeit.app"),
-  title: "HumanizeIt Lifetime Deal — Pay Once, Humanize Forever",
+  title: "Founding 100 — Two Years of HumanizeIt Pro for $99",
   description:
-    "Get lifetime access to HumanizeIt's AI humanizer and AI detector for a single one-time payment. No subscription and no monthly fees, ever.",
+    "Back HumanizeIt early: two years of Pro for $99, paid once. Only 100 spots, a live counter, and a 14-day full refund. No lifetime deal, no auto-renewal.",
   alternates: { canonical: "https://humanizeit.app/lifetime" },
   openGraph: {
-    title: "HumanizeIt Lifetime Deal — Pay Once, Humanize Forever",
-    description:
-      "Lifetime access to HumanizeIt's AI humanizer with a one-time payment. No subscription, no monthly fees.",
+    title: "Founding 100 — Two Years of HumanizeIt Pro for $99",
+    description: "Two years of Pro for $99, paid once. 100 spots, then it closes for good.",
     url: "https://humanizeit.app/lifetime",
     siteName: "HumanizeIt",
     type: "website",

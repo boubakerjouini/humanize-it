@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
+import { MAGNET_LIST } from "@/lib/growth/magnets";
 
 type Freq = MetadataRoute.Sitemap[number]["changeFrequency"];
 
@@ -66,6 +67,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     e("/ai-detector", "2026-10-06", 0.9, "weekly"),
     e("/free-ai-humanizer", "2026-10-06", 0.9, "weekly"),
     e("/gptzero-checker", "2026-10-06", 0.8),
+
+    // Free lead magnets (the thanks and confirmation pages are noindex and stay out)
+    e("/free", "2026-10-07", 0.8),
+    ...MAGNET_LIST.map((m) => e(`/free/${m.slug}`, "2026-10-07", 0.8)),
+    e("/extension", "2026-10-07", 0.6),
 
     // Bypass cluster
     e("/bypass", "2026-06-09", 0.8, "weekly"),

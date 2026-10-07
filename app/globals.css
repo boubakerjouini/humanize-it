@@ -315,6 +315,35 @@
   .ws-main-pad { padding-top: 52px; padding-bottom: 64px; }
 }
 
+/* ── Marketing and tools headers: phones keep only the logo and the CTA ──── */
+@media (max-width: 640px) {
+  .mkt-nav-link { display: none !important; }
+}
+
+/* ── Admin shell: the sidebar turns into a top bar on narrow screens ─────── */
+@media (max-width: 768px) {
+  .admin-shell { flex-direction: column !important; }
+  .admin-aside {
+    width: 100% !important;
+    height: auto !important;
+    position: static !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border-c);
+  }
+  .admin-nav {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+  .admin-nav-group { flex-direction: row !important; flex-shrink: 0; }
+  .admin-nav-title { display: none; }
+  .admin-nav-link { white-space: nowrap; flex-shrink: 0; }
+  .admin-aside-foot { display: none; }
+  .admin-main { overflow-x: auto; }
+}
+
 /* ── History drawer (slide-in from right; full-width on phones) ─────────── */
 @keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
 .history-drawer { width: 440px; max-width: 92vw; animation: drawer-in 0.28s cubic-bezier(0.4, 0, 0.2, 1); }

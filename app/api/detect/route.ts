@@ -14,6 +14,7 @@ import { deepScanText } from "@/lib/detect-llm";
 import { activeProvider } from "@/lib/llm";
 import { ensureUser } from "@/lib/user";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/client-ip";
 
 const MAX_CHARS = 6000;
 const MAX_WORDS = 1200; // a deep scan reads more than the humanizer rewrites
@@ -26,12 +27,6 @@ const ANON_PER_DAY = 15;
 // Signed-in (dashboard editor) — bounded per user, generous for paid plans.
 const USER_BURST_PER_MIN = 10;
 const USER_PER_DAY: Record<string, number> = { FREE: 20, PRO: 200, TEAM: 200 };
-
-function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0]!.trim();
-  return req.headers.get("x-real-ip")?.trim() || "unknown";
-}
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;

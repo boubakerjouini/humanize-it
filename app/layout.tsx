@@ -5,8 +5,7 @@ import { Suspense } from "react";
 import { Sora, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { PostHogPageview } from "@/components/posthog-pageview";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { VercelAnalytics } from "@/components/vercel-analytics";
 import Script from "next/script";
 import "./globals.css";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
@@ -164,7 +163,9 @@ export default function RootLayout({
                   window.dataLayer = window.dataLayer || [];
                   function gtag(){dataLayer.push(arguments);}
                   gtag('js', new Date());
-                  gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+                  var hzLoc = new URL(location.href);
+                  hzLoc.searchParams.delete('t'); // signed email-link token
+                  gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_location: hzLoc.toString() });
                 `}
               </Script>
             </>
@@ -176,8 +177,7 @@ export default function RootLayout({
             {children}
           </Providers>
           <Toaster richColors position="bottom-center" />
-          <Analytics />
-          <SpeedInsights />
+          <VercelAnalytics />
         </body>
       </html>
     </ClerkProvider>

@@ -1,3 +1,11 @@
+// ===========================================================
+// lib/plans.ts — Plan limits and the offer around them (tones, Voice Match,
+// the guarantee, Founding 100, the Word Pack, founder services). Every number
+// shown on the site, in the app and in emails comes from here, so copy can't
+// drift from what the code enforces. Imported by client components too: env
+// reads that must stay server-side live in functions, not constants.
+// ===========================================================
+
 export type PlanId = "FREE" | "PRO" | "TEAM";
 
 export interface PlanConfig {
@@ -12,7 +20,10 @@ export interface PlanConfig {
   rewriteLimit: number;
   rewriteLimitPeriod: "day" | "month";
   maxTextLength: number;
+  /** How many of TONES the plan may use (Free: Standard only). Enforced in /api/humanize. */
   toneOptions: number;
+  /** Saved Voice Match profiles (Pro annual gets PRO_ANNUAL_VOICE_PROFILES instead). */
+  voiceProfiles: number;
   /** Days of history retained; null = unlimited; 0 = none */
   historyDays: number | null;
   apiAccess: boolean;
@@ -43,6 +54,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rewriteLimitPeriod: "day",
     maxTextLength: 5_000,
     toneOptions: 1,
+    voiceProfiles: 0,
     historyDays: 0,
     apiAccess: false,
     watermark: true,
@@ -64,7 +76,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rewriteLimit: -1, // unlimited
     rewriteLimitPeriod: "month",
     maxTextLength: 10_000,
-    toneOptions: 3,
+    toneOptions: 5,
+    voiceProfiles: 1,
     historyDays: 30,
     apiAccess: true,
     watermark: false,
@@ -87,7 +100,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rewriteLimit: -1, // unlimited
     rewriteLimitPeriod: "month",
     maxTextLength: 10_000,
-    toneOptions: 3,
+    toneOptions: 5,
+    voiceProfiles: 10,
     historyDays: null, // unlimited
     apiAccess: true,
     watermark: false,
@@ -148,4 +162,129 @@ export function orgWordsLimit(seats: number): number {
 /** Monthly list price for `seats` seats (before any discount). */
 export function orgMonthlyPrice(seats: number): number {
   return Math.max(0, seats) * ORG_SEAT.pricePerSeatMonthly;
+}
+
+// ===========================================================
+// Tones — Free gets Standard; paid plans get all five the editor offers.
+// "storytelling" predates the editor list and stays reachable on paid plans
+// for API callers, but it is not advertised as one of the five.
+// ===========================================================
+
+export const TONES = ["standard", "formal", "casual", "academic", "professional"] as const;
+export type AdvertisedTone = (typeof TONES)[number];
+export const FREE_TONE: AdvertisedTone = "standard";
+
+/** Whether `planId` may rewrite with `tone`. Unknown tones are the caller's problem (they coerce to standard). */
+export function isToneAllowed(planId: PlanId, tone: string): boolean {
+  return PLANS[planId].toneOptions > 1 || tone === FREE_TONE;
+}
+
+// ===========================================================
+// Voice Match — saved style fingerprints. Annual Pro gets 3 (an annual-only
+// bonus), and so do Founding members, who prepaid two years.
+// ===========================================================
+
+export const PRO_ANNUAL_VOICE_PROFILES = 3;
+
+export function voiceProfileLimit(planId: PlanId, opts: { annual?: boolean; founding?: boolean } = {}): number {
+  if (planId === "PRO" && (opts.annual || opts.founding)) return PRO_ANNUAL_VOICE_PROFILES;
+  return PLANS[planId].voiceProfiles;
+}
+
+// ===========================================================
+// The "Sounds Like You" guarantee — one policy everywhere (/refunds, the home
+// FAQ, the plan menu, emails). It is about satisfaction, never a detector score.
+// ===========================================================
+
+export const GUARANTEE_DAYS = 14;
+export const TEAM_ANNUAL_GUARANTEE_DAYS = 30;
+
+// ===========================================================
+// One-time offers (LemonSqueezy one-time products). Each is hidden while its
+// variant env var is unset; read the env inside functions so client bundles
+// never inline a server-only value.
+// ===========================================================
+
+type Env = Record<string, string | undefined>;
+
+/** Founding 100: two years of Pro, paid once, hard cap of 100 buyers. */
+export const FOUNDING = {
+  priceUsd: 99,
+  seats: 100,
+  months: 24,
+  /** planExpiresAt moves this many days out per purchase. */
+  grantDays: 730,
+} as const;
+
+export function foundingVariantId(env: Env = process.env): string | null {
+  return env.LEMONSQUEEZY_FOUNDING_VARIANT_ID?.trim() || null;
+}
+
+/**
+ * The plan expiry a founding purchase sets: two years from now, or from the
+ * end of a live Pro grant so a stacked purchase never shortens what was paid.
+ */
+export function foundingExpiry(user: { plan: string; planExpiresAt: Date | null }, now: Date = new Date()): Date {
+  const live = user.plan === "PRO" && user.planExpiresAt && user.planExpiresAt.getTime() > now.getTime();
+  const base = live ? user.planExpiresAt!.getTime() : now.getTime();
+  return new Date(base + FOUNDING.grantDays * 86_400_000);
+}
+
+export type WordPackConfig = { variantId: string; priceUsd: number; words: number; days: number };
+
+const positiveInt = (raw: string | undefined, fallback: number): number => {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+};
+
+/** Word Pack (downsell, Test A): $5 for 20,000 bonus words valid 60 days. Null when not on sale. */
+export function wordPackConfig(env: Env = process.env): WordPackConfig | null {
+  const variantId = env.LEMONSQUEEZY_WORDPACK_VARIANT_ID?.trim();
+  if (!variantId) return null;
+  return {
+    variantId,
+    priceUsd: 5,
+    words: positiveInt(env.WORDPACK_WORDS, 20_000),
+    days: positiveInt(env.WORDPACK_DAYS, 60),
+  };
+}
+
+export type OneTimeOffer = "founding" | "wordpack";
+
+/** Which one-time offer a LemonSqueezy variant sells, if any (subscription variants return null). */
+export function oneTimeOfferForVariant(variantId: string, env: Env = process.env): OneTimeOffer | null {
+  if (!variantId) return null;
+  if (variantId === foundingVariantId(env)) return "founding";
+  if (variantId === wordPackConfig(env)?.variantId) return "wordpack";
+  return null;
+}
+
+// ===========================================================
+// Founder services — real founder time, so each has a hard monthly cap shared
+// by everyone (resets on the 1st, UTC) and one request per account.
+// Requests become CrmTasks of the same kind for the founder's task list.
+// ===========================================================
+
+export const FOUNDER_SERVICES = {
+  founder_review: {
+    name: "Founder's First-Document Review",
+    plans: ["PRO"] as PlanId[],
+    monthlyCap: 10,
+  },
+  team_setup: {
+    name: "30-minute Workflow Setup",
+    plans: ["TEAM"] as PlanId[],
+    monthlyCap: 10,
+  },
+} as const;
+export type FounderService = keyof typeof FOUNDER_SERVICES;
+export const FOUNDER_SERVICE_KINDS = Object.keys(FOUNDER_SERVICES) as FounderService[];
+
+export function isFounderService(value: unknown): value is FounderService {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(FOUNDER_SERVICES, value);
+}
+
+/** First instant of the current UTC month: the caps count requests from here. */
+export function monthStartUtc(now: Date = new Date()): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }

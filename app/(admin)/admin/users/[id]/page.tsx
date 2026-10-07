@@ -6,9 +6,12 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft, ShieldCheck, Trash2, RotateCcw, Gift, FileText, Building2, Ticket,
-  StickyNote, Tag as TagIcon, Clock, Plus, X, Crown, Sparkles, Zap, Mail,
+  StickyNote, Tag as TagIcon, Clock, Plus, X, Crown, Sparkles, Zap, Mail, Activity, Contact,
 } from "lucide-react";
-import { THEME, glow, humanScore, humanScoreColor } from "@/lib/theme";
+import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
+import { TOPIC_LABELS, isTopic } from "@/lib/growth/constants";
+import { ScoreBadge, StagePill, StatusChip, fmtDate, fmtRelative } from "@/components/admin/crm-ui";
+import { Timeline, humanizeKey, type TimelineEntry } from "@/components/admin/crm/contact-bits";
 
 interface Detail {
   user: {
@@ -23,6 +26,17 @@ interface Detail {
   notes: { id: string; authorEmail: string; body: string; createdAt: string }[];
   tags: { id: string; name: string; color: string }[];
   audit: { id: string; actorEmail: string; action: string; summary: string | null; createdAt: string }[];
+  // CRM slice: null/empty when the contact doesn't exist yet or the tables are missing.
+  contact: {
+    id: string; stage: string; stageOverride: string | null; score: number; source: string; channel: string | null;
+    referrerHost: string | null; landingPath: string | null; utmSource: string | null; utmMedium: string | null; utmCampaign: string | null; utmContent: string | null;
+    subscribedTopics: string[]; pendingTopics: string[]; lifecycleEmails: boolean; emailStatus: string; emailVerifiedAt: string | null;
+    lastActiveAt: string | null; lastEmailedAt: string | null; pipelineStage: string | null;
+  } | null;
+  emails?: { id: string; template: string; subject: string | null; stream: string; status: string; queuedAt: string; sentAt: string | null }[];
+  enrollments?: { id: string; sequenceKey: string; status: string; stepIndex: number; nextRunAt: string | null; exitReason: string | null; enrolledAt: string }[];
+  timeline?: TimelineEntry[];
+  emailCounts?: { byStatus: Record<string, number>; nextStepAt: string | null } | null;
 }
 
 const PLAN_ICON = { TEAM: Crown, PRO: Sparkles, FREE: Zap } as const;
@@ -93,6 +107,11 @@ export default function CustomerPage() {
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: status.c, background: THEME.surface3, borderRadius: 999, padding: "3px 9px" }}><span style={{ width: 6, height: 6, borderRadius: 999, background: status.c }} />{status.l}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: THEME.textDim, marginTop: 3 }}><Mail size={13} aria-hidden="true" /> {u.email}</div>
+          {d.contact && (
+            <Link href={`/admin/contacts/${d.contact.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: THEME.brandHi, textDecoration: "none", marginTop: 6 }}>
+              <Contact size={13} aria-hidden="true" /> Open in CRM
+            </Link>
+          )}
         </div>
       </div>
 
@@ -182,9 +201,15 @@ export default function CustomerPage() {
               </div>
             ))}
           </Panel>
+
+          <Panel title="Activity timeline" icon={Activity}>
+            {d.contact ? <Timeline items={d.timeline ?? []} empty="No activity recorded yet." /> : <Empty>No CRM contact yet. Run Sync contacts on the Contacts page.</Empty>}
+          </Panel>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <LifecyclePanel d={d} />
+
           {/* Memberships + redemptions */}
           <Panel title="Organizations" icon={Building2}>
             {d.memberships.length === 0 ? <Empty>None.</Empty> : d.memberships.map((m) => (
@@ -209,6 +234,48 @@ export default function CustomerPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LifecyclePanel({ d }: { d: Detail }) {
+  const c = d.contact;
+  if (!c) {
+    return (
+      <Panel title="Lifecycle & email" icon={Contact}>
+        <Empty>No CRM contact yet. Run Sync contacts on the Contacts page.</Empty>
+      </Panel>
+    );
+  }
+  const counts = d.emailCounts?.byStatus ?? {};
+  const sent = (counts.sent ?? 0) + (counts.delivered ?? 0);
+  const notSent = Object.entries(counts).filter(([k]) => k !== "sent" && k !== "delivered").reduce((n, [, v]) => n + v, 0);
+  const active = (d.enrollments ?? []).filter((e) => e.status === "active");
+  const utm = [c.utmSource, c.utmMedium, c.utmCampaign, c.utmContent].filter(Boolean).join(" / ");
+  const topics = [...c.subscribedTopics.map((t) => (isTopic(t) ? TOPIC_LABELS[t] : t)), ...c.pendingTopics.filter((t) => !c.subscribedTopics.includes(t)).map((t) => `${isTopic(t) ? TOPIC_LABELS[t] : t} (pending)`)];
+  const line = (label: string, value: React.ReactNode) => (
+    <div style={{ display: "flex", gap: 10, padding: "6px 0", fontSize: 13, borderTop: `1px solid ${THEME.border}` }}>
+      <span style={{ width: 110, flexShrink: 0, color: THEME.textMuted, fontSize: 12 }}>{label}</span>
+      <span style={{ color: THEME.text, minWidth: 0, overflowWrap: "anywhere" }}>{value}</span>
+    </div>
+  );
+  return (
+    <Panel title="Lifecycle & email" icon={Contact}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+        <StagePill stage={c.stage} overridden={!!c.stageOverride} />
+        <ScoreBadge score={c.score} />
+        <Link href={`/admin/contacts/${c.id}`} style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: THEME.brandHi, textDecoration: "none" }}>Contact 360 →</Link>
+      </div>
+      {line("Source", `${humanizeKey(c.source)} · ${humanizeKey(c.channel)}`)}
+      {line("First touch", [c.referrerHost, c.landingPath].filter(Boolean).join(" → ") || "—")}
+      {line("UTM", utm || "—")}
+      {line("Topics", topics.length ? topics.join(", ") : "None")}
+      {line("Lifecycle email", c.lifecycleEmails ? "On" : "Off")}
+      {line("Deliverability", <StatusChip status={c.emailStatus} />)}
+      {line("Emails", `${sent} sent${notSent ? ` · ${notSent} not sent` : ""}${c.lastEmailedAt ? ` · last ${fmtRelative(c.lastEmailedAt)}` : ""}`)}
+      {line("Sequences", active.length ? active.map((e) => humanizeKey(e.sequenceKey)).join(", ") : "None active")}
+      {line("Next step", d.emailCounts?.nextStepAt ? fmtDate(d.emailCounts.nextStepAt) : "—")}
+      {line("Last active", c.lastActiveAt ? fmtRelative(c.lastActiveAt) : "—")}
+    </Panel>
   );
 }
 

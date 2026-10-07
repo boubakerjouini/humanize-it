@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
 import { PLANS } from "@/lib/plans";
+import { bonusBalance } from "@/lib/crm/bonus";
 
 export async function GET() {
   try {
@@ -31,6 +32,8 @@ export async function GET() {
     }
 
     const plan = PLANS[user.plan];
+    // Separate and defensive: 0 when the contact (or its table) is missing.
+    const bonus = await bonusBalance(user.id);
 
     return NextResponse.json({
       plan: user.plan,
@@ -42,6 +45,8 @@ export async function GET() {
       // Expose subscription status so the UI can show payment failure banners
       subscriptionStatus: user.subscription?.status ?? null,
       stripeCurrentPeriodEnd: user.subscription?.lsCurrentPeriodEnd ?? null,
+      // Usable bonus words (referral rewards, word packs), drawn after the plan allowance.
+      bonusWords: bonus.words,
     });
   } catch (err) {
     console.error("[usage] error:", err);

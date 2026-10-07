@@ -1,14 +1,20 @@
-// Drop-in extras for a blog post page: emits BlogPosting JSON-LD and renders a
-// "Related articles" block (up to 3 other posts) for internal-link circulation.
+// Drop-in extras for a blog post page: emits BlogPosting JSON-LD, offers the
+// post's free PDF (inline box + exit intent, mapped in lib/growth/magnets.ts)
+// and renders a "Related articles" block (up to 3 other posts) for
+// internal-link circulation.
 // Server component — looks the post up by slug from lib/posts-metadata.
 import Link from "next/link";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { ArticleJsonLd, kitStyles } from "@/components/seo/page-kit";
+import { LeadMagnetInline } from "@/components/growth/lead-magnet-inline";
+import { ExitIntent } from "@/components/ui/exit-intent";
+import { magnetForPost } from "@/lib/growth/magnets";
 import { THEME } from "@/lib/theme";
 
 export function BlogPostExtras({ slug }: { slug: string }) {
   const post = getPostBySlug(slug);
   const related = getAllPosts().filter((p) => p.slug !== slug).slice(0, 3);
+  const magnet = magnetForPost(slug);
 
   return (
     <>
@@ -21,6 +27,9 @@ export function BlogPostExtras({ slug }: { slug: string }) {
           dateModified={post.dateModified}
         />
       )}
+
+      <LeadMagnetInline slug={magnet} source="blog_inline" />
+      <ExitIntent variant="magnet" magnet={magnet} />
 
       {related.length > 0 && (
         <section style={{ marginTop: "56px", borderTop: `1px solid ${THEME.border}`, paddingTop: "32px" }}>

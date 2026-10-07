@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
+import { isToneAllowed } from "@/lib/plans";
+
+const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
 const MAX_WORDS = 300;
 const TONES = ["standard", "formal", "casual", "academic", "professional"] as const;
@@ -18,11 +23,13 @@ interface HumanizeResponse {
 /**
  * Free, no-signup humanizer. Calls the capped POST /api/public/humanize
  * (anonymous, IP-rate-limited, 300-word cap). On the daily cap it surfaces a
- * sign-up CTA. Real per-document humanizing lives behind auth in the dashboard.
+ * sign-up CTA plus a free checklist for finishing the draft by hand. Real
+ * per-document humanizing lives behind auth in the dashboard.
  */
 export function HumanizerTool() {
   const [text, setText] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("standard");
+  const [lockedTone, setLockedTone] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<HumanizeResponse | null>(null);
   const [copied, setCopied] = useState(false);
@@ -72,7 +79,16 @@ export function HumanizerTool() {
             </span>
             <select
               value={tone}
-              onChange={(e) => setTone(e.target.value as (typeof TONES)[number])}
+              onChange={(e) => {
+                const next = e.target.value as (typeof TONES)[number];
+                // Free (and this tool) is Standard only: a locked pick shows the hint instead.
+                if (isToneAllowed("FREE", next)) {
+                  setTone(next);
+                  setLockedTone(null);
+                } else {
+                  setLockedTone(next);
+                }
+              }}
               aria-label="Tone"
               style={{
                 fontSize: "13px", color: THEME.textDim, background: THEME.surface1,
@@ -81,7 +97,9 @@ export function HumanizerTool() {
               }}
             >
               {TONES.map((t) => (
-                <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)} tone</option>
+                <option key={t} value={t}>
+                  {t[0].toUpperCase() + t.slice(1)} tone{isToneAllowed("FREE", t) ? "" : " (Pro)"}
+                </option>
               ))}
             </select>
           </div>
@@ -97,6 +115,12 @@ export function HumanizerTool() {
             {loading ? "Humanizing…" : "Humanize free →"}
           </button>
         </div>
+        {lockedTone && (
+          <p role="status" style={{ fontSize: "13px", color: THEME.textDim, margin: "10px 0 0" }}>
+            The {lockedTone} tone is part of Pro. The free humanizer and the Free plan use the Standard tone.{" "}
+            <Link href="/#pricing" style={{ color: THEME.brandHi }}>See Pro</Link>
+          </p>
+        )}
         {overCap && (
           <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>
             The free humanizer is capped at {MAX_WORDS} words.{" "}
@@ -118,6 +142,18 @@ export function HumanizerTool() {
             >
               Sign up free for more &rarr;
             </Link>
+          )}
+          {err.signupCta && (
+            <div style={{ marginTop: "20px", borderTop: `1px solid ${THEME.border}`, paddingTop: "18px", textAlign: "left" }}>
+              <p style={{ fontSize: "14px", color: THEME.textDim, lineHeight: 1.6, margin: "0 0 12px" }}>
+                Or finish this draft by hand: the free{" "}
+                <Link href="/free/linkedin-humanizer-checklist" style={{ color: THEME.brandHi }}>
+                  LinkedIn &amp; Cover Letter Checklist
+                </Link>{" "}
+                lists the tells to cut and what to write instead.
+              </p>
+              <LeadCaptureForm source="tool_inline" magnet="linkedin-humanizer-checklist" variant="compact" ctaLabel="Get the checklist" />
+            </div>
           )}
         </div>
       )}
@@ -166,6 +202,8 @@ export function HumanizerTool() {
           </div>
         </div>
       )}
+
+      <ExitIntent variant="magnet" magnet="false-ai-flag-appeal-kit" suppress={loading} />
     </div>
   );
 }

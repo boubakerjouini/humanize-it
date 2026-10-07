@@ -219,8 +219,8 @@ export default function HumanizeItVsUndetectableAi() {
       </p>
       <p style={pStyle}>
         HumanizeIt keeps billing simple: the price you pick is the price you pay, your subscription
-        can be managed and cancelled from your dashboard at any time, and annual plans come with a
-        14-day money-back guarantee. We believe that if a product is good enough, you should not
+        can be managed and cancelled from your dashboard at any time, and every paid plan, monthly or
+        annual, comes with a 14-day money-back guarantee (30 days on Team annual). We believe that if a product is good enough, you should not
         need to trick people into staying.
       </p>
 

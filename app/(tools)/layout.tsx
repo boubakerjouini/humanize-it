@@ -25,10 +25,10 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
             <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>HumanizeIt</span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: "22px" }}>
-            <Link href="/ai-detector" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>AI Detector</Link>
-            <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Humanizer</Link>
-            <Link href="/compare" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Compare</Link>
-            <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
+            <Link href="/ai-detector" className="mkt-nav-link" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>AI Detector</Link>
+            <Link href="/free-ai-humanizer" className="mkt-nav-link" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Humanizer</Link>
+            <Link href="/compare" className="mkt-nav-link" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Compare</Link>
+            <Link href="/blog" className="mkt-nav-link" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>Blog</Link>
             <Link
               href="/sign-up"
               style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: THEME.radius, textDecoration: "none" }}

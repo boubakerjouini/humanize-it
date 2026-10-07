@@ -1,7 +1,24 @@
+// ===========================================================
+// app/api/webhooks/clerk/route.ts — Mirror Clerk users into the DB (svix-
+// verified). Also hands each created/updated user to the CRM after the
+// response, and writes the CRM's hashed suppressions before a user is deleted.
+// CRM work is best-effort: it never changes this route's responses.
+// ===========================================================
+
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import type { User } from "@/app/generated/prisma/client";
+import { runAfter } from "@/lib/growth/safe";
+
+/** Sync the CRM contact after the response. Webhooks carry no visitor cookies, so no attribution. */
+function identifyAfterResponse(user: User, isNew: boolean): void {
+  runAfter("clerk-identify", async () => {
+    const { onUserIdentified } = await import("@/lib/crm/hooks");
+    await onUserIdentified(user, { isNew, attribution: null, via: "clerk_webhook" });
+  });
+}
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -61,11 +78,12 @@ export async function POST(req: Request) {
     // Upsert (not create): an API route may have already upserted this user with
     // a placeholder email before this webhook fired. Backfill the real email so
     // the admin allowlist and invite-email matching work reliably.
-    await db.user.upsert({
+    const user = await db.user.upsert({
       where: { clerkId: id },
       update: { email, name },
       create: { clerkId: id, email, name },
     });
+    identifyAfterResponse(user, true);
   }
 
   if (eventType === "user.updated") {
@@ -75,17 +93,27 @@ export async function POST(req: Request) {
 
     // Upsert, not update: the row may not exist yet if the create webhook was
     // missed. Never overwrite a known email with undefined.
-    await db.user.upsert({
+    const user = await db.user.upsert({
       where: { clerkId: id },
       update: { email: email ?? undefined, name },
       create: { clerkId: id, email: email ?? `${id}@placeholder.humanize-it.app`, name },
     });
+    identifyAfterResponse(user, false);
   }
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
 
     if (id) {
+      // Hashed suppressions first: deleting the user cascades to its contact,
+      // and an unsubscribed or bounced address must never be emailed again.
+      try {
+        const { onUserDeleted } = await import("@/lib/crm/hooks");
+        await onUserDeleted({ clerkId: id, actor: "clerk_webhook" });
+      } catch {
+        // Best effort: the deletion itself must still happen.
+      }
+
       // deleteMany is idempotent — won't throw if the row is already gone.
       await db.user.deleteMany({
         where: { clerkId: id },
