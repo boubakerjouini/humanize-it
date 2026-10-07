@@ -5,17 +5,23 @@
 //
 // Order matters: size limit → schema → bot check (fake success, no writes) →
 // per-IP limits → address quality → per-recipient caps → contact upsert →
-// pending consent → delivery. Topics stay *pending* until the person clicks
+// pending consent → recipient check → global send cap → delivery. Topics stay *pending* until the person clicks
 // an explicit confirm button on a page linked from the email; nothing here or
 // on page load confirms them. The response never reveals whether the address
 // was already known, and magnets are downloadable immediately either way.
+//
+// Anyone can type any address here, so these sends are stricter than other
+// transactional mail: an address that bounced, complained or opted out of
+// anything gets nothing (with the same answer), and anonymous captures share
+// a global daily cap so they can never eat the budget welcome and account
+// emails need.
 // ===========================================================
 
 import { NextResponse } from "next/server";
-import { canonicalHash } from "@/lib/email/address";
+import { canonicalHash, emailHash } from "@/lib/email/address";
 import { genericConfirmUrl, magnetConfirmUrl, magnetDownloadUrl, waitlistConfirmUrl } from "@/lib/email/links";
 import { canSendInline, sendEmail } from "@/lib/email/send";
-import { clientIp } from "@/lib/client-ip";
+import { clientIp, ipBucket } from "@/lib/client-ip";
 import { grantTopics } from "@/lib/crm/consent";
 import { upsertLeadContact } from "@/lib/crm/contacts";
 import { recordEvent } from "@/lib/crm/events";
@@ -38,6 +44,8 @@ import {
   type LeadRequest,
 } from "@/lib/growth/lead-validation";
 import { magnetPdfPath } from "@/lib/growth/magnets";
+import { patternLabel } from "@/lib/growth/pattern-fixes";
+import { emailDailyCap } from "@/lib/growth/flags";
 import { logGrowthError, runAfter } from "@/lib/growth/safe";
 import { checkDailyLimit, checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import type { Topic } from "@/lib/growth/constants";
@@ -49,6 +57,27 @@ const IP_PER_MINUTE = 3;
 const IP_PER_DAY = 10;
 /** Emails one inbox can trigger per day across every form (anti subscription-bombing). */
 const INBOX_PER_DAY = 3;
+
+/**
+ * Lead emails per UTC day across all visitors: a third of EMAIL_DAILY_CAP, at
+ * most 30, so the rest of the day's budget stays for signups and account mail.
+ */
+function leadSendsPerDay(): number {
+  return Math.max(1, Math.min(30, Math.floor(emailDailyCap() / 3)));
+}
+
+/**
+ * May an address someone typed on a public form get mail from us? Not if it
+ * ever bounced, complained or opted out of anything: the requester is not
+ * verified, so we never use the form to reach someone who told us to stop.
+ */
+async function recipientAcceptsLeadMail(contactId: string, email: string): Promise<boolean> {
+  const [contact, suppressed] = await Promise.all([
+    db.contact.findUnique({ where: { id: contactId }, select: { emailStatus: true } }),
+    db.emailSuppression.count({ where: { emailHash: emailHash(email) } }),
+  ]);
+  return !!contact && contact.emailStatus === "ok" && suppressed === 0;
+}
 
 type Delivery = "email" | "link" | "unavailable" | "pending";
 type LeadResponse = { ok: true; delivery: Delivery; downloadUrl?: string };
@@ -103,14 +132,15 @@ export async function POST(req: Request) {
 
   // 4. Per-IP limits.
   const ip = clientIp(req);
-  const burst = await checkRateLimit(`lead:min:ip:${ip}`, IP_PER_MINUTE);
+  const ipKey = ipBucket(ip);
+  const burst = await checkRateLimit(`lead:min:ip:${ipKey}`, IP_PER_MINUTE);
   if (!burst.ok) {
     return errorJson("RATE_LIMITED", "Too many requests. Please wait a minute and try again.", 429, {
       ...rateLimitHeaders(burst),
       "Retry-After": String(burst.retryAfterSeconds),
     });
   }
-  const daily = await checkDailyLimit(`lead:day:ip:${ip}`, IP_PER_DAY);
+  const daily = await checkDailyLimit(`lead:day:ip:${ipKey}`, IP_PER_DAY);
   if (!daily.ok) {
     return errorJson("RATE_LIMITED", "Too many requests today. Please try again tomorrow.", 429, {
       ...rateLimitHeaders(daily),
@@ -193,9 +223,22 @@ export async function POST(req: Request) {
     await recomputeContact(contactId);
   });
 
-  // 9. Delivery.
+  // 9. Recipient check. A blocked address gets the same answer as a sent
+  //    email, so the response says nothing about it.
   if (!canSend || !mayEmail) return respond(kind, input, canSend);
+  try {
+    if (!(await recipientAcceptsLeadMail(contactId, email))) return respond(kind, input, true);
+  } catch (err) {
+    logGrowthError("leads:recipient", err);
+    return respond(kind, input, false);
+  }
 
+  // 10. Global cap on anonymous lead email. Past it the visitor gets the
+  //     no-email fallback (the PDF link for magnets); it is the same for everyone.
+  const global = await checkDailyLimit("lead:send:global", leadSendsPerDay());
+  if (!global.ok) return respond(kind, input, false);
+
+  // 11. Delivery.
   switch (kind) {
     case "magnet": {
       const magnet = input.magnet!;
@@ -224,9 +267,12 @@ export async function POST(req: Request) {
           props: {
             instantScore: Math.round(ctx.instantScore),
             deepScore: ctx.deepScore === undefined ? undefined : Math.round(ctx.deepScore),
-            verdict: ctx.verdict,
             confidence: ctx.confidence,
-            patterns: ctx.patterns,
+            // Labels from our own catalog; an id we don't know is dropped.
+            patterns: ctx.patterns.flatMap((x) => {
+              const label = patternLabel(x.id);
+              return label ? [{ id: x.id, label, hits: x.hits }] : [];
+            }),
             wordCount: ctx.wordCount,
             confirmUrl: pending.includes("tips") ? genericConfirmUrl(contactId) : undefined,
           },

@@ -14,3 +14,19 @@ export function clientIp(req: Request): string {
   const first = xff?.split(",")[0]?.trim();
   return first || "unknown";
 }
+
+/**
+ * Rate-limit bucket for an address. One IPv6 subscriber usually holds a whole
+ * /64, so keying on the full address would hand them billions of fresh
+ * buckets; IPv6 is bucketed by its first four groups. IPv4 stays as is.
+ */
+export function ipBucket(ip: string): string {
+  if (!ip.includes(":") || /^::ffff:\d+\.\d+\.\d+\.\d+$/i.test(ip)) return ip.replace(/^::ffff:/i, "");
+  const addr = ip.split("%")[0].toLowerCase();
+  const [head, tail = ""] = addr.split("::");
+  const headGroups = head ? head.split(":") : [];
+  const tailGroups = addr.includes("::") ? (tail ? tail.split(":") : []) : [];
+  const missing = Math.max(0, 8 - headGroups.length - tailGroups.length);
+  const groups = addr.includes("::") ? [...headGroups, ...Array<string>(missing).fill("0"), ...tailGroups] : headGroups;
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, "") || "0").join(":")}::/64`;
+}
