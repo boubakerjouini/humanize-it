@@ -15,7 +15,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
-import { CONSENT_WORDING, type MagnetSlug, type PublicLeadSource, type Topic } from "@/lib/growth/constants";
+import { CONSENT_WORDING, consentWordingFor, type MagnetSlug, type PublicLeadSource, type Topic } from "@/lib/growth/constants";
 
 export type ReportContext = {
   instantScore: number;
@@ -238,7 +238,7 @@ export function LeadCaptureForm({
 
       {requiredTopic ? (
         <p style={{ fontSize: "12.5px", color: THEME.textDim, lineHeight: 1.5, margin: "10px 0 0" }}>
-          {CONSENT_WORDING[requiredTopic === "tips" ? "tips-v1" : "ext-v1"]}
+          {CONSENT_WORDING[consentWordingFor(requiredTopic, source)]}
         </p>
       ) : null}
 
@@ -255,7 +255,7 @@ export function LeadCaptureForm({
             style={{ marginTop: "3px", accentColor: THEME.brand, flex: "0 0 auto" }}
           />
           <span>
-            {CONSENT_WORDING["tips-v1"]} <span style={{ color: THEME.textMuted }}>(optional)</span>
+            {CONSENT_WORDING[consentWordingFor("tips", source)]} <span style={{ color: THEME.textMuted }}>(optional)</span>
           </span>
         </label>
       ) : null}

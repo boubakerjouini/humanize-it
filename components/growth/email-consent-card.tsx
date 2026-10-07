@@ -75,7 +75,7 @@ export function EmailConsentCard({ onVisibleChange }: { onVisibleChange?: (visib
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <Mail size={16} color={THEME.brand} aria-hidden="true" />
         <span style={{ fontSize: 14, fontWeight: 700, color: THEME.text }}>
-          Want writing tips and early access? About 2 emails a month.
+          Want writing tips and occasional offers? About 2 emails a month.
         </span>
       </div>
       <label htmlFor={checkboxId} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13, color: THEME.textDim, cursor: "pointer", lineHeight: 1.5 }}>

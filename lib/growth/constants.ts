@@ -171,13 +171,27 @@ export function isEventType(value: unknown): value is EventType {
  * instead of editing an existing one.
  */
 export const CONSENT_WORDING = {
+  /** Now only on the Founding 100 list form, whose contacts get no nurture series. */
   "tips-v1":
     "Send me writing tips and occasional offers from HumanizeIt (about 2 emails a month). Unsubscribe anytime.",
+  /** Guides and the detector report: the lead_nurture series comes first. */
+  "tips-v2":
+    "Send me writing tips and occasional offers from HumanizeIt: 5 short emails over the first 2 weeks, then about 2 a month. Unsubscribe anytime.",
   "ext-v1":
     "Email me about the HumanizeIt Chrome extension: a few updates, then launch day. Unsubscribe anytime.",
   "inapp-tips-v1": "Yes, email me tips and occasional offers (about 2 a month). Unsubscribe anytime.",
 } as const;
 export type ConsentWordingId = keyof typeof CONSENT_WORDING;
+
+/**
+ * The wording shown next to a topic's opt-in on a public form (and stored on
+ * its ConsentRecord). Tips from a guide or the detector lead into the 5-email
+ * lead_nurture series, so they say so; the Founding 100 list doesn't get it.
+ */
+export function consentWordingFor(topic: Topic, source: PublicLeadSource): ConsentWordingId {
+  if (topic === "extension_launch") return "ext-v1";
+  return source === "founding_waitlist" ? "tips-v1" : "tips-v2";
+}
 
 export function isMagnetSlug(value: unknown): value is MagnetSlug {
   return typeof value === "string" && (MAGNET_SLUGS as readonly string[]).includes(value);

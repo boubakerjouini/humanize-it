@@ -67,6 +67,12 @@ export async function onLeadConfirmed(contactId: string, magnet?: MagnetSlug): P
   await guard("lead-confirmed", async () => {
     const contact = await db.contact.findUnique({ where: { id: contactId }, select: { userId: true, subscribedTopics: true, magnets: true } });
     if (!contact || contact.userId || !contact.subscribedTopics.includes("tips")) return;
+    // Someone who only joined the Founding 100 list asked to hear about that
+    // offer; the nurture series is about false AI flags, so they skip it.
+    if (!magnet && contact.magnets.length === 0) {
+      const founding = await db.contactEvent.findUnique({ where: { dedupeKey: `waitlist_joined:${contactId}:founding` }, select: { id: true } });
+      if (founding) return;
+    }
     const context: EnrollmentContext = {};
     const chosen = magnet ?? (contact.magnets[0] as MagnetSlug | undefined);
     if (chosen) context.magnet = chosen;

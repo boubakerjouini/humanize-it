@@ -20,10 +20,8 @@ import {
   MAGNET_SLUGS,
   PUBLIC_LEAD_SOURCES,
   TOPICS,
-  type ConsentWordingId,
   type MagnetSlug,
   type PublicLeadSource,
-  type Topic,
 } from "@/lib/growth/constants";
 import { isDisposableDomain } from "@/lib/growth/disposable-domains";
 
@@ -171,12 +169,6 @@ export async function checkMailDomain(
     if (timer) clearTimeout(timer);
   }
 }
-
-/** The consent wording shown next to each topic's opt-in (stored on the ConsentRecord). */
-export const TOPIC_WORDING: Record<Topic, ConsentWordingId> = {
-  tips: "tips-v1",
-  extension_launch: "ext-v1",
-};
 
 export type LeadKind = "magnet" | "report" | "waitlist" | "founding";
 

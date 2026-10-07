@@ -68,7 +68,7 @@ export default function PrivacyPage() {
 
       <Section title="4. Marketing Emails">
         <ul style={ul}>
-          <li style={li}><strong style={strong}>What we send:</strong> writing tips and occasional offers (about 2 emails a month), and, if you joined the waitlist, a few updates about the Chrome extension and its launch.</li>
+          <li style={li}><strong style={strong}>What we send:</strong> writing tips and occasional offers (about 2 emails a month; if you sign up through a free guide or the AI detector, a short series of 5 emails over the first 2 weeks comes first), and, if you joined the waitlist, a few updates about the Chrome extension and its launch.</li>
           <li style={li}><strong style={strong}>Legal basis:</strong> your consent. Boxes start unticked, and getting a free guide never requires subscribing. After you opt in on a public form, we ask you to confirm with a button on our site before we send any marketing email (double opt-in).</li>
           <li style={li}><strong style={strong}>How to stop:</strong> use the unsubscribe link in any email, the email preferences page linked from every email, or your dashboard settings. Unsubscribing takes effect immediately.</li>
           <li style={li}><strong style={strong}>What we keep:</strong> your consent records (Section 2) as proof of what you agreed to, and a suppression list so we never email you again after you unsubscribe, an email bounces, or you ask us to delete your data. The suppression list stores a hash of your address, not the address.</li>

@@ -1,3 +1,4 @@
+import { CONSENT_WORDING, consentWordingFor } from "@/lib/growth/constants";
 import { patternLabel } from "@/lib/growth/pattern-fixes";
 import {
   MIN_FILL_MS,
@@ -180,5 +181,14 @@ describe("patternLabel", () => {
   it("returns the catalog label for known ids and null for anything else", () => {
     expect(patternLabel("filler")).toBe("Filler Phrases");
     expect(patternLabel("Urgent: reset password at evil.example")).toBeNull();
+  });
+});
+
+describe("consentWordingFor", () => {
+  it("names the nurture series where it follows, and not on the Founding 100 list", () => {
+    expect(consentWordingFor("tips", "magnet_page")).toBe("tips-v2");
+    expect(CONSENT_WORDING["tips-v2"]).toContain("5 short emails over the first 2 weeks");
+    expect(consentWordingFor("tips", "founding_waitlist")).toBe("tips-v1");
+    expect(consentWordingFor("extension_launch", "extension_waitlist")).toBe("ext-v1");
   });
 });

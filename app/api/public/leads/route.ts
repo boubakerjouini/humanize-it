@@ -31,7 +31,6 @@ import { readAttribution } from "@/lib/growth/attribution-server";
 import { bumpDailyMetric, utcDay } from "@/lib/growth/daily-metrics";
 import {
   LEAD_MAX_BODY_BYTES,
-  TOPIC_WORDING,
   checkEmailQuality,
   checkMailDomain,
   deliveryFlow,
@@ -48,7 +47,7 @@ import { patternLabel } from "@/lib/growth/pattern-fixes";
 import { emailDailyCap } from "@/lib/growth/flags";
 import { logGrowthError, runAfter } from "@/lib/growth/safe";
 import { checkDailyLimit, checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
-import type { Topic } from "@/lib/growth/constants";
+import { consentWordingFor, type Topic } from "@/lib/growth/constants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -191,7 +190,7 @@ export async function POST(req: Request) {
       await grantTopics(contactId, [topic], {
         pending: true,
         method: "checkbox",
-        wording: TOPIC_WORDING[topic],
+        wording: consentWordingFor(topic, input.source),
         source: input.path ?? input.source,
         ip,
         userAgent,
