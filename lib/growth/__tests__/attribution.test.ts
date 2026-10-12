@@ -8,8 +8,10 @@ import {
   hasSignal,
   mergeLastTouch,
   normalizeRef,
+  parsePageTouch,
   readCookieValue,
   touchCookie,
+  touchEventProps,
   touchToFirstTouchFields,
   type Touch,
 } from "@/lib/growth/attribution";
@@ -52,15 +54,30 @@ describe("classifyChannel rules, in order", () => {
     expect(touch("/?fbclid=xyz", "https://www.facebook.com/").ch).toBe("paid");
   });
 
-  it("3. email medium or source is email", () => {
+  it("3. outreach source or outreach/dm medium is outreach", () => {
+    expect(touch("/?utm_source=outreach").ch).toBe("outreach");
+    expect(touch("/?utm_medium=dm&utm_source=whatsapp").ch).toBe("outreach");
+    expect(touch("/?utm_medium=dm&utm_source=linkedin").ch).toBe("outreach");
+    expect(touch("/?utm_medium=outreach").ch).toBe("outreach");
+    expect(touch("/?utm_medium=cold-email&utm_source=agency").ch).toBe("outreach");
+  });
+
+  it("outreach wins over the email rule: warm DMs sent by email and cold email are outreach", () => {
+    expect(touch("/?utm_source=email&utm_medium=dm&utm_campaign=warm-seg-1").ch).toBe("outreach");
+    expect(touch("/?utm_source=outreach&utm_medium=email").ch).toBe("outreach");
+    expect(touch("/?utm_source=cold&utm_medium=email").ch).toBe("outreach");
+    expect(touch("/?utm_source=Email&utm_medium=DM").ch).toBe("outreach");
+  });
+
+  it("4. email medium or source is email", () => {
     expect(touch("/?utm_medium=email").ch).toBe("email");
     expect(touch("/?utm_source=newsletter").ch).toBe("email");
   });
 
-  it("4. outreach source or outreach/dm medium is outreach", () => {
-    expect(touch("/?utm_source=outreach").ch).toBe("outreach");
-    expect(touch("/?utm_medium=dm&utm_source=whatsapp").ch).toBe("outreach");
-    expect(touch("/?utm_medium=outreach").ch).toBe("outreach");
+  it("keeps our own emails (utm_source=email, stream medium) in email", () => {
+    for (const stream of ["transactional", "lifecycle", "marketing", "personal"]) {
+      expect(touch(`/?utm_source=email&utm_medium=${stream}&utm_campaign=welcome`).ch).toBe("email");
+    }
   });
 
   it("5. social mediums or a social utm_source is social", () => {
@@ -220,6 +237,47 @@ describe("encode / decode", () => {
   });
 });
 
+describe("parsePageTouch (the cookieless fallback a lead form sends)", () => {
+  it("accepts a touch the page encoded", () => {
+    const t = touch("/free/false-ai-flag-appeal-kit?utm_source=linkedin&utm_medium=dm&utm_campaign=warm-seg-1", "https://www.linkedin.com/");
+    expect(parsePageTouch(encodeTouch(t), NOW + 60_000)).toEqual(t);
+  });
+
+  it("classifies the channel itself instead of trusting the page", () => {
+    const forged = encodeRaw({ v: 1, ts: NOW, ch: "paid", lp: "/", us: "reddit" });
+    expect(parsePageTouch(forged, NOW)?.ch).toBe("social");
+    expect(parsePageTouch(encodeRaw({ v: 1, ts: NOW, ch: "referral_program", lp: "/" }), NOW)?.ch).toBe("direct");
+  });
+
+  it("drops a referrer that is one of our own hosts or a sign-in round trip, and normalizes the rest", () => {
+    const own = parsePageTouch(encodeRaw({ v: 1, ts: NOW, ch: "referral", lp: "/", rh: "humanizeit.app" }), NOW);
+    expect(own?.rh).toBeUndefined();
+    expect(own?.ch).toBe("direct");
+    expect(parsePageTouch(encodeRaw({ v: 1, ts: NOW, ch: "referral", lp: "/", rh: "accounts.google.com" }), NOW)?.rh).toBeUndefined();
+    const external = parsePageTouch(encodeRaw({ v: 1, ts: NOW, ch: "direct", lp: "/", rh: "WWW.Reddit.com" }), NOW);
+    expect(external).toMatchObject({ rh: "reddit.com", ch: "social" });
+  });
+
+  it("keeps a visit time from the last day, and uses now for anything else", () => {
+    const at = (ts: number) => parsePageTouch(encodeRaw({ v: 1, ts, ch: "direct", lp: "/" }), NOW)?.ts;
+    expect(at(NOW - 3_600_000)).toBe(NOW - 3_600_000);
+    expect(at(NOW - 2 * 86_400_000)).toBe(NOW);
+    expect(at(NOW + 60_000)).toBe(NOW);
+  });
+
+  it("caps lengths and keeps only known keys", () => {
+    const parsed = parsePageTouch(encodeRaw({ v: 1, ts: NOW, ch: "direct", lp: "/", uc: "c".repeat(300), email: "ana@example.com" }), NOW);
+    expect(parsed?.uc?.length).toBe(100);
+    expect(parsed).not.toHaveProperty("email");
+  });
+
+  it("returns null for anything that isn't an encoded touch", () => {
+    for (const raw of [undefined, null, 42, {}, ["x"], "", "%%%", encodeRaw({ v: 1, ts: NOW, ch: "direct", lp: "no-slash" })]) {
+      expect(parsePageTouch(raw, NOW)).toBeNull();
+    }
+  });
+});
+
 describe("last-touch overwrite rules", () => {
   const earlier: Touch = { v: 1, ts: NOW - 1000, ch: "social", lp: "/", us: "reddit" };
 
@@ -267,6 +325,16 @@ describe("cookie helpers and contact mapping", () => {
       refCode: "K7M2P9QR",
       firstTouchAt: new Date(NOW),
     });
+  });
+
+  it("maps a touch onto analytics event properties, unknown without one", () => {
+    expect(touchEventProps(touch("/?utm_source=linkedin&utm_medium=dm&utm_campaign=warm-seg-1&utm_term=t"))).toEqual({
+      channel: "outreach",
+      utm_source: "linkedin",
+      utm_campaign: "warm-seg-1",
+    });
+    expect(touchEventProps(touch("/", "https://www.bing.com/"))).toEqual({ channel: "organic_search" });
+    expect(touchEventProps(null)).toEqual({ channel: "unknown" });
   });
 });
 

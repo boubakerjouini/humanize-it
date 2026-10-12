@@ -1,10 +1,11 @@
 // ===========================================================
 // /admin/funnel — where people come from and how far they get:
 // lead → signup → activated (first document within 7 days) → paying, by
-// first-touch channel and by lead source, plus magnets, sequences, the
-// Rule-of-100 outreach tracker, offer numbers (Founding 100, word packs) and
-// comped plans about to end. ?days=30 (default) or 90. Read-only server page;
-// lib/crm/metrics.ts does the counting.
+// first-touch channel, lead source, UTM source and UTM campaign, plus magnets,
+// sequences, the Rule-of-100 outreach tracker, offer numbers (Founding 100,
+// word packs) and comped plans about to end. ?days=30 (default) or 90.
+// Read-only server page; lib/crm/metrics.ts does the counting (and defines a
+// lead).
 // ===========================================================
 
 import Link from "next/link";
@@ -19,7 +20,7 @@ import { FOUNDER_SERVICES, FOUNDER_SERVICE_KINDS } from "@/lib/plans";
 import {
   FOUNDING_CAP,
   cohortTotals,
-  getAttributionTable,
+  getAttributionTables,
   getCompedExpiring,
   getFunnel,
   getLeadSeries,
@@ -62,8 +63,9 @@ function ChartCard({ title, total, data, color }: { title: string; total: number
   );
 }
 
-function AttributionTable({ rows, keyLabel }: { rows: AttributionRow[]; keyLabel: string }) {
-  if (rows.length === 0) return <Empty title="No new contacts in this period" />;
+/** `raw` shows keys as stored (UTM values are free text), instead of humanized enum keys. */
+function AttributionTable({ rows, keyLabel, raw = false, empty }: { rows: AttributionRow[]; keyLabel: string; raw?: boolean; empty?: { title: string; description?: string } }) {
+  if (rows.length === 0) return <Empty title={empty?.title ?? "No new contacts in this period"} description={empty?.description} />;
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={tableStyles.table}>
@@ -79,7 +81,7 @@ function AttributionTable({ rows, keyLabel }: { rows: AttributionRow[]; keyLabel
         <tbody>
           {rows.map((r) => (
             <tr key={r.key} style={tableStyles.tr}>
-              <td style={{ ...tableStyles.td, color: THEME.text, fontWeight: 600 }}>{humanizeKey(r.key)}</td>
+              <td style={{ ...tableStyles.td, color: THEME.text, fontWeight: 600, overflowWrap: "anywhere" }}>{raw ? r.key : humanizeKey(r.key)}</td>
               {[r.people, r.leads, r.signups, r.activated, r.paying].map((v, i) => (
                 <td key={i} className="tnum" style={tableStyles.td}>
                   {v}
@@ -101,10 +103,9 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
   const { days: daysRaw } = await searchParams;
   const days = PERIODS.find((p) => String(p) === daysRaw) ?? 30;
 
-  const [funnel, byChannel, bySource, magnets, sequences, outreach, leadSeries, signupSeries, comped, offer] = await Promise.all([
+  const [funnel, attribution, magnets, sequences, outreach, leadSeries, signupSeries, comped, offer] = await Promise.all([
     getFunnel(days),
-    getAttributionTable(days, "channel"),
-    getAttributionTable(days, "source"),
+    getAttributionTables(days),
     getMagnetTable(days),
     getSequenceStats(days),
     getOutreachStats(30),
@@ -115,13 +116,13 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
   ]);
   const f = funnel.current;
   const p = funnel.previous;
-  const cohort = cohortTotals(byChannel);
+  const cohort = cohortTotals(attribution.channel);
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", padding: "32px 28px", fontFamily: THEME.fontSans }}>
       <PageHeader
         title="Funnel"
-        description={`Lead → signup → activated → paying, last ${days} days.`}
+        description={`Lead → signup → activated → paying, last ${days} days. A lead is a new contact from a lead form; contacts tagged test, Resend test inboxes and admin contacts never count.`}
         actions={
           <nav aria-label="Period" style={{ display: "inline-flex", border: `1px solid ${THEME.border}`, borderRadius: 9, overflow: "hidden" }}>
             {PERIODS.map((d) => (
@@ -139,7 +140,7 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12 }}>
-        <KpiCard icon={Inbox} label="Leads captured" value={f.leads.toLocaleString()} sub={delta(f.leads, p.leads, days)} />
+        <KpiCard icon={Inbox} label="Leads" value={f.leads.toLocaleString()} sub={delta(f.leads, p.leads, days)} />
         <KpiCard icon={MailCheck} label="Confirmed (DOI)" value={pct(f.leadsConfirmed, f.leads)} sub={`${f.leadsConfirmed} of ${f.leads} leads`} />
         <KpiCard icon={UserPlus} label="Signups" value={f.signups.toLocaleString()} sub={delta(f.signups, p.signups, days)} />
         <KpiCard icon={Zap} label="Activated" value={f.activated.toLocaleString()} sub={`${pct(f.activated, f.signups)} of signups · first document within 7 days`} accent={THEME.human} />
@@ -167,12 +168,22 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
 
       <SectionTitle sub="The same people by first-touch channel. Paying means a paying subscription or seat today.">By channel</SectionTitle>
       <Panel flush>
-        <AttributionTable rows={byChannel} keyLabel="Channel" />
+        <AttributionTable rows={attribution.channel} keyLabel="Channel" />
       </Panel>
 
       <SectionTitle sub="Same people, by how we first got their email.">By lead source</SectionTitle>
       <Panel flush>
-        <AttributionTable rows={bySource} keyLabel="Source" />
+        <AttributionTable rows={attribution.source} keyLabel="Source" />
+      </Panel>
+
+      <SectionTitle sub="Same people who arrived on a tagged link, by its first-touch utm_source (a directory, a community, a post).">By UTM source</SectionTitle>
+      <Panel flush>
+        <AttributionTable rows={attribution.utmSource} keyLabel="utm_source" raw empty={{ title: "No tagged links in this period", description: "Tag the links you post with the UTM builder below." }} />
+      </Panel>
+
+      <SectionTitle sub="Same people, by the first-touch utm_campaign of their tagged link.">By UTM campaign</SectionTitle>
+      <Panel flush>
+        <AttributionTable rows={attribution.utmCampaign} keyLabel="utm_campaign" raw empty={{ title: "No tagged links in this period", description: "Tag the links you post with the UTM builder below." }} />
       </Panel>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: 16, marginTop: 28 }}>

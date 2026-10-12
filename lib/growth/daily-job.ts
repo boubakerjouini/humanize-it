@@ -6,7 +6,8 @@
 //   3. CRM auto-task rules
 //   4. circuit breaker (before any marketing goes out)
 //   5. due sequence steps          6. campaign draining
-//   7. retry failed one-off sends  8. reset rows stuck in "sending"
+//   7. retry failed or held one-off sends
+//   8. reset rows stuck in "sending"
 // It runs under a 10-minute JobLock lease, so the cron and an admin "Run now"
 // never overlap, and records a JobRun with per-step stats. New work stops at
 // 240s to stay inside the 300s function limit. Steps fail independently: one
@@ -42,7 +43,8 @@ export type DailyJobResult =
 
 /**
  * Daily step 7: one-off sends (inline transactional, personal notes) that
- * failed with attempts left. Sequence steps are retried by the engine and
+ * failed with attempts left, and lead emails held as "queued" past a daily
+ * limit (app/api/public/leads). Sequence steps are retried by the engine and
  * campaign rows by the drain, both under their own dedupe keys.
  */
 export async function retryFailedMessages(now: Date = new Date(), deadlineMs?: number): Promise<{ retried: number; sent: number; skipped: number }> {
@@ -50,7 +52,8 @@ export async function retryFailedMessages(now: Date = new Date(), deadlineMs?: n
   if (emailSendingMode() === "off") return out;
   const rows = await db.emailMessage.findMany({
     where: {
-      status: "failed",
+      // Queued rows without a campaign or an enrollment are only ever held lead emails.
+      status: { in: ["failed", "queued"] },
       attempts: { lt: MAX_ATTEMPTS },
       queuedAt: { gte: new Date(now.getTime() - RETRY_WINDOW_MS) },
       enrollmentId: null,

@@ -8,13 +8,15 @@
 // Consent rules: the tips box starts unticked and is never required for a
 // download. Where the form's whole purpose is an opt-in (waitlists), the
 // consent wording sits next to the button instead, and the topic is sent as
-// `requiredTopic`. Magnets download right away; email is a copy.
+// `requiredTopic`. Magnets download right away; email is a copy, and past the
+// day's email limit it is queued for the next daily run ("queued").
 // No zod here on purpose (bundle size): the server validates everything.
 // ===========================================================
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { readPageTouch } from "@/components/growth/attribution-capture";
 import { CONSENT_WORDING, consentWordingFor, type MagnetSlug, type PublicLeadSource, type Topic } from "@/lib/growth/constants";
 
 export type ReportContext = {
@@ -26,7 +28,7 @@ export type ReportContext = {
   wordCount?: number;
 };
 
-export type LeadResult = { ok: true; delivery: "email" | "link" | "unavailable" | "pending"; downloadUrl?: string };
+export type LeadResult = { ok: true; delivery: "email" | "queued" | "link" | "unavailable" | "pending"; downloadUrl?: string };
 
 type Props = {
   source: PublicLeadSource;
@@ -120,6 +122,8 @@ export function LeadCaptureForm({
           elapsedMs: mountedAt.current ? Date.now() - mountedAt.current : 0,
           path: window.location.pathname.slice(0, 200),
           context,
+          // How this visit arrived, only when no attribution cookie may hold it.
+          touch: readPageTouch(),
         }),
       });
       const data = (await res.json().catch(() => null)) as (LeadResult & { error?: { code?: string; message?: string } }) | null;
@@ -324,12 +328,29 @@ function SuccessView({
               : "We've also emailed you a copy from HumanizeIt."}{" "}
             {editLink}
           </p>
+        ) : result.delivery === "queued" ? (
+          <p style={body}>
+            {tips
+              ? "We'll also email you a copy, usually within a day. To get the tips, open that email and click \"Yes, send me tips\" on the download page. Nothing is sent until you do."
+              : "We'll also email you a copy from HumanizeIt, usually within a day."}{" "}
+            {editLink}
+          </p>
         ) : null}
       </div>
     );
   }
 
   if (isReport) {
+    if (result.delivery === "queued") {
+      return (
+        <div>
+          <p style={title}>Report queued</p>
+          <p style={body}>
+            We&apos;ll email your scores and fix list, usually within a day. They also stay on this page. {editLink}
+          </p>
+        </div>
+      );
+    }
     return result.delivery === "email" ? (
       <div>
         <p style={title}>Report on its way</p>

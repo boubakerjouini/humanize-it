@@ -10,6 +10,9 @@
 //   - refused them on /cookies (localStorage hz_attr_optout), or
 //   - is in the EU, EEA, UK or Switzerland by device time zone, where they
 //     would need opt-in consent and the site has no consent banner.
+// Under GPC or in those time zones the visit's touch is kept in memory only
+// (nothing is stored on the device), so a lead form sent during the visit can
+// still say how it arrived (readPageTouch). After a refusal nothing is kept.
 // ===========================================================
 
 import { useEffect } from "react";
@@ -27,7 +30,11 @@ import {
   mergeLastTouch,
   readCookieValue,
   touchCookie,
+  type Touch,
 } from "@/lib/growth/attribution";
+
+/** The landing touch of a visit that gets no cookie: module memory, gone on the next full page load. */
+let pageTouch: Touch | null = null;
 
 function optedOut(): boolean {
   try {
@@ -53,16 +60,37 @@ export function clearAttributionCookies(): void {
   }
 }
 
+/**
+ * The visit's in-memory touch, encoded like the cookie, for a lead form to send
+ * (the server uses it only when no attribution cookie exists). Undefined when
+ * the cookies carry the touch, or when the visitor refused attribution.
+ */
+export function readPageTouch(): string | undefined {
+  if (!pageTouch || optedOut()) return undefined;
+  try {
+    return encodeTouch(pageTouch);
+  } catch {
+    return undefined;
+  }
+}
+
 export function AttributionCapture() {
   useEffect(() => {
     try {
-      const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
-      if (nav.globalPrivacyControl === true || optedOut() || isConsentRegionTimeZone(deviceTimeZone())) {
+      if (optedOut()) {
         clearAttributionCookies();
         return;
       }
 
       const touch = buildTouch({ href: window.location.href, referrer: document.referrer, now: Date.now() });
+      const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+      if (nav.globalPrivacyControl === true || isConsentRegionTimeZone(deviceTimeZone())) {
+        clearAttributionCookies();
+        // A remount mid-visit keeps the landing touch.
+        if (!pageTouch) pageTouch = touch;
+        return;
+      }
+
       const secure = window.location.protocol === "https:";
 
       if (!decodeTouch(readCookieValue(document.cookie, FIRST_TOUCH_COOKIE))) {
