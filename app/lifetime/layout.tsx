@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 
 // Metadata-only wrapper for /lifetime (kept as the URL: it is linked from the
 // home page, the footer and the sitemap). The page now sells Founding 100,
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/lifetime",
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
 };
 

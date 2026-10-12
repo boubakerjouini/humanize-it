@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
       "Check your own writing for the patterns AI detectors flag, avoid false GPTZero and Turnitin flags, and polish drafts within your school's rules.",
     url: "https://humanizeit.app/use-cases/students",
     type: "website",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/use-cases/students",

@@ -48,27 +48,39 @@ export default async function MagnetPage({ params }: Params) {
     <div style={{ maxWidth: "52rem", margin: "0 auto", padding: "40px 16px" }}>
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Free resources", href: "/free" }, { label: magnet.shortTitle }]} />
 
-      <div style={{ display: "flex", gap: "32px", alignItems: "flex-start", flexWrap: "wrap-reverse" }}>
-        <div style={{ flex: "1 1 340px", minWidth: 0 }}>
-          <div className="kicker" style={{ marginBottom: "14px" }}>
-            Free {magnet.noun} · {magnet.pages} pages · PDF
+      {/* Desktop: text beside the cover, form below. Phones: text, form, then the cover (rules below). */}
+      <div className="magnet-hero">
+        <div className="magnet-hero-row" style={{ display: "flex", gap: "32px", alignItems: "flex-start", flexWrap: "wrap-reverse" }}>
+          <div style={{ flex: "1 1 340px", minWidth: 0 }}>
+            <div className="kicker" style={{ marginBottom: "14px" }}>
+              Free {magnet.noun} · {magnet.pages} pages · PDF
+            </div>
+            <h1 style={kitStyles.h1}>{magnet.title}</h1>
+            <p style={{ ...kitStyles.p, fontSize: "18px", color: THEME.text }}>{magnet.promise}</p>
+            <p style={kitStyles.p}>{magnet.subtitle}</p>
           </div>
-          <h1 style={kitStyles.h1}>{magnet.title}</h1>
-          <p style={{ ...kitStyles.p, fontSize: "18px", color: THEME.text }}>{magnet.promise}</p>
-          <p style={kitStyles.p}>{magnet.subtitle}</p>
+          <div className="magnet-hero-cover" style={{ flex: "0 0 auto", margin: "0 auto" }}>
+            <MagnetCover magnet={magnet} />
+          </div>
         </div>
-        <div style={{ flex: "0 0 auto", margin: "0 auto" }}>
-          <MagnetCover magnet={magnet} />
+
+        <div style={{ margin: "8px 0 0" }}>
+          <LeadCaptureForm source="magnet_page" magnet={magnet.slug} ctaLabel={`Get the free ${magnet.noun}`} thing={`the ${magnet.noun}`} />
         </div>
-      </div>
 
-      <div style={{ margin: "8px 0 0" }}>
-        <LeadCaptureForm source="magnet_page" magnet={magnet.slug} ctaLabel={`Get the free ${magnet.noun}`} thing={`the ${magnet.noun}`} />
+        {magnet.guardrail ? (
+          <p style={{ ...kitStyles.p, fontSize: "14px", marginTop: "14px", color: THEME.textMuted }}>{magnet.guardrail}</p>
+        ) : null}
       </div>
-
-      {magnet.guardrail ? (
-        <p style={{ ...kitStyles.p, fontSize: "14px", marginTop: "14px", color: THEME.textMuted }}>{magnet.guardrail}</p>
-      ) : null}
+      {/* On narrow screens the wrapped row put the cover above the title and pushed the form below the
+          first screen: under 640px, dissolve the row into one column and move the cover after the form. */}
+      <style>{`
+        @media (max-width: 639px) {
+          .magnet-hero { display: grid; grid-template-columns: minmax(0, 1fr); }
+          .magnet-hero-row { display: contents !important; }
+          .magnet-hero-cover { order: 1; margin: 24px auto 0 !important; }
+        }
+      `}</style>
 
       <h2 style={kitStyles.h2}>What&apos;s inside</h2>
       <ul style={listStyle}>

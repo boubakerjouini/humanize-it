@@ -50,8 +50,8 @@ export default function AiDetectorPage() {
       </h1>
       <p style={{ ...toolStyles.p, fontSize: "17px" }}>
         Paste any text to see how likely it is to be flagged as AI-generated, and exactly which patterns trigger it.
-        No signup and no limits. The instant check runs in your browser; the optional deep scan sends your text to our
-        AI provider (Anthropic) for a one-time analysis that we don&apos;t store.
+        No signup, and no limit on the instant check, which runs in your browser. The optional deep scan has a daily
+        allowance and sends your text to our AI provider (Anthropic) for a one-time analysis that we don&apos;t store.
       </p>
 
       <DetectorTool ctaHref="/free-ai-humanizer" />
@@ -69,8 +69,9 @@ export default function AiDetectorPage() {
       <p style={toolStyles.p}>
         Spotting the patterns is half the battle. When your text scores high, our{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link> rewrites it to reduce
-        those exact signals while preserving your meaning. For how each detector works, see our{" "}
-        <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>.
+        those exact signals while preserving your meaning. For how detectors score text and why they flag human
+        writing, read{" "}
+        <Link href="/blog/ai-detection-how-it-works" style={{ color: THEME.brandHi }}>how AI detection works</Link>.
       </p>
 
       <LeadMagnetInline slug="false-ai-flag-appeal-kit" source="tool_inline" />

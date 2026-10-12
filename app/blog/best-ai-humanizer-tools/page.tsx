@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
     type: "article",
     publishedTime: POST.date,
     modifiedTime: POST.dateModified,
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/blog/best-ai-humanizer-tools",

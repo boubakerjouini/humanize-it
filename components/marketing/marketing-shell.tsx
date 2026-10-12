@@ -27,6 +27,7 @@ const SITE_LINKS = [
   { label: "Blog", href: "/blog" },
   { label: "Free Guides", href: "/free" },
   { label: "Chrome Extension", href: "/extension" },
+  { label: "About", href: "/about" },
 ];
 
 export function MarketingFooterLinks() {

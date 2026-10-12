@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
       "Check and humanize AI-assisted drafts at scale with document uploads, a REST API, and per-seat team organizations. Team plan $29/mo.",
     url: "https://humanizeit.app/use-cases/agencies",
     type: "website",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/use-cases/agencies",

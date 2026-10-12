@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/gptzero-checker",
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
   alternates: { canonical: "https://humanizeit.app/gptzero-checker" },
 };
