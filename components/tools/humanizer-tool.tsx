@@ -140,7 +140,7 @@ export function HumanizerTool() {
                 padding: "10px 24px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.3),
               }}
             >
-              Sign up free for more &rarr;
+              Create a free account &rarr;
             </Link>
           )}
           {err.signupCta && (
@@ -191,13 +191,13 @@ export function HumanizerTool() {
               {copied ? "Copied ✓" : "Copy result"}
             </button>
             <Link
-              href="/sign-up"
+              href="/#pricing"
               style={{
                 background: THEME.brand, color: "#fff", fontSize: "13px", fontWeight: 600, padding: "8px 18px",
                 borderRadius: THEME.radius, textDecoration: "none",
               }}
             >
-              Get unlimited &rarr;
+              Unlimited rewrites with Pro &rarr;
             </Link>
           </div>
         </div>
