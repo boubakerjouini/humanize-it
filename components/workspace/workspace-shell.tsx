@@ -11,6 +11,7 @@ import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
 import { FoundingBadge } from "@/components/growth/founding-badge";
 import { useOffers } from "@/components/growth/founding-offers";
+import { readCheckoutIntent, withoutCheckoutIntent, type CheckoutIntent } from "@/lib/checkout-intent";
 
 interface PlanInfo {
   plan: string;
@@ -37,13 +38,24 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const [info, setInfo] = useState<PlanInfo>({ plan: "FREE", isAdmin: false, organization: null });
   const [usage, setUsage] = useState<Usage | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // A paid plan picked on the pricing page before sign-up (lib/checkout-intent.ts).
+  const [pickedPlan, setPickedPlan] = useState<CheckoutIntent | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   // Null while the referral program is off: the invite entry stays hidden.
   const referral = useReferralInfo();
   const founding = useOffers()?.founding.member ?? false;
 
   useEffect(() => {
-    fetch("/api/user-plan").then((r) => r.json()).then((d) => setInfo({ plan: d.plan ?? "FREE", isAdmin: !!d.isAdmin, organization: d.organization ?? null })).catch(() => {});
+    // Take the picked plan out of the address so a reload or Back doesn't reopen the menu.
+    const picked = readCheckoutIntent(window.location.search);
+    if (picked) window.history.replaceState(null, "", withoutCheckoutIntent(window.location.href));
+    fetch("/api/user-plan").then((r) => r.json()).then((d) => setInfo({ plan: d.plan ?? "FREE", isAdmin: !!d.isAdmin, organization: d.organization ?? null })).catch(() => {})
+      // Then open the plan menu on it, once the menu knows the current plan.
+      .finally(() => {
+        if (!picked) return;
+        setPickedPlan(picked);
+        setUpgradeOpen(true);
+      });
     fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d) => d && setUsage(d)).catch(() => {});
   }, []);
 
@@ -164,7 +176,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <UpgradeModal isOpen={upgradeOpen} onClose={() => setUpgradeOpen(false)} currentPlan={info.plan} />
+      <UpgradeModal
+        isOpen={upgradeOpen}
+        onClose={() => { setUpgradeOpen(false); setPickedPlan(null); }}
+        currentPlan={info.plan}
+        intent={pickedPlan}
+      />
       {referral && (
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogContent style={{ background: THEME.surface2, fontFamily: THEME.fontSans }}>

@@ -5,6 +5,12 @@ import Link from "next/link";
 import { usePostHog } from "posthog-js/react";
 import { Check, X } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
+import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
+import { PLANS } from "@/lib/plans";
+
+// What the Free plan gives, from lib/plans.ts, so the modal can't drift from it.
+const FREE = PLANS.FREE;
+const FREE_REWRITES = `${FREE.rewriteLimit} rewrite${FREE.rewriteLimit === 1 ? "" : "s"}`;
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -102,7 +108,7 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
           </span>
         </h2>
         <p style={{ fontSize: "14px", color: THEME.textDim, marginBottom: "24px", fontFamily: THEME.fontSans }}>
-          Join 12,000+ writers using HumanizeIt
+          Free AI checks, plus {FREE.wordsLimit} words of rewriting a day.
         </p>
 
         <div style={{ height: "1px", background: THEME.border, marginBottom: "24px" }} />
@@ -157,8 +163,8 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[
-            "500 words/day humanization",
-            "37-pattern AI detection",
+            `${FREE.wordsLimit} words of rewriting a day (${FREE_REWRITES}, Standard tone)`,
+            `${PATTERN_COUNT}-pattern AI detection`,
             "Text heatmap",
             "No credit card needed",
           ].map((f) => (

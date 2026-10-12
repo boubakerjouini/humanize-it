@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import Playground from "./playground";
 
 export const metadata: Metadata = {
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/docs/api",
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
 };
 

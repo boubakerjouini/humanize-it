@@ -5,6 +5,8 @@
 // and, with trigger="quota", when a request hits the plan's limit. A
 // Monthly/Annual toggle (annual pre-selected) sends { plan, annual } to
 // /api/checkout; annual prices are shown per month (≈$6.58/mo for Pro).
+// Opened with an intent (a plan picked on the pricing page before sign-up),
+// it shows that billing period and marks that plan's card.
 // On a quota hit, two cheaper ways out sit under the plans: the Word Pack
 // (only once its LemonSqueezy variant exists) and inviting a friend (only
 // while referrals are on). Prices, limits and the guarantee come from
@@ -17,6 +19,7 @@ import { track } from "@vercel/analytics";
 import { Check, X, Package, Gift, ShieldCheck } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { GUARANTEE_DAYS, PLANS as PLAN_CONFIG, TEAM_ANNUAL_GUARANTEE_DAYS, type PlanConfig } from "@/lib/plans";
+import type { CheckoutIntent } from "@/lib/checkout-intent";
 import { startOfferCheckout, useOffers } from "@/components/growth/founding-offers";
 import { useReferralInfo } from "@/components/growth/referral-card";
 
@@ -32,6 +35,8 @@ interface UpgradeModalProps {
   currentPlan: string;
   /** Why the modal opened; changes the header copy (see UpgradeTrigger). */
   trigger?: UpgradeTrigger;
+  /** A plan picked on the pricing page before sign-up: preset its billing period and mark its card. */
+  intent?: CheckoutIntent | null;
 }
 
 const PLAN_IDS = ["FREE", "PRO", "TEAM"] as const;
@@ -63,14 +68,14 @@ const ANNUAL_FREE_MONTHS = (() => {
   return pro.priceAnnual ? Math.round((pro.price * 12 - pro.priceAnnual) / pro.price) : 0;
 })();
 
-export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade" }: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade", intent = null }: UpgradeModalProps) {
   const posthog = usePostHog();
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
   // Annual first: lower churn, and it is the better deal for the buyer.
-  const [billing, setBilling] = useState<Billing>("annual");
+  const [billing, setBilling] = useState<Billing>(intent && !intent.annual ? "monthly" : "annual");
   const [packBusy, setPackBusy] = useState(false);
   const [packError, setPackError] = useState<string | null>(null);
   const offers = useOffers();
@@ -83,7 +88,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
     if (checkingOut) return;
     setCheckingOut(planId);
     const annual = billing === "annual";
-    posthog?.capture("upgrade_cta_clicked", { plan: planId, current_plan: currentPlan, annual, trigger });
+    posthog?.capture("upgrade_cta_clicked", { plan: planId, current_plan: currentPlan, annual, trigger, from_pricing: !!intent });
     track("upgrade_cta_clicked", { plan: planId, annual });
     try {
       const res = await fetch("/api/checkout", {
@@ -109,7 +114,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
     if (isOpen) {
       previouslyFocused.current = document.activeElement as HTMLElement | null;
       document.body.style.overflow = "hidden";
-      posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger });
+      posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger, from_pricing: !!intent });
       requestAnimationFrame(() => panelRef.current?.focus());
       return () => {
         document.body.style.overflow = "";
@@ -117,6 +122,11 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
       };
     }
   }, [isOpen]);
+
+  // Show the billing period picked on the pricing page.
+  useEffect(() => {
+    if (isOpen && intent) setBilling(intent.annual ? "annual" : "monthly");
+  }, [isOpen, intent]);
 
   // Close on ESC
   useEffect(() => {
@@ -265,25 +275,26 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
           {/* Plan cards */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "14px 10px", marginBottom: "8px" }}>
             {PLAN_IDS.map((id) => {
-              const plan = { ...PLAN_CONFIG[id], popular: id === "PRO" };
+              const plan = PLAN_CONFIG[id];
               const { price, note } = displayPrice(plan, billing);
               const isCurrent = currentPlan.toUpperCase() === plan.id;
-              const isPro = plan.id === "PRO";
+              // The highlighted card: the plan picked on the pricing page, else Pro.
+              const highlighted = plan.id === (intent?.plan ?? "PRO");
               const isFree = plan.id === "FREE";
               return (
                 <div
                   key={plan.id}
                   style={{
                     flex: "1 1 130px", minWidth: 0,
-                    background: isPro ? THEME.brandDim : THEME.surface2,
-                    border: `1px solid ${isPro ? THEME.brand : THEME.border}`,
+                    background: highlighted ? THEME.brandDim : THEME.surface2,
+                    border: `1px solid ${highlighted ? THEME.brand : THEME.border}`,
                     borderRadius: THEME.radius, padding: "16px 12px", textAlign: "center",
                     position: "relative",
-                    boxShadow: isPro ? glow(THEME.brand, 0.28) : "none",
+                    boxShadow: highlighted ? glow(THEME.brand, 0.28) : "none",
                     opacity: isFree ? 0.62 : 1,
                   }}
                 >
-                  {plan.popular && (
+                  {highlighted && (
                     <div style={{
                       position: "absolute", top: "-9px", left: "50%", transform: "translateX(-50%)",
                       background: THEME.accent, color: "#ffffff", fontSize: "10px", fontWeight: 700,
@@ -291,13 +302,14 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
                       fontFamily: THEME.fontSans, letterSpacing: "0.01em",
                       boxShadow: glow(THEME.accent, 0.35),
                     }}>
-                      Most popular
+                      {/* Not "Most popular": no sales figure backs that yet. */}
+                      {intent ? "Your pick" : "Recommended"}
                     </div>
                   )}
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, marginBottom: "6px", fontFamily: THEME.fontSans }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: highlighted ? THEME.brandHi : THEME.text, marginBottom: "6px", fontFamily: THEME.fontSans }}>
                     {plan.name}
                   </div>
-                  <div className="tnum" style={{ fontSize: "clamp(20px, 6vw, 26px)", fontWeight: 700, color: isPro ? THEME.brandHi : THEME.text, lineHeight: 1.1, overflowWrap: "anywhere" }}>
+                  <div className="tnum" style={{ fontSize: "clamp(20px, 6vw, 26px)", fontWeight: 700, color: highlighted ? THEME.brandHi : THEME.text, lineHeight: 1.1, overflowWrap: "anywhere" }}>
                     {price}
                     {!isFree && <span className="tnum" style={{ fontSize: "13px", fontWeight: 400, color: THEME.textMuted }}>/mo</span>}
                   </div>
@@ -322,12 +334,12 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
                       style={{
                         display: "block", width: "100%", padding: "9px", borderRadius: THEME.radius,
                         fontSize: "12px", fontWeight: 700, border: "none",
-                        background: isPro ? THEME.gradient : THEME.surface3,
-                        color: isPro ? "#ffffff" : THEME.text,
+                        background: highlighted ? THEME.gradient : THEME.surface3,
+                        color: highlighted ? "#ffffff" : THEME.text,
                         textAlign: "center",
                         cursor: checkingOut ? "wait" : "pointer",
                         opacity: checkingOut && checkingOut !== plan.id ? 0.6 : 1,
-                        boxShadow: isPro ? glow(THEME.brand, 0.34) : "none",
+                        boxShadow: highlighted ? glow(THEME.brand, 0.34) : "none",
                         fontFamily: THEME.fontSans,
                       }}
                     >

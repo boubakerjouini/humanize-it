@@ -128,7 +128,10 @@ export const EVENT_TYPES = [
   "subscription_resumed",
   "payment_failed",
   "payment_recovered",
-  // One-time purchases (Founding 100, word packs)
+  // One-time purchases (Founding 100, word packs). Their checkout start is its
+  // own type: the abandoned-checkout task and email read checkout_started as a
+  // subscription checkout, and these buyers never get a subscription.
+  "offer_checkout_started",
   "founding_purchased",
   "wordpack_purchased",
   // Plans and codes

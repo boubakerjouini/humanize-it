@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { MarketingFooterLinks } from "@/components/marketing/marketing-shell";
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/compare",
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
 };
 

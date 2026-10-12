@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME, glow } from "@/lib/theme";
 import { BlogPostExtras } from "@/components/blog/blog-post-extras";
 import { getPostBySlug, formatPostDate } from "@/lib/blog";
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
     type: "article",
     publishedTime: POST.date,
     modifiedTime: POST.dateModified,
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/blog/humanize-chatgpt-text",

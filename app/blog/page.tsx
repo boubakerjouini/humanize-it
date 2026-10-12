@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { getAllPosts } from "@/lib/blog";
 import { THEME } from "@/lib/theme";
 
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/blog",
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
 };
 

@@ -7,8 +7,10 @@
 //          (a UTM, a ?ref= code, an ad click id, or an external referrer), so
 //          an internal page view never erases how someone actually arrived.
 // Both are base64url JSON under 1 KB. A click id is recorded only as present,
-// never its value. Shared by the client capture component and the server
-// reader, so it must stay free of DOM, Node and DB imports.
+// never its value. Where the cookies may not be set, the page keeps its touch
+// in memory and a lead form sends it, encoded the same way (parsePageTouch).
+// Shared by the client capture component and the server reader, so it must
+// stay free of DOM, Node and DB imports.
 // ===========================================================
 
 import { CHANNELS, type Channel } from "@/lib/growth/constants";
@@ -147,7 +149,9 @@ const SOCIAL_UTM_SOURCES = new Set([
 ]);
 const PAID_MEDIUMS = new Set(["cpc", "ppc", "paid", "paidsearch", "paid_social", "display"]);
 const EMAIL_VALUES = new Set(["email", "newsletter"]);
-const OUTREACH_MEDIUMS = new Set(["outreach", "dm"]);
+/** Our own outreach: warm DMs (utm_medium=dm, whatever the source) and cold email. */
+const OUTREACH_SOURCES = new Set(["outreach", "cold"]);
+const OUTREACH_MEDIUMS = new Set(["outreach", "dm", "cold", "cold-email", "cold_email"]);
 const SOCIAL_MEDIUMS = new Set(["social", "social-organic", "community"]);
 
 function matchesDomain(host: string, domain: string): boolean {
@@ -187,7 +191,12 @@ export function externalReferrerHost(
   return clip(host.replace(/^www\./, ""), LIMITS.rh);
 }
 
-/** Ordered rules, first match wins (spec §4.2). */
+/**
+ * Ordered rules, first match wins (spec §4.2). Outreach comes before email: a
+ * warm DM sent by email (utm_source=email&utm_medium=dm) or a cold email is
+ * outreach, while our own emails carry utm_source=email with their stream as
+ * the medium (lib/email/links.ts withUtm), so they still land in email.
+ */
 export function classifyChannel(t: Pick<Touch, "ref" | "um" | "us" | "cid" | "rh">): Channel {
   const medium = t.um?.toLowerCase();
   const source = t.us?.toLowerCase();
@@ -195,8 +204,8 @@ export function classifyChannel(t: Pick<Touch, "ref" | "um" | "us" | "cid" | "rh
 
   if (t.ref) return "referral_program";
   if ((medium && PAID_MEDIUMS.has(medium)) || t.cid) return "paid";
+  if ((source && OUTREACH_SOURCES.has(source)) || (medium && OUTREACH_MEDIUMS.has(medium))) return "outreach";
   if ((medium && EMAIL_VALUES.has(medium)) || (source && EMAIL_VALUES.has(source))) return "email";
-  if (source === "outreach" || (medium && OUTREACH_MEDIUMS.has(medium))) return "outreach";
   if ((medium && SOCIAL_MEDIUMS.has(medium)) || (source && SOCIAL_UTM_SOURCES.has(source))) return "social";
   if (host) {
     // AI assistants first: gemini.google.com would otherwise read as Google search.
@@ -342,6 +351,29 @@ export function decodeTouch(raw: string | null | undefined): Touch | null {
   return touch;
 }
 
+/** A page keeps its touch for one visit; an older visit time is not that visit's. */
+const PAGE_TOUCH_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * The touch a page sent with a lead form, for visitors who get no attribution
+ * cookie (components/growth/attribution-capture.tsx). It is client input, so it
+ * is decoded like a cookie (known keys only, capped lengths) and then checked
+ * again: the referrer must still be an external host, a visit time outside the
+ * last day becomes `now`, and the channel is classified here, never trusted.
+ * Null for anything malformed. Never throws.
+ */
+export function parsePageTouch(raw: unknown, now: number): Touch | null {
+  if (typeof raw !== "string") return null;
+  const decoded = decodeTouch(raw);
+  if (!decoded) return null;
+  const { rh, ...touch } = decoded;
+  const host = rh ? externalReferrerHost(`https://${rh}/`) : undefined;
+  const checked: Touch = host ? { ...touch, rh: host } : touch;
+  if (!(checked.ts <= now && checked.ts >= now - PAGE_TOUCH_MAX_AGE_MS)) checked.ts = now;
+  checked.ch = classifyChannel(checked);
+  return checked;
+}
+
 /** `Set-Cookie`-style string for document.cookie: first-party, Lax, not HttpOnly. */
 export function touchCookie(name: string, value: string, opts: { maxAgeSeconds: number; secure: boolean }): string {
   return `${name}=${value}; Max-Age=${opts.maxAgeSeconds}; Path=/; SameSite=Lax${opts.secure ? "; Secure" : ""}`;
@@ -372,6 +404,16 @@ export function touchToFirstTouchFields(t: Touch) {
     refCode: t.ref ?? null,
     firstTouchAt: new Date(t.ts),
   };
+}
+
+export type TouchEventProps = { channel: Channel; utm_source?: string; utm_campaign?: string };
+
+/** Attribution properties for a server-side analytics event: the channel and the main campaign tags. */
+export function touchEventProps(t: Touch | null | undefined): TouchEventProps {
+  const props: TouchEventProps = { channel: t?.ch ?? "unknown" };
+  if (t?.us) props.utm_source = t.us;
+  if (t?.uc) props.utm_campaign = t.uc;
+  return props;
 }
 
 // ── Consent region ──────────────────────────────────────────────────────────

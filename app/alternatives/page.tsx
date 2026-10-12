@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { kitStyles, Breadcrumbs, FaqSection, PageCta } from "@/components/seo/page-kit";
 import { THEME } from "@/lib/theme";
 
@@ -8,7 +9,7 @@ const URL = "https://humanizeit.app/alternatives";
 export const metadata: Metadata = {
   title: "Best AI Humanizer Alternatives (2026) | HumanizeIt",
   description:
-    "Looking for AI humanizer alternatives? Compare HumanizeIt against Undetectable.ai, Quillbot, and StealthGPT &mdash; what each does well, where it falls short, and who it fits.",
+    "Looking for AI humanizer alternatives? Compare HumanizeIt against Undetectable.ai, Quillbot, and StealthGPT — what each does well, where it falls short, and who it fits.",
   keywords: [
     "AI humanizer alternatives",
     "Undetectable.ai alternative",
@@ -22,10 +23,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Best AI Humanizer Alternatives (2026) | HumanizeIt",
     description:
-      "Compare the most popular AI humanizer alternatives &mdash; Undetectable.ai, Quillbot, and StealthGPT &mdash; against HumanizeIt to find the right fit for your writing.",
+      "Compare the most popular AI humanizer alternatives — Undetectable.ai, Quillbot, and StealthGPT — against HumanizeIt to find the right fit for your writing.",
     url: URL,
     siteName: "HumanizeIt",
     type: "website",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: URL,
@@ -159,7 +161,7 @@ export default function AlternativesHubPage() {
         faqs={[
           {
             q: "What is the best AI humanizer alternative?",
-            a: "There is no single best one &mdash; it depends on your goal. Detection-focused tools like Undetectable.ai, StealthGPT, and HumanizeIt prioritize reducing how AI-like text reads, while Quillbot is stronger as a general paraphrasing and grammar suite. The best choice is the tool that clears the specific detector you care about while keeping your meaning and voice intact, which you can only confirm by testing your own text.",
+            a: "There is no single best one — it depends on your goal. Detection-focused tools like Undetectable.ai, StealthGPT, and HumanizeIt prioritize reducing how AI-like text reads, while Quillbot is stronger as a general paraphrasing and grammar suite. The best choice is the tool that clears the specific detector you care about while keeping your meaning and voice intact, which you can only confirm by testing your own text.",
           },
           {
             q: "How is HumanizeIt different from Undetectable.ai?",
@@ -171,7 +173,7 @@ export default function AlternativesHubPage() {
           },
           {
             q: "Do any of these tools guarantee passing AI detection?",
-            a: "No honest tool can. Detectors retrain regularly and each weights its signals differently, so a clean score on one tool or one day is never permanent. Any humanizer &mdash; including HumanizeIt &mdash; can meaningfully reduce how AI-like text reads, but you should treat a pass as a snapshot, re-check after edits, and always review the output yourself.",
+            a: "No honest tool can. Detectors retrain regularly and each weights its signals differently, so a clean score on one tool or one day is never permanent. Any humanizer — including HumanizeIt — can meaningfully reduce how AI-like text reads, but you should treat a pass as a snapshot, re-check after edits, and always review the output yourself.",
           },
           {
             q: "Can I try these alternatives for free?",

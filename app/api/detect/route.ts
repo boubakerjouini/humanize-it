@@ -6,8 +6,11 @@
 // rubric-guided model call. Anonymous-capable like /api/public/humanize, with
 // the same bounded-cost guards — a hard word cap, a per-IP burst limit, and a
 // per-IP daily allowance — so it can't be turned into a free LLM proxy.
+// A finished scan is counted in PostHog (deep_scan_completed) under a fresh id
+// per scan, with no person profile and never the text.
 // ===========================================================
 
+import { randomUUID } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { deepScanText } from "@/lib/detect-llm";
@@ -15,6 +18,10 @@ import { activeProvider } from "@/lib/llm";
 import { ensureUser } from "@/lib/user";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/client-ip";
+import { touchEventProps } from "@/lib/growth/attribution";
+import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
+import { runAfter } from "@/lib/growth/safe";
+import { trackServer } from "@/lib/posthog";
 
 const MAX_CHARS = 6000;
 const MAX_WORDS = 1200; // a deep scan reads more than the humanizer rewrites
@@ -48,7 +55,7 @@ async function currentUser(): Promise<{ id: string; plan: string } | null> {
 /** Apply burst + daily limits scoped to the signed-in user or the IP. Returns
  *  the daily result (for headers/remaining) or a 429 NextResponse to return. */
 async function enforceLimits(req: Request): Promise<
-  | { ok: true; daily: Awaited<ReturnType<typeof checkDailyLimit>> }
+  | { ok: true; daily: Awaited<ReturnType<typeof checkDailyLimit>>; signedIn: boolean }
   | { ok: false; response: NextResponse }
 > {
   const user = await currentUser();
@@ -79,7 +86,7 @@ async function enforceLimits(req: Request): Promise<
       ),
     };
   }
-  return { ok: true, daily };
+  return { ok: true, daily, signedIn: !!user };
 }
 
 export async function POST(req: Request) {
@@ -114,10 +121,21 @@ export async function POST(req: Request) {
 
   const limited = await enforceLimits(req);
   if (!limited.ok) return limited.response;
-  const { daily } = limited;
+  const { daily, signedIn } = limited;
 
   try {
     const result = await deepScanText(text);
+    const touch = firstTouchOf(await readAttribution());
+    runAfter("detect:analytics", () =>
+      trackServer(randomUUID(), "deep_scan_completed", {
+        word_count: words,
+        ai_likelihood: Math.round(result.aiLikelihood),
+        confidence: result.confidence,
+        signed_in: signedIn,
+        ...touchEventProps(touch),
+        $process_person_profile: false,
+      })
+    );
     return NextResponse.json(
       { ...result, remainingToday: daily.remaining },
       { headers: rateLimitHeaders(daily) }

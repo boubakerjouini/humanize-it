@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { track } from "@vercel/analytics";
 import posthog from "posthog-js";
 import { THEME, glow } from "@/lib/theme";
+import { signUpUrlFor } from "@/lib/checkout-intent";
 
 interface PricingButtonProps {
   plan: "PRO" | "TEAM";
@@ -25,7 +26,8 @@ export function PricingButton({ plan, annual, isPro, label }: PricingButtonProps
     posthog.capture("landing_plan_selected", { plan, annual: annual ? "true" : "false" });
 
     if (!isSignedIn) {
-      router.push(`/sign-up?redirect_url=/dashboard`);
+      // Keep the pick through sign-up: the new account lands on the plan menu with it selected.
+      router.push(signUpUrlFor({ plan, annual }));
       return;
     }
 

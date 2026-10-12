@@ -2,6 +2,7 @@
 // GET    /api/admin/users/[id]  — full customer 360 (admin only), with the CRM
 //                                 slice (contact, emails, enrollments, timeline)
 // PATCH  /api/admin/users/[id]  — actions: setPlan | grant | setRole | resetQuota
+//                                 (grant only adds: see ../grant.ts)
 // DELETE /api/admin/users/[id]  — delete a customer
 // ===========================================================
 
@@ -13,6 +14,7 @@ import { logAudit } from "@/lib/audit";
 import { runAfter } from "@/lib/growth/safe";
 import { onUserDeleted, trackAdminPlanChange } from "@/lib/crm/hooks";
 import { loadCustomerCrm } from "@/lib/crm/contact-360";
+import { MAX_GRANT_DAYS, describeGrant, isGrantDays, planAfterGrant, type GrantPlan } from "../grant";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -92,7 +94,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const { id } = await params;
     const body = (await req.json()) as { action?: string; plan?: string; role?: string; days?: number | null };
 
-    const target = await db.user.findUnique({ where: { id }, select: { email: true, plan: true, role: true } });
+    const target = await db.user.findUnique({ where: { id }, select: { email: true, plan: true, role: true, planExpiresAt: true } });
     if (!target) return NextResponse.json({ error: { message: "User not found." } }, { status: 404 });
 
     switch (body.action) {
@@ -106,11 +108,17 @@ export async function PATCH(req: Request, { params }: Ctx) {
       }
       case "grant": {
         if (!body.plan || !["PRO", "TEAM"].includes(body.plan)) return NextResponse.json({ error: { message: "Grant requires PRO or TEAM." } }, { status: 400 });
-        const days = typeof body.days === "number" && body.days > 0 ? body.days : null;
-        const planExpiresAt = days ? new Date(Date.now() + days * 86_400_000) : null;
-        await db.user.update({ where: { id }, data: { plan: body.plan as "PRO" | "TEAM", planExpiresAt } });
-        await logAudit({ actorEmail: admin.email, action: "user.grant", targetType: "user", targetId: id, summary: `Granted ${body.plan}${days ? ` for ${days}d` : " (lifetime)"}` });
-        const plan = body.plan;
+        // No days = no end date. Anything else must be a real number of days, never a silent lifetime grant.
+        if (body.days != null && !isGrantDays(body.days)) {
+          return NextResponse.json({ error: { message: `Days must be a whole number from 1 to ${MAX_GRANT_DAYS}.` } }, { status: 400 });
+        }
+        const grant = { plan: body.plan as GrantPlan, days: body.days ?? null };
+        const outcome = planAfterGrant(target, grant);
+        if (!outcome.ok) return NextResponse.json({ error: { message: outcome.reason } }, { status: 409 });
+        await db.user.update({ where: { id }, data: { plan: outcome.plan, planExpiresAt: outcome.planExpiresAt } });
+        await logAudit({ actorEmail: admin.email, action: "user.grant", targetType: "user", targetId: id, summary: describeGrant(target, grant, outcome) });
+        const plan = outcome.plan;
+        const days = grant.days;
         runAfter("admin-plan-change", () => trackAdminPlanChange(id, { action: "grant", plan, days, actor: admin.email }));
         break;
       }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
       "Side-by-side comparison of HumanizeIt and StealthGPT covering pricing, billing transparency, the free tier, and output quality.",
     type: "article",
     url: "https://humanizeit.app/compare/humanizeit-vs-stealthgpt",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/compare/humanizeit-vs-stealthgpt",

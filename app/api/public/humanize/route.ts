@@ -6,21 +6,32 @@
 // (per minute), and a small per-IP daily limit. Real users who want more are
 // pushed to sign up. This is the only place anonymous LLM calls are allowed.
 // Tones follow the Free plan (Standard only), so signing up is never a step down.
+// A finished rewrite is counted in PostHog (free_humanize_completed) under a
+// fresh id per rewrite, with no person profile and never the text.
 // ===========================================================
 
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { activeProvider } from "@/lib/llm";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/client-ip";
-import { isToneAllowed } from "@/lib/plans";
+import { PLANS, isToneAllowed } from "@/lib/plans";
+import { touchEventProps } from "@/lib/growth/attribution";
+import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
+import { runAfter } from "@/lib/growth/safe";
+import { trackServer } from "@/lib/posthog";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
 const MAX_CHARS = 2500;
 const MAX_WORDS = 300; // per request
 const BURST_PER_MIN = 4; // per IP
 const FREE_PER_DAY = 2; // rewrites per IP per day
+
+// What signing up adds, from lib/plans.ts, so the cap message can't promise more.
+const FREE_ACCOUNT = PLANS.FREE;
+const FREE_ACCOUNT_OFFER = `A free account adds ${FREE_ACCOUNT.rewriteLimit} rewrite${FREE_ACCOUNT.rewriteLimit === 1 ? "" : "s"} a day of up to ${FREE_ACCOUNT.wordsLimit} words; Pro has unlimited rewrites.`;
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 const VALID_INTENSITIES: IntensityLevel[] = ["light", "medium", "heavy"];
@@ -97,7 +108,7 @@ export async function POST(req: Request) {
       {
         error: {
           code: "DAILY_LIMIT_REACHED",
-          message: `You've used your ${FREE_PER_DAY} free rewrites for today. Sign up free for more.`,
+          message: `You've used your ${FREE_PER_DAY} free rewrites for today. ${FREE_ACCOUNT_OFFER}`,
         },
         signupCta: true,
       },
@@ -129,6 +140,16 @@ export async function POST(req: Request) {
   }
 
   const after = analyzeText(humanizedText);
+  const touch = firstTouchOf(await readAttribution());
+  runAfter("public-humanize:analytics", () =>
+    trackServer(randomUUID(), "free_humanize_completed", {
+      word_count: before.wordCount,
+      tone,
+      intensity,
+      ...touchEventProps(touch),
+      $process_person_profile: false,
+    })
+  );
   return NextResponse.json(
     {
       humanizedText,
