@@ -6,15 +6,18 @@
 // applies the kill switch, the allowlist, suppressions and the daily cap; this
 // form never talks to Resend. A script can be inserted with the contact's data
 // filled in, and a send is refused while {placeholders} are left in the text.
+// Test first: Send stays locked until "Send test to me" delivered this exact
+// subject and body to the admin's own inbox (the API enforces it too, see
+// lib/email/personal.ts); any edit locks it again.
 // ===========================================================
 
 import { useId, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { THEME } from "@/lib/theme";
 import type { SendOutcome } from "@/lib/email/send";
 import { composableScripts, fillScript, unfilledPlaceholders, type ScriptVars } from "@/lib/crm/scripts";
-import { Pill } from "@/components/admin/crm-ui";
+import { Pill, disabledStyle, ghostBtn } from "@/components/admin/crm-ui";
 import { FormDialog, FormField, inputStyle, selectStyle } from "./form-dialog";
 
 const MODE_COPY: Record<string, { label: string; color: string; detail: string }> = {
@@ -61,6 +64,39 @@ function ComposerForm({ open, contactId, to, hasMarketingConsent, emailMode, var
   const scripts = composableScripts();
   const mode = MODE_COPY[emailMode] ?? MODE_COPY.off;
   const leftovers = unfilledPlaceholders(`${subject}\n${body}`);
+  // The content a test went out for; Send needs it to match what's in the form.
+  const content = `${subject.trim()}\n${body.trim()}`;
+  const [testedContent, setTestedContent] = useState<string | null>(null);
+  const [testedTo, setTestedTo] = useState<string | null>(null);
+  const [testing, setTesting] = useState(false);
+  // Why the last test didn't go out. Shown in the dialog: toasts sit under the modal's backdrop.
+  const [testError, setTestError] = useState<string | null>(null);
+  const tested = testedContent === content;
+  const canCompose = !!subject.trim() && !!body.trim() && leftovers.length === 0;
+
+  const sendTest = async () => {
+    setTesting(true);
+    setTestError(null);
+    try {
+      const res = await fetch("/api/admin/email/personal/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: subject.trim(), bodyMd: body.trim() }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; to?: string; message?: string; error?: { message?: string } };
+      if (res.ok && data.ok) {
+        setTestedContent(content);
+        setTestedTo(data.to ?? null);
+        toast.success(data.message ?? "Test sent to your inbox.");
+      } else {
+        setTestError(data.message ?? data.error?.message ?? "The test was not sent.");
+      }
+    } catch {
+      setTestError("Network error: the test was not sent.");
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const insert = (sid: string) => {
     setScriptId(sid);
@@ -84,7 +120,7 @@ function ComposerForm({ open, contactId, to, hasMarketingConsent, emailMode, var
         </span>
       }
       submitLabel="Send"
-      submitDisabled={!to || !subject.trim() || !body.trim() || leftovers.length > 0}
+      submitDisabled={!to || !canCompose || !tested || testing}
       onClose={onClose}
       onSubmit={async () => {
         try {
@@ -137,6 +173,29 @@ function ComposerForm({ open, contactId, to, hasMarketingConsent, emailMode, var
           Fill in before sending: {leftovers.map((p) => `{${p}}`).join(", ")}
         </div>
       ) : null}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <button type="button" onClick={sendTest} disabled={!canCompose || testing} style={disabledStyle(ghostBtn, !canCompose || testing)}>
+          {testing ? (
+            <Loader2 size={14} aria-hidden="true" style={{ animation: "crm-spin 0.8s linear infinite" }} />
+          ) : (
+            <Send size={14} aria-hidden="true" />
+          )}
+          Send test to me
+        </button>
+        <span role="status" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: tested ? THEME.human : testError ? THEME.ai : THEME.textMuted }}>
+          {tested ? (
+            <>
+              <CheckCircle2 size={14} aria-hidden="true" /> Test sent{testedTo ? ` to ${testedTo}` : ""}. Check it, then Send.
+            </>
+          ) : testError ? (
+            testError
+          ) : testedContent ? (
+            "Edited since the test: send a new test first."
+          ) : (
+            "Send requires a test to your own inbox first."
+          )}
+        </span>
+      </div>
     </FormDialog>
   );
 }
