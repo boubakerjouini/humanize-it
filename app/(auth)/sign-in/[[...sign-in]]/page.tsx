@@ -1,6 +1,7 @@
 import { SignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { afterAuthPath, authPageUrl } from "@/lib/checkout-intent";
 
 const clerkAppearance = {
   variables: {
@@ -56,7 +57,12 @@ const clerkAppearance = {
   },
 };
 
-export default function SignInPage() {
+type Props = { searchParams: Promise<{ redirect_url?: string | string[] }> };
+
+export default async function SignInPage({ searchParams }: Props) {
+  // A same-origin ?redirect_url= (e.g. a plan picked on the pricing page, carried over from
+  // /sign-up) is where the account lands; anything else lands on the dashboard.
+  const afterSignIn = afterAuthPath((await searchParams).redirect_url);
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -86,7 +92,12 @@ export default function SignInPage() {
         }}>HumanizeIt</span>
       </div>
       <div style={{ position: "relative", zIndex: 1 }}>
-        <SignIn appearance={clerkAppearance} routing="path" path="/sign-in" signUpUrl="/sign-up" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
+        <SignIn
+          appearance={clerkAppearance} routing="path" path="/sign-in"
+          signUpUrl={authPageUrl("/sign-up", afterSignIn)}
+          forceRedirectUrl={afterSignIn} fallbackRedirectUrl={afterSignIn}
+          signUpForceRedirectUrl={afterSignIn}
+        />
       </div>
       <Link href="/" style={{
         fontSize: "13px", color: THEME.textDim, textDecoration: "none", marginTop: "20px",
