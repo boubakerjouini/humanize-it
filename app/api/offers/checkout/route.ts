@@ -7,6 +7,12 @@
 // pay through a subscription: its webhook sets the plan with an expiry, which
 // a later subscription event would overwrite, so those buyers are switched by
 // hand (support email) instead of silently losing what they paid for.
+//
+// A checkout that opened is recorded on the contact's timeline as an
+// offer_checkout_started event with the offer ("founding" | "wordpack"). It is
+// deliberately not a checkout_started: the abandoned-checkout task and email
+// treat that as a subscription checkout, and these buyers never get a
+// subscription, so every paid order would look abandoned.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -17,6 +23,8 @@ import { db } from "@/lib/db";
 import { effectivePlanId } from "@/lib/quota";
 import { foundingVariantId, wordPackConfig, type OneTimeOffer } from "@/lib/plans";
 import { trackServer } from "@/lib/posthog";
+import { recordEvent } from "@/lib/crm/events";
+import { runAfter } from "@/lib/growth/safe";
 import { foundingStatus } from "../shared";
 
 export const runtime = "nodejs";
@@ -108,6 +116,7 @@ export async function POST(req: Request) {
     }
 
     trackServer(clerkId, "offer_checkout_started", { offer });
+    runAfter("offer-checkout-started", () => recordEvent({ userId: user.id, type: "offer_checkout_started", props: { offer } }));
     return NextResponse.json({ url: data.data.attributes.url });
   } catch (err) {
     console.error("[offers/checkout] error:", err);

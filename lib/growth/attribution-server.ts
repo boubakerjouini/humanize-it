@@ -1,6 +1,7 @@
 // ===========================================================
 // lib/growth/attribution-server.ts — Server side of attribution: read the
-// hz_ft / hz_lt cookies of the current request and copy them onto a Contact.
+// hz_ft / hz_lt cookies of the current request (or, where they are never set,
+// the touch a lead form sent) and copy them onto a Contact.
 // First-touch columns are written once (only while firstTouchAt is null);
 // lastTouch is refreshed every time a newer touch is known.
 // ===========================================================
@@ -12,6 +13,7 @@ import {
   FIRST_TOUCH_COOKIE,
   LAST_TOUCH_COOKIE,
   decodeTouch,
+  hasSignal,
   touchToFirstTouchFields,
   type Touch,
 } from "@/lib/growth/attribution";
@@ -37,6 +39,20 @@ export async function readAttribution(): Promise<AttributionSnapshot | null> {
 /** The touch to use as first touch: hz_ft, else hz_lt (e.g. hz_ft was cleared). */
 export function firstTouchOf(snapshot: AttributionSnapshot | null | undefined): Touch | null {
   return snapshot?.first ?? snapshot?.last ?? null;
+}
+
+/**
+ * The cookies' snapshot, or, when no cookie holds a touch (none are set under
+ * GPC or in consent-region time zones), the touch the page sent with the form
+ * (parsePageTouch). Without a signal it is a first touch only, so it never
+ * replaces a better last touch.
+ */
+export function withPageTouch(
+  snapshot: AttributionSnapshot | null,
+  pageTouch: Touch | null
+): AttributionSnapshot | null {
+  if (!pageTouch || firstTouchOf(snapshot)) return snapshot;
+  return { first: pageTouch, last: hasSignal(pageTouch) ? pageTouch : null };
 }
 
 /**

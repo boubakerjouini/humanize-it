@@ -1,12 +1,15 @@
 // ===========================================================
 // /sign-up — Clerk sign-up, plus what we'll email (account mail only; tips
 // are opt-in later) and, while the referral program is on, a note for
-// visitors who arrive with a valid ?ref= code.
+// visitors who arrive with a valid ?ref= code. A same-origin ?redirect_url=
+// (a plan picked on the pricing page, /lifetime) is where the new account
+// lands; anything else lands on the dashboard (lib/checkout-intent.ts).
 // ===========================================================
 
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { THEME, glow } from "@/lib/theme";
+import { afterAuthPath, authPageUrl } from "@/lib/checkout-intent";
 import { normalizeRef } from "@/lib/growth/attribution";
 import { referralsEnabled } from "@/lib/growth/flags";
 import { REFERRAL_REWARD_WORDS } from "@/lib/growth/referral-rules";
@@ -65,11 +68,13 @@ const clerkAppearance = {
   },
 };
 
-type Props = { searchParams: Promise<{ ref?: string | string[] }> };
+type Props = { searchParams: Promise<{ ref?: string | string[]; redirect_url?: string | string[] }> };
 
 export default async function SignUpPage({ searchParams }: Props) {
-  const { ref } = await searchParams;
+  const { ref, redirect_url } = await searchParams;
   const invited = referralsEnabled() && normalizeRef(typeof ref === "string" ? ref : null) !== undefined;
+  // Validated here and passed as forceRedirectUrl, which Clerk prefers over its own query params.
+  const afterSignUp = afterAuthPath(redirect_url);
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -111,7 +116,13 @@ export default async function SignUpPage({ searchParams }: Props) {
         </div>
       ) : null}
       <div style={{ position: "relative", zIndex: 1 }}>
-        <SignUp appearance={clerkAppearance} routing="path" path="/sign-up" signInUrl="/sign-in" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
+        <SignUp
+          appearance={clerkAppearance} routing="path" path="/sign-up"
+          signInUrl={authPageUrl("/sign-in", afterSignUp)}
+          forceRedirectUrl={afterSignUp} fallbackRedirectUrl={afterSignUp}
+          // An existing account that signs in from here (Google, GitHub) goes to the same place.
+          signInForceRedirectUrl={afterSignUp}
+        />
       </div>
       <p style={{
         position: "relative", zIndex: 1, maxWidth: "400px", margin: "16px 16px 0", textAlign: "center",

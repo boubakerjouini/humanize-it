@@ -10,8 +10,9 @@
 
 import { randomBytes } from "node:crypto";
 import { db } from "@/lib/db";
-import type { OrgRole, Prisma } from "@/app/generated/prisma/client";
+import type { OrgRole, Prisma, User } from "@/app/generated/prisma/client";
 import { ORG_SEAT } from "@/lib/plans";
+import { isAdminUser } from "@/lib/admin";
 
 // ---- Slugs & tokens ----
 
@@ -67,6 +68,21 @@ export async function getActiveMembership(userId: string): Promise<MembershipWit
 /** Roles allowed to manage seats, invites and billing. */
 export function isOrgManager(role: OrgRole): boolean {
   return role === "OWNER" || role === "ADMIN";
+}
+
+// ---- Who may hand out seats ----
+//
+// Seats have no checkout yet: no seat variant is on sale, and no webhook bills
+// an organization or takes its seats back. Every seat hands its member Team
+// with no end date, so creating an organization or raising its seat count
+// would give Team away for good. Until seats can be bought, only a platform
+// admin may do either. A Team subscription doesn't qualify: cancelling it
+// would leave every seat it created in place. Existing organizations keep
+// the seats they have.
+
+/** May this user create an organization or add seats to one? Admins only, for now. */
+export function maySeatOthers(user: Pick<User, "email" | "role">): boolean {
+  return isAdminUser(user);
 }
 
 // ---- Seat accounting ----

@@ -12,6 +12,7 @@ import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
 import { TOPIC_LABELS, isTopic } from "@/lib/growth/constants";
 import { ScoreBadge, StagePill, StatusChip, fmtDate, fmtRelative } from "@/components/admin/crm-ui";
 import { Timeline, humanizeKey, type TimelineEntry } from "@/components/admin/crm/contact-bits";
+import { MAX_GRANT_DAYS, isGrantDays, planAfterGrant, type GrantPlan } from "@/app/api/admin/users/grant";
 
 interface Detail {
   user: {
@@ -52,6 +53,8 @@ export default function CustomerPage() {
   const [note, setNote] = useState("");
   const [tag, setTag] = useState("");
   const [grantDays, setGrantDays] = useState("30");
+  // Starts on the account's own plan so the form never suggests a lower one.
+  const [grantPlan, setGrantPlan] = useState<GrantPlan>("PRO");
   const [confirmDel, setConfirmDel] = useState(false);
 
   const load = useCallback(async () => {
@@ -59,7 +62,9 @@ export default function CustomerPage() {
     try {
       const res = await fetch(`/api/admin/users/${id}`);
       if (!res.ok) { toast.error("Failed to load customer."); return; }
-      setD(await res.json());
+      const data = (await res.json()) as Detail;
+      setD(data);
+      setGrantPlan(data.user.plan === "TEAM" ? "TEAM" : "PRO");
     } catch { toast.error("Network error."); } finally { setLoading(false); }
   }, [id]);
   useEffect(() => { void load(); }, [load]);
@@ -91,6 +96,11 @@ export default function CustomerPage() {
   const u = d.user;
   const PlanIcon = PLAN_ICON[u.plan];
   const status = u.paid ? { c: THEME.human, l: "Paid" } : u.plan !== "FREE" ? { c: THEME.accentHi, l: "Comped" } : { c: THEME.textMuted, l: "Free" };
+  // The grant only adds (keeps the higher plan, extends from the current end date): show its result first.
+  const days = Number(grantDays.trim());
+  const grant = isGrantDays(days)
+    ? planAfterGrant({ plan: u.plan, planExpiresAt: u.planExpiresAt ? new Date(u.planExpiresAt) : null }, { plan: grantPlan, days })
+    : null;
 
   return (
     <div style={{ maxWidth: 1040, margin: "0 auto", padding: "28px 28px 64px", fontFamily: THEME.fontSans }}>
@@ -123,9 +133,12 @@ export default function CustomerPage() {
           </select>
         </Field>
         <Field label="Grant">
-          <select id="grantPlan" disabled={busy} defaultValue="PRO" style={sel}><option>PRO</option><option>TEAM</option></select>
-          <input value={grantDays} onChange={(e) => setGrantDays(e.target.value)} style={{ ...sel, width: 56 }} aria-label="Grant days" />
-          <button disabled={busy} onClick={() => action({ action: "grant", plan: (document.getElementById("grantPlan") as HTMLSelectElement)?.value ?? "PRO", days: parseInt(grantDays, 10) || null }, "Granted")} style={btn}><Gift size={13} aria-hidden="true" /> Grant</button>
+          <select value={grantPlan} disabled={busy} onChange={(e) => setGrantPlan(e.target.value === "TEAM" ? "TEAM" : "PRO")} style={sel} aria-label="Grant plan"><option>PRO</option><option>TEAM</option></select>
+          <input value={grantDays} onChange={(e) => setGrantDays(e.target.value)} inputMode="numeric" style={{ ...sel, width: 56 }} aria-label="Days to add" />
+          <button disabled={busy || !grant?.ok} onClick={() => action({ action: "grant", plan: grantPlan, days }, "Granted")} style={btn}><Gift size={13} aria-hidden="true" /> Grant</button>
+          <span style={{ fontSize: 11, color: grant?.ok ? THEME.textMuted : THEME.warn, maxWidth: 280 }}>
+            {!grant ? `Days: 1 to ${MAX_GRANT_DAYS}` : grant.ok ? `→ ${grant.plan}${grant.planExpiresAt ? ` until ${fmt(grant.planExpiresAt.toISOString())}` : ", no end date"}` : grant.reason}
+          </span>
         </Field>
         <button disabled={busy} onClick={() => action({ action: "resetQuota" }, "Quota reset")} style={ghost}><RotateCcw size={13} aria-hidden="true" /> Reset quota</button>
         <button disabled={busy} onClick={() => action({ action: "setRole", role: u.role === "ADMIN" ? "USER" : "ADMIN" }, "Role updated")} style={ghost}><ShieldCheck size={13} aria-hidden="true" /> {u.role === "ADMIN" ? "Revoke admin" : "Make admin"}</button>

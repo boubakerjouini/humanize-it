@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import { Sora, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import { PostHogPageview } from "@/components/posthog-pageview";
-import { VercelAnalytics } from "@/components/vercel-analytics";
-import Script from "next/script";
+import { VercelAnalytics } from "@/components/analytics/vercel-analytics";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import "./globals.css";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 
@@ -152,24 +152,8 @@ export default function RootLayout({
               visible content, so it must not live in the global <head>. */}
         </head>
         <body className="antialiased">
-          {process.env.NEXT_PUBLIC_GA_ID && (
-            <>
-              <Script
-                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-                strategy="afterInteractive"
-              />
-              <Script id="google-analytics" strategy="afterInteractive">
-                {`
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  var hzLoc = new URL(location.href);
-                  hzLoc.searchParams.delete('t'); // signed email-link token
-                  gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { page_location: hzLoc.toString() });
-                `}
-              </Script>
-            </>
-          )}
+          {/* Only for visitors it may set cookies for, never on /admin (lib/analytics/consent.ts). */}
+          {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_ID} />}
           <Providers>
             <Suspense fallback={null}>
               <PostHogPageview />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { kitStyles, Breadcrumbs, FaqSection, PageCta } from "@/components/seo/page-kit";
 import { THEME } from "@/lib/theme";
 
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: ABSOLUTE_URL,

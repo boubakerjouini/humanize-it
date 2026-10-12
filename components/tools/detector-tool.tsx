@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import posthog from "posthog-js";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { ReportCapture, buildReportContext } from "@/components/growth/report-capture";
@@ -34,7 +35,9 @@ const DEEP_MIN_WORDS = 25;
  * text stays in the browser. Only the optional deep scan sends the text to
  * /api/detect (and on to the AI provider). The emailed report carries scores
  * and pattern labels, never the text. Shows the full transparent breakdown
- * competitors hide, then converts to the humanizer / signup.
+ * competitors hide, then converts to the humanizer / signup. A finished
+ * instant check is counted in PostHog (free_check_completed) with its word
+ * count and score band only; the deep scan is counted by its API route.
  */
 export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: string }) {
   const [text, setText] = useState("");
@@ -57,7 +60,10 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
   function runInstant() {
     setDeep(null);
     setDeepError(null);
-    setResult(canAnalyze ? analyzeText(text) : null);
+    const r = canAnalyze ? analyzeText(text) : null;
+    setResult(r);
+    // PostHog only runs where instrumentation-client.ts allows it; never send the text.
+    if (r && posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand });
   }
 
   async function runDeepScan() {

@@ -62,6 +62,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     e("/compare", "2026-10-06", 0.8),
     e("/use-cases", "2026-10-06", 0.7),
     e("/docs/api", "2026-10-06", 0.5),
+    e("/about", "2026-10-08", 0.5),
 
     // Free tools
     e("/ai-detector", "2026-10-06", 0.9, "weekly"),

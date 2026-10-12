@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME, glow } from "@/lib/theme";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
       "Side-by-side comparison of HumanizeIt and Undetectable.ai covering price, quality, transparency, and features.",
     type: "article",
     url: "https://humanizeit.app/compare/humanizeit-vs-undetectable-ai",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: "https://humanizeit.app/compare/humanizeit-vs-undetectable-ai",

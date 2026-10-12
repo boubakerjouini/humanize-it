@@ -1,6 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+// Paths that never go through auth.protect(). Only app areas (isAppArea below)
+// are protected at all, so for /api this list is the allowlist of public
+// endpoints; the page entries record what must stay public.
 const isPublicRoute = createRouteMatcher([
   "/",
   // Marketing surface — MUST be crawlable. `/compare(.*)` (not exact `/compare`)
@@ -60,9 +63,33 @@ const isPublicRoute = createRouteMatcher([
   "/manifest.webmanifest",
 ]);
 
+// The signed-in app, the admin area and the API: the only places protected.
+// Any other path is a public page or an unknown URL, and an unknown URL must
+// get the 404 page, not a redirect to the Clerk sign-in.
+//
+// Fails closed. Next also matches the percent-decoded path against app routes,
+// so the check decodes it too, ignores case and repeated or back slashes, and
+// treats any non-word character after the prefix as a boundary (`/dashboard.rsc`).
+// `/dashboards` or `/api-docs` stay outside and get the 404.
+function isAppArea(pathname: string): boolean {
+  let path = pathname;
+  for (let i = 0; i < 3; i++) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(path);
+    } catch {
+      break;
+    }
+    if (decoded === path) break;
+    path = decoded;
+  }
+  return /^[\\/]+(?:dashboard|admin|api|trpc)(?![\w-])/i.test(path);
+}
+
 // Standard Clerk middleware: runs on ALL routes so session cookies are always
 // processed (enabling auth() to return userId for logged-in users on public
-// routes). Only PROTECTS non-public routes (redirects to sign-in if not authed).
+// routes). Only PROTECTS the app areas outside the public list (sign-in for
+// pages, 404 for API calls when signed out).
 export default clerkMiddleware(async (auth, req) => {
   // Signed-in users who hit the marketing homepage go straight to the app.
   // Other marketing routes (/blog, /compare, …) stay browsable while signed in.
@@ -73,7 +100,7 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  if (!isPublicRoute(req)) {
+  if (isAppArea(req.nextUrl.pathname) && !isPublicRoute(req)) {
     await auth.protect();
   }
 });

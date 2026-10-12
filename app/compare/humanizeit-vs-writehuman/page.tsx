@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { OG_IMAGES } from "@/lib/seo/og";
 import { THEME } from "@/lib/theme";
 import { kitStyles, Breadcrumbs, FaqSection, PageCta } from "@/components/seo/page-kit";
 
@@ -8,7 +9,7 @@ const ABSOLUTE_URL = "https://humanizeit.app/compare/humanizeit-vs-writehuman";
 export const metadata: Metadata = {
   title: "HumanizeIt vs WriteHuman (2026): Honest Comparison",
   description:
-    "An honest, side-by-side comparison of HumanizeIt and WriteHuman. We compare features, detection bypass, transparency, and pricing so you can pick the right tool.",
+    "An honest, side-by-side comparison of HumanizeIt and WriteHuman. We compare features, how each handles AI detectors, transparency, and pricing so you can pick the right tool.",
   keywords: [
     "HumanizeIt vs WriteHuman",
     "WriteHuman alternative",
@@ -21,10 +22,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "HumanizeIt vs WriteHuman (2026): Honest Comparison",
     description:
-      "A side-by-side look at HumanizeIt and WriteHuman covering features, detection bypass, transparency, and pricing.",
+      "A side-by-side look at HumanizeIt and WriteHuman covering features, how each handles AI detectors, transparency, and pricing.",
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",
+    images: OG_IMAGES,
   },
   alternates: {
     canonical: ABSOLUTE_URL,
@@ -50,8 +52,8 @@ export default function HumanizeItVsWriteHuman() {
         WriteHuman is one of the most recognizable names in the AI-humanizer space, and it shows up
         constantly when people search for a way to make ChatGPT or Claude output read like a real
         person wrote it. HumanizeIt competes in the same category. This page is a straight, honest
-        look at how the two tools differ across features, detection bypass, transparency, and
-        pricing &mdash; written so you can decide for yourself rather than being sold a verdict. If
+        look at how the two tools differ across features, how each handles AI detectors, transparency,
+        and pricing &mdash; written so you can decide for yourself rather than being sold a verdict. If
         you want to skim other matchups first, our full{" "}
         <Link href="/compare" style={{ color: THEME.brandHi }}>
           comparison hub
@@ -98,7 +100,7 @@ export default function HumanizeItVsWriteHuman() {
         .
       </p>
 
-      <h2 style={kitStyles.h2}>Detection bypass: what is realistic</h2>
+      <h2 style={kitStyles.h2}>AI detectors: what is realistic</h2>
       <p style={kitStyles.p}>
         This is the area where honesty matters most, because the whole category is full of inflated
         claims. No humanizer &mdash; not WriteHuman, not HumanizeIt, not anyone &mdash; can promise a
@@ -188,7 +190,7 @@ export default function HumanizeItVsWriteHuman() {
             a: "Yes. HumanizeIt does the same core paste-and-rewrite job as WriteHuman and adds a built-in AI detector, a documented API, bulk-friendly processing, a usable free tier, and a Founding 100 offer (two years of Pro for $99, while it lasts). Whether it is better for you depends on whether you value those extras or prefer WriteHuman's minimal interface.",
           },
           {
-            q: "Can either tool guarantee I will bypass AI detectors?",
+            q: "Can either tool guarantee a pass on AI detectors?",
             a: "No, and you should be skeptical of any humanizer that claims to. Detectors update their models regularly, so no rewrite stays undetectable forever. Both tools can reduce AI-likelihood scores on most major detectors, but the safe practice is to verify your output against a real detector before submitting.",
           },
           {

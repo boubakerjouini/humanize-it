@@ -6,17 +6,30 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { THEME, glow } from "@/lib/theme";
+import { ORG_SEAT } from "@/lib/plans";
 
 interface Member { membershipId: string; userId: string; email: string; name: string | null; role: string; isSelf: boolean; }
 interface Invite { id: string; email: string; role: string; token: string; expiresAt: string; }
 interface OrgData {
   organization: { id: string; name: string; slug: string; seatsTotal: number; status: string; pooledWordsLimit: number; wordsUsed: number } | null;
+  /** No org yet: may this user start one (admins only until seats can be bought)? */
+  canCreate?: boolean;
   role?: string;
   canManage?: boolean;
+  /** Managers only: may they add seats (same rule as canCreate)? */
+  canAddSeats?: boolean;
   usage?: { seatsTotal: number; used: number; available: number; pendingInvites: number };
   members?: Member[];
   invitations?: Invite[];
 }
+
+type ApiError = { error?: { code?: string; message: string } };
+
+/** The API's 403 code when someone other than an admin starts an organization or adds seats. */
+const SEATS_ON_REQUEST = "SEATS_ON_REQUEST";
+
+/** Seats can't be bought yet, so they're asked for by email. */
+const SEATS_MAILTO = "mailto:support@humanizeit.app?subject=Organization%20seats";
 
 export default function OrganizationPage() {
   const [data, setData] = useState<OrgData | null>(null);
@@ -52,8 +65,12 @@ export default function OrganizationPage() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, seats }),
       });
-      const d = await res.json() as { error?: { message: string } };
-      if (!res.ok) { toast.error(d.error?.message ?? "Could not create organization."); return; }
+      const d = await res.json() as ApiError;
+      if (!res.ok) {
+        if (d.error?.code === SEATS_ON_REQUEST) setData(prev => (prev ? { ...prev, canCreate: false } : prev));
+        toast.error(d.error?.message ?? "Could not create organization.");
+        return;
+      }
       toast.success("Organization created!");
       await load();
     } catch { toast.error("Network error."); }
@@ -94,14 +111,21 @@ export default function OrganizationPage() {
   };
 
   const updateSeats = async (next: number) => {
+    // Only an admin can add seats for now, so a removed seat can't be added back from here.
+    if (next < (data?.organization?.seatsTotal ?? 0) && !data?.canAddSeats
+      && !window.confirm("Adding seats isn't self-serve yet, so you won't be able to add this seat back from here. Remove it?")) return;
     setBusy(true);
     try {
       const res = await fetch("/api/organizations", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ seatsTotal: next }),
       });
-      const d = await res.json() as { error?: { message: string } };
-      if (!res.ok) { toast.error(d.error?.message ?? "Could not update seats."); return; }
+      const d = await res.json() as ApiError;
+      if (!res.ok) {
+        if (d.error?.code === SEATS_ON_REQUEST) setData(prev => (prev ? { ...prev, canAddSeats: false } : prev));
+        toast.error(d.error?.message ?? "Could not update seats.");
+        return;
+      }
       await load();
     } catch { toast.error("Network error."); }
     finally { setBusy(false); }
@@ -128,38 +152,55 @@ export default function OrganizationPage() {
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.02em", marginBottom: 6 }}>Start an organization</h1>
           <p style={{ fontSize: 14, color: THEME.textDim, lineHeight: 1.6 }}>
-            Buy seats and invite your team. Every seated member gets full Pro/Team features under one workspace.
+            Invite your team. Every seated member gets Team features under one workspace.
           </p>
         </div>
 
-        <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl, padding: 28, boxShadow: glow(THEME.brand, 0.12) }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.textDim, marginBottom: 6 }}>Organization name</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Acme Inc." style={{
-            width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${THEME.border}`,
-            background: THEME.surface1, color: THEME.text, fontSize: 14, outline: "none", marginBottom: 18,
-          }} />
-
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.textDim, marginBottom: 6 }}>Seats</label>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-            <input type="range" min={2} max={50} value={seats} onChange={e => setSeats(Number(e.target.value))} style={{ flex: 1, accentColor: THEME.brand }} />
-            <span className="tnum" style={{ fontSize: 20, fontWeight: 700, color: THEME.text, minWidth: 36, textAlign: "right" }}>{seats}</span>
+        {data?.canCreate === false ? (
+          <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl, padding: 28, textAlign: "center" }}>
+            <p style={{ fontSize: 14, color: THEME.text, lineHeight: 1.6, marginBottom: 18 }}>
+              Organizations aren&apos;t self-serve yet, because seats can&apos;t be bought online.
+            </p>
+            <a href={SEATS_MAILTO} style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "12px 22px", borderRadius: 12,
+              background: THEME.brand, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none", boxShadow: glow(THEME.brand, 0.3),
+            }}>
+              <Mail size={16} aria-hidden="true" /> Email us about seats
+            </a>
+            <p style={{ fontSize: 12, color: THEME.textMuted, marginTop: 14 }}>
+              Tell us how many seats you need ({ORG_SEAT.minSeats} or more) at <a href={SEATS_MAILTO} style={{ color: THEME.brandHi }}>support@humanizeit.app</a>.
+            </p>
           </div>
-          <div style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 20 }}>
-            ${seats * 12}/mo · {(seats * 100000).toLocaleString()} pooled words/month
-          </div>
+        ) : (
+          <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusXl, padding: 28, boxShadow: glow(THEME.brand, 0.12) }}>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.textDim, marginBottom: 6 }}>Organization name</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Acme Inc." style={{
+              width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${THEME.border}`,
+              background: THEME.surface1, color: THEME.text, fontSize: 14, outline: "none", marginBottom: 18,
+            }} />
 
-          <button onClick={createOrg} disabled={busy} style={{
-            width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
-            padding: "12px", borderRadius: 12, border: "none", background: THEME.brand, color: "#fff",
-            fontSize: 14, fontWeight: 700, cursor: busy ? "not-allowed" : "pointer", boxShadow: glow(THEME.brand, 0.3),
-          }}>
-            {busy ? <Loader2 size={16} style={{ animation: "spin 0.8s linear infinite" }} aria-hidden="true" /> : <Building2 size={16} aria-hidden="true" />}
-            Create organization
-          </button>
-          <p style={{ fontSize: 11, color: THEME.textMuted, textAlign: "center", marginTop: 10 }}>
-            You become the owner and take the first seat.
-          </p>
-        </div>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: THEME.textDim, marginBottom: 6 }}>Seats</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+              <input type="range" min={ORG_SEAT.minSeats} max={50} value={seats} onChange={e => setSeats(Number(e.target.value))} style={{ flex: 1, accentColor: THEME.brand }} />
+              <span className="tnum" style={{ fontSize: 20, fontWeight: 700, color: THEME.text, minWidth: 36, textAlign: "right" }}>{seats}</span>
+            </div>
+            <div style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 20 }}>
+              {(seats * ORG_SEAT.wordsPerSeat).toLocaleString()} pooled words/month
+            </div>
+
+            <button onClick={createOrg} disabled={busy} style={{
+              width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+              padding: "12px", borderRadius: 12, border: "none", background: THEME.brand, color: "#fff",
+              fontSize: 14, fontWeight: 700, cursor: busy ? "not-allowed" : "pointer", boxShadow: glow(THEME.brand, 0.3),
+            }}>
+              {busy ? <Loader2 size={16} style={{ animation: "spin 0.8s linear infinite" }} aria-hidden="true" /> : <Building2 size={16} aria-hidden="true" />}
+              Create organization
+            </button>
+            <p style={{ fontSize: 11, color: THEME.textMuted, textAlign: "center", marginTop: 10 }}>
+              You become the owner and take the first seat.
+            </p>
+          </div>
+        )}
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -169,6 +210,7 @@ export default function OrganizationPage() {
   const org = data.organization;
   const usage = data.usage!;
   const canManage = data.canManage;
+  const canAddSeats = !!data.canAddSeats;
   const seatPct = Math.round((usage.used / Math.max(1, usage.seatsTotal)) * 100);
 
   return (
@@ -198,9 +240,14 @@ export default function OrganizationPage() {
             <span style={{ fontSize: 12, color: THEME.textDim }}>Adjust seats:</span>
             <button onClick={() => updateSeats(org.seatsTotal - 1)} disabled={busy || org.seatsTotal <= usage.used} style={seatBtn}>−</button>
             <span className="tnum" style={{ fontSize: 15, fontWeight: 700, color: THEME.text, minWidth: 24, textAlign: "center" }}>{org.seatsTotal}</span>
-            <button onClick={() => updateSeats(org.seatsTotal + 1)} disabled={busy} style={seatBtn}>+</button>
-            <span style={{ fontSize: 11, color: THEME.textMuted, marginLeft: 6 }}>${org.seatsTotal * 12}/mo</span>
+            <button onClick={() => updateSeats(org.seatsTotal + 1)} disabled={busy || !canAddSeats} style={{ ...seatBtn, opacity: canAddSeats ? 1 : 0.45 }}>+</button>
+            <span style={{ fontSize: 11, color: THEME.textMuted, marginLeft: 6 }}>{org.pooledWordsLimit.toLocaleString()} pooled words/month</span>
           </div>
+        )}
+        {canManage && !canAddSeats && (
+          <p style={{ fontSize: 11, color: THEME.textMuted, marginTop: 10 }}>
+            Adding seats isn&apos;t self-serve yet. <a href={SEATS_MAILTO} style={{ color: THEME.brandHi }}>Email us for more seats</a>
+          </p>
         )}
       </div>
 
@@ -227,7 +274,11 @@ export default function OrganizationPage() {
               <Plus size={14} aria-hidden="true" /> Invite
             </button>
           </div>
-          {usage.available <= 0 && <p style={{ fontSize: 11, color: THEME.warn, marginTop: 8 }}>No seats available — add seats above to invite more people.</p>}
+          {usage.available <= 0 && (
+            <p style={{ fontSize: 11, color: THEME.warn, marginTop: 8 }}>
+              {canAddSeats ? "No seats available — add seats above to invite more people." : "No seats available. Remove a member or revoke an invite to free one."}
+            </p>
+          )}
         </div>
       )}
 

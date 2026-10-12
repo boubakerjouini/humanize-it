@@ -1,16 +1,21 @@
 // ===========================================================
 // lib/crm/metrics.ts — Numbers for /admin/funnel.
 //
-// The funnel is lead → signup → activated → paying, cut by first-touch channel
-// and by lead source. "Activated" means a first document within 7 days of
-// signup. Cohorts are by when a contact was first created, so a lead captured
-// in the window who signed up later still counts for its source. Every query
-// on a growth table falls back to empty, so the page renders on a database
-// that lacks them. Signup series and `since` come from lib/admin-metrics.ts.
+// The funnel is lead → signup → activated → paying, cut by first-touch channel,
+// lead source, UTM source and UTM campaign. "Activated" means a first document
+// within 7 days of signup. Cohorts are by when a contact was first created, so
+// a lead captured in the window who signed up later still counts for its
+// source. Test and internal contacts never count (isTestOrInternalContact).
+// Every query on a growth table falls back to empty, so the page renders on a
+// database that lacks them. Signup series and `since` come from
+// lib/admin-metrics.ts.
 // ===========================================================
 
 import { db } from "@/lib/db";
+import type { Prisma } from "@/app/generated/prisma/client";
 import { since, type DayPoint } from "@/lib/admin-metrics";
+import { adminEmails } from "@/lib/admin";
+import { canonicalForLimits } from "@/lib/email/address";
 import { MAGNET_SLUGS, PUBLIC_LEAD_SOURCES } from "@/lib/growth/constants";
 import { outreachDailyGoal } from "@/lib/growth/flags";
 import { FOUNDER_SERVICE_KINDS, monthStartUtc, type FounderService } from "@/lib/plans";
@@ -48,6 +53,65 @@ function countByDay(dates: Date[]): Map<string, number> {
 const activatedWithin = (firstDocumentAt: Date | null, signedUpAt: Date | null | undefined) =>
   !!firstDocumentAt && !!signedUpAt && firstDocumentAt.getTime() - signedUpAt.getTime() <= ACTIVATION_DAYS * DAY_MS;
 
+// ── Who counts ──────────────────────────────────────────────────────────────
+
+/** Resend's test inboxes (delivered@, bounced@…): QA traffic, never a person. */
+const TEST_EMAIL_DOMAIN = "@resend.dev";
+/** The tag the founder puts on QA contacts in /admin/contacts or /admin/users. */
+const TEST_TAG = "test";
+
+type TagRows = { tag: { name: string } }[];
+type CountableContact = { email: string | null; tags?: TagRows; user: { role: string; tags?: TagRows } | null };
+
+const tagSelect = { select: { tag: { select: { name: true } } } } as const;
+/** What isTestOrInternalContact reads, on the contact and on its account. */
+const countableSelect = { email: true, tags: tagSelect } satisfies Prisma.ContactSelect;
+const countableUserSelect = { role: true, tags: tagSelect } satisfies Prisma.UserSelect;
+
+/** Allowlisted admin addresses, folded like canonicalForLimits (no +tag, no Gmail dots). */
+function internalAddresses(): Set<string> {
+  return new Set([...adminEmails()].map(canonicalForLimits));
+}
+
+const taggedTest = (rows: TagRows | undefined) => !!rows?.some((t) => t.tag.name.trim().toLowerCase() === TEST_TAG);
+
+/**
+ * Test and internal contacts: tagged "test" (the contact or its account), a
+ * Resend test inbox, an admin's own account, or an allowlisted admin address
+ * under any +tag or Gmail-dot spelling. They are left out of every count on
+ * the funnel. Pure.
+ */
+export function isTestOrInternalContact(c: CountableContact, internal: ReadonlySet<string>): boolean {
+  if (c.user?.role === "ADMIN" || taggedTest(c.tags) || taggedTest(c.user?.tags)) return true;
+  const email = c.email?.trim().toLowerCase();
+  if (!email) return false;
+  return email.endsWith(TEST_EMAIL_DOMAIN) || internal.has(canonicalForLimits(email));
+}
+
+/** New since `from`: no account, or an account created since then too (not an old one the backfill just linked). */
+const newSince = (from: Date): Prisma.ContactWhereInput => ({ OR: [{ userId: null }, { user: { is: { createdAt: { gte: from } } } }] });
+
+// ── Leads ───────────────────────────────────────────────────────────────────
+//
+// One definition for the KPI, the per-day chart and the attribution tables: a
+// lead is a new Contact that a public lead form created (source in
+// PUBLIC_LEAD_SOURCES), counted on Contact.createdAt. Contacts are unique per
+// email, so a repeat capture, or a capture from someone who already had an
+// account (and so a contact), is never a new lead. Test and internal contacts
+// are left out.
+
+async function leadsIn(window: { gte: Date; lt?: Date }): Promise<{ createdAt: Date; emailVerifiedAt: Date | null }[]> {
+  const internal = internalAddresses();
+  const rows = await db.contact
+    .findMany({
+      where: { source: { in: LEAD_SOURCES }, createdAt: window, ...newSince(window.gte) },
+      select: { createdAt: true, emailVerifiedAt: true, ...countableSelect, user: { select: countableUserSelect } },
+      take: MAX_ROWS,
+    })
+    .catch(() => []);
+  return rows.filter((c) => !isTestOrInternalContact(c, internal));
+}
+
 // ── Funnel KPIs ─────────────────────────────────────────────────────────────
 
 export type FunnelCounts = {
@@ -60,9 +124,8 @@ export type FunnelCounts = {
 
 async function funnelBetween(from: Date, to: Date): Promise<FunnelCounts> {
   const window = { gte: from, lt: to };
-  const [leads, leadsConfirmed, signups, signupContacts, payingEvents] = await Promise.all([
-    db.contact.count({ where: { source: { in: LEAD_SOURCES }, createdAt: window } }).catch(() => 0),
-    db.contact.count({ where: { source: { in: LEAD_SOURCES }, createdAt: window, emailVerifiedAt: { not: null } } }).catch(() => 0),
+  const [leads, signups, signupContacts, payingEvents] = await Promise.all([
+    leadsIn(window),
     db.user.count({ where: { createdAt: window } }),
     db.contact
       .findMany({
@@ -76,8 +139,8 @@ async function funnelBetween(from: Date, to: Date): Promise<FunnelCounts> {
       .catch(() => []),
   ]);
   return {
-    leads,
-    leadsConfirmed,
+    leads: leads.length,
+    leadsConfirmed: leads.filter((c) => c.emailVerifiedAt).length,
     signups,
     activated: signupContacts.filter((c) => activatedWithin(c.firstDocumentAt, c.user?.createdAt)).length,
     newPaying: payingEvents.length,
@@ -101,36 +164,38 @@ export type AttributionRow = {
   paying: number;
 };
 
-/**
- * People who first showed up in the window, grouped by first-touch channel or
- * by lead source: how many came in as leads, signed up, activated and pay now.
- * "First showed up" is the earlier of the contact's and the account's creation,
- * so an old account whose contact the backfill created today isn't counted as new.
- */
-export async function getAttributionTable(days: number, by: "channel" | "source"): Promise<AttributionRow[]> {
-  const from = since(days);
-  const rows = await db.contact
-    .findMany({
-      where: { createdAt: { gte: from }, OR: [{ userId: null }, { user: { is: { createdAt: { gte: from } } } }] },
-      select: {
-        source: true,
-        channel: true,
-        firstDocumentAt: true,
-        user: {
-          select: {
-            createdAt: true,
-            subscription: { select: { status: true } },
-            memberships: { where: { seatActive: true }, select: { organization: { select: { lsSubscriptionId: true, status: true } } } },
-          },
-        },
-      },
-      take: MAX_ROWS,
-    })
-    .catch(() => []);
+export type AttributionDimension = "channel" | "source" | "utmSource" | "utmCampaign";
 
+const cohortSelect = {
+  ...countableSelect,
+  source: true,
+  channel: true,
+  utmSource: true,
+  utmCampaign: true,
+  firstDocumentAt: true,
+  user: {
+    select: {
+      ...countableUserSelect,
+      createdAt: true,
+      subscription: { select: { status: true } },
+      memberships: { where: { seatActive: true }, select: { organization: { select: { lsSubscriptionId: true, status: true } } } },
+    },
+  },
+} satisfies Prisma.ContactSelect;
+
+export type CohortContact = Prisma.ContactGetPayload<{ select: typeof cohortSelect }>;
+
+/**
+ * Group the cohort by one dimension: how many came in as leads, signed up,
+ * activated and pay now. The UTM tables list tagged people only; everyone
+ * else still shows under their channel and lead source. Pure.
+ */
+export function groupAttribution(cohort: readonly CohortContact[], by: AttributionDimension): AttributionRow[] {
   const table = new Map<string, AttributionRow>();
-  for (const c of rows) {
-    const key = (by === "channel" ? c.channel : c.source) ?? "unknown";
+  for (const c of cohort) {
+    const value = c[by];
+    if (value == null && (by === "utmSource" || by === "utmCampaign")) continue;
+    const key = value ?? "unknown";
     const row = table.get(key) ?? { key, people: 0, leads: 0, signups: 0, activated: 0, paying: 0 };
     row.people++;
     if (LEAD_SOURCES.includes(c.source)) row.leads++;
@@ -146,6 +211,27 @@ export async function getAttributionTable(days: number, by: "channel" | "source"
   return [...table.values()].sort((a, b) => b.people - a.people || a.key.localeCompare(b.key));
 }
 
+/**
+ * People who first showed up in the window, grouped by first-touch channel,
+ * lead source, UTM source and UTM campaign (one query). "First showed up" is
+ * the earlier of the contact's and the account's creation, so an old account
+ * whose contact the backfill created today isn't counted as new.
+ */
+export async function getAttributionTables(days: number): Promise<Record<AttributionDimension, AttributionRow[]>> {
+  const from = since(days);
+  const internal = internalAddresses();
+  const rows = await db.contact
+    .findMany({ where: { createdAt: { gte: from }, ...newSince(from) }, select: cohortSelect, take: MAX_ROWS })
+    .catch(() => []);
+  const cohort = rows.filter((c) => !isTestOrInternalContact(c, internal));
+  return {
+    channel: groupAttribution(cohort, "channel"),
+    source: groupAttribution(cohort, "source"),
+    utmSource: groupAttribution(cohort, "utmSource"),
+    utmCampaign: groupAttribution(cohort, "utmCampaign"),
+  };
+}
+
 /** Column totals of an attribution table: the period's cohort funnel. */
 export function cohortTotals(rows: readonly AttributionRow[]): Omit<AttributionRow, "key"> {
   return rows.reduce(
@@ -158,14 +244,15 @@ export function cohortTotals(rows: readonly AttributionRow[]): Omit<AttributionR
 
 export type MagnetRow = { slug: string; captures: number; confirmed: number; signups: number };
 
-/** Per lead magnet: people who asked for it in the window, how many confirmed, how many signed up. */
+/** Per lead magnet: people who asked for it in the window (test and internal contacts left out), how many confirmed, how many signed up. */
 export async function getMagnetTable(days: number): Promise<MagnetRow[]> {
   const from = since(days);
-  const [events, contacts] = await Promise.all([
+  const internal = internalAddresses();
+  const [allEvents, allContacts] = await Promise.all([
     db.contactEvent
       .findMany({
         where: { type: "lead_captured", occurredAt: { gte: from } },
-        select: { contactId: true, props: true, contact: { select: { emailVerifiedAt: true, userId: true } } },
+        select: { contactId: true, props: true, contact: { select: { emailVerifiedAt: true, userId: true, ...countableSelect, user: { select: countableUserSelect } } } },
         take: MAX_ROWS,
       })
       .catch(() => []),
@@ -173,11 +260,13 @@ export async function getMagnetTable(days: number): Promise<MagnetRow[]> {
     db.contact
       .findMany({
         where: { createdAt: { gte: from }, magnets: { isEmpty: false } },
-        select: { id: true, magnets: true, emailVerifiedAt: true, userId: true },
+        select: { id: true, magnets: true, emailVerifiedAt: true, userId: true, ...countableSelect, user: { select: countableUserSelect } },
         take: MAX_ROWS,
       })
       .catch(() => []),
   ]);
+  const events = allEvents.filter((e) => !isTestOrInternalContact(e.contact, internal));
+  const contacts = allContacts.filter((c) => !isTestOrInternalContact(c, internal));
 
   const people = new Map<string, Map<string, { verified: boolean; user: boolean }>>();
   const add = (slug: string, id: string, verified: boolean, user: boolean) => {
@@ -253,9 +342,7 @@ export async function getOutreachStats(days = 30): Promise<OutreachStats> {
 // ── Leads per day ───────────────────────────────────────────────────────────
 
 export async function getLeadSeries(days: number): Promise<DayPoint[]> {
-  const rows = await db.contact
-    .findMany({ where: { source: { in: LEAD_SOURCES }, createdAt: { gte: since(days) } }, select: { createdAt: true }, take: MAX_ROWS })
-    .catch(() => []);
+  const rows = await leadsIn({ gte: since(days) });
   return zeroFill(countByDay(rows.map((r) => r.createdAt)), days);
 }
 
