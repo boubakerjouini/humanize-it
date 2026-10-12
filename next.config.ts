@@ -25,6 +25,17 @@ const nextConfig: NextConfig = {
         destination: "/bypass",
         statusCode: 301,
       },
+      // Addresses people type or guess from a DM, a directory form or an AI
+      // answer. Without these they get the 404 page.
+      ...[
+        ["/pricing", "/#pricing"],
+        ["/signup", "/sign-up"],
+        ["/login", "/sign-in"],
+        ["/signin", "/sign-in"],
+        ["/contact", "/about#contact"],
+        ["/support", "/about#contact"],
+        ["/about-us", "/about"],
+      ].map(([from, to]) => ({ source: `${from}{/}?`, destination: to, statusCode: 301 })),
     ];
   },
   async rewrites() {
