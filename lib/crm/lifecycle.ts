@@ -99,6 +99,8 @@ export function computeStage(i: StageInput): StageResult {
   const paying = (status !== null && PAYING.has(status)) || i.orgSeatActive;
 
   if (status !== null && PAYMENT_ISSUE.has(status)) return { stage: "at_risk", reason: "payment issue or paused" };
+  // Cancelled at period end: still paid up and on the plan, but leaving.
+  if (status === "cancelled" && i.effectivePlan !== "FREE") return { stage: "at_risk", reason: "cancelled, ends at period end" };
   if (paying && inactive(14)) return { stage: "at_risk", reason: "paying, inactive 14d" };
   if (paying) return { stage: "customer", reason: "active subscription" };
   if (i.hadPaidSubscription && i.effectivePlan === "FREE") return { stage: "churned", reason: "subscription ended" };
