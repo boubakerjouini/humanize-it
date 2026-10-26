@@ -3,7 +3,7 @@
 //
 // Two years of Pro for $99, paid once, hard cap of 100 buyers. The counter is
 // read from the database on every request (app/api/offers/shared.ts) and the
-// CTA closes for good at 100. Until the LemonSqueezy product exists, the CTA
+// CTA closes for good at 100. Until the Polar product is set, the CTA
 // is a waitlist. Copy rule: real scarcity only, no detector promises.
 // ===========================================================
 

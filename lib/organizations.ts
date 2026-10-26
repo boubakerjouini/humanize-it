@@ -125,7 +125,7 @@ export async function recomputeUserPlan(userId: string): Promise<void> {
 
   let plan: "FREE" | "PRO" | "TEAM" = "FREE";
   if (hasPaidSub) {
-    // Keep whatever their own subscription grants (looked up by variant elsewhere);
+    // Keep whatever their own subscription grants (set by the Polar webhook);
     // default such users to their existing plan if non-FREE.
     plan = user.plan === "FREE" ? "PRO" : user.plan;
   } else if (user.memberships.length > 0) {

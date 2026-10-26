@@ -2,7 +2,7 @@
 // lib/admin-metrics.ts — honest platform metrics for the admin dashboard.
 //
 // The key distinction the old dashboard missed: a PRO/TEAM user can be either
-//   • PAID  — has an active LemonSqueezy `Subscription` row (real money), or
+//   • PAID  — has an active Polar `Subscription` row (real money), or
 //   • COMPED — got the plan by redeeming a discount code (app/api/redeem),
 //              which sets User.plan + planExpiresAt with NO Subscription and
 //              NO payment.
@@ -81,7 +81,7 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     db.document.count({ where: { createdAt: { gte: since(7) } } }),
     db.document.aggregate({ _sum: { wordCount: true } }),
     db.subscription.findMany({ where: { status: "active" }, include: { user: { select: { plan: true } } } }),
-    db.organization.findMany({ where: { status: "active", lsSubscriptionId: { not: null } }, select: { seatsTotal: true } }),
+    db.organization.findMany({ where: { status: "active", polarSubscriptionId: { not: null } }, select: { seatsTotal: true } }),
     db.membership.count({ where: { seatActive: true } }),
     db.redemption.count(),
     db.redemption.findMany({ select: { userId: true }, distinct: ["userId"] }),

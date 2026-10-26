@@ -72,7 +72,7 @@ const REF_PATTERN = new RegExp(`^[${REFERRAL_CODE_ALPHABET}]{${REFERRAL_CODE_LEN
 export const DEFAULT_OWN_HOSTS: readonly string[] = [
   "humanizeit.app",
   "vercel.app",
-  "lemonsqueezy.com",
+  "polar.sh",
   "accounts.dev",
   "localhost",
   "127.0.0.1",

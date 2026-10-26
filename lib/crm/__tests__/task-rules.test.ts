@@ -108,12 +108,12 @@ describe("rules", () => {
     expect(task.dedupeKey).toBe(`comped_expiring:c1:${ahead(10).toISOString().slice(0, 10)}`);
     expect(rules(snap({}, { plan: "TEAM", planExpiresAt: ahead(20) }))).not.toContain("comped_expiring");
     expect(rules(snap({}, { plan: "TEAM", planExpiresAt: ago(1) }))).not.toContain("comped_expiring");
-    const paying = snap({}, { plan: "PRO", planExpiresAt: ahead(5), subscription: { id: "s", status: "active", lsSubscriptionId: "ls" } });
+    const paying = snap({}, { plan: "PRO", planExpiresAt: ahead(5), subscription: { id: "s", status: "active", polarSubscriptionId: "polar" } });
     expect(rules(paying)).not.toContain("comped_expiring");
   });
 
   it("paid_inactive: paying and idle for 10+ days (signup date when never active)", () => {
-    const sub = { id: "s", status: "active", lsSubscriptionId: "ls" };
+    const sub = { id: "s", status: "active", polarSubscriptionId: "polar" };
     expect(rules(snap({ stage: "customer", lastActiveAt: ago(11) }, { plan: "PRO", subscription: sub }))).toContain("paid_inactive");
     expect(rules(snap({ stage: "customer", lastActiveAt: ago(3) }, { plan: "PRO", subscription: sub }))).not.toContain("paid_inactive");
     expect(rules(snap({ stage: "customer" }, { plan: "TEAM", createdAt: ago(12), payingOrgSeat: true }))).toContain("paid_inactive");
@@ -138,9 +138,9 @@ describe("rules", () => {
   });
 
   it("churned_recent: churned within 3 days, keyed by the subscription", () => {
-    const sub = { id: "sub_row", status: "cancelled", lsSubscriptionId: "ls_42" };
+    const sub = { id: "sub_row", status: "cancelled", polarSubscriptionId: "polar_42" };
     const [task] = evaluateTaskRules(snap({ stage: "churned", stageChangedAt: ago(1) }, { subscription: sub }), NOW);
-    expect(task.dedupeKey).toBe("churned_recent:c1:ls_42");
+    expect(task.dedupeKey).toBe("churned_recent:c1:polar_42");
     expect(rules(snap({ stage: "churned", stageChangedAt: ago(4) }, { subscription: sub }))).toEqual([]);
   });
 

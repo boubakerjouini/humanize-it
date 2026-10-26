@@ -14,6 +14,7 @@ import { logAudit } from "@/lib/audit";
 import { runAfter } from "@/lib/growth/safe";
 import { onUserDeleted, trackAdminPlanChange } from "@/lib/crm/hooks";
 import { loadCustomerCrm } from "@/lib/crm/contact-360";
+import { deleteCustomerOf } from "@/lib/polar";
 import { MAX_GRANT_DAYS, describeGrant, isGrantDays, planAfterGrant, type GrantPlan } from "../grant";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -161,6 +162,8 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     // Before the cascade removes the contact: keep hashed suppressions so the
     // address is never emailed again (withdrawn consent, bounces, complaints).
     await onUserDeleted({ userId: id, actor: admin.email });
+    // A deleted account must never be billed again: Polar cancels its subscriptions.
+    await deleteCustomerOf(id);
     await db.user.delete({ where: { id } });
     await logAudit({ actorEmail: admin.email, action: "user.delete", targetType: "user", targetId: id, summary: `Deleted ${target.email}` });
     return NextResponse.json({ ok: true });

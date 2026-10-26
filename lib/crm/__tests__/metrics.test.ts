@@ -19,7 +19,7 @@ type Row = {
     tags?: { tag: { name: string } }[];
     createdAt: Date;
     subscription: { status: string } | null;
-    memberships: { organization: { lsSubscriptionId: string | null; status: string } }[];
+    memberships: { organization: { polarSubscriptionId: string | null; status: string } }[];
   } | null;
 };
 

@@ -49,7 +49,7 @@ List with public sources only, Partner Pack paragraph, a script from the playboo
 Start from the steps in `channels/launch-directories.md` §5. Verify each claimed surface with the founder before writing it; every permission gets a one-line justification; data-use answers must match the code.
 
 ## Guardrails
-- **Never submit, post, pitch, sign up, pay or accept terms** on any directory, store, affiliate platform or press channel; never create LemonSqueezy affiliate settings or discount codes; never enable `REFERRALS_ENABLED` (`07` §6). Approval is the founder's own message in this session.
+- **Never submit, post, pitch, sign up, pay or accept terms** on any directory, store, affiliate platform or press channel; never create Polar discount codes or change Polar settings; never enable `REFERRALS_ENABLED` (`07` §6). Approval is the founder's own message in this session.
 - Honesty: listings and pitches use the honest positioning (`02` §1); no "bypass", "undetectable" or guaranteed-pass wording; no fabricated reviews, ratings, user counts or press quotes; reviews are asked for honestly and never rewarded.
 - Affiliates and partners must follow disclosure rules (FTC); you are responsible for the kit they use.
 - Spend: propose with the decision rule and the cap from the playbook; the founder pays.

@@ -30,7 +30,7 @@ export default function RefundsPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Refund Policy</h1>
-        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 7, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 25, 2026</p>
       </div>
 
       <div style={{ background: THEME.brandDim, border: `1px solid ${THEME.brand}`, borderRadius: THEME.radiusLg, padding: '20px 24px', marginBottom: '40px', color: THEME.text, fontSize: '15px', lineHeight: 1.7 }}>
@@ -71,10 +71,10 @@ export default function RefundsPage() {
       <Section title="7. How to ask for a refund">
         <ol style={{ paddingLeft: '20px' }}>
           <li style={li}>Email <strong style={strong}>support@humanizeit.app</strong> from the address on your account</li>
-          <li style={li}>Include your order number (it&apos;s in your receipt email from Lemon Squeezy)</li>
+          <li style={li}>Include your order number (it&apos;s in your receipt email from Polar)</li>
           <li style={li}>A reason is optional within the guarantee period</li>
         </ol>
-        <p style={{ marginTop: '12px' }}>We reply within 3–5 business days. Refunds go through Lemon Squeezy, our payment provider, back to your original payment method.</p>
+        <p style={{ marginTop: '12px' }}>We reply within 3–5 business days. Refunds go through Polar, our payment provider, back to your original payment method.</p>
       </Section>
 
       <Section title="8. Free plan">

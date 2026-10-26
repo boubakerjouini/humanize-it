@@ -137,7 +137,7 @@ describe("referrer handling", () => {
       "https://accounts.humanizeit.app/sign-in",
       "https://humanize-it-git-feat.vercel.app/",
       "http://localhost:3458/",
-      "https://humanizeit.lemonsqueezy.com/checkout",
+      "https://polar.sh/checkout/polar_c_abc123",
       "https://accounts.google.com/o/oauth2",
     ]) {
       const t = touch("/dashboard", ref);

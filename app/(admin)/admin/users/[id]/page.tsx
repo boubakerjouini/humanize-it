@@ -20,7 +20,7 @@ interface Detail {
     plan: "FREE" | "PRO" | "TEAM"; role: "USER" | "ADMIN"; planExpiresAt: string | null;
     wordsUsed: number; rewriteCount: number; quotaResetAt: string; createdAt: string; documentCount: number; paid: boolean;
   };
-  subscription: { status: string; lsCurrentPeriodEnd: string | null } | null;
+  subscription: { status: string; currentPeriodEnd: string | null } | null;
   documents: { id: string; title: string | null; overallScore: number; humanizedScore: number | null; wordCount: number; status: string; createdAt: string }[];
   redemptions: { id: string; code: string; plan: string; redeemedAt: string }[];
   memberships: { id: string; org: { id: string; name: string; slug: string }; role: string; seatActive: boolean }[];
@@ -181,7 +181,7 @@ export default function CustomerPage() {
         <Card icon={FileText} label="Documents"><Big>{u.documentCount.toLocaleString()}</Big><Sub>joined {fmt(u.createdAt)}</Sub></Card>
         <Card icon={Ticket} label="Billing">
           <Big>{d.subscription ? d.subscription.status : u.plan !== "FREE" ? "comped" : "free"}</Big>
-          <Sub>{d.subscription?.lsCurrentPeriodEnd ? `renews ${fmt(d.subscription.lsCurrentPeriodEnd)}` : `${d.redemptions.length} redemptions`}</Sub>
+          <Sub>{d.subscription?.currentPeriodEnd ? `renews ${fmt(d.subscription.currentPeriodEnd)}` : `${d.redemptions.length} redemptions`}</Sub>
         </Card>
       </div>
 

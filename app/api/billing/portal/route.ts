@@ -1,17 +1,16 @@
 // ===========================================================
-// POST /api/billing/portal — Lemon Squeezy customer portal
-// Returns the manage-subscription URL from the stored subscription
+// POST /api/billing/portal — Polar customer portal
+// Opens a short-lived customer session for the user's own Polar customer and
+// returns its portal URL (manage plan, payment method, invoices, cancel).
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { getSubscription } from "@lemonsqueezy/lemonsqueezy.js";
-import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
+import { customerPortalUrl, getPolar, POLAR_CALLS_PER_MINUTE } from "@/lib/polar";
 import { db } from "@/lib/db";
+import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export async function POST() {
-  configureLemonSqueezy();
-
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
@@ -21,49 +20,41 @@ export async function POST() {
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { clerkId },
-      include: { subscription: true },
-    });
+    const user = await db.user.findUnique({ where: { clerkId }, select: { id: true } });
+    if (!user) {
+      return NextResponse.json({ error: { code: "USER_NOT_FOUND", message: "User not found." } }, { status: 401 });
+    }
 
-    if (!user?.subscription?.lsSubscriptionId) {
+    const limit = await checkRateLimit(`polar:${user.id}`, POLAR_CALLS_PER_MINUTE);
+    if (!limit.ok) {
       return NextResponse.json(
-        {
-          error: {
-            code: "NO_SUBSCRIPTION",
-            message: "No active subscription found.",
-          },
-        },
+        { error: { code: "RATE_LIMITED", message: "Too many requests. Please wait a minute and try again." } },
+        { status: 429, headers: { ...rateLimitHeaders(limit), "Retry-After": String(limit.retryAfterSeconds) } }
+      );
+    }
+
+    const polar = getPolar();
+    if (!polar) {
+      return NextResponse.json(
+        { error: { code: "BILLING_NOT_CONFIGURED", message: "Billing is not configured." } },
+        { status: 500 }
+      );
+    }
+
+    // Opened by our user id, so it can only ever show this user's own billing.
+    const url = await customerPortalUrl(polar, user.id);
+    if (!url) {
+      // No Polar customer: nothing was ever bought (a comped, granted or seat plan).
+      return NextResponse.json(
+        { error: { code: "NO_SUBSCRIPTION", message: "There's no billing for this account: your plan wasn't bought through checkout." } },
         { status: 400 }
       );
     }
-
-    // Retrieve the subscription to get the live customer portal URL
-    const { data, error } = await getSubscription(
-      user.subscription.lsSubscriptionId
-    );
-
-    if (error || !data) {
-      console.error("[billing/portal] LS error:", error);
-      return NextResponse.json(
-        { error: { code: "LS_ERROR", message: "Failed to retrieve subscription." } },
-        { status: 500 }
-      );
-    }
-
-    const portalUrl = data.data.attributes.urls?.customer_portal;
-    if (!portalUrl) {
-      return NextResponse.json(
-        { error: { code: "NO_PORTAL_URL", message: "Portal URL unavailable." } },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ url: portalUrl });
+    return NextResponse.json({ url });
   } catch (err) {
-    console.error("[billing/portal] error:", err);
+    console.error("[billing/portal] Polar error:", err);
     return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Something went wrong." } },
+      { error: { code: "PORTAL_FAILED", message: "Failed to open the billing portal." } },
       { status: 500 }
     );
   }
