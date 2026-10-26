@@ -8,6 +8,11 @@
 // ===========================================================
 
 import { createPolar, errors, type Polar } from "@polar-sh/sdk/2026-10";
+import { appUrl } from "@/lib/growth/flags";
+
+// The checkout routes build Polar's success and return URLs from it. It is the
+// email links' origin helper: no trailing slash, so no "//dashboard" URLs.
+export { appUrl };
 
 let client: Polar | null = null;
 let clientKey = "";
@@ -108,9 +113,4 @@ export async function deleteCustomerOf(userId: string): Promise<void> {
   } catch (err) {
     if (!(err instanceof errors.ResourceNotFound)) console.error(`[polar] could not delete the customer of user ${userId}:`, err);
   }
-}
-
-/** Where Polar sends the buyer after paying, and the back link on its pages. */
-export function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }

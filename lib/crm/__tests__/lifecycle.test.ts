@@ -48,6 +48,15 @@ describe("computeStage rule table", () => {
     }
   });
 
+  it("row 1b: a subscription cancelled at period end is at risk while its plan lasts, never comped", () => {
+    expect(computeStage(user({ subscriptionStatus: "cancelled", effectivePlan: "PRO", hadPaidSubscription: true }))).toEqual({
+      stage: "at_risk",
+      reason: "cancelled, ends at period end",
+    });
+    // Once the period is over the plan is gone: churned, as before.
+    expect(stageOf(user({ subscriptionStatus: "expired", effectivePlan: "FREE", hadPaidSubscription: true }))).toBe("churned");
+  });
+
   it("row 2: a paying customer inactive for 14 days is at risk", () => {
     expect(computeStage(user({ subscriptionStatus: "active", lastActiveAt: daysAgo(15) }))).toEqual({
       stage: "at_risk",
@@ -90,8 +99,8 @@ describe("computeStage rule table", () => {
 
   it("row 6: a non-FREE effective plan without a subscription is comped", () => {
     expect(computeStage(user({ effectivePlan: "PRO" }))).toEqual({ stage: "comped", reason: "plan via code or grant" });
-    // A cancelled subscription whose plan is still PRO is not churned yet.
-    expect(stageOf(user({ effectivePlan: "PRO", hadPaidSubscription: true, subscriptionStatus: "cancelled" }))).toBe("comped");
+    // A cancelled subscription whose plan is still PRO is not churned yet, but leaving (row 1b), not comped.
+    expect(stageOf(user({ effectivePlan: "PRO", hadPaidSubscription: true, subscriptionStatus: "cancelled" }))).toBe("at_risk");
   });
 
   it("row 7: five or more documents in 14 days is a power user", () => {
