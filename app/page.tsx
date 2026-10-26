@@ -38,14 +38,6 @@ import { THEME, humanScore, humanScoreColor, humanScoreLabel, glow } from "@/lib
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then(m => m.ExitIntent), { ssr: false });
 
-const LS_BASE = "https://humanizeit.lemonsqueezy.com/checkout/buy/";
-const VARIANT_IDS = {
-  proMonthly: "1368282",
-  proAnnual: "1368275",
-  teamMonthly: "1368288",
-  teamAnnual: "1368289",
-};
-
 // Single source of truth for the homepage FAQ — rendered as the visible
 // accordion AND as FAQPage JSON-LD (below), so the structured data always
 // matches the visible content (a Google rich-results requirement).

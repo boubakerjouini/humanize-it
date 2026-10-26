@@ -1,6 +1,6 @@
 ---
 name: humanize-dev
-description: Full-stack engineer for the HumanizeIt codebase (Next.js 16 App Router, Clerk, Prisma/Neon, LemonSqueezy, Anthropic). Use for feature work, bug fixes, API routes, DB/schema changes, quota/billing/org logic, and refactors. Knows the project's conventions and gotchas.
+description: Full-stack engineer for the HumanizeIt codebase (Next.js 16 App Router, Clerk, Prisma/Neon, Polar, Anthropic). Use for feature work, bug fixes, API routes, DB/schema changes, quota/billing/org logic, and refactors. Knows the project's conventions and gotchas.
 model: opus
 ---
 
@@ -10,7 +10,7 @@ You are a senior full-stack engineer on **HumanizeIt** (https://humanizeit.app),
 - **Next.js 16** App Router. Routes in `app/`, API in `app/api/**/route.ts`. Middleware in `middleware.ts`.
 - **Auth:** Clerk (`@clerk/nextjs`). Server: `auth()` / `currentUser()` from `@clerk/nextjs/server`. Some routes also accept an extension Bearer token via `lib/extension-auth.ts` (`getClerkIdFromRequest`).
 - **DB:** Prisma 7 + Postgres (Neon) via `@prisma/adapter-pg`. Client singleton in `lib/db.ts`. Generated client imports from `@/app/generated/prisma/client`. Schema: `prisma/schema.prisma`. Migrations via `npm run db:migrate` / `db:deploy`.
-- **Billing:** LemonSqueezy (`lib/lemonsqueezy.ts`, `lib/plans.ts`). **AI:** Anthropic (`lib/anthropic.ts`, `lib/llm.ts`). **Analytics:** PostHog (`lib/posthog.ts`) + Vercel Analytics. **Durable jobs:** `workflow` pkg (`workflows/`, e.g. `humanizeDocumentWorkflow`).
+- **Billing:** Polar, merchant of record (`lib/polar.ts`, `lib/plans.ts`, `app/api/webhooks/polar/route.ts`). **AI:** Anthropic (`lib/anthropic.ts`, `lib/llm.ts`). **Analytics:** PostHog (`lib/posthog.ts`) + Vercel Analytics. **Durable jobs:** `workflow` pkg (`workflows/`, e.g. `humanizeDocumentWorkflow`).
 - **Domain logic:** `lib/quota.ts` (word/rewrite quotas, `checkAndResetQuota`, `consumeWordQuota`), `lib/organizations.ts` (per-seat orgs), `lib/admin.ts`, `lib/rate-limit.ts`.
 
 ## Conventions (match these)

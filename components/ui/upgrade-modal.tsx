@@ -8,7 +8,7 @@
 // Opened with an intent (a plan picked on the pricing page before sign-up),
 // it shows that billing period and marks that plan's card.
 // On a quota hit, two cheaper ways out sit under the plans: the Word Pack
-// (only once its LemonSqueezy variant exists) and inviting a friend (only
+// (only once its Polar product exists) and inviting a friend (only
 // while referrals are on). Prices, limits and the guarantee come from
 // lib/plans.ts.
 // ===========================================================

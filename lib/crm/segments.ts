@@ -96,7 +96,7 @@ function payingUser(): Prisma.UserWhereInput {
       { subscription: { is: { status: { in: PAYING_STATUSES } } } },
       {
         memberships: {
-          some: { seatActive: true, organization: { is: { lsSubscriptionId: { not: null }, status: { in: PAYING_STATUSES } } } },
+          some: { seatActive: true, organization: { is: { polarSubscriptionId: { not: null }, status: { in: PAYING_STATUSES } } } },
         },
       },
     ],

@@ -62,7 +62,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     });
 
     const seatsUsed = org.memberships.filter((m) => m.seatActive).length;
-    const paid = !!org.lsSubscriptionId;
+    const paid = !!org.polarSubscriptionId;
     // Est. MRR — per-seat monthly list price, only counted when org is on a paid LS subscription.
     const mrr = paid ? org.seatsTotal * ORG_SEAT.pricePerSeatMonthly : 0;
 
@@ -76,7 +76,7 @@ export async function GET(_req: Request, { params }: Ctx) {
         wordsUsed: org.wordsUsed,
         status: org.status,
         billingEmail: org.billingEmail,
-        lsSubscriptionId: org.lsSubscriptionId,
+        polarSubscriptionId: org.polarSubscriptionId,
         currentPeriodEnd: org.currentPeriodEnd,
         createdAt: org.createdAt,
         invitationCount: org._count.invitations,

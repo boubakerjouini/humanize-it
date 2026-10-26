@@ -66,7 +66,7 @@ export type StageInput = {
   /** Effective plan (an expired grant is FREE), resolved by the caller. */
   effectivePlan: PlanId;
   subscriptionStatus: string | null;
-  /** A LemonSqueezy subscription row has ever existed. */
+  /** A Polar subscription row has ever existed. */
   hadPaidSubscription: boolean;
   /** Occupies a seat in a paying organization. */
   orgSeatActive: boolean;

@@ -178,7 +178,7 @@ const cohortSelect = {
       ...countableUserSelect,
       createdAt: true,
       subscription: { select: { status: true } },
-      memberships: { where: { seatActive: true }, select: { organization: { select: { lsSubscriptionId: true, status: true } } } },
+      memberships: { where: { seatActive: true }, select: { organization: { select: { polarSubscriptionId: true, status: true } } } },
     },
   },
 } satisfies Prisma.ContactSelect;
@@ -203,7 +203,7 @@ export function groupAttribution(cohort: readonly CohortContact[], by: Attributi
       row.signups++;
       if (activatedWithin(c.firstDocumentAt, c.user.createdAt)) row.activated++;
       const subPaying = !!c.user.subscription && PAYING_STATUSES.includes(c.user.subscription.status);
-      const seatPaying = c.user.memberships.some((m) => !!m.organization.lsSubscriptionId && PAYING_STATUSES.includes(m.organization.status));
+      const seatPaying = c.user.memberships.some((m) => !!m.organization.polarSubscriptionId && PAYING_STATUSES.includes(m.organization.status));
       if (subPaying || seatPaying) row.paying++;
     }
     table.set(key, row);

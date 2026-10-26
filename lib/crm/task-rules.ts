@@ -45,7 +45,7 @@ export type TaskRuleSnapshot = {
     planExpiresAt: Date | null;
     createdAt: Date;
     documentCount: number;
-    subscription: { id: string; status: string; lsSubscriptionId: string | null } | null;
+    subscription: { id: string; status: string; polarSubscriptionId: string | null } | null;
     /** Holds an active seat in a paying organization. */
     payingOrgSeat: boolean;
   } | null;
@@ -141,7 +141,7 @@ export const TASK_RULES: Record<TaskRuleKey, Rule> = {
     if (now.getTime() - s.stageChangedAt.getTime() > 3 * DAY_MS) return null;
     const sub = s.user?.subscription;
     return {
-      cycle: sub?.lsSubscriptionId ?? sub?.id ?? isoDay(s.stageChangedAt),
+      cycle: sub?.polarSubscriptionId ?? sub?.id ?? isoDay(s.stageChangedAt),
       title: "Ask why they cancelled (1:1)",
       kind: "email",
       priority: "high",
@@ -183,8 +183,8 @@ function candidateSelect(now: Date) {
         plan: true,
         planExpiresAt: true,
         createdAt: true,
-        subscription: { select: { id: true, status: true, lsSubscriptionId: true } },
-        memberships: { where: { seatActive: true }, select: { organization: { select: { lsSubscriptionId: true, status: true } } } },
+        subscription: { select: { id: true, status: true, polarSubscriptionId: true } },
+        memberships: { where: { seatActive: true }, select: { organization: { select: { polarSubscriptionId: true, status: true } } } },
         tags: { select: { tag: { select: { name: true } } } },
         _count: { select: { documents: true } },
       },
@@ -209,7 +209,7 @@ function candidateWhere(now: Date): Prisma.ContactWhereInput {
       { user: { is: { subscription: { is: { status: paying } } } } },
       {
         user: {
-          is: { memberships: { some: { seatActive: true, organization: { is: { lsSubscriptionId: { not: null }, status: paying } } } } },
+          is: { memberships: { some: { seatActive: true, organization: { is: { polarSubscriptionId: { not: null }, status: paying } } } } },
         },
       },
       { userId: null, stage: { in: ["lead", "engaged_lead"] }, score: { gte: 60 } },
@@ -253,7 +253,7 @@ export function toSnapshot(row: CandidateRow): TaskRuleSnapshot {
           documentCount: user._count.documents,
           subscription: user.subscription,
           payingOrgSeat: user.memberships.some(
-            (m) => !!m.organization.lsSubscriptionId && PAYING_STATUSES.includes(m.organization.status)
+            (m) => !!m.organization.polarSubscriptionId && PAYING_STATUSES.includes(m.organization.status)
           ),
         }
       : null,

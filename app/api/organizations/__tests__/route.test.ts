@@ -26,7 +26,7 @@ import { ensureUser } from "@/lib/user";
 type TestUser = { id: string; email: string; role: "USER" | "ADMIN"; plan: string; planExpiresAt: Date | null };
 
 const FREE_USER: TestUser = { id: "user_1", email: "owner@example.com", role: "USER", plan: "FREE", planExpiresAt: null };
-// A Team plan from a LemonSqueezy subscription, a redeem code or an admin grant.
+// A Team plan from a Polar subscription, a redeem code or an admin grant.
 const TEAM_USER: Partial<TestUser> = { plan: "TEAM", planExpiresAt: new Date(Date.now() + 200 * 86_400_000) };
 
 function signedIn(user: Partial<TestUser> = {}) {

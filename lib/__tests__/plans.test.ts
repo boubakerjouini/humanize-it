@@ -6,7 +6,7 @@ import {
   isFounderService,
   isToneAllowed,
   monthStartUtc,
-  oneTimeOfferForVariant,
+  oneTimeOfferForProduct,
   voiceProfileLimit,
   wordPackConfig,
 } from "@/lib/plans";
@@ -64,24 +64,24 @@ describe("foundingExpiry", () => {
 });
 
 describe("one-time offers", () => {
-  it("hides the word pack while its variant is unset", () => {
+  it("hides the word pack while its product is unset", () => {
     expect(wordPackConfig({})).toBeNull();
-    expect(wordPackConfig({ LEMONSQUEEZY_WORDPACK_VARIANT_ID: "  " })).toBeNull();
+    expect(wordPackConfig({ POLAR_WORDPACK_PRODUCT_ID: "  " })).toBeNull();
   });
 
   it("defaults to 20,000 words for 60 days and reads overrides", () => {
-    expect(wordPackConfig({ LEMONSQUEEZY_WORDPACK_VARIANT_ID: "42" })).toEqual({ variantId: "42", priceUsd: 5, words: 20_000, days: 60 });
-    expect(wordPackConfig({ LEMONSQUEEZY_WORDPACK_VARIANT_ID: "42", WORDPACK_WORDS: "30000", WORDPACK_DAYS: "90" })).toMatchObject({ words: 30_000, days: 90 });
-    expect(wordPackConfig({ LEMONSQUEEZY_WORDPACK_VARIANT_ID: "42", WORDPACK_WORDS: "-1", WORDPACK_DAYS: "abc" })).toMatchObject({ words: 20_000, days: 60 });
+    expect(wordPackConfig({ POLAR_WORDPACK_PRODUCT_ID: "42" })).toEqual({ productId: "42", priceUsd: 5, words: 20_000, days: 60 });
+    expect(wordPackConfig({ POLAR_WORDPACK_PRODUCT_ID: "42", WORDPACK_WORDS: "30000", WORDPACK_DAYS: "90" })).toMatchObject({ words: 30_000, days: 90 });
+    expect(wordPackConfig({ POLAR_WORDPACK_PRODUCT_ID: "42", WORDPACK_WORDS: "-1", WORDPACK_DAYS: "abc" })).toMatchObject({ words: 20_000, days: 60 });
   });
 
-  it("maps variants to offers and leaves subscription variants alone", () => {
-    const env = { LEMONSQUEEZY_FOUNDING_VARIANT_ID: "100", LEMONSQUEEZY_WORDPACK_VARIANT_ID: "200" };
-    expect(oneTimeOfferForVariant("100", env)).toBe("founding");
-    expect(oneTimeOfferForVariant("200", env)).toBe("wordpack");
-    expect(oneTimeOfferForVariant("1368282", env)).toBeNull();
-    expect(oneTimeOfferForVariant("", env)).toBeNull();
-    expect(oneTimeOfferForVariant("100", {})).toBeNull();
+  it("maps products to offers and leaves subscription products alone", () => {
+    const env = { POLAR_FOUNDING_PRODUCT_ID: "100", POLAR_WORDPACK_PRODUCT_ID: "200" };
+    expect(oneTimeOfferForProduct("100", env)).toBe("founding");
+    expect(oneTimeOfferForProduct("200", env)).toBe("wordpack");
+    expect(oneTimeOfferForProduct("prod_pro_monthly", env)).toBeNull();
+    expect(oneTimeOfferForProduct("", env)).toBeNull();
+    expect(oneTimeOfferForProduct("100", {})).toBeNull();
   });
 });
 

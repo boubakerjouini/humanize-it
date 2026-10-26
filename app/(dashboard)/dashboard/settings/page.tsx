@@ -22,7 +22,7 @@ interface UsageData {
   rewriteLimit: number;
   quotaResetAt: string;
   subscriptionStatus: string | null;
-  stripeCurrentPeriodEnd: string | null;
+  currentPeriodEnd: string | null;
   bonusWords?: number;
 }
 
@@ -53,6 +53,14 @@ function nextReset(usage: UsageData): string {
   }
   at.setMonth(at.getMonth() + 1);
   return fmt(at.toISOString());
+}
+
+/** "renews" only for a subscription that will renew; a cancelled one ends on that date. */
+function periodNote(usage: UsageData): string {
+  if (usage.plan === "FREE" || !usage.currentPeriodEnd) return "";
+  if (usage.subscriptionStatus === "cancelled") return ` · ends ${fmt(usage.currentPeriodEnd)}`;
+  if (usage.subscriptionStatus === "active" || usage.subscriptionStatus === "on_trial") return ` · renews ${fmt(usage.currentPeriodEnd)}`;
+  return "";
 }
 
 export default function SettingsPage() {
@@ -149,7 +157,7 @@ export default function SettingsPage() {
                 </div>
               )}
               <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 10 }}>
-                Words reset {nextReset(usage)}{usage.stripeCurrentPeriodEnd ? ` · renews ${fmt(usage.stripeCurrentPeriodEnd)}` : ""}
+                Words reset {nextReset(usage)}{periodNote(usage)}
               </div>
             </>
           )}

@@ -1,19 +1,31 @@
 // ===========================================================
-// POST /api/checkout — Create Lemon Squeezy checkout URL
+// POST /api/checkout — Create a Polar checkout session for Pro or Team
+//
+// A user who already has a live subscription gets the Polar customer portal
+// instead: Polar allows one billable subscription per customer, so a second
+// checkout could never be paid. Plan and billing-period changes happen there.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { createCheckout } from "@lemonsqueezy/lemonsqueezy.js";
-import { configureLemonSqueezy } from "@/lib/lemonsqueezy";
+import { appUrl, BillingAccountError, customerPortalUrl, ensureCustomer, getPolar, POLAR_CALLS_PER_MINUTE } from "@/lib/polar";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { trackCheckoutStarted } from "@/lib/crm/hooks";
 import { runAfter } from "@/lib/growth/safe";
+import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+
+/** Local statuses of a subscription Polar still bills (lib/crm/lifecycle.ts vocabulary). */
+const LIVE_STATUSES = ["active", "on_trial", "past_due"];
+
+function hasLiveSubscription(sub: { polarSubscriptionId: string | null; status: string; currentPeriodEnd: Date | null } | null): boolean {
+  if (!sub?.polarSubscriptionId) return false;
+  if (LIVE_STATUSES.includes(sub.status)) return true;
+  // Cancelled at period end: still billable in Polar until the period is over.
+  return sub.status === "cancelled" && !!sub.currentPeriodEnd && sub.currentPeriodEnd.getTime() > Date.now();
+}
 
 export async function POST(req: Request) {
-  configureLemonSqueezy();
-
   try {
     const { userId: clerkId } = await auth();
     if (!clerkId) {
@@ -34,6 +46,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const limit = await checkRateLimit(`polar:${user.id}`, POLAR_CALLS_PER_MINUTE);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: { code: "RATE_LIMITED", message: "Too many requests. Please wait a minute and try again." } },
+        { status: 429, headers: { ...rateLimitHeaders(limit), "Retry-After": String(limit.retryAfterSeconds) } }
+      );
+    }
+
     // Parse request body — default to PRO monthly
     let body: { plan?: unknown; annual?: unknown } = {};
     try { body = await req.json(); } catch { /* no body */ }
@@ -42,81 +62,74 @@ export async function POST(req: Request) {
     const isAnnual = body.annual === true;
     const planConfig = PLANS[planId];
 
-    // Pick monthly or annual variant
-    const variantId = isAnnual && planConfig.lsVariantIdAnnual
-      ? planConfig.lsVariantIdAnnual
-      : planConfig.lsVariantId;
+    // Pick the monthly or annual product
+    const productId = isAnnual && planConfig.polarProductIdAnnual
+      ? planConfig.polarProductIdAnnual
+      : planConfig.polarProductId;
 
-    if (!variantId) {
+    if (!productId) {
       return NextResponse.json(
         {
           error: {
             code: "PLAN_NOT_CONFIGURED",
-            message: `Lemon Squeezy variant ID not configured for "${planId}"${isAnnual ? " annual" : ""}.`,
+            message: `Polar product ID not configured for "${planId}"${isAnnual ? " annual" : ""}.`,
           },
         },
         { status: 500 }
       );
     }
 
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID;
-    if (!storeId) {
+    const polar = getPolar();
+    if (!polar) {
       return NextResponse.json(
-        { error: { code: "STORE_NOT_CONFIGURED", message: "Store ID missing." } },
+        { error: { code: "BILLING_NOT_CONFIGURED", message: "Billing is not configured." } },
         { status: 500 }
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    if (user.subscription?.polarSubscriptionId && user.subscription.status === "paused") {
+      // Polar's portal can't resume unless its pause setting is on, and a new
+      // subscription would double-bill once the paused one resumes.
+      return NextResponse.json(
+        { error: { code: "SUBSCRIPTION_PAUSED", message: "Your subscription is paused. Email support@humanizeit.app and we'll resume it." } },
+        { status: 409 }
+      );
+    }
+    if (hasLiveSubscription(user.subscription)) {
+      const portal = await customerPortalUrl(polar, user.id);
+      if (portal) return NextResponse.json({ url: portal });
+    }
+
+    let customerId: string;
+    try {
+      customerId = await ensureCustomer(polar, user);
+    } catch (err) {
+      if (!(err instanceof BillingAccountError)) throw err;
+      console.error(`[checkout] userId=${user.id}: ${err.code}`);
+      return NextResponse.json({ error: { code: err.code, message: err.message } }, { status: 409 });
+    }
+
+    const baseUrl = appUrl();
 
     // Feeds the checkout_abandoned sequence; it exits once a subscription starts.
     runAfter("checkout-started", () => trackCheckoutStarted(user.id, planId, isAnnual));
 
-    const { data, error } = await createCheckout(storeId, variantId, {
-      checkoutOptions: {
-        embed: false,
-        media: true,
-        logo: true,
-      },
-      checkoutData: {
-        email: user.email,
-        name: user.name ?? undefined,
-        // custom_data is passed through to webhook meta.custom_data
-        custom: {
-          clerk_id: clerkId,
-          plan_id: planId,
-          annual: isAnnual ? "true" : "false",
-        },
-      },
-      productOptions: {
-        redirectUrl: `${baseUrl}/dashboard/editor?upgraded=true`,
-        receiptLinkUrl: `${baseUrl}/dashboard/settings`,
-        receiptButtonText: "Go to dashboard",
-        receiptThankYouNote: "Thank you for upgrading HumanizeIt!",
-        enabledVariants: [Number(variantId)],
-      },
-      expiresAt: null,
-      preview: false,
-      // Explicit override (LEMONSQUEEZY_TEST_MODE=true) so preview/sandbox deploys
-      // use test mode even though Vercel runs them with NODE_ENV=production.
-      testMode:
-        process.env.LEMONSQUEEZY_TEST_MODE === "true" ||
-        process.env.NODE_ENV !== "production",
+    const checkout = await polar.checkouts.create({
+      products: [productId],
+      // The buyer's own customer: the webhook checks it against the metadata,
+      // and the billing portal opens on it.
+      customer_id: customerId,
+      // Copied onto the subscription and its orders, so the webhook can read it.
+      metadata: { user_id: user.id, plan_id: planId, annual: isAnnual },
+      success_url: `${baseUrl}/dashboard/editor?upgraded=true`,
+      return_url: `${baseUrl}/dashboard/settings`,
     });
 
-    if (error || !data?.data.attributes.url) {
-      console.error("[checkout] Lemon Squeezy error:", error);
-      return NextResponse.json(
-        { error: { code: "LS_ERROR", message: "Failed to create checkout." } },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ url: data.data.attributes.url });
+    return NextResponse.json({ url: checkout.url });
   } catch (err) {
-    console.error("[checkout] error:", err);
+    console.error("[checkout] Polar error:", err);
     return NextResponse.json(
-      { error: { code: "INTERNAL_ERROR", message: "Something went wrong." } },
+      { error: { code: "CHECKOUT_FAILED", message: "Failed to create checkout." } },
       { status: 500 }
     );
   }

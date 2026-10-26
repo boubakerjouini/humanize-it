@@ -3,7 +3,7 @@
 // ===========================================================
 // components/growth/founding-offers.ts — Client view of GET /api/offers:
 // Founding 100 state (and whether this user is a founding member, for the
-// badge) and the Word Pack, which stays hidden until its LemonSqueezy
+// badge) and the Word Pack, which stays hidden until its Polar
 // variant is configured. One fetch per page, shared by every caller.
 // ===========================================================
 

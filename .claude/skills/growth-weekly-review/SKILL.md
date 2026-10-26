@@ -11,7 +11,7 @@ One honest page: where the numbers are vs the targets, what the decision rules s
 ## Inputs
 
 - **Week**: the ISO week just ending (Monday to Sunday) unless the founder names one. Report file name uses the ISO week, e.g. `2026-W43` (`date +%G-W%V`).
-- Founder-only numbers he pastes (Search Console, Bing Webmaster, LemonSqueezy, tracker Daily Log) when they are not reachable read-only.
+- Founder-only numbers he pastes (Search Console, Bing Webmaster, Polar, tracker Daily Log) when they are not reachable read-only.
 - Notes from the week: replies, objections, what felt good or bad.
 
 ## Preflight
