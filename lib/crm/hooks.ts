@@ -190,7 +190,7 @@ export async function trackCheckoutStarted(userId: string, plan: string, annual:
 
 // ── Billing and plans ───────────────────────────────────────────────────────
 
-/** A LemonSqueezy webhook branch ran. `dedupeKey` makes webhook replays no-ops. */
+/** A Polar webhook branch ran. `dedupeKey` makes webhook replays no-ops. */
 export async function trackBillingEvent(
   userId: string,
   type: BillingEventType,

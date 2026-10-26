@@ -44,7 +44,7 @@ export async function GET() {
       quotaResetAt: user.quotaResetAt,
       // Expose subscription status so the UI can show payment failure banners
       subscriptionStatus: user.subscription?.status ?? null,
-      stripeCurrentPeriodEnd: user.subscription?.lsCurrentPeriodEnd ?? null,
+      currentPeriodEnd: user.subscription?.currentPeriodEnd ?? null,
       // Usable bonus words (referral rewards, word packs), drawn after the plan allowance.
       bonusWords: bonus.words,
     });

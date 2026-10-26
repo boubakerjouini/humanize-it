@@ -31,7 +31,7 @@ export default async function AdminRevenuePage() {
         <KpiCard icon={Gift} label="Comped value / mo" value={money(m.compedMrrValue)} sub={`${m.compedUsers} users on free grants`} accent={THEME.accent} />
       </div>
 
-      <SectionTitle sub="Paid = real LemonSqueezy subscription. Comped = discount-code grant (no payment).">By tier</SectionTitle>
+      <SectionTitle sub="Paid = real Polar subscription. Comped = discount-code grant (no payment).">By tier</SectionTitle>
       <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 1fr 1fr", gap: 0, padding: "12px 18px", borderBottom: `1px solid ${THEME.border}`, fontSize: 11, fontWeight: 700, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.04em" }}>
           <span>Tier</span><span>List price</span><span>Paid</span><span>Comped</span><span>Paid MRR</span>
@@ -58,7 +58,7 @@ export default async function AdminRevenuePage() {
 
       <p style={{ fontSize: 12, color: THEME.textMuted, marginTop: 20, lineHeight: 1.6 }}>
         Note: most PRO/TEAM users today are <strong>comped via discount codes</strong>, not paying. &ldquo;Paid MRR&rdquo; reflects
-        only real LemonSqueezy subscriptions — the number to grow.
+        only real Polar subscriptions — the number to grow.
       </p>
     </div>
   );

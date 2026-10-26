@@ -1,6 +1,6 @@
 // ===========================================================
 // app/api/offers/shared.ts — Founding 100 and Word Pack state, shared by
-// /api/offers, /api/offers/checkout, the LemonSqueezy webhook and /lifetime.
+// /api/offers, /api/offers/checkout, the Polar webhook and /lifetime.
 //
 // Deleting an account must not put its seat back on sale, so the "{n} of 100
 // left" counter takes the larger of two ledgers: Purchase rows (deleted with
@@ -10,9 +10,9 @@
 // ===========================================================
 
 import { db } from "@/lib/db";
-import { FOUNDING, foundingVariantId, wordPackConfig } from "@/lib/plans";
+import { FOUNDING, foundingProductId, wordPackConfig } from "@/lib/plans";
 
-/** AuditLog action written once per founding order (see the LemonSqueezy webhook). */
+/** AuditLog action written once per founding order (see the Polar webhook). */
 export const FOUNDING_AUDIT_ACTION = "offer.founding_purchased";
 export const WORDPACK_AUDIT_ACTION = "offer.wordpack_purchased";
 export const FOUNDING_REFUND_AUDIT_ACTION = "offer.founding_refunded";
@@ -25,7 +25,7 @@ export const WORDPACK_REFUND_AUDIT_ACTION = "offer.wordpack_refunded";
 export const REFUNDED_KIND = { founding: "founding_refunded", wordpack: "wordpack_refunded" } as const;
 
 export type FoundingStatus = {
-  /** The LemonSqueezy product exists (env set); otherwise the page collects a waitlist. */
+  /** The Polar product is set (env); otherwise the page collects a waitlist. */
   configured: boolean;
   /** Seats sold so far, or null when the database couldn't be read. */
   sold: number | null;
@@ -44,7 +44,7 @@ export async function foundingSold(): Promise<number> {
 }
 
 export async function foundingStatus(): Promise<FoundingStatus> {
-  const configured = !!foundingVariantId();
+  const configured = !!foundingProductId();
   let sold: number | null = null;
   try {
     sold = await foundingSold();

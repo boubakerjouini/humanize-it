@@ -220,7 +220,7 @@ export async function buildContact360(contactId: string, now: Date = new Date())
               wordsUsed: true,
               rewriteCount: true,
               createdAt: true,
-              subscription: { select: { status: true, lsCurrentPeriodEnd: true } },
+              subscription: { select: { status: true, currentPeriodEnd: true } },
               _count: { select: { documents: true } },
             },
           })
@@ -302,7 +302,7 @@ export async function buildContact360(contactId: string, now: Date = new Date())
           createdAt: user.createdAt,
           documentCount: user._count.documents,
           subscriptionStatus,
-          renewsAt: user.subscription?.lsCurrentPeriodEnd ?? null,
+          renewsAt: user.subscription?.currentPeriodEnd ?? null,
           paying: subscriptionStatus !== null && PAYING_STATUSES.has(subscriptionStatus),
           lastCode: lastRedemption?.discountCode.code ?? null,
         }

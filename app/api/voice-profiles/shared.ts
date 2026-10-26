@@ -45,12 +45,12 @@ export async function isFoundingMember(userId: string): Promise<boolean> {
 /** How many profiles `userId` may use on `planId` right now. */
 export async function voiceAllowance(userId: string, planId: PlanId): Promise<VoiceAllowance> {
   if (planId !== "PRO") return { limit: voiceProfileLimit(planId), annual: false, founding: false };
-  const annualVariant = PLANS.PRO.lsVariantIdAnnual;
+  const annualProduct = PLANS.PRO.polarProductIdAnnual;
   const [sub, founding] = await Promise.all([
-    db.subscription.findUnique({ where: { userId }, select: { lsVariantId: true, status: true } }),
+    db.subscription.findUnique({ where: { userId }, select: { polarProductId: true, status: true } }),
     isFoundingMember(userId),
   ]);
-  const annual = !!annualVariant && sub?.lsVariantId === annualVariant && sub.status !== "expired";
+  const annual = !!annualProduct && sub?.polarProductId === annualProduct && sub.status !== "expired";
   return { limit: voiceProfileLimit(planId, { annual, founding }), annual, founding };
 }
 

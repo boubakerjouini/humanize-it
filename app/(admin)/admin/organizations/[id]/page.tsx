@@ -19,7 +19,7 @@ interface OrgDetail {
     wordsUsed: number;
     status: string;
     billingEmail: string | null;
-    lsSubscriptionId: string | null;
+    polarSubscriptionId: string | null;
     currentPeriodEnd: string | null;
     createdAt: string;
     invitationCount: number;

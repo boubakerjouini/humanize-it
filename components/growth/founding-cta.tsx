@@ -4,7 +4,7 @@
 // components/growth/founding-cta.tsx — The /lifetime call to action, in one
 // of three honest states decided on the server:
 //   open      → checkout (signed out: sign up first, then come back here)
-//   waitlist  → the LemonSqueezy product doesn't exist yet: reserve a spot
+//   waitlist  → the Polar product isn't set yet: reserve a spot
 //               through the lead form (source founding_waitlist)
 //   closed    → all 100 spots are taken; no form, no fake "last chance"
 // ===========================================================

@@ -47,7 +47,7 @@ const scoringSelect = {
       subscription: { select: { status: true } },
       memberships: {
         where: { seatActive: true },
-        select: { organization: { select: { lsSubscriptionId: true, status: true } } },
+        select: { organization: { select: { polarSubscriptionId: true, status: true } } },
       },
     },
   },
@@ -75,7 +75,7 @@ export function buildScoringInput(contact: ScoringContact, activity: ActivityCou
   const user = contact.user;
   const subscriptionStatus = user?.subscription?.status ?? null;
   const orgSeatActive = !!user?.memberships.some(
-    (m) => !!m.organization.lsSubscriptionId && PAYING_STATUSES.has(m.organization.status)
+    (m) => !!m.organization.polarSubscriptionId && PAYING_STATUSES.has(m.organization.status)
   );
   const hasActiveSubscription = (subscriptionStatus !== null && PAYING_STATUSES.has(subscriptionStatus)) || orgSeatActive;
 

@@ -11,6 +11,7 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import type { User } from "@/app/generated/prisma/client";
 import { runAfter } from "@/lib/growth/safe";
+import { deleteCustomerOf } from "@/lib/polar";
 
 /** Sync the CRM contact after the response. Webhooks carry no visitor cookies, so no attribution. */
 function identifyAfterResponse(user: User, isNew: boolean): void {
@@ -113,6 +114,9 @@ export async function POST(req: Request) {
       } catch {
         // Best effort: the deletion itself must still happen.
       }
+      // A deleted account must never be billed again: Polar cancels its subscriptions.
+      const row = await db.user.findUnique({ where: { clerkId: id }, select: { id: true } });
+      if (row) await deleteCustomerOf(row.id);
 
       // deleteMany is idempotent — won't throw if the row is already gone.
       await db.user.deleteMany({

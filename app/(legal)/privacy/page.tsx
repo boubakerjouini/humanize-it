@@ -30,7 +30,7 @@ export default function PrivacyPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Privacy Policy</h1>
-        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 8, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 25, 2026</p>
       </div>
 
       <Section title="1. Who We Are">
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           <li style={li}><strong style={strong}>Your documents (signed-in users):</strong> when you check, rewrite or upload text in your dashboard, we save it as a document in your account so it appears in History. A document holds the original text (for PDF and DOCX uploads, the text extracted from the file; we don&apos;t keep the file itself), the rewritten text if you humanized it, the scores and pattern analysis, the tone, the word count and the date.</li>
           <li style={li}><strong style={strong}>Voice profiles (Voice Match, paid plans):</strong> when you create a voice, the writing samples you paste are sent once to our AI provider to build a short description of your style (sentence length, word choice, tone and similar traits). We store only that description (it may quote a short phrase you use often), the name you give the voice and the samples&apos; word count, never the samples themselves. You can delete a voice from the Voice page at any time, and deleting your account deletes them all.</li>
           <li style={li}><strong style={strong}>Usage data:</strong> words processed, number of rewrites, quota resets and timestamps, used to apply your plan&apos;s limits.</li>
-          <li style={li}><strong style={strong}>Subscription data:</strong> your plan (Free, Pro or Team) and billing status, through Lemon Squeezy. We never see your full card details.</li>
+          <li style={li}><strong style={strong}>Subscription data:</strong> your plan (Free, Pro or Team) and billing status, through Polar. We never see your full card details.</li>
           <li style={li}><strong style={strong}>Free tools without an account:</strong> the instant AI detector runs in your browser, so that text stays on your device. The optional deep scan and the free humanizer send your text to our server and our AI provider for a one-time analysis or rewrite; we don&apos;t store that text. To stop abuse, we keep short-lived counters keyed by your IP address (deleted after about a day).</li>
           <li style={li}><strong style={strong}>Email and lead data:</strong> when you give us your email on a form (a free guide, the emailed detector report, the Chrome extension waitlist or the Founding 100 list), we store your email, which form and resource it was, the topics you opted into, and how you found us (see Attribution below). The detector report email contains your scores and fix list, never your text.</li>
           <li style={li}><strong style={strong}>Consent records:</strong> for every opt-in, confirmation or unsubscribe: the topic, the exact wording you saw (by version), how you gave it (checkbox, confirmation button, preference page), the page, the time, your browser&apos;s user-agent string (shortened) and a keyed hash of your IP address rather than the address itself.</li>
@@ -99,10 +99,10 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="7. Third-Party Services">
-        <p style={{ marginBottom: '12px' }}>We use the following services to operate HumanizeIt. They process data on our behalf, except Lemon Squeezy, which handles your purchases as merchant of record under its own privacy policy:</p>
+        <p style={{ marginBottom: '12px' }}>We use the following services to operate HumanizeIt. They process data on our behalf, except Polar, which handles your purchases as merchant of record under its own privacy policy:</p>
         <ul style={ul}>
           <li style={li}><strong style={strong}>Clerk</strong> — Authentication (stores your email and sign-in details). <a href="https://clerk.com/privacy" target="_blank" rel="noopener" style={link}>Privacy Policy</a></li>
-          <li style={li}><strong style={strong}>Lemon Squeezy</strong> — Payment processing (stores billing information). <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener" style={link}>Privacy Policy</a></li>
+          <li style={li}><strong style={strong}>Polar</strong> — Payment processing (stores billing information). <a href="https://polar.sh/legal/privacy-policy" target="_blank" rel="noopener" style={link}>Privacy Policy</a></li>
           <li style={li}><strong style={strong}>Neon</strong> — Database hosting (stores your account, documents, usage, email and consent records)</li>
           <li style={li}><strong style={strong}>Vercel</strong> — Application hosting (processes all web requests), plus Vercel Web Analytics and Speed Insights (aggregate, cookieless page and performance statistics)</li>
           <li style={li}><strong style={strong}>Anthropic</strong> — AI processing: the text you submit for a deep scan, a rewrite or a document, and the writing samples for a voice profile, are sent to the Claude API. Anthropic does not train on API data.</li>

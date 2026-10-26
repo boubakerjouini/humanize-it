@@ -34,10 +34,10 @@ export interface PlanConfig {
   apiRequestsLimit: number;
   /** Max API keys allowed (0 for FREE, 3 for PRO, 10 for TEAM) */
   apiKeysMax: number;
-  /** Lemon Squeezy variant ID (monthly) — set LEMONSQUEEZY_PRO_VARIANT_ID / LEMONSQUEEZY_TEAM_VARIANT_ID */
-  lsVariantId: string | null;
-  /** Lemon Squeezy variant ID (annual) — set LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID / LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID */
-  lsVariantIdAnnual?: string | null;
+  /** Polar product ID (monthly) — set POLAR_PRO_PRODUCT_ID / POLAR_TEAM_PRODUCT_ID */
+  polarProductId: string | null;
+  /** Polar product ID (annual) — set POLAR_PRO_ANNUAL_PRODUCT_ID / POLAR_TEAM_ANNUAL_PRODUCT_ID */
+  polarProductIdAnnual?: string | null;
   uploadEnabled: boolean;
   uploadMaxWords: number;
   uploadMonthlyLimit: number;
@@ -61,7 +61,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rateLimit: 5,
     apiRequestsLimit: 0,
     apiKeysMax: 0,
-    lsVariantId: null,
+    polarProductId: null,
     uploadEnabled: false,
     uploadMaxWords: 0,
     uploadMonthlyLimit: 0,
@@ -84,8 +84,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rateLimit: 20,
     apiRequestsLimit: 1_000,
     apiKeysMax: 3,
-    lsVariantId: process.env.LEMONSQUEEZY_PRO_VARIANT_ID ?? null,
-    lsVariantIdAnnual: process.env.LEMONSQUEEZY_PRO_ANNUAL_VARIANT_ID ?? null,
+    polarProductId: process.env.POLAR_PRO_PRODUCT_ID ?? null,
+    polarProductIdAnnual: process.env.POLAR_PRO_ANNUAL_PRODUCT_ID ?? null,
     uploadEnabled: true,
     uploadMaxWords: 10_000,
     uploadMonthlyLimit: 20,
@@ -108,8 +108,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     rateLimit: 60,
     apiRequestsLimit: 10_000,
     apiKeysMax: 10,
-    lsVariantId: process.env.LEMONSQUEEZY_TEAM_VARIANT_ID ?? null,
-    lsVariantIdAnnual: process.env.LEMONSQUEEZY_TEAM_ANNUAL_VARIANT_ID ?? null,
+    polarProductId: process.env.POLAR_TEAM_PRODUCT_ID ?? null,
+    polarProductIdAnnual: process.env.POLAR_TEAM_ANNUAL_PRODUCT_ID ?? null,
     uploadEnabled: true,
     uploadMaxWords: 50_000,
     uploadMonthlyLimit: 100,
@@ -117,14 +117,15 @@ export const PLANS: Record<PlanId, PlanConfig> = {
 } as const;
 
 /**
- * Find a plan by its Lemon Squeezy variant ID (monthly or annual).
+ * Find a plan by its Polar product ID (monthly or annual).
  */
-export function getPlanByVariantId(variantId: string): PlanConfig | null {
+export function getPlanByProductId(productId: string): PlanConfig | null {
+  if (!productId) return null;
   return (
     Object.values(PLANS).find(
       (plan) =>
-        plan.lsVariantId === variantId ||
-        plan.lsVariantIdAnnual === variantId
+        plan.polarProductId === productId ||
+        plan.polarProductIdAnnual === productId
     ) ?? null
   );
 }
@@ -146,9 +147,9 @@ export const ORG_SEAT = {
   minSeats: 2,
   /** Safety cap on a single self-serve org. */
   maxSeats: 500,
-  /** Lemon Squeezy variant for the per-seat subscription (quantity = seats). */
-  lsVariantId: process.env.LEMONSQUEEZY_SEAT_VARIANT_ID ?? null,
-  lsVariantIdAnnual: process.env.LEMONSQUEEZY_SEAT_ANNUAL_VARIANT_ID ?? null,
+  /** Polar product for the per-seat subscription (seat-based price). Not on sale yet: no product exists. */
+  polarProductId: process.env.POLAR_SEAT_PRODUCT_ID ?? null,
+  polarProductIdAnnual: process.env.POLAR_SEAT_ANNUAL_PRODUCT_ID ?? null,
 } as const;
 
 /** Members of an org inherit TEAM-tier feature flags. */
@@ -200,8 +201,8 @@ export const GUARANTEE_DAYS = 14;
 export const TEAM_ANNUAL_GUARANTEE_DAYS = 30;
 
 // ===========================================================
-// One-time offers (LemonSqueezy one-time products). Each is hidden while its
-// variant env var is unset; read the env inside functions so client bundles
+// One-time offers (Polar one-time products). Each is hidden while its
+// product env var is unset; read the env inside functions so client bundles
 // never inline a server-only value.
 // ===========================================================
 
@@ -216,8 +217,8 @@ export const FOUNDING = {
   grantDays: 730,
 } as const;
 
-export function foundingVariantId(env: Env = process.env): string | null {
-  return env.LEMONSQUEEZY_FOUNDING_VARIANT_ID?.trim() || null;
+export function foundingProductId(env: Env = process.env): string | null {
+  return env.POLAR_FOUNDING_PRODUCT_ID?.trim() || null;
 }
 
 /**
@@ -230,32 +231,42 @@ export function foundingExpiry(user: { plan: string; planExpiresAt: Date | null 
   return new Date(base + FOUNDING.grantDays * 86_400_000);
 }
 
-export type WordPackConfig = { variantId: string; priceUsd: number; words: number; days: number };
+export type WordPackTerms = { priceUsd: number; words: number; days: number };
+export type WordPackConfig = WordPackTerms & { productId: string };
 
 const positiveInt = (raw: string | undefined, fallback: number): number => {
   const n = Number(raw);
   return Number.isInteger(n) && n > 0 ? n : fallback;
 };
 
-/** Word Pack (downsell, Test A): $5 for 20,000 bonus words valid 60 days. Null when not on sale. */
+/**
+ * What a Word Pack gives (Test A: $5 for 20,000 bonus words valid 60 days),
+ * on sale or not: a pack sold before the offer was switched off is still
+ * fulfilled and refunded on these terms.
+ */
+export function wordPackTerms(env: Env = process.env): WordPackTerms {
+  return { priceUsd: 5, words: positiveInt(env.WORDPACK_WORDS, 20_000), days: positiveInt(env.WORDPACK_DAYS, 60) };
+}
+
+/** The Word Pack on sale now, or null when not on sale. */
 export function wordPackConfig(env: Env = process.env): WordPackConfig | null {
-  const variantId = env.LEMONSQUEEZY_WORDPACK_VARIANT_ID?.trim();
-  if (!variantId) return null;
-  return {
-    variantId,
-    priceUsd: 5,
-    words: positiveInt(env.WORDPACK_WORDS, 20_000),
-    days: positiveInt(env.WORDPACK_DAYS, 60),
-  };
+  const productId = env.POLAR_WORDPACK_PRODUCT_ID?.trim();
+  if (!productId) return null;
+  return { productId, ...wordPackTerms(env) };
 }
 
 export type OneTimeOffer = "founding" | "wordpack";
 
-/** Which one-time offer a LemonSqueezy variant sells, if any (subscription variants return null). */
-export function oneTimeOfferForVariant(variantId: string, env: Env = process.env): OneTimeOffer | null {
-  if (!variantId) return null;
-  if (variantId === foundingVariantId(env)) return "founding";
-  if (variantId === wordPackConfig(env)?.variantId) return "wordpack";
+/** Narrows a stored value (Purchase.kind, checkout metadata) to a one-time offer. */
+export function isOneTimeOffer(value: unknown): value is OneTimeOffer {
+  return value === "founding" || value === "wordpack";
+}
+
+/** Which one-time offer a Polar product sells, if any (subscription products return null). */
+export function oneTimeOfferForProduct(productId: string, env: Env = process.env): OneTimeOffer | null {
+  if (!productId) return null;
+  if (productId === foundingProductId(env)) return "founding";
+  if (productId === wordPackConfig(env)?.productId) return "wordpack";
   return null;
 }
 

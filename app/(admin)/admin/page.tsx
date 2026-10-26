@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
       )}
 
       {/* Revenue (real money) */}
-      <SectionTitle sub="Actual LemonSqueezy subscriptions only — discount-code grants are excluded.">Revenue</SectionTitle>
+      <SectionTitle sub="Actual Polar subscriptions only — discount-code grants are excluded.">Revenue</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
         <KpiCard icon={DollarSign} label="Paid MRR (real)" value={money(m.paidMrr)} sub={`${m.paidIndividuals} subs · ${m.paidSeats} paid seats`} accent={THEME.human} />
         <KpiCard icon={UserCheck} label="Paying customers" value={(m.paidIndividuals + m.paidOrgs).toLocaleString()} sub={`${m.paidPro} PRO · ${m.paidTeam} TEAM · ${m.paidOrgs} orgs`} accent={THEME.human} />

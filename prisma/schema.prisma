@@ -87,13 +87,13 @@ model Organization {
   wordsUsed        Int       @default(0)
   quotaResetAt     DateTime  @default(now())
 
-  // Org-level billing (Lemon Squeezy, quantity = seats)
-  lsCustomerId     String?
-  lsSubscriptionId String?   @unique
-  lsVariantId      String?
-  currentPeriodEnd DateTime?
-  status           String    @default("active")
-  billingEmail     String?
+  // Org-level billing (Polar). @map keeps the old column names (no migration).
+  polarCustomerId     String?   @map("lsCustomerId")
+  polarSubscriptionId String?   @unique @map("lsSubscriptionId")
+  polarProductId      String?   @map("lsVariantId")
+  currentPeriodEnd    DateTime?
+  status              String    @default("active")
+  billingEmail        String?
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -202,16 +202,16 @@ model Document {
 }
 
 model Subscription {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  // Lemon Squeezy fields — @map keeps the existing DB column names (no migration needed)
-  lsCustomerId      String    @unique  @map("stripeCustomerId")
-  lsSubscriptionId  String?   @unique  @map("stripeSubscriptionId")
-  lsVariantId       String?            @map("stripePriceId")
-  lsCurrentPeriodEnd DateTime?         @map("stripeCurrentPeriodEnd")
-  status            String
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  // Polar fields — @map keeps the existing DB column names (no migration needed)
+  polarCustomerId     String    @unique @map("stripeCustomerId")
+  polarSubscriptionId String?   @unique @map("stripeSubscriptionId")
+  polarProductId      String?   @map("stripePriceId")
+  currentPeriodEnd    DateTime? @map("stripeCurrentPeriodEnd")
+  status              String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -685,18 +685,18 @@ model VoiceProfile {
   @@index([userId])
 }
 
-/// One-time LemonSqueezy orders (Founding 100, word packs). lsOrderId makes webhook replays idempotent.
+/// One-time Polar orders (Founding 100, word packs). polarOrderId makes webhook replays idempotent.
 model Purchase {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// founding | wordpack
-  kind        String
-  lsOrderId   String   @unique
-  lsVariantId String?
-  amountCents Int?
-  words       Int?
-  createdAt   DateTime @default(now())
+  kind           String
+  polarOrderId   String   @unique @map("lsOrderId")
+  polarProductId String?  @map("lsVariantId")
+  amountCents    Int?
+  words          Int?
+  createdAt      DateTime @default(now())
 
   @@index([kind])
   @@index([userId])

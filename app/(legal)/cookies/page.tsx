@@ -31,7 +31,7 @@ export default function CookiesPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Cookie Policy</h1>
-        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 8, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 25, 2026</p>
       </div>
 
       <Section title="1. What Are Cookies">
@@ -56,7 +56,7 @@ export default function CookiesPage() {
                 { name: 'hz_ft', provider: 'HumanizeIt (first-party)', purpose: 'Remembers how you first arrived (referring site, landing page, campaign tags) so we know which pages and sources work. Kept 180 days.', required: 'No' },
                 { name: 'hz_lt', provider: 'HumanizeIt (first-party)', purpose: 'Same as hz_ft, for your most recent visit. Kept 30 days.', required: 'No' },
                 { name: '_ga, _ga_*', provider: 'Google Analytics', purpose: 'Counts visits and where they come from, with a random ID for this browser. Kept up to 2 years. Set only outside the EU, the EEA, the UK and Switzerland, without Global Privacy Control, and if you have not refused (section 5).', required: 'No' },
-                { name: 'ls_*', provider: 'Lemon Squeezy', purpose: 'Checkout session (payment flow only)', required: 'Checkout only' },
+                { name: 'polar.sh cookies', provider: 'Polar', purpose: 'Checkout session on Polar’s payment page (payment flow only)', required: 'Checkout only' },
               ].map((row, i) => (
                 <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : THEME.surface2 }}>
                   <td style={{ padding: '10px 12px', fontSize: '13px', fontFamily: THEME.fontMono, color: THEME.human, border: `1px solid ${THEME.border}` }}>{row.name}</td>

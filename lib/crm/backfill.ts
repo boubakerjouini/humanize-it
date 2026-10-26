@@ -46,7 +46,7 @@ export async function backfillContacts(opts: { batchSize?: number } = {}): Promi
       }),
       db.subscription.findMany({
         where: { userId: { in: ids } },
-        select: { id: true, userId: true, status: true, lsVariantId: true, createdAt: true },
+        select: { id: true, userId: true, status: true, polarProductId: true, createdAt: true },
       }),
       db.redemption.findMany({
         where: { userId: { in: ids } },
@@ -99,7 +99,7 @@ export async function backfillContacts(opts: { batchSize?: number } = {}): Promi
                 type: "subscription_started",
                 dedupeKey: `subscription_started:backfill:${sub.id}`,
                 occurredAt: sub.createdAt,
-                props: { status: sub.status, variantId: sub.lsVariantId, via: "backfill" },
+                props: { status: sub.status, productId: sub.polarProductId, via: "backfill" },
               })
             );
           }

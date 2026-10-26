@@ -23,7 +23,7 @@ const PAYING = {
       memberships: {
         some: {
           seatActive: true,
-          organization: { is: { lsSubscriptionId: { not: null }, status: { in: ["active", "on_trial", "past_due"] } } },
+          organization: { is: { polarSubscriptionId: { not: null }, status: { in: ["active", "on_trial", "past_due"] } } },
         },
       },
     },
