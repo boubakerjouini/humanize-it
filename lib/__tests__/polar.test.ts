@@ -12,7 +12,7 @@ jest.mock("@polar-sh/sdk/2026-10", () => ({
 
 import { errors } from "@polar-sh/sdk/2026-10";
 import type { Polar } from "@polar-sh/sdk/2026-10";
-import { BillingAccountError, deleteCustomerOf, ensureCustomer } from "@/lib/polar";
+import { BillingAccountError, customerPortalUrl, deleteCustomerOf, ensureCustomer } from "@/lib/polar";
 
 const notFound = () => new errors.ResourceNotFound(404, { error: "ResourceNotFound", detail: "Not found" });
 const invalid = (field: string, msg: string) =>
@@ -81,6 +81,26 @@ describe("ensureCustomer", () => {
     getExternal.mockRejectedValue(new Error("Polar down"));
     await expect(ensureCustomer(polar, user)).rejects.toThrow("Polar down");
     expect(create).not.toHaveBeenCalled();
+  });
+});
+
+describe("customerPortalUrl", () => {
+  const portal = (create: jest.Mock) => ({ customerSessions: { create } }) as unknown as Polar;
+
+  it("opens the portal by our user id", async () => {
+    const create = jest.fn(async () => ({ customer_portal_url: "https://polar.example/portal/xyz" }));
+    await expect(customerPortalUrl(portal(create), "user_1")).resolves.toBe("https://polar.example/portal/xyz");
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ external_customer_id: "user_1" }));
+  });
+
+  it("returns null for a user who never bought anything (Polar answers 422, not 404)", async () => {
+    const create = jest.fn(async () => Promise.reject(invalid("external_customer_id", "Customer does not exist.")));
+    await expect(customerPortalUrl(portal(create), "user_1")).resolves.toBeNull();
+  });
+
+  it("passes any other Polar error through", async () => {
+    const create = jest.fn(async () => Promise.reject(new Error("Polar down")));
+    await expect(customerPortalUrl(portal(create), "user_1")).rejects.toThrow("Polar down");
   });
 });
 

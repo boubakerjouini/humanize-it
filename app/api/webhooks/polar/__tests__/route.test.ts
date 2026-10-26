@@ -504,6 +504,20 @@ describe("subscriptions", () => {
     expect(tracked()).toEqual(["subscription_resumed"]);
   });
 
+  it("takes nothing more on later deliveries for a paused subscription, so a grant made during the pause stays", async () => {
+    mockDb.subscription.findUnique.mockResolvedValue(storedRow("paused"));
+    await deliver(subscription("subscription.updated", { status: "paused", modifiedAt: "2026-10-27T10:00:00Z" }));
+    await deliver(subscription("subscription.revoked", { status: "canceled", modifiedAt: "2026-10-28T10:00:00Z" }));
+    expect(tx.user.update).not.toHaveBeenCalled();
+    expect(mockDb.subscription.upsert.mock.calls[1][0].update.status).toBe("expired");
+  });
+
+  it("records the start of a subscription first seen already cancelled at period end", async () => {
+    await deliver(subscription("subscription.active", { cancelAtPeriodEnd: true }));
+    expect(tx.user.update).toHaveBeenCalledWith({ where: { id: "user_1" }, data: { plan: "TEAM", planExpiresAt: null } });
+    expect(tracked()).toEqual(["subscription_started", "subscription_cancelled"]);
+  });
+
   it("ends a subscription Polar gave up collecting (unpaid)", async () => {
     mockDb.subscription.findUnique.mockResolvedValue(storedRow("past_due"));
     await deliver(subscription("subscription.revoked", { status: "unpaid" }));
@@ -609,6 +623,16 @@ describe("subscriptions", () => {
       await deliver(subscription("subscription.active", { productId: "prod_pro" }));
       expect(get).toHaveBeenCalledWith("sub_1");
       expect(tx.user.update).toHaveBeenCalledWith({ where: { id: "user_1" }, data: { plan: "TEAM", planExpiresAt: null } });
+    });
+
+    it("keeps the delivery when Polar's copy is older (a lagging read replica)", async () => {
+      // The delivery reports the upgrade to Team; the API still serves the Pro version.
+      const get = jest.fn(async () => subscription("subscription.updated", { productId: "prod_pro", modifiedAt: "2026-10-25T09:59:58Z" }).data);
+      (getPolar as jest.Mock).mockReturnValue({ subscriptions: { get } });
+      mockDb.subscription.findUnique.mockResolvedValue(storedRow("active", { productId: "prod_pro" }));
+      await deliver(subscription("subscription.updated", { productId: "prod_team", modifiedAt: "2026-10-25T10:00:00Z" }));
+      expect(tx.user.update).toHaveBeenCalledWith({ where: { id: "user_1" }, data: { plan: "TEAM", planExpiresAt: null } });
+      expect(tracked()).toEqual(["subscription_plan_changed"]);
     });
 
     it("uses the delivery's copy when Polar can't be reached", async () => {

@@ -75,13 +75,24 @@ export async function ensureCustomer(polar: Polar, user: { id: string; email: st
   }
 }
 
-/** A customer-portal link for the user: plan changes, card, invoices, cancel. */
-export async function customerPortalUrl(polar: Polar, userId: string): Promise<string> {
-  const session = await polar.customerSessions.create({
-    external_customer_id: userId,
-    return_url: `${appUrl()}/dashboard/settings`,
-  });
-  return session.customer_portal_url;
+/**
+ * A customer-portal link for the user (plan changes, card, invoices, cancel),
+ * or null when the user has no Polar customer, i.e. never bought anything.
+ */
+export async function customerPortalUrl(polar: Polar, userId: string): Promise<string | null> {
+  try {
+    const session = await polar.customerSessions.create({
+      external_customer_id: userId,
+      return_url: `${appUrl()}/dashboard/settings`,
+    });
+    return session.customer_portal_url;
+  } catch (err) {
+    // Polar answers an unknown external id with 422 "Customer does not exist.", not 404.
+    const unknown =
+      err instanceof errors.HTTPValidationError && (err.error.detail ?? []).some((d) => d.loc.includes("external_customer_id"));
+    if (unknown) return null;
+    throw err;
+  }
 }
 
 /**

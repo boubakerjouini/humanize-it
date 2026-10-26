@@ -74,7 +74,6 @@ it("opens the checkout on the buyer's own Polar customer, with our user id in th
 it.each([
   ["active", null],
   ["past_due", null],
-  ["paused", null],
   ["cancelled", 10 * DAY],
 ])("sends a %s subscriber to the portal to change plan", async (status, endsIn) => {
   mockDb.user.findUnique.mockResolvedValue({
@@ -89,6 +88,26 @@ it.each([
   expect(mockPortalUrl).toHaveBeenCalledWith(mockPolar, "user_1");
   expect(mockPolar.checkouts.create).not.toHaveBeenCalled();
   expect(trackCheckoutStarted).not.toHaveBeenCalled();
+});
+
+it("sends a paused subscriber to support: the portal can't resume, and a second subscription would double-bill", async () => {
+  mockDb.user.findUnique.mockResolvedValue({ ...buyer, subscription: { polarSubscriptionId: "sub_1", status: "paused", currentPeriodEnd: null } });
+
+  const res = await checkout({ plan: "PRO" });
+
+  expect(res.status).toBe(409);
+  expect((await res.json()).error.code).toBe("SUBSCRIPTION_PAUSED");
+  expect(mockPortalUrl).not.toHaveBeenCalled();
+  expect(mockPolar.checkouts.create).not.toHaveBeenCalled();
+});
+
+it("falls back to a checkout when Polar has no customer behind the stored subscription", async () => {
+  mockDb.user.findUnique.mockResolvedValue({ ...buyer, subscription: { polarSubscriptionId: "sub_1", status: "active", currentPeriodEnd: null } });
+  mockPortalUrl.mockResolvedValue(null);
+
+  await checkout({ plan: "PRO" });
+
+  expect(mockPolar.checkouts.create).toHaveBeenCalled();
 });
 
 it("opens a new checkout once a cancelled subscription's period is over", async () => {

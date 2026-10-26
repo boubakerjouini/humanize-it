@@ -15,8 +15,8 @@ import { trackCheckoutStarted } from "@/lib/crm/hooks";
 import { runAfter } from "@/lib/growth/safe";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
-/** Local statuses of a subscription Polar still counts as live (lib/crm/lifecycle.ts vocabulary). */
-const LIVE_STATUSES = ["active", "on_trial", "past_due", "paused"];
+/** Local statuses of a subscription Polar still bills (lib/crm/lifecycle.ts vocabulary). */
+const LIVE_STATUSES = ["active", "on_trial", "past_due"];
 
 function hasLiveSubscription(sub: { polarSubscriptionId: string | null; status: string; currentPeriodEnd: Date | null } | null): boolean {
   if (!sub?.polarSubscriptionId) return false;
@@ -87,8 +87,17 @@ export async function POST(req: Request) {
       );
     }
 
+    if (user.subscription?.polarSubscriptionId && user.subscription.status === "paused") {
+      // Polar's portal can't resume unless its pause setting is on, and a new
+      // subscription would double-bill once the paused one resumes.
+      return NextResponse.json(
+        { error: { code: "SUBSCRIPTION_PAUSED", message: "Your subscription is paused. Email support@humanizeit.app and we'll resume it." } },
+        { status: 409 }
+      );
+    }
     if (hasLiveSubscription(user.subscription)) {
-      return NextResponse.json({ url: await customerPortalUrl(polar, user.id) });
+      const portal = await customerPortalUrl(polar, user.id);
+      if (portal) return NextResponse.json({ url: portal });
     }
 
     let customerId: string;

@@ -6,7 +6,6 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { errors } from "@polar-sh/sdk/2026-10";
 import { customerPortalUrl, getPolar, POLAR_CALLS_PER_MINUTE } from "@/lib/polar";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
@@ -42,17 +41,16 @@ export async function POST() {
       );
     }
 
-    try {
-      // Opened by our user id, so it can only ever show this user's own billing.
-      return NextResponse.json({ url: await customerPortalUrl(polar, user.id) });
-    } catch (err) {
-      // No Polar customer yet: nothing was ever bought (a comped or granted plan).
-      if (!(err instanceof errors.ResourceNotFound)) throw err;
+    // Opened by our user id, so it can only ever show this user's own billing.
+    const url = await customerPortalUrl(polar, user.id);
+    if (!url) {
+      // No Polar customer: nothing was ever bought (a comped, granted or seat plan).
       return NextResponse.json(
         { error: { code: "NO_SUBSCRIPTION", message: "There's no billing for this account: your plan wasn't bought through checkout." } },
         { status: 400 }
       );
     }
+    return NextResponse.json({ url });
   } catch (err) {
     console.error("[billing/portal] Polar error:", err);
     return NextResponse.json(

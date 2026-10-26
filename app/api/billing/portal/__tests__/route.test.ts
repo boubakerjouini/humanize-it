@@ -2,8 +2,6 @@
 // so it can only ever show the signed-in user's billing, and says so plainly
 // when the account has nothing billed through Polar.
 
-import { errors } from "@polar-sh/sdk/2026-10";
-
 jest.mock("@clerk/nextjs/server", () => ({ auth: jest.fn(async () => ({ userId: "clerk_1" })) }));
 const mockPolar = {};
 const mockPortalUrl = jest.fn();
@@ -35,7 +33,7 @@ it("opens the portal of the signed-in user's own Polar customer", async () => {
 });
 
 it("explains that a comped plan has no billing to manage", async () => {
-  mockPortalUrl.mockRejectedValue(new errors.ResourceNotFound(404, { error: "ResourceNotFound", detail: "Not found" }));
+  mockPortalUrl.mockResolvedValue(null); // no Polar customer for this user
 
   const res = await POST();
 

@@ -20,10 +20,11 @@
 //                              (Pro time, bonus words, the seat).
 //
 // Every subscription event syncs the local row and the plan from the
-// subscription's state, read again from Polar's API when it can be: a retried
-// delivery carries the payload of its first attempt, possibly older than
-// changes that went through since. Polar's statuses are stored in the
-// vocabulary the CRM and quota code already read (localStatus below).
+// subscription's state: the newer of the delivery and Polar's API copy. A
+// retried delivery carries the payload of its first attempt, possibly older
+// than changes that went through since, while the API reads from a replica
+// that can lag the change a fresh delivery reports. Polar's statuses are
+// stored in the vocabulary the CRM and quota code already read (localStatus).
 //
 // Whose purchase it is: our checkouts open on the buyer's own Polar customer
 // (external id = our user id) and also put the user id in the metadata, which
@@ -51,7 +52,9 @@
 // recorded after the DB write (runAfter, so the response never waits).
 //
 // Keep "Allow multiple subscriptions" off in Polar: a user has one
-// Subscription row, and /api/checkout sends subscribers to the portal.
+// Subscription row, and /api/checkout sends subscribers to the portal. A
+// paused subscriber is sent to support (the portal can't resume unless its
+// pause setting is on, and a second subscription would double-bill).
 // ===========================================================
 
 import { webhooks } from "@polar-sh/sdk/2026-10";
@@ -170,13 +173,20 @@ async function foundingEntitlementEnd(userId: string, now: Date): Promise<Date |
 
 type Track = (userId: string, type: BillingEventType, props: Record<string, string | null>, dedupeKey: string) => void;
 
-/** Local statuses of a subscription that provided the plan (an incomplete one never did). */
-const PROVIDED = new Set(["active", "on_trial", "past_due", "paused", "cancelled"]);
+/**
+ * Local statuses under which a subscription gives the plan. Not incomplete
+ * (it never did) and not paused (the plan was already taken away when the
+ * pause was stored, so a later delivery must not take away a grant made since).
+ */
+const PROVIDED = new Set(["active", "on_trial", "past_due", "cancelled"]);
 
 /** The CRM event for a local status change, if it is one we record. */
 function transition(before: string | null, after: string): BillingEventType | null {
   if (before === after) return null;
-  if (before === null || before === "incomplete") return PAYING_STATUSES.includes(after) ? "subscription_started" : null;
+  if (before === null || before === "incomplete") {
+    // "cancelled" is still paid up: first seen already set to cancel at period end.
+    return PAYING_STATUSES.includes(after) || after === "cancelled" ? "subscription_started" : null;
+  }
   if (after === "active" && before === "past_due") return "payment_recovered";
   if (after === "active" && (before === "cancelled" || before === "paused")) return "subscription_resumed";
   if (after === "past_due") return "payment_failed";
@@ -186,12 +196,22 @@ function transition(before: string | null, after: string): BillingEventType | nu
   return null;
 }
 
-/** The subscription as Polar has it now; the delivery's copy when the API can't be reached. */
+/** When Polar last wrote this copy of the subscription. */
+function versionOf(sub: Pick<PolarSubscription, "modified_at" | "created_at">): number {
+  return Date.parse(sub.modified_at ?? sub.created_at);
+}
+
+/**
+ * The newest known state of the subscription: Polar's API copy, unless the
+ * delivery is newer (the API reads from a replica that can lag the change
+ * this delivery reports). The delivery's copy when the API can't be reached.
+ */
 async function currentState(sub: PolarSubscription): Promise<PolarSubscription> {
   const polar = getPolar();
   if (!polar) return sub;
   try {
-    return await polar.subscriptions.get(sub.id);
+    const live = await polar.subscriptions.get(sub.id);
+    return versionOf(live) < versionOf(sub) ? sub : live;
   } catch (err) {
     console.warn(`[polar/webhook] could not read subscription ${sub.id} from Polar; using the delivery's copy:`, err);
     return sub;
@@ -294,6 +314,10 @@ async function syncSubscription(eventType: PolarEvent["type"], delivered: PolarS
   if (type) {
     // A subscription starts once, whichever delivery shows it first.
     track(userId, type, props, type === "subscription_started" ? `polar:${sub.id}:started` : `polar:${sub.id}:${type}:${version}`);
+  }
+  if (type === "subscription_started" && status === "cancelled") {
+    // First seen already cancelled at period end: record both steps.
+    track(userId, "subscription_cancelled", props, `polar:${sub.id}:subscription_cancelled:${version}`);
   }
   if (before !== null && previous?.polarProductId && previous.polarProductId !== sub.product_id) {
     // A product switch (plan or monthly/annual); plain renewals keep the product.
