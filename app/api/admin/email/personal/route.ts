@@ -14,15 +14,11 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
 import { getOrCreateContactForUser } from "@/lib/crm/contacts";
-import { hasRecentPersonalTest, personalDigest, personalEmailSchema } from "@/lib/email/personal";
-import { sendEmail } from "@/lib/email/send";
-import { checkDailyLimit } from "@/lib/rate-limit";
+import { PERSONAL_DAILY_LIMIT, personalEmailSchema, sendPersonalNote } from "@/lib/email/personal";
 import { fail, handleError, readJson } from "../_lib/respond";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const DAILY_LIMIT = 40;
 
 const bodySchema = personalEmailSchema.extend({
   contactId: z.string().trim().min(1).max(64),
@@ -37,22 +33,12 @@ export async function POST(req: Request) {
     const contact = await db.contact.findUnique({ where: { id: input.contactId }, select: { id: true } });
     if (!contact) return fail("NOT_FOUND", "Contact not found.", 404);
 
-    const digest = personalDigest(input.subject, input.bodyMd);
     const ownContactId = await getOrCreateContactForUser(admin.id);
-    if (!ownContactId || !(await hasRecentPersonalTest(ownContactId, digest))) {
-      return fail("TEST_REQUIRED", "Send yourself a test of this exact email first, then send it.", 409);
-    }
+    const sent = ownContactId ? await sendPersonalNote({ ownContactId, contactId: contact.id, email: input }) : { status: "test_required" as const };
+    if (sent.status === "test_required") return fail("TEST_REQUIRED", "Send yourself a test of this exact email first, then send it.", 409);
+    if (sent.status === "rate_limited") return fail("RATE_LIMITED", `Daily limit of ${PERSONAL_DAILY_LIMIT} personal emails reached.`, 429);
 
-    const limit = await checkDailyLimit("admin:personal", DAILY_LIMIT);
-    if (!limit.ok) return fail("RATE_LIMITED", `Daily limit of ${DAILY_LIMIT} personal emails reached.`, 429);
-
-    const result = await sendEmail({
-      contactId: contact.id,
-      template: "personal_note",
-      props: { subject: input.subject, bodyMd: input.bodyMd },
-      dedupeKey: `personal:${contact.id}:${digest}`,
-      pool: "inline",
-    });
+    const { result } = sent;
     await logAudit({
       actorEmail: admin.email,
       action: "email.personal.send",

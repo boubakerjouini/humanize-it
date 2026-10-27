@@ -72,7 +72,8 @@ export type TemplateProps = {
   referral_reward: Base & { words: number; role: "referrer" | "referee" };
   // Admin-written
   campaign: Base & { subject: string; preheader?: string; bodyMd: string };
-  personal_note: Base & { subject: string; bodyMd: string };
+  /** inReplyTo: Message-ID of the support email this answers, so it threads as a reply. */
+  personal_note: Base & { subject: string; bodyMd: string; inReplyTo?: string };
 };
 
 export type TemplateKey = keyof TemplateProps;
