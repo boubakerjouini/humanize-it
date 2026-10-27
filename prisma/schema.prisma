@@ -51,6 +51,7 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   documents    Document[]
+  toolRuns     ToolRun[]
   subscription Subscription?
   redemptions  Redemption[]
   apiKeys      ApiKey[]
@@ -162,6 +163,34 @@ model ApiKey {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+/// One run of a free tool (public detector, deep scan, free humanizer, blog widget). Metadata only:
+/// never the text, the IP or an email (the privacy policy promises free-tool text isn't stored).
+/// Feeds the admin "Free tools" view and per-page usage.
+model ToolRun {
+  id         String   @id @default(cuid())
+  /// detector_instant | detector_deep | humanizer_free
+  tool       String
+  /// Path of the page the tool ran on, e.g. /ai-detector, /bypass/turnitin, /blog/<slug>
+  page       String
+  wordCount  Int
+  /// AI likelihood 0-100 (before the rewrite for the humanizer)
+  score      Float?
+  /// Humanizer only: AI likelihood after the rewrite
+  scoreAfter Float?
+  /// Instant check: its score band (likely-human … likely-ai); deep scan: its confidence (low | medium | high)
+  band       String?
+  /// Set when the visitor was signed in; cleared if the account is deleted
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// How the visitor arrived: utm_source, else the attribution channel; null without attribution
+  source     String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([page, createdAt])
   @@index([userId])
 }
 

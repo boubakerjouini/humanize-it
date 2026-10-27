@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 import { isToneAllowed } from "@/lib/plans";
@@ -27,6 +28,7 @@ interface HumanizeResponse {
  * per-document humanizing lives behind auth in the dashboard.
  */
 export function HumanizerTool() {
+  const pathname = usePathname();
   const [text, setText] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("standard");
   const [lockedTone, setLockedTone] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function HumanizerTool() {
       const r = await fetch("/api/public/humanize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, tone }),
+        body: JSON.stringify({ text, tone, page: pathname }),
       });
       setRes((await r.json()) as HumanizeResponse);
     } catch {
@@ -112,7 +114,7 @@ export function HumanizerTool() {
               cursor: canRun ? "pointer" : "not-allowed", fontFamily: THEME.fontSans,
             }}
           >
-            {loading ? "Humanizing…" : "Humanize free →"}
+            {loading ? "Humanizing…" : "Humanize free"}
           </button>
         </div>
         {lockedTone && (
@@ -140,7 +142,7 @@ export function HumanizerTool() {
                 padding: "10px 24px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.3),
               }}
             >
-              Create a free account &rarr;
+              Create a free account
             </Link>
           )}
           {err.signupCta && (
@@ -197,7 +199,7 @@ export function HumanizerTool() {
                 borderRadius: THEME.radius, textDecoration: "none",
               }}
             >
-              Unlimited rewrites with Pro &rarr;
+              Unlimited rewrites with Pro
             </Link>
           </div>
         </div>

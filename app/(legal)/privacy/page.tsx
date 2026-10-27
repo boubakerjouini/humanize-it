@@ -30,7 +30,7 @@ export default function PrivacyPage() {
     <>
       <div style={{ marginBottom: '48px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: 700, color: THEME.text, marginBottom: '8px', fontFamily: THEME.fontHeading, letterSpacing: '-0.02em' }}>Privacy Policy</h1>
-        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 25, 2026</p>
+        <p style={{ color: THEME.textDim, fontSize: '14px' }}>Last updated: October 28, 2026</p>
       </div>
 
       <Section title="1. Who We Are">
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           <li style={li}><strong style={strong}>Voice profiles (Voice Match, paid plans):</strong> when you create a voice, the writing samples you paste are sent once to our AI provider to build a short description of your style (sentence length, word choice, tone and similar traits). We store only that description (it may quote a short phrase you use often), the name you give the voice and the samples&apos; word count, never the samples themselves. You can delete a voice from the Voice page at any time, and deleting your account deletes them all.</li>
           <li style={li}><strong style={strong}>Usage data:</strong> words processed, number of rewrites, quota resets and timestamps, used to apply your plan&apos;s limits.</li>
           <li style={li}><strong style={strong}>Subscription data:</strong> your plan (Free, Pro or Team) and billing status, through Polar. We never see your full card details.</li>
-          <li style={li}><strong style={strong}>Free tools without an account:</strong> the instant AI detector runs in your browser, so that text stays on your device. The optional deep scan and the free humanizer send your text to our server and our AI provider for a one-time analysis or rewrite; we don&apos;t store that text. To stop abuse, we keep short-lived counters keyed by your IP address (deleted after about a day).</li>
+          <li style={li}><strong style={strong}>Free tools without an account:</strong> the instant AI detector runs in your browser, so that text stays on your device. The optional deep scan and the free humanizer send your text to our server and our AI provider for a one-time analysis or rewrite; we don&apos;t store that text. To stop abuse, we keep short-lived counters keyed by your IP address (deleted after about a day). For each check or rewrite we keep a usage record so we know which tools and pages are used: the tool, the page, the word count, the score, how you arrived (only where attribution is allowed, see below) and your account if you&apos;re signed in. It never contains your text, your IP address or your email.</li>
           <li style={li}><strong style={strong}>Email and lead data:</strong> when you give us your email on a form (a free guide, the emailed detector report, the Chrome extension waitlist or the Founding 100 list), we store your email, which form and resource it was, the topics you opted into, and how you found us (see Attribution below). The detector report email contains your scores and fix list, never your text.</li>
           <li style={li}><strong style={strong}>Consent records:</strong> for every opt-in, confirmation or unsubscribe: the topic, the exact wording you saw (by version), how you gave it (checkbox, confirmation button, preference page), the page, the time, your browser&apos;s user-agent string (shortened) and a keyed hash of your IP address rather than the address itself.</li>
           <li style={li}><strong style={strong}>Email delivery records:</strong> for each email we send: which email it was, when, and whether it was delivered, bounced or marked as spam. These records store a hash of your address and its domain, not the address.</li>
@@ -120,7 +120,7 @@ export default function PrivacyPage() {
         <ul style={ul}>
           <li style={li}><strong style={strong}>Account data and documents:</strong> kept while your account exists. You can delete any document from History at any time, and deleting your account deletes your documents. The Free plan&apos;s History shows your 5 most recent documents; older documents stay stored in your account until you delete them or your account.</li>
           <li style={li}><strong style={strong}>Backups:</strong> deleted data can remain in database backups for up to 90 days.</li>
-          <li style={li}><strong style={strong}>Text sent to the free tools:</strong> not stored (Section 2).</li>
+          <li style={li}><strong style={strong}>Text sent to the free tools:</strong> not stored (Section 2). Their usage records (no text, IP address or email) are kept for statistics; if you delete your account, the records of your signed-in checks are no longer linked to you.</li>
           <li style={li}><strong style={strong}>Lead and customer records:</strong> kept until you ask us to delete them.</li>
           <li style={li}><strong style={strong}>Consent records and the suppression list:</strong> kept after you unsubscribe or ask for deletion, because they prove your choice and stop us from emailing you again. The suppression list holds only a hash of your address.</li>
           <li style={li}><strong style={strong}>Email delivery records:</strong> kept in our database with a hashed address; Resend keeps its own delivery logs for a limited period.</li>

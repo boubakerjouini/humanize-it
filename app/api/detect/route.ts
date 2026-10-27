@@ -7,7 +7,8 @@
 // the same bounded-cost guards — a hard word cap, a per-IP burst limit, and a
 // per-IP daily allowance — so it can't be turned into a free LLM proxy.
 // A finished scan is counted in PostHog (deep_scan_completed) under a fresh id
-// per scan, with no person profile and never the text.
+// per scan, with no person profile and never the text, and as a ToolRun row
+// (lib/growth/tool-runs.ts) with the page it ran on, for the admin view.
 // ===========================================================
 
 import { randomUUID } from "node:crypto";
@@ -22,6 +23,7 @@ import { touchEventProps } from "@/lib/growth/attribution";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
 import { trackServer } from "@/lib/posthog";
+import { cleanToolPage, recordToolRun, refererPage, toolRunSource } from "@/lib/growth/tool-runs";
 
 const MAX_CHARS = 6000;
 const MAX_WORDS = 1200; // a deep scan reads more than the humanizer rewrites
@@ -55,7 +57,7 @@ async function currentUser(): Promise<{ id: string; plan: string } | null> {
 /** Apply burst + daily limits scoped to the signed-in user or the IP. Returns
  *  the daily result (for headers/remaining) or a 429 NextResponse to return. */
 async function enforceLimits(req: Request): Promise<
-  | { ok: true; daily: Awaited<ReturnType<typeof checkDailyLimit>>; signedIn: boolean }
+  | { ok: true; daily: Awaited<ReturnType<typeof checkDailyLimit>>; userId: string | null }
   | { ok: false; response: NextResponse }
 > {
   const user = await currentUser();
@@ -86,7 +88,7 @@ async function enforceLimits(req: Request): Promise<
       ),
     };
   }
-  return { ok: true, daily, signedIn: !!user };
+  return { ok: true, daily, userId: user?.id ?? null };
 }
 
 export async function POST(req: Request) {
@@ -97,7 +99,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { text?: unknown };
+  let body: { text?: unknown; page?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -121,7 +123,10 @@ export async function POST(req: Request) {
 
   const limited = await enforceLimits(req);
   if (!limited.ok) return limited.response;
-  const { daily, signedIn } = limited;
+  const { daily, userId } = limited;
+  const signedIn = !!userId;
+  // The tool sends its page; the Referer is the fallback for older clients.
+  const page = cleanToolPage(body.page) ?? refererPage(req);
 
   try {
     const result = await deepScanText(text);
@@ -133,9 +138,23 @@ export async function POST(req: Request) {
         confidence: result.confidence,
         signed_in: signedIn,
         ...touchEventProps(touch),
+        ...(page ? { tool_page: page } : {}),
         $process_person_profile: false,
       })
     );
+    if (page) {
+      runAfter("detect:tool-run", () =>
+        recordToolRun({
+          tool: "detector_deep",
+          page,
+          wordCount: words,
+          score: result.aiLikelihood,
+          band: result.confidence,
+          userId,
+          source: toolRunSource(touch),
+        })
+      );
+    }
     return NextResponse.json(
       { ...result, remainingToday: daily.remaining },
       { headers: rateLimitHeaders(daily) }

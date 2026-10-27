@@ -16,6 +16,11 @@ jest.mock("@/lib/growth/attribution-server", () => ({
 }));
 jest.mock("@/lib/growth/safe", () => ({ runAfter: (_l: string, fn: () => unknown) => void fn(), logGrowthError: jest.fn() }));
 jest.mock("@/lib/posthog", () => ({ trackServer: jest.fn() }));
+const mockRecordToolRun = jest.fn();
+jest.mock("@/lib/growth/tool-runs", () => ({
+  ...jest.requireActual("@/lib/growth/tool-runs"),
+  recordToolRun: (...args: unknown[]) => mockRecordToolRun(...args),
+}));
 
 import { POST } from "@/app/api/public/humanize/route";
 import { humanizeText } from "@/lib/algorithms/humanizeText";
@@ -85,4 +90,15 @@ it("counts nothing when the rewrite fails or is refused", async () => {
   (checkDailyLimit as jest.Mock).mockResolvedValueOnce({ ok: false, limit: 2, remaining: 0, retryAfterSeconds: 60 });
   expect((await rewrite()).status).toBe(429);
   expect(trackServer).not.toHaveBeenCalled();
+});
+
+it("records a ToolRun with the page and the before and after scores, never the text", async () => {
+  await rewrite({ text: TEXT, page: "/free-ai-humanizer" });
+  expect(mockRecordToolRun).toHaveBeenCalledTimes(1);
+  const run = mockRecordToolRun.mock.calls[0][0];
+  expect(run).toMatchObject({ tool: "humanizer_free", page: "/free-ai-humanizer", wordCount: TEXT.split(/\s+/).length, source: null });
+  expect(typeof run.score).toBe("number");
+  expect(typeof run.scoreAfter).toBe("number");
+  expect(JSON.stringify(run)).not.toContain("secretphrase");
+  expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({ tool_page: "/free-ai-humanizer" });
 });
