@@ -35,6 +35,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/detect(.*)",
   // Developer API v1 — API key auth handled inside route handlers
   "/api/v1(.*)",
+  // The founder's agent API — Bearer token checked inside route handlers (lib/agent/auth.ts)
+  "/api/agent(.*)",
   // Growth engine — public pages (magnets + PDFs, waitlist, email preferences, referral links).
   // The matcher doesn't skip .pdf, so the lead-magnet files must be listed here.
   "/free(.*)",

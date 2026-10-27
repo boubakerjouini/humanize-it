@@ -279,9 +279,14 @@ export function threadingHeaders(messageId: string | null | undefined): Record<s
 // Control and invisible/bidi characters, except tab and newline.
 const UNSAFE_TEXT = /[\u0000-\u0008\u000b-\u001f\u007f​-‏‪-‮⁦-⁩]/g;
 
+/** The untrusted plain-text body without control or invisible/bidi characters; "" when there is none. */
+export function cleanText(text: string | null | undefined): string {
+  return (text ?? "").replace(/\r\n?/g, "\n").replace(UNSAFE_TEXT, "").trim();
+}
+
 /** The untrusted plain-text body as "> " quoted lines, capped; null when there is none. */
 export function quotedText(text: string | null | undefined, max = QUOTED_TEXT_MAX_CHARS): string | null {
-  const clean = (text ?? "").replace(/\r\n?/g, "\n").replace(UNSAFE_TEXT, "").trim();
+  const clean = cleanText(text);
   if (!clean) return null;
   const lines = clean.slice(0, max).split("\n").map((line) => `> ${line}`);
   if (clean.length > max) lines.push(`> [cut here: read the rest in ${RESEND_INBOX_HINT}]`);

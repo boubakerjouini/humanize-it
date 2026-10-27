@@ -1,8 +1,9 @@
 // ===========================================================
 // app/api/admin/email/_lib/respond.ts — Shared responses for the email admin
-// routes (email, sequences, enrollments, campaigns). Errors use the project
-// envelope { error: { code, message } }; requireAdmin's 401/403 and
-// CampaignError keep their status, anything unexpected is a logged 500.
+// routes (email, sequences, enrollments, campaigns) and the agent API. Errors
+// use the project envelope { error: { code, message } }; requireAdmin's and
+// requireAgent's 401/403/404 and CampaignError keep their status, anything
+// unexpected is a logged 500.
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -20,6 +21,7 @@ export function handleError(label: string, err: unknown) {
   const status = (err as { status?: number })?.status;
   if (status === 401) return fail("UNAUTHORIZED", "Authentication required.", 401);
   if (status === 403) return fail("FORBIDDEN", "Admin access required.", 403);
+  if (status === 404) return fail("NOT_FOUND", "Not found.", 404);
   logGrowthError(label, err);
   return fail("INTERNAL_ERROR", "Something went wrong.", 500);
 }
