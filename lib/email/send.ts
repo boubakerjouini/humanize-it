@@ -23,6 +23,7 @@ import { isFlowEnabled } from "@/lib/email/enroll";
 import { oneClickUrl } from "@/lib/email/links";
 import { TemplateNotImplementedError, buildRenderCtx, firstNameFrom, renderEmail, unsubscribeScopeFor } from "@/lib/email/render";
 import { classifyResendError, describeResendError, getResend, type ResendErrorLike } from "@/lib/email/resend-client";
+import { threadingHeaders } from "@/lib/email/inbound-rules";
 import { isTopic, type EmailStream, type Topic } from "@/lib/growth/constants";
 import { emailSendingMode, isAllowlisted, postalAddress } from "@/lib/growth/flags";
 import { isUniqueViolation, logGrowthError } from "@/lib/growth/safe";
@@ -336,13 +337,17 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
     return { ok: false, outcome: await markFailed(claim.messageId, message, false) };
   }
 
-  // 9. Payload.
-  const headers = usesOneClickUnsubscribe(stream)
-    ? {
-        "List-Unsubscribe": `<${oneClickUrl(contact.id, unsubscribeScopeFor(stream))}>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-      }
-    : undefined;
+  // 9. Payload. A reply (a stored inReplyTo prop, so a retry keeps it) threads with the email it answers.
+  const inReplyTo = (i.props as { inReplyTo?: unknown }).inReplyTo;
+  const headers = {
+    ...(usesOneClickUnsubscribe(stream)
+      ? {
+          "List-Unsubscribe": `<${oneClickUrl(contact.id, unsubscribeScopeFor(stream))}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+      : {}),
+    ...(typeof inReplyTo === "string" ? threadingHeaders(inReplyTo) : {}),
+  };
   const replyTo = process.env.EMAIL_REPLY_TO?.trim() || undefined;
   const subject = isTest ? `[TEST] ${rendered.subject}` : rendered.subject;
 
@@ -365,7 +370,7 @@ export async function prepareEmail<K extends TemplateKey>(i: PrepareInput<K>): P
         html: rendered.html,
         text: rendered.text,
         ...(replyTo ? { replyTo } : {}),
-        ...(headers ? { headers } : {}),
+        ...(Object.keys(headers).length > 0 ? { headers } : {}),
         tags: [
           { name: "m", value: tagValue(claim.messageId) },
           { name: "stream", value: tagValue(stream) },
