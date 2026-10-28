@@ -39,7 +39,7 @@ export default function GptzeroCheckerPage() {
       />
 
       <nav style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
-        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>Home</Link>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
         <Link href="/ai-detector" style={{ color: THEME.brandHi, textDecoration: "none" }}>AI Detector</Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>

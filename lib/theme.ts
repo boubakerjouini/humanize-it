@@ -18,7 +18,7 @@ export const THEME = {
   // Text
   text: "#1d1726",      // near-black with a faint purple undertone
   textDim: "#5b5470",   // secondary
-  textMuted: "#8b8399", // tertiary
+  textMuted: "#6e6780", // tertiary (4.5:1+ on white and the lavender surfaces)
 
   // Brand — purple (primary action / interactive / brand)
   brand: "#7c3aed",

@@ -270,7 +270,7 @@ export function LeadCaptureForm({
           : magnet
             ? `You'll get the PDF right away${thing ? ` and a copy of ${thing} by email` : " and a copy by email"}. We never share your email. `
             : "No spam, and we never share your email. "}
-        <Link href="/privacy" style={{ color: THEME.textDim }}>
+        <Link href="/privacy" style={{ color: THEME.textDim, textDecoration: "underline", textUnderlineOffset: 2 }}>
           Privacy Policy
         </Link>
       </p>
