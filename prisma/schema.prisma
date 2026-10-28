@@ -244,7 +244,7 @@ model RateLimit {
 model WebhookEvent {
   id        String   @id @default(cuid())
   eventId   String   @unique
-  source    String   @default("lemonsqueezy")
+  source    String   @default("polar")
   createdAt DateTime @default(now())
 }
 
