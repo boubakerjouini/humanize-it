@@ -2,7 +2,9 @@
 
 // ===========================================================
 // components/ui/upgrade-modal.tsx — The plan menu: opened from upgrade buttons
-// and, with trigger="quota", when a request hits the plan's limit. A
+// and, with trigger="quota", when a request hits the plan's limit (then the
+// lead says which limit, how much was used and when it refills, from the same
+// GET /api/usage numbers as the sidebar meter). A
 // Monthly/Annual toggle (annual pre-selected) sends { plan, annual } to
 // /api/checkout; annual prices are shown per month (≈$6.58/mo for Pro).
 // Opened with an intent (a plan picked on the pricing page before sign-up),
@@ -29,11 +31,15 @@ import { THEME, glow } from "@/lib/theme";
 import { GUARANTEE_DAYS, PLANS as PLAN_CONFIG, TEAM_ANNUAL_GUARANTEE_DAYS, type PlanConfig, type PlanId } from "@/lib/plans";
 import type { CheckoutIntent, CheckoutPlan } from "@/lib/checkout-intent";
 import { requestCheckout } from "@/components/checkout-outcome";
+import { formatResetIn, summarizeUsage, usagePeriod, type UsageSnapshot } from "@/components/workspace/feedback";
 import { startOfferCheckout, useOffers, type OffersInfo } from "@/components/growth/founding-offers";
 import { useReferralInfo, type ReferralInfo } from "@/components/growth/referral-card";
 
 /** quota: a request hit the plan's limit. feature: a locked tone, voice or report was picked. */
 export type UpgradeTrigger = "upgrade" | "quota" | "feature";
+
+/** Which Free limit a quota hit was: /api/humanize sends it as error.reason. */
+export type QuotaReason = "words" | "rewrites";
 
 const KICKER: Record<UpgradeTrigger, string> = { upgrade: "Upgrade", quota: "Limit reached", feature: "Part of Pro" };
 type Billing = "monthly" | "annual";
@@ -47,6 +53,8 @@ interface UpgradeModalProps {
   trigger?: UpgradeTrigger;
   /** A plan picked on the pricing page before sign-up: preset its billing period and mark its card. */
   intent?: CheckoutIntent | null;
+  /** With trigger="quota": which limit was hit. Omitted means words (the meter's "Get more words"). */
+  quotaReason?: QuotaReason;
 }
 
 const PLAN_IDS = ["FREE", "PRO", "TEAM"] as const;
@@ -81,6 +89,57 @@ function displayPrice(plan: PlanConfig, billing: Billing): { price: string; note
   return { price: fmtUsd(plan.price), note: "billed monthly" };
 }
 
+/** GET /api/usage, or null when it fails: the quota copy then falls back to the generic lead. */
+export async function fetchUsageSnapshot(): Promise<UsageSnapshot | null> {
+  try {
+    const res = await fetch("/api/usage");
+    return res.ok ? ((await res.json()) as UsageSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+const fmtCount = (n: number) => n.toLocaleString("en-US");
+
+/**
+ * The factual quota lead: what was used and when it refills (the meter's own
+ * math, so both say the same time), plus how Pro compares for anyone below
+ * it. Null when the numbers can't support it (no snapshot, unlimited, unknown
+ * reset): the caller keeps the generic copy.
+ */
+export function quotaCopy(
+  usage: UsageSnapshot | null,
+  reason: QuotaReason,
+  now: Date = new Date()
+): { lead: string; compare: string | null } | null {
+  if (!usage) return null;
+  // effectivePlan: a lapsed gift still stores PRO but has Free's limits.
+  const raw = (usage.effectivePlan ?? usage.plan).toUpperCase();
+  const effective: PlanId = raw in PLAN_CONFIG ? (raw as PlanId) : "FREE";
+  const s = summarizeUsage(usage, usagePeriod(usage));
+  if (!s.resetsAt) return null;
+  const resetIn = formatResetIn(s.resetsAt, now);
+
+  let lead: string;
+  if (reason === "rewrites") {
+    // Only Free has a rewrite cap; it refills with the daily words.
+    if (PLAN_CONFIG[effective].rewriteLimit < 0) return null;
+    lead = `You've used today's free rewrite. Your next one comes ${resetIn}.`;
+  } else {
+    if (s.unlimited) return null;
+    const used = Math.min(usage.wordsUsed, usage.wordsLimit);
+    lead = `You've used ${fmtCount(used)} of ${fmtCount(usage.wordsLimit)} words ${s.periodLabel}. ${fmtCount(usage.wordsLimit)} more ${resetIn}.`;
+  }
+
+  const pro = PLAN_CONFIG.PRO;
+  const proWords = pro.wordsLimit >= 1000 ? `${pro.wordsLimit / 1000}k` : fmtCount(pro.wordsLimit);
+  const compare =
+    PLAN_RANK[effective] < PLAN_RANK.PRO
+      ? `Pro: ${proWords} words a ${pro.wordsLimitPeriod}${pro.rewriteLimit < 0 ? ", unlimited rewrites" : ""}.`
+      : null;
+  return { lead, compare };
+}
+
 /** Months of Pro an annual plan saves vs paying monthly, e.g. 3 ($108 vs $79). */
 const ANNUAL_FREE_MONTHS = (() => {
   const pro = PLAN_CONFIG.PRO;
@@ -103,7 +162,7 @@ function lockPageScroll(): () => void {
   };
 }
 
-export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade", intent = null }: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade", intent = null, quotaReason }: UpgradeModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const offers = useOffers();
@@ -162,6 +221,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
           onClose={onClose}
           currentPlan={currentPlan}
           trigger={trigger}
+          quotaReason={quotaReason ?? "words"}
           intent={intent}
           wordPack={wordPack}
           referral={trigger === "quota" ? referral : null}
@@ -176,13 +236,14 @@ interface UpgradePanelProps {
   onClose: () => void;
   currentPlan: string;
   trigger: UpgradeTrigger;
+  quotaReason: QuotaReason;
   intent: CheckoutIntent | null;
   wordPack: WordPackOffer | null;
   referral: ReferralInfo | null;
 }
 
 /** The menu's content. Mounted on each opening, so it starts fresh with the intent's billing period. */
-function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack, referral }: UpgradePanelProps) {
+function UpgradePanel({ titleId, onClose, currentPlan, trigger, quotaReason, intent, wordPack, referral }: UpgradePanelProps) {
   const posthog = usePostHog();
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -195,13 +256,28 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
   const [billing, setBilling] = useState<Billing>(intent && !intent.annual ? "monthly" : "annual");
   const [packBusy, setPackBusy] = useState(false);
   const [packError, setPackError] = useState<string | null>(null);
+  // Quota hits only: the settings and voice pages open the menu with nothing to explain.
+  const [usage, setUsage] = useState<UsageSnapshot | null>(null);
   const codeId = useId();
   const fromPricing = !!intent;
   const current = currentPlan.toUpperCase();
+  const reason = trigger === "quota" ? quotaReason : null;
+  const quota = reason ? quotaCopy(usage, reason) : null;
 
   useEffect(() => {
-    posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger, from_pricing: fromPricing });
-  }, [posthog, currentPlan, trigger, fromPricing]);
+    posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger, from_pricing: fromPricing, reason });
+  }, [posthog, currentPlan, trigger, fromPricing, reason]);
+
+  useEffect(() => {
+    if (trigger !== "quota") return;
+    let alive = true;
+    fetchUsageSnapshot().then((u) => {
+      if (alive) setUsage(u);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [trigger]);
 
   useEffect(() => lockPageScroll(), []);
 
@@ -295,11 +371,14 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
         ) : (
           <>
             <p className="hz-up-lead">
-              {trigger !== "quota"
-                ? "More words, unlimited rewrites, document upload and saved history."
-                : current === "FREE"
-                  ? "Free words reset 24 hours after your last reset. Need more now? Pick monthly or annual."
-                  : "You've used this month's words. They reset with your next billing month, or you can move up a plan."}
+              {quota
+                ? quota.lead
+                : trigger !== "quota"
+                  ? "More words, unlimited rewrites, document upload and saved history."
+                  : current === "FREE"
+                    ? "Free words reset 24 hours after your last reset. Need more now? Pick monthly or annual."
+                    : "You've used this month's words. They reset with your next billing month, or you can move up a plan."}
+              {quota?.compare && <span className="hz-up-compare">{quota.compare}</span>}
             </p>
 
             {/* Billing toggle */}
@@ -581,7 +660,7 @@ export function CheckoutPausedPanel({ message, onDone }: { message: string; onDo
             <p className="hz-up-notify-note">
               {`One email to ${waitlist?.email || "your account email"}, nothing else. Unsubscribe anytime in Settings.`}
             </p>
-            {joinError && <p role="alert" className="hz-up-error">Couldn't save that. Try again.</p>}
+            {joinError && <p role="alert" className="hz-up-error">Couldn&apos;t save that. Try again.</p>}
           </>
         )}
       </div>
@@ -648,6 +727,7 @@ const STYLES = `
 }
 .hz-up-body > * { flex-shrink: 0; }
 .hz-up-lead { margin: 0; font-size: 14px; line-height: 1.55; color: ${THEME.textDim}; text-wrap: pretty; }
+.hz-up-compare { display: block; margin-top: 4px; font-weight: 600; color: ${THEME.text}; }
 
 .hz-up-billing { display: flex; justify-content: center; }
 .hz-up-seg { display: inline-flex; gap: 4px; max-width: 100%; padding: 4px; border-radius: 999px; background: ${THEME.surface3}; }
