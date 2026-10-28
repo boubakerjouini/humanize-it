@@ -89,6 +89,10 @@ export const leadRequestSchema = z
     if (v.topics.includes("extension_launch") && v.source !== "extension_waitlist") {
       ctx.addIssue({ code: "custom", path: ["topics"], message: "Launch updates are only offered on the waitlist." });
     }
+    // Only a signed-in account can ask for the checkout note (in-app opt-in).
+    if (v.topics.includes("checkout_open")) {
+      ctx.addIssue({ code: "custom", path: ["topics"], message: "That update is only offered in the app." });
+    }
   });
 
 export type LeadRequest = z.infer<typeof leadRequestSchema>;

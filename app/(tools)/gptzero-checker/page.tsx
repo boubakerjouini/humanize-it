@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { OG_IMAGES } from "@/lib/seo/og";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
-import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
+import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, Breadcrumbs, type Faq } from "../_shared";
 
 export const metadata: Metadata = {
   title: "Free GPTZero Checker — Test Your Text Before You Submit",
@@ -17,7 +16,6 @@ export const metadata: Metadata = {
     url: "https://humanizeit.app/gptzero-checker",
     siteName: "HumanizeIt",
     type: "website",
-    images: OG_IMAGES,
   },
   alternates: { canonical: "https://humanizeit.app/gptzero-checker" },
 };
@@ -38,13 +36,7 @@ export default function GptzeroCheckerPage() {
         description="Free checker that estimates a GPTZero-style AI score from perplexity and burstiness patterns, in the browser."
       />
 
-      <nav aria-label="Breadcrumb" style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
-        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
-        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
-        <Link href="/ai-detector" style={{ color: THEME.brandHi, textDecoration: "none" }}>AI Detector</Link>
-        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
-        <span style={{ color: THEME.textDim }}>GPTZero Checker</span>
-      </nav>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "AI Detector", href: "/ai-detector" }, { label: "GPTZero Checker" }]} />
 
       <div className="kicker" style={{ marginBottom: "14px" }}>Free tool</div>
       <h1 style={{ fontFamily: THEME.fontHeading, fontWeight: 800, color: THEME.text, fontSize: "clamp(28px, 5vw, 40px)", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: "16px" }}>

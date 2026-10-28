@@ -1,0 +1,24 @@
+# Daily probe of production's webhook endpoints and /api/health
+# (scripts/webhook-probe.sh). Unsigned requests are rejected at verification,
+# so nothing is read or written; a 500 means a webhook secret is unset, a
+# non-200 health means the database or core config is down. A failed run makes
+# GitHub notify the repo owner, which needs no email setup of ours.
+# GitHub turns scheduled workflows off after 60 days without repo activity.
+
+name: Webhook probe
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/webhook-probe.sh

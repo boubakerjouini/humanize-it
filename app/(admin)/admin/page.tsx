@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/admin";
-import { getAdminMetrics, getLast24hMetrics, getSignupSeries } from "@/lib/admin-metrics";
+import { getAdminMetrics, getLast24hMetrics, getOpsHealth, getSignupSeries, type OpsHealth } from "@/lib/admin-metrics";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { KpiCard, SectionTitle, Sparkline } from "@/components/admin/kpi";
@@ -8,14 +8,14 @@ import { DigestTestButton } from "@/components/admin/digest-test-button";
 import { founderDigestEnabled } from "@/lib/growth/founder-digest";
 import {
   Users, FileText, DollarSign, Building2, Sparkles, TrendingUp, Crown, Zap,
-  Gift, AlertTriangle, UserCheck, Hash, ScanSearch, CreditCard, Mail, Inbox,
+  Gift, AlertTriangle, UserCheck, Hash, ScanSearch, CreditCard, Mail, Inbox, Activity,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
   if (!(await getAdminUser())) redirect("/dashboard");
-  const [m, signups, day] = await Promise.all([getAdminMetrics(), getSignupSeries(30), getLast24hMetrics()]);
+  const [m, signups, day, health] = await Promise.all([getAdminMetrics(), getSignupSeries(30), getLast24hMetrics(), getOpsHealth()]);
 
   const money = (n: number) => `$${n.toLocaleString()}`;
   const planTotal = m.totalUsers || 1;
@@ -53,6 +53,8 @@ export default async function AdminOverviewPage() {
         </Link>
       </div>
       <DigestTestButton enabled={founderDigestEnabled()} />
+
+      <HealthLine health={health} />
 
       {/* Revenue (real money) */}
       <SectionTitle sub="Actual Polar subscriptions only — discount-code grants are excluded.">Revenue</SectionTitle>
@@ -119,6 +121,40 @@ export default async function AdminOverviewPage() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** One line of ops counters (lib/ops/checks.ts turns the same numbers into tasks once a day). */
+function HealthLine({ health }: { health: OpsHealth }) {
+  const errors = health.errorsToday.reduce((n, e) => n + e.count, 0);
+  const { lastJob: job, jobLate } = health;
+  const trouble = errors > 0 || health.webhookFailsToday > 0 || health.emailsFailed > 0 || job?.status === "error" || jobLate;
+  const part = (label: string, bad: boolean) => (
+    <span style={{ color: bad ? THEME.warn : THEME.textDim, fontWeight: bad ? 600 : 400 }}>{label}</span>
+  );
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px 14px", marginTop: 12, padding: "10px 14px",
+        background: THEME.surface2, border: `1px solid ${trouble ? THEME.warn : THEME.border}`, borderRadius: THEME.radius, fontSize: 13,
+      }}
+    >
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: THEME.text, fontWeight: 600 }}>
+        <Activity size={14} color={trouble ? THEME.warn : THEME.human} aria-hidden="true" /> Health
+      </span>
+      {part(
+        errors > 0 ? `${errors} server error${errors === 1 ? "" : "s"} today (${health.errorsToday.map((e) => `${e.area} ${e.count}`).join(", ")})` : "No server errors today",
+        errors > 0
+      )}
+      {part(`${health.webhookFailsToday} webhook failure${health.webhookFailsToday === 1 ? "" : "s"}`, health.webhookFailsToday > 0)}
+      <Link href="/admin/email-log" style={{ textDecoration: "none" }}>
+        {part(`${health.emailsFailed} email${health.emailsFailed === 1 ? "" : "s"} failed (24h)`, health.emailsFailed > 0)}
+      </Link>
+      {part(
+        job ? `Daily job ${job.status === "ok" ? "ok" : "had errors"}, ${job.startedAt.toISOString().slice(0, 16).replace("T", " ")} UTC` : "Daily job has not run",
+        job?.status === "error" || jobLate
+      )}
     </div>
   );
 }

@@ -13,7 +13,8 @@ import { FOUNDING, PLANS } from "@/lib/plans";
 import { FoundingBadge } from "@/components/growth/founding-badge";
 import { useOffers } from "@/components/growth/founding-offers";
 import { ServiceRequestCard } from "@/components/growth/service-request-card";
-import { describePlan, isOnFree, longDate, planName, type PlanStatus } from "@/lib/plan-status";
+import { describePlan, isOnFree, longDate, planName, usageRefillLine, type PlanStatus } from "@/lib/plan-status";
+import { summarizeUsage, usagePeriod } from "@/components/workspace/feedback";
 
 interface UsageData {
   plan: string;
@@ -45,18 +46,6 @@ const PLAN_META: Record<string, { label: string; icon: typeof Crown; color: stri
 };
 
 const n = (v: number) => v.toLocaleString("en-US");
-
-/** quotaResetAt is the last reset: Free resets 24 hours later, paid plans a month later (lib/quota.ts). */
-function nextReset(usage: UsageData, plan: string): string {
-  const at = new Date(usage.quotaResetAt);
-  if (Number.isNaN(at.getTime())) return "soon";
-  if (plan === "FREE") {
-    at.setDate(at.getDate() + 1);
-    return at.toLocaleString("en-US", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
-  }
-  at.setMonth(at.getMonth() + 1);
-  return longDate(at);
-}
 
 export default function SettingsPage() {
   const { user } = useUser();
@@ -108,6 +97,10 @@ export default function SettingsPage() {
   const meta = PLAN_META[plan] ?? PLAN_META.FREE;
   const pastDue = status?.kind === "subscription" && status.status === "past_due";
   const paid = plan === "PRO" || plan === "TEAM";
+  // Same reset math as the shell's usage meter, plus the plan's end date when it comes first.
+  const refill = usage && status
+    ? usageRefillLine(status, summarizeUsage(usage, usagePeriod(usage)).resetsAt, PLANS.FREE.wordsLimit)
+    : null;
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "28px clamp(16px, 4vw, 24px) 64px", fontFamily: THEME.fontSans }}>
@@ -143,7 +136,7 @@ export default function SettingsPage() {
 
         {/* Usage: the current quota window (a day on Free, a month on paid plans) */}
         <Section title={paid ? "Usage this month" : "Usage today"} icon={BarChart3} accent={THEME.brand}
-          sub={usage ? `Resets ${nextReset(usage, plan)}` : undefined}>
+          sub={refill?.text}>
           {usage ? (
             <>
               <UsageBar label="Words" used={usage.wordsUsed} limit={usage.wordsLimit} />
@@ -320,9 +313,11 @@ function PlanSummary({ status, founding, busy, onUpgrade, onPortal }: { status: 
   );
 }
 
-const TOPIC_ROWS: { topic: Topic; label: string }[] = [
+// onlyIfOn: offered only on the paused-checkout notice, so here it is just the way back out.
+const TOPIC_ROWS: { topic: Topic; label: string; onlyIfOn?: boolean }[] = [
   { topic: "tips", label: CONSENT_WORDING["inapp-tips-v1"] },
   { topic: "extension_launch", label: CONSENT_WORDING["ext-v1"] },
+  { topic: "checkout_open", label: CONSENT_WORDING["checkout-v1"], onlyIfOn: true },
 ];
 
 /** Each toggle saves at once, as a delta, so it can never touch a topic it doesn't show. */
@@ -361,8 +356,9 @@ function EmailPreferences() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {TOPIC_ROWS.map(({ topic, label }) => {
+      {TOPIC_ROWS.map(({ topic, label, onlyIfOn }) => {
         const on = prefs.topics.includes(topic);
+        if (onlyIfOn && !on) return null;
         const pending = !on && prefs.pendingTopics.includes(topic);
         return (
           <PrefRow key={topic} checked={on} disabled={saving} label={label}

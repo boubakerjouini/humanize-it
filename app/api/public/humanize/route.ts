@@ -4,7 +4,8 @@
 // Powers the free /free-ai-humanizer tool page. NO auth, NO user quota. Cost
 // and abuse are bounded by: a hard per-request word cap, a per-IP burst limit
 // (per minute), and a small per-IP daily limit. Real users who want more are
-// pushed to sign up. This is the only place anonymous LLM calls are allowed.
+// pushed to sign up. A global daily ceiling across all IPs bounds the worst
+// case (rotating proxies). This is the only place anonymous LLM rewrites run.
 // Tones follow the Free plan (Standard only), so signing up is never a step down.
 // A finished rewrite is counted as a ToolRun row (lib/growth/tool-runs.ts) with
 // its page, for the admin view. Its PostHog event (free_humanize_completed) is
@@ -17,7 +18,7 @@ import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
 import { activeProvider } from "@/lib/llm";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
-import { clientIp } from "@/lib/client-ip";
+import { clientIp, ipBucket } from "@/lib/client-ip";
 import { PLANS, isToneAllowed } from "@/lib/plans";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
@@ -28,6 +29,9 @@ const MAX_CHARS = 2500;
 const MAX_WORDS = 300; // per request
 const BURST_PER_MIN = 4; // per IP
 const FREE_PER_DAY = 2; // rewrites per IP per day
+// All anonymous rewrites, every IP together. Far above real volume; it only
+// caps the bill when many addresses are rotated against the tool.
+const ALL_ANON_PER_DAY = 300;
 
 // What signing up adds, from lib/plans.ts, so the cap message can't promise more.
 const FREE_ACCOUNT = PLANS.FREE;
@@ -93,7 +97,7 @@ export async function POST(req: Request) {
       : "medium";
 
   // 2. Rate limits — burst (per minute) then the daily free allowance.
-  const ip = clientIp(req);
+  const ip = ipBucket(clientIp(req));
   const burst = await checkRateLimit(`pub:hz:min:${ip}`, BURST_PER_MIN);
   if (!burst.ok) {
     return NextResponse.json(
@@ -114,6 +118,15 @@ export async function POST(req: Request) {
         signupCta: true,
       },
       { status: 429, headers: { ...rateLimitHeaders(daily), "Retry-After": String(daily.retryAfterSeconds) } }
+    );
+  }
+  // Checked after the per-IP limits, so one abuser's refused calls never use
+  // up the shared budget.
+  const all = await checkDailyLimit("pub:hz:day:all", ALL_ANON_PER_DAY);
+  if (!all.ok) {
+    return NextResponse.json(
+      { error: { code: "BUSY_TRY_LATER", message: "The free tool is busy today. Sign up free to keep going." }, signupCta: true },
+      { status: 429, headers: { "Retry-After": String(all.retryAfterSeconds) } }
     );
   }
 

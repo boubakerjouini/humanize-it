@@ -36,6 +36,7 @@ const button: CSSProperties = {
 const TOPIC_HELP: Record<Topic, string> = {
   tips: "Practical writing tips and, sometimes, an offer. About two emails a month.",
   extension_launch: "Updates on the Chrome extension, and the launch email.",
+  checkout_open: "One email when upgrades to Pro open.",
 };
 
 export function PreferencesForm({ token, initial, highlightUnsubscribe }: Props) {

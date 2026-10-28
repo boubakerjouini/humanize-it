@@ -160,7 +160,9 @@ describe("while Polar can't take payments yet", () => {
     expect(res.status).toBe(409);
     const json = await res.json();
     expect(json.error.code).toBe("CHECKOUT_PAUSED");
-    expect(json.error.message).toMatch(/email you/);
+    expect(json.error.message).toMatch(/Upgrades open soon/);
+    // No email is promised here: the notice offers an explicit opt-in instead.
+    expect(json.error.message).not.toMatch(/email/i);
     expect(mockPolar.checkouts.create).not.toHaveBeenCalled();
     expect(mockEnsureCustomer).not.toHaveBeenCalled();
     expect(trackCheckoutPaused).toHaveBeenCalledWith("user_1", "PRO", true);

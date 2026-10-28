@@ -13,7 +13,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { clientIp } from "@/lib/client-ip";
+import { clientIp, ipBucket } from "@/lib/client-ip";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { TOOL_RUN_BANDS, cleanToolPage, recordToolRun, toolRunSource } from "@/lib/growth/tool-runs";
 import { checkDailyLimit, checkRateLimit } from "@/lib/rate-limit";
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   const page = parsed.success ? cleanToolPage(parsed.data.page) : null;
   if (!parsed.success || !page) return done();
 
-  const ip = clientIp(req);
+  const ip = ipBucket(clientIp(req));
   if (!(await checkRateLimit(`toolrun:min:${ip}`, PER_MINUTE)).ok) return done();
   if (!(await checkDailyLimit(`toolrun:day:${ip}`, PER_DAY)).ok) return done();
 

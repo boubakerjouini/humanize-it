@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import posthog from "posthog-js";
 import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 import { isToneAllowed } from "@/lib/plans";
+import { savePrefill, takePrefill } from "@/lib/prefill";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
@@ -36,6 +37,11 @@ export function HumanizerTool() {
   const [loading, setLoading] = useState(false);
   const [res, setRes] = useState<HumanizeResponse | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Text checked on a detector page arrives here; the user still presses Humanize.
+  useEffect(() => { const t = takePrefill(); if (t) setText(t); }, []);
+  // Signup lands on the dashboard editor, so the sign-up links carry the text there.
+  const keepTextForSignup = () => savePrefill(text);
 
   const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
   const overCap = words > MAX_WORDS;
@@ -133,7 +139,7 @@ export function HumanizerTool() {
         {overCap && (
           <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>
             The free humanizer is capped at {MAX_WORDS} words.{" "}
-            <Link href="/sign-up" style={{ color: THEME.brandHi }}>Sign up free</Link> to humanize longer text.
+            <Link href="/sign-up" onClick={keepTextForSignup} style={{ color: THEME.brandHi }}>Sign up free</Link> to humanize longer text.
           </p>
         )}
       </div>
@@ -144,6 +150,7 @@ export function HumanizerTool() {
           {err.signupCta && (
             <Link
               href="/sign-up"
+              onClick={keepTextForSignup}
               style={{
                 display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "14px",
                 padding: "10px 24px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.3),

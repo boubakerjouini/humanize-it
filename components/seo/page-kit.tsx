@@ -63,8 +63,10 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
       {items.map((c, i) => (
         <span key={c.label}>
           {i > 0 && <span style={{ margin: "0 8px", color: THEME.border }}>/</span>}
+          {/* Underlined: purple on the muted trail is under 3:1 against the
+              surrounding text, so colour alone fails link-in-text-block. */}
           {c.href ? (
-            <Link href={c.href} style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
+            <Link href={c.href} style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2, fontWeight: 500 }}>
               {c.label}
             </Link>
           ) : (

@@ -4,7 +4,7 @@ import { THEME } from "@/lib/theme";
 import { DetectorTool } from "@/components/tools/detector-tool";
 import { LeadMagnetInline } from "@/components/growth/lead-magnet-inline";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
-import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, type Faq } from "../_shared";
+import { toolStyles, ToolFaq, SoftwareAppJsonLd, ToolCta, Breadcrumbs, type Faq } from "../_shared";
 
 export const metadata: Metadata = {
   title: "Free AI Detector: Check Text for GPTZero & Turnitin Patterns",
@@ -38,11 +38,7 @@ export default function AiDetectorPage() {
         description={`Free AI detector that scores text against ${PATTERN_COUNT} AI-detection patterns in the browser.`}
       />
 
-      <nav aria-label="Breadcrumb" style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
-        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
-        <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
-        <span style={{ color: THEME.textDim }}>AI Detector</span>
-      </nav>
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "AI Detector" }]} />
 
       <div className="kicker" style={{ marginBottom: "14px" }}>Free tool</div>
       <h1 style={{ fontFamily: THEME.fontHeading, fontWeight: 800, color: THEME.text, fontSize: "clamp(28px, 5vw, 40px)", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: "16px" }}>
