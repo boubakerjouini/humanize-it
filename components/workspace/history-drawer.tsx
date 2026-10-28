@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
-import { Search, Trash2, ChevronDown, Copy, FileText, Lock, X, FileInput } from "lucide-react";
+import { Search, Trash2, ChevronDown, Copy, FileText, Lock, X, FileInput, PenLine } from "lucide-react";
 import { THEME, glow, humanScore, humanScoreColor } from "@/lib/theme";
+import { HistoryRowsSkeleton } from "@/components/workspace/skeleton";
+import { InlineError } from "@/components/workspace/inline-error";
+import { notify, copyText } from "@/components/workspace/notify";
+import { historyError, type FriendlyError } from "@/components/workspace/feedback";
 
 interface Doc {
   id: string;
@@ -62,6 +65,7 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
   const [plan, setPlan] = useState("FREE");
   const [totalAll, setTotalAll] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<FriendlyError | null>(null);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -71,15 +75,16 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
 
   const load = useCallback(async (p: number) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch(`/api/documents?page=${p}&limit=10`);
+      if (!res.ok) { setLoadError(historyError(res.status)); return; }
       const data = (await res.json()) as DocsResponse;
-      if (!res.ok) { toast.error(data.error?.message ?? "Failed to load history."); return; }
       setDocs(data.documents);
       setPagination({ page: data.pagination.page, totalPages: data.pagination.totalPages, total: data.pagination.total });
       setPlan(data.plan);
       setTotalAll(data.totalAll);
-    } catch { toast.error("Failed to load history."); } finally { setLoading(false); }
+    } catch { setLoadError(historyError(0)); } finally { setLoading(false); }
   }, []);
 
   // Load when the drawer opens (and on page change while open).
@@ -123,10 +128,11 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
     setDeleting(id);
     try {
       const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
-      if (!res.ok) { toast.error("Failed to delete."); return; }
+      if (!res.ok) { notify.error("Couldn't delete that document", "It's still in your history. Try again in a moment."); return; }
       setDocs((d) => d.filter((x) => x.id !== id));
-      toast.success("Deleted");
-    } catch { toast.error("Failed to delete."); } finally { setDeleting(null); }
+      setPagination((pg) => ({ ...pg, total: Math.max(0, pg.total - 1) }));
+      notify.deleted();
+    } catch { notify.offline(); } finally { setDeleting(null); }
   }
 
   if (!open) return null;
@@ -144,7 +150,9 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
         <div style={{ padding: "16px 18px", borderBottom: `1px solid ${THEME.border}`, display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 17, fontWeight: 800, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>History</div>
-            <div style={{ fontSize: 12, color: THEME.textMuted }}>{pagination.total.toLocaleString()} document{pagination.total === 1 ? "" : "s"}</div>
+            <div style={{ fontSize: 12, color: THEME.textMuted, minHeight: 16 }}>
+              {loading && docs.length === 0 ? "Loading…" : loadError ? "Not loaded" : `${pagination.total.toLocaleString()} document${pagination.total === 1 ? "" : "s"}`}
+            </div>
           </div>
           <button onClick={onClose} aria-label="Close history" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: 9, color: THEME.textDim, cursor: "pointer" }}>
             <X size={16} aria-hidden="true" />
@@ -163,11 +171,28 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
         {/* List */}
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 18px 18px" }}>
           {loading ? (
-            <div style={{ textAlign: "center", padding: 48, color: THEME.textMuted }}>Loading…</div>
+            <HistoryRowsSkeleton />
+          ) : loadError ? (
+            <InlineError error={loadError} onRetry={() => void load(page)} compact />
+          ) : filtered.length === 0 && query ? (
+            <div style={{ textAlign: "center", padding: "36px 18px", color: THEME.textMuted }}>
+              <Search size={22} aria-hidden="true" style={{ marginBottom: 8 }} />
+              <div style={{ fontSize: 14, color: THEME.text, fontWeight: 600 }}>{`No matches for "${query.trim()}"`}</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>Search looks at this page only. Try another word or clear the search.</div>
+              <button onClick={() => setQuery("")} style={{ ...ghost, marginTop: 14 }}>Clear search</button>
+            </div>
           ) : filtered.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "44px 18px", background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, color: THEME.textMuted }}>
-              <FileText size={24} aria-hidden="true" style={{ marginBottom: 10 }} />
-              <div style={{ fontSize: 14 }}>{query ? "No matches on this page." : "No documents yet. Humanize something to see it here."}</div>
+            <div style={{ textAlign: "center", padding: "36px 22px", background: THEME.surface1, border: `1px dashed ${THEME.borderStrong}`, borderRadius: THEME.radiusLg }}>
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, background: THEME.brandDim, color: THEME.brandHi, marginBottom: 12 }}>
+                <FileText size={22} aria-hidden="true" />
+              </span>
+              <div style={{ fontSize: 15, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading }}>No documents yet</div>
+              <p style={{ fontSize: 13, color: THEME.textDim, lineHeight: 1.55, margin: "6px auto 16px", maxWidth: 300 }}>
+                Every text you humanize is saved here, so you can reopen it, copy it or compare before and after.
+              </p>
+              <button onClick={onClose} style={{ ...ghost, background: THEME.gradient, color: "#fff", border: "none", boxShadow: glow(THEME.brand, 0.25) }}>
+                <PenLine size={14} aria-hidden="true" /> Humanize your first text
+              </button>
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -195,7 +220,7 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
                         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                           <button onClick={() => void openInEditor(d)} disabled={opening === d.id}
                             style={{ ...ghost, color: THEME.brandHi, borderColor: `${THEME.brand}44` }}><FileInput size={13} aria-hidden="true" /> {opening === d.id ? "Opening…" : "Open in editor"}</button>
-                          <button onClick={() => { navigator.clipboard?.writeText((full[d.id]?.rewrittenText ?? d.rewrittenText) ?? d.originalText); toast.success("Copied"); }}
+                          <button onClick={() => void copyText((full[d.id]?.rewrittenText ?? d.rewrittenText) ?? d.originalText)}
                             style={ghost}><Copy size={13} aria-hidden="true" /> Copy</button>
                           <button onClick={() => void remove(d.id)} disabled={deleting === d.id}
                             style={{ ...ghost, color: THEME.ai, borderColor: `${THEME.ai}44` }}><Trash2 size={13} aria-hidden="true" /> {deleting === d.id ? "Deleting…" : "Delete"}</button>

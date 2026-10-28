@@ -10,7 +10,7 @@ const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 export const metadata: Metadata = {
   title: "Can Turnitin Detect ChatGPT? (2026)",
   description:
-    "Yes, Turnitin's AI detector flags raw ChatGPT output at high rates, but false positives are real. Learn how it works, its accuracy, and how to avoid wrong flags.",
+    "Yes, Turnitin flags raw ChatGPT output at high rates, but false positives are real. How it works, how accurate it is, and how to avoid wrong flags.",
   keywords: [
     "can Turnitin detect ChatGPT",
     "Turnitin ChatGPT detection",

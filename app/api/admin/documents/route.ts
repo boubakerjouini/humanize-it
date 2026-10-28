@@ -1,5 +1,6 @@
 // ===========================================================
-// GET  /api/admin/documents  — list/search documents (admin only)
+// GET  /api/admin/documents  — list/search documents (admin only).
+//      ?q= title, ?source=paste|pdf|docx|txt, ?status=complete|processing|error, ?page=
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -21,9 +22,14 @@ export async function GET(req: Request) {
     const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
     const limit = 25;
 
-    const where = q
-      ? { title: { contains: q, mode: "insensitive" as const } }
-      : {};
+    const source = url.searchParams.get("source");
+    const status = url.searchParams.get("status");
+    const where = {
+      ...(q ? { title: { contains: q, mode: "insensitive" as const } } : {}),
+      // Rows from before sourceType existed were all pasted text.
+      ...(source === "paste" ? { OR: [{ sourceType: "paste" }, { sourceType: null }] } : source && ["pdf", "docx", "txt"].includes(source) ? { sourceType: source } : {}),
+      ...(status && ["complete", "processing", "error"].includes(status) ? { status } : {}),
+    };
 
     const [documents, total] = await Promise.all([
       db.document.findMany({
@@ -38,6 +44,7 @@ export async function GET(req: Request) {
           overallScore: true,
           humanizedScore: true,
           status: true,
+          sourceType: true,
           createdAt: true,
           user: { select: { id: true, clerkId: true, email: true, name: true } },
         },

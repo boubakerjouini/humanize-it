@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { notify, copyText } from "@/components/workspace/notify";
 import { Key, Plus, Copy, Check, Trash2, Lock } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 
@@ -45,22 +45,22 @@ export function ApiKeysSection({ onUpgrade }: { onUpgrade: () => void }) {
     try {
       const res = await fetch("/api/keys", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name.trim() || "Default" }) });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error?.message ?? "Failed to create key."); return; }
+      if (!res.ok) { notify.error("Couldn't create the key", data.error?.message); return; }
       setRevealed(data.key as string);
       setName("");
-      toast.success("API key created — copy it now, it won't be shown again.");
+      notify.success("API key created", "Copy it now: it won't be shown again.");
       void load();
-    } catch { toast.error("Network error."); } finally { setCreating(false); }
+    } catch { notify.offline(); } finally { setCreating(false); }
   }
 
   async function revoke(id: string) {
     setRevoking(id);
     try {
       const res = await fetch(`/api/keys/${id}`, { method: "DELETE" });
-      if (!res.ok) { toast.error("Failed to revoke."); return; }
-      toast.success("Key revoked.");
+      if (!res.ok) { notify.error("Couldn't revoke the key", "Try again in a moment."); return; }
+      notify.success("API key revoked");
       void load();
-    } catch { toast.error("Network error."); } finally { setRevoking(null); }
+    } catch { notify.offline(); } finally { setRevoking(null); }
   }
 
   if (state && !state.apiAccess) {
@@ -80,7 +80,7 @@ export function ApiKeysSection({ onUpgrade }: { onUpgrade: () => void }) {
           <div style={{ fontSize: 12, fontWeight: 600, color: THEME.brandHi, marginBottom: 8 }}>Your new API key — copy it now, it won&apos;t be shown again:</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <code style={{ flex: 1, fontFamily: THEME.fontMono, fontSize: 13, color: THEME.text, background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: 7, padding: "8px 10px", overflow: "auto", whiteSpace: "nowrap" }}>{revealed}</code>
-            <button onClick={() => { navigator.clipboard?.writeText(revealed); setCopied(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: THEME.brand, color: "#fff", border: "none", borderRadius: 7, padding: "8px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? "Copied" : "Copy"}</button>
+            <button onClick={() => { void copyText(revealed).then((ok) => ok && setCopied(true)); }} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: THEME.brand, color: "#fff", border: "none", borderRadius: 7, padding: "8px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}{copied ? "Copied" : "Copy"}</button>
           </div>
           <button onClick={() => { setRevealed(null); setCopied(false); }} style={{ marginTop: 10, background: "transparent", border: "none", color: THEME.textDim, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Done</button>
         </div>

@@ -68,7 +68,7 @@ export const MAGNETS: Record<MagnetSlug, Magnet> = {
       "This kit helps you show your real writing process. It won't help you hide AI use, and we don't recommend trying.",
     relatedPostSlugs: [],
     seo: {
-      title: "False AI Flag Appeal Kit: What to Do If You're Wrongly Flagged",
+      title: "False AI Flag Appeal Kit: Wrongly Flagged as AI?",
       description:
         "Flagged as AI for writing you did yourself? Free kit: a 24-hour plan, an evidence checklist, email templates and a meeting script.",
       keywords: [

@@ -9,7 +9,7 @@ const ABSOLUTE_URL = "https://humanizeit.app/compare/humanizeit-vs-writehuman";
 export const metadata: Metadata = {
   title: "HumanizeIt vs WriteHuman (2026): Honest Comparison",
   description:
-    "An honest, side-by-side comparison of HumanizeIt and WriteHuman. We compare features, how each handles AI detectors, transparency, and pricing so you can pick the right tool.",
+    "An honest side-by-side comparison of HumanizeIt and WriteHuman: features, how each handles AI detectors, transparency and pricing.",
   keywords: [
     "HumanizeIt vs WriteHuman",
     "WriteHuman alternative",

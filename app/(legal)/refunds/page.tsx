@@ -10,7 +10,7 @@ import { FOUNDING, GUARANTEE_DAYS, PLANS, TEAM_ANNUAL_GUARANTEE_DAYS } from "@/l
 export const metadata = {
   title: 'Refund Policy — HumanizeIt',
   description:
-    `HumanizeIt's refund policy: a ${GUARANTEE_DAYS}-day "Sounds Like You" guarantee on every paid plan, monthly or annual, how to ask for a refund, and what we never promise.`,
+    `HumanizeIt's refund policy: a ${GUARANTEE_DAYS}-day "Sounds Like You" guarantee on every paid plan, how to ask for a refund, and what we never promise.`,
   alternates: { canonical: 'https://humanizeit.app/refunds' },
 }
 

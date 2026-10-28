@@ -9,7 +9,7 @@ const URL = "https://humanizeit.app/alternatives";
 export const metadata: Metadata = {
   title: "Best AI Humanizer Alternatives (2026) | HumanizeIt",
   description:
-    "Looking for AI humanizer alternatives? Compare HumanizeIt against Undetectable.ai, Quillbot, and StealthGPT — what each does well, where it falls short, and who it fits.",
+    "Compare AI humanizer alternatives: HumanizeIt vs Undetectable.ai, Quillbot and StealthGPT, what each does well, where it falls short and who it fits.",
   keywords: [
     "AI humanizer alternatives",
     "Undetectable.ai alternative",
