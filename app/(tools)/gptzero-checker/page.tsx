@@ -38,7 +38,7 @@ export default function GptzeroCheckerPage() {
         description="Free checker that estimates a GPTZero-style AI score from perplexity and burstiness patterns, in the browser."
       />
 
-      <nav style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
+      <nav aria-label="Breadcrumb" style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
         <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
         <Link href="/ai-detector" style={{ color: THEME.brandHi, textDecoration: "none" }}>AI Detector</Link>

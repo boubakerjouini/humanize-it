@@ -102,9 +102,9 @@ export function FaqSection({ faqs, heading = "Frequently asked questions" }: { f
       <h2 style={kitStyles.h2}>{heading}</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {faqs.map((f) => (
-          <details key={f.q} style={{ background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius, padding: "14px 18px" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 600, color: THEME.text, fontSize: "15px" }}>{f.q}</summary>
-            <p style={{ ...kitStyles.p, marginTop: "10px", marginBottom: 0, fontSize: "15px" }}>{f.a}</p>
+          <details key={f.q} style={{ background: THEME.surface1, border: `1px solid ${THEME.border}`, borderRadius: THEME.radius }}>
+            <summary style={{ cursor: "pointer", fontWeight: 600, color: THEME.text, fontSize: "15px", padding: "14px 18px" }}>{f.q}</summary>
+            <p style={{ ...kitStyles.p, margin: "-4px 18px 0", paddingBottom: "14px", fontSize: "15px" }}>{f.a}</p>
           </details>
         ))}
       </div>
@@ -202,6 +202,7 @@ export function PageCta({
       <p style={{ fontSize: "16px", lineHeight: 1.7, marginBottom: "22px", color: THEME.textDim }}>{body}</p>
       <Link
         href={href}
+        className="cta-full"
         style={{ display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "16px", padding: "12px 30px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}
       >
         {cta}

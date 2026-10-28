@@ -44,7 +44,7 @@ export default function FreeAiHumanizerPage() {
         description="Free, no-signup AI humanizer that rewrites AI text to read naturally and shows the AI score before and after."
       />
 
-      <nav style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
+      <nav aria-label="Breadcrumb" style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
         <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
         <span style={{ color: THEME.textDim }}>Free AI Humanizer</span>

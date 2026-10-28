@@ -91,7 +91,7 @@ export default function BestAiHumanizerToolsPage() {
   return (
     <article style={{ maxWidth: "48rem", margin: "0 auto", padding: "48px 16px", color: THEME.text }}>
       {/* Breadcrumb */}
-      <nav style={{ marginBottom: "32px", fontSize: "13px", color: THEME.textMuted }}>
+      <nav aria-label="Breadcrumb" style={{ marginBottom: "32px", fontSize: "13px", color: THEME.textMuted }}>
         <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none", fontWeight: 500 }}>
           Home
         </Link>

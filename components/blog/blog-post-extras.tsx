@@ -48,7 +48,7 @@ export function BlogPostExtras({ slug }: { slug: string }) {
                   textDecoration: "none",
                 }}
               >
-                <div style={{ fontSize: "11px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+                <div style={{ fontSize: "12px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
                   {p.category}
                 </div>
                 <div style={{ fontSize: "15px", fontWeight: 600, color: THEME.text, marginBottom: "4px" }}>{p.title}</div>

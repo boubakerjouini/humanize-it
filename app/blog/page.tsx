@@ -90,7 +90,7 @@ export default function BlogPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
                   <span
                     style={{
-                      fontSize: "11px",
+                      fontSize: "12px",
                       fontWeight: 600,
                       color: cat.text,
                       textTransform: "uppercase",

@@ -94,7 +94,7 @@ export default function AlternativesHubPage() {
         aggressive settings, where the rewrite sometimes flattens your original voice.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/alternatives/undetectable-ai" style={altLink}>HumanizeIt vs Undetectable.ai</Link>
+        <Link href="/alternatives/undetectable-ai" className="tap-pad" style={altLink}>HumanizeIt vs Undetectable.ai</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Quillbot</h2>
@@ -108,7 +108,7 @@ export default function AlternativesHubPage() {
         draft reads to a strict detector, a detection-focused tool will usually go further.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/alternatives/quillbot" style={altLink}>HumanizeIt vs Quillbot</Link>
+        <Link href="/alternatives/quillbot" className="tap-pad" style={altLink}>HumanizeIt vs Quillbot</Link>
       </p>
 
       <h2 style={kitStyles.h2}>StealthGPT</h2>
@@ -122,7 +122,7 @@ export default function AlternativesHubPage() {
         want general editing or you care more about preserving an existing piece word for word.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/alternatives/stealthgpt" style={altLink}>HumanizeIt vs StealthGPT</Link>
+        <Link href="/alternatives/stealthgpt" className="tap-pad" style={altLink}>HumanizeIt vs StealthGPT</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Where HumanizeIt fits</h2>

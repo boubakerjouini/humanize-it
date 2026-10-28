@@ -51,7 +51,7 @@ export default function CopywritersUseCasePage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       {/* Breadcrumb */}
-      <nav className="text-sm mb-8" style={{ color: THEME.textDim }}>
+      <nav className="text-sm mb-8" aria-label="Breadcrumb" style={{ color: THEME.textDim }}>
         <Link href="/" className="hover:underline">
           Home
         </Link>

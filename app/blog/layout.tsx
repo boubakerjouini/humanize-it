@@ -11,6 +11,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
   return (
     <div style={{ minHeight: "100vh", color: THEME.text }}>
       <nav
+        className="mkt-nav"
         style={{
           position: "sticky",
           top: 0,

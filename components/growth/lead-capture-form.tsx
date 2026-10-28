@@ -195,7 +195,7 @@ export function LeadCaptureForm({
       >
         Your email
       </label>
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      <div className="lead-form-row" style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         <input
           id={`${id}-email`}
           name="email"
@@ -256,6 +256,7 @@ export function LeadCaptureForm({
             type="checkbox"
             checked={tips}
             onChange={(e) => setTips(e.target.checked)}
+            className="lead-tips-box"
             style={{ marginTop: "3px", accentColor: THEME.brand, flex: "0 0 auto" }}
           />
           <span>
