@@ -7,24 +7,19 @@ import { useEffect, useState } from "react";
 import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, Gift, AudioLines } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { UpgradeModal, type UpgradeTrigger } from "@/components/ui/upgrade-modal";
 import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card";
 import { FoundingBadge } from "@/components/growth/founding-badge";
 import { useOffers } from "@/components/growth/founding-offers";
 import { readCheckoutIntent, withoutCheckoutIntent, type CheckoutIntent } from "@/lib/checkout-intent";
+import { UsageChip, UsageMeter } from "@/components/workspace/usage-meter";
+import { Skeleton } from "@/components/workspace/skeleton";
+import { USAGE_CHANGED_EVENT, type UsageSnapshot } from "@/components/workspace/feedback";
 
 interface PlanInfo {
   plan: string;
   isAdmin: boolean;
   organization: { id: string; name: string; role: string } | null;
-}
-interface Usage {
-  plan: string;
-  wordsUsed: number;
-  wordsLimit: number; // -1 = unlimited
-  quotaResetAt: string | null;
-  /** Bonus words drawn after the plan allowance (referrals, word packs). */
-  bonusWords?: number;
 }
 
 const PLAN_META: Record<string, { label: string; icon: typeof Crown; }> = {
@@ -36,8 +31,12 @@ const PLAN_META: Record<string, { label: string; icon: typeof Crown; }> = {
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [info, setInfo] = useState<PlanInfo>({ plan: "FREE", isAdmin: false, organization: null });
-  const [usage, setUsage] = useState<Usage | null>(null);
+  // Until /api/user-plan answers, paying users must not see "Upgrade" flash.
+  const [planLoaded, setPlanLoaded] = useState(false);
+  const [usage, setUsage] = useState<UsageSnapshot | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // "quota" when opened from the out-of-words meter: the modal then leads with the limit and the word pack.
+  const [upgradeTrigger, setUpgradeTrigger] = useState<UpgradeTrigger>("upgrade");
   // A paid plan picked on the pricing page before sign-up (lib/checkout-intent.ts).
   const [pickedPlan, setPickedPlan] = useState<CheckoutIntent | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -52,11 +51,21 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     fetch("/api/user-plan").then((r) => r.json()).then((d) => setInfo({ plan: d.plan ?? "FREE", isAdmin: !!d.isAdmin, organization: d.organization ?? null })).catch(() => {})
       // Then open the plan menu on it, once the menu knows the current plan.
       .finally(() => {
+        setPlanLoaded(true);
         if (!picked) return;
         setPickedPlan(picked);
         setUpgradeOpen(true);
       });
-    fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d) => d && setUsage(d)).catch(() => {});
+  }, []);
+
+  // The meter refetches whenever the editor reports a spend (or a quota hit).
+  useEffect(() => {
+    const load = () => {
+      fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d: UsageSnapshot | null) => d && setUsage(d)).catch(() => {});
+    };
+    load();
+    window.addEventListener(USAGE_CHANGED_EVENT, load);
+    return () => window.removeEventListener(USAGE_CHANGED_EVENT, load);
   }, []);
 
   const nav = [
@@ -72,11 +81,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const isFree = info.plan === "FREE";
 
   // The plan menu (monthly or annual) rather than a straight monthly checkout.
-  const upgrade = () => setUpgradeOpen(true);
-  const bonusWords = usage?.bonusWords ?? 0;
-
-  const pct = usage && usage.wordsLimit > 0 ? Math.min(100, Math.round((usage.wordsUsed / usage.wordsLimit) * 100)) : 0;
-  const wordsLeft = usage && usage.wordsLimit > 0 ? Math.max(0, usage.wordsLimit - usage.wordsUsed) : null;
+  const upgrade = () => { setUpgradeTrigger("upgrade"); setUpgradeOpen(true); };
+  const moreWords = () => { setUpgradeTrigger("quota"); setUpgradeOpen(true); };
 
   // Render helpers (not components): defining components inside render remounts them every time.
   const renderNavLinks = (onNavigate?: () => void) => (
@@ -102,22 +108,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const renderPlanCard = () => (
     <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
-      {usage && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: THEME.textMuted, marginBottom: 5 }}>
-            <span>{wordsLeft === null ? "Unlimited words" : `${wordsLeft.toLocaleString()} words left`}</span>
-            <span className="tnum">{usage.wordsLimit > 0 ? `${pct}%` : "∞"}</span>
-          </div>
-          <div style={{ height: 5, background: THEME.surface3, borderRadius: 999 }}>
-            <div style={{ height: 5, width: `${pct}%`, background: pct > 90 ? THEME.warn : THEME.brand, borderRadius: 999, transition: "width .4s ease" }} />
-          </div>
-          {bonusWords > 0 && (
-            <div className="tnum" style={{ fontSize: 11, color: THEME.accentHi, fontWeight: 600, marginTop: 5 }}>
-              {`+${bonusWords.toLocaleString("en-US")} bonus words`}
-            </div>
-          )}
-        </div>
-      )}
+      <UsageMeter usage={usage} onUpgrade={moreWords} />
       {referral && (
         <button onClick={() => setInviteOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: 8, background: THEME.accentDim, color: THEME.accentHi, border: `1px solid ${THEME.accent}33`, borderRadius: 9, padding: "8px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: THEME.fontSans, textAlign: "left" }}>
@@ -125,7 +116,9 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           {`Invite friends · +${referral.rewardWords.toLocaleString("en-US")} words`}
         </button>
       )}
-      {isFree ? (
+      {!planLoaded ? (
+        <Skeleton height={36} radius={9} />
+      ) : isFree ? (
         <button onClick={upgrade}
           style={{ display: "flex", alignItems: "center", justifyContent: "center", background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28), fontFamily: THEME.fontSans }}>
           Upgrade to Pro
@@ -148,6 +141,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ display: "flex", minHeight: "100dvh", background: THEME.bg, fontFamily: THEME.fontSans }}>
+      <style href="ws-shell-mobile" precedence="default">{SHELL_MOBILE_CSS}</style>
       {/* Desktop sidebar */}
       <aside className="ws-sidebar" style={{ width: 232, flexShrink: 0, borderRight: `1px solid ${THEME.border}`, background: THEME.surface1, flexDirection: "column", position: "sticky", top: 0, height: "100dvh" }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, padding: "18px 16px 14px", textDecoration: "none", borderBottom: `1px solid ${THEME.border}` }}>
@@ -166,7 +160,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           <span style={{ fontSize: 18, fontWeight: 800, color: THEME.brand, fontFamily: THEME.fontHeading }}>H<span style={{ color: THEME.accent }}>.</span></span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {isFree && <button onClick={upgrade} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
+          <UsageChip usage={usage} onUpgrade={moreWords} />
+          {planLoaded && isFree && <button onClick={upgrade} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>
@@ -180,6 +175,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         isOpen={upgradeOpen}
         onClose={() => { setUpgradeOpen(false); setPickedPlan(null); }}
         currentPlan={info.plan}
+        trigger={upgradeTrigger}
         intent={pickedPlan}
       />
       {referral && (
@@ -209,3 +205,14 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+// Phone fixes that only make sense while the shell's fixed bars are on screen:
+// sticky editor bars clear the 52px top bar and 60px bottom tabs, and toasts
+// sit above the tabs instead of covering them.
+const SHELL_MOBILE_CSS = `
+@media (max-width: 768px) {
+  .ws-editor-toolbar { top: 52px !important; }
+  .ws-editor-footer { bottom: 60px !important; }
+  [data-sonner-toaster] { --offset-bottom: 72px !important; --mobile-offset-bottom: 72px !important; }
+}
+`;
