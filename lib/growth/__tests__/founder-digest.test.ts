@@ -4,7 +4,7 @@
 
 const mockDb = {
   contact: { findUnique: jest.fn() },
-  crmTask: { count: jest.fn() },
+  crmTask: { count: jest.fn(), findMany: jest.fn(async () => []) },
   // The job's retry and stuck-reset steps.
   emailMessage: { findMany: jest.fn(async () => []), updateMany: jest.fn(async () => ({ count: 0 })) },
 };
@@ -80,6 +80,24 @@ describe("buildFounderDigest", () => {
 
   it("leaves the job section out of a test copy", () => {
     expect(buildFounderDigest(NOW, COUNTS, null).bodyMd).not.toContain("This morning's job");
+  });
+
+  it("opens with the founder's priorities, flags overdue ones and counts the overflow", () => {
+    const priorities = [
+      { title: "Submit the Polar review", dueAt: new Date(NOW.getTime() - 86_400_000) },
+      { title: "Invite 10 users to an interview", dueAt: new Date(NOW.getTime() + 7 * 86_400_000) },
+      ...Array.from({ length: 8 }, (_, i) => ({ title: `Later ${i}`, dueAt: null })),
+    ];
+    const body = buildFounderDigest(NOW, { ...COUNTS, priorities }, null).bodyMd;
+    expect(body.startsWith("**Your priorities**")).toBe(true);
+    expect(body).toMatch(/- Submit the Polar review \(due \d+ \w+, overdue\)/);
+    expect(body).toMatch(/- Invite 10 users to an interview \(due \d+ \w+\)\n/);
+    expect(body).toContain("- …and 2 more");
+    expect(body.indexOf("**Your priorities**")).toBeLessThan(body.indexOf("**Last 24 hours**"));
+  });
+
+  it("has no priorities section when there are none", () => {
+    expect(buildFounderDigest(NOW, { ...COUNTS, priorities: [] }, null).bodyMd).not.toContain("Your priorities");
   });
 });
 
