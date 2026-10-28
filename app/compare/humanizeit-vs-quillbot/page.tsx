@@ -91,7 +91,7 @@ export default function HumanizeItVsQuillbotPage() {
       <p style={kitStyles.p}>
         HumanizeIt is built around those patterns rather than around vocabulary. It deliberately
         introduces the variation in rhythm and structure that human writing has naturally, instead of
-        just substituting words. No tool can promise to beat every detector every time &mdash; detectors
+        just substituting words. No tool can promise any detector result &mdash; detectors
         update, and any honest comparison should say so &mdash; but a humanizer aimed at the statistical
         layer is working on the right problem, where a paraphraser is working one level too shallow. If
         you want to understand what detectors actually measure, our explainer on{" "}
@@ -175,7 +175,7 @@ export default function HumanizeItVsQuillbotPage() {
             a: "Not primarily. Quillbot is a paraphraser and grammar suite. Its paraphraser can reword AI text, but it is not built to reshape the statistical patterns AI detectors look for, and it does not present itself as a detection-focused humanizer. HumanizeIt is purpose-built for that job.",
           },
           {
-            q: "Can Quillbot bypass AI detectors?",
+            q: "Does Quillbot change AI detector scores?",
             a: "Sometimes, but unreliably. Paraphrasing swaps words and restructures sentences, while detectors mostly measure perplexity and burstiness across the whole document. Surface-level rewording often leaves those patterns intact, so paraphrased AI text still gets flagged fairly often. No tool can guarantee a bypass since detectors keep changing.",
           },
           {

@@ -80,6 +80,8 @@ describe("middleware: what auth.protect() guards", () => {
     "/free-ai-humanizer",
     "/free/false-ai-flag-appeal-kit",
     "/blog/ai-detection-how-it-works",
+    "/detectors",
+    "/detectors/turnitin",
     "/bypass/turnitin",
     "/about",
     "/lifetime",

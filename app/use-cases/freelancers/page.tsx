@@ -17,7 +17,6 @@ export const metadata: Metadata = {
     "humanize AI text",
     "AI detection for client work",
     "freelance content delivery",
-    "bypass AI detection",
     "HumanizeIt freelancers",
   ],
   openGraph: {

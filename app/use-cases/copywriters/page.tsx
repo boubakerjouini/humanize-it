@@ -13,7 +13,6 @@ export const metadata: Metadata = {
     "copywriter AI tools",
     "AI content detection",
     "HumanizeIt copywriters",
-    "undetectable AI writing",
     "content writing workflow",
     "AI text humanizer",
   ],

@@ -16,12 +16,8 @@ export const metadata: Metadata = {
     "AI humanizer",
     "best AI humanizer tools",
     "AI text humanizer",
-    "undetectable AI",
-    "bypass AI detection",
     "humanize AI text",
     "AI content rewriter",
-    "GPTZero bypass",
-    "Turnitin bypass",
     "HumanizeIt",
   ],
   openGraph: {
@@ -461,7 +457,7 @@ export default function BestAiHumanizerToolsPage() {
       </ul>
       <p style={pStyle}>
         For detector-specific advice, our{" "}
-        <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
+        <Link href="/detectors" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
         explain how Turnitin, GPTZero, Originality.ai and others score text, and the{" "}
         <Link href="/alternatives" style={{ color: THEME.brandHi }}>alternatives hub</Link> goes deeper
         on switching from a specific tool.

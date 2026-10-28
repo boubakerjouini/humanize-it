@@ -17,7 +17,7 @@ export type ToolRunTool = (typeof TOOL_RUN_TOOLS)[number];
 /** The instant check's score band (analyzeText) or the deep scan's confidence. */
 export const TOOL_RUN_BANDS = ["likely-human", "uncertain", "possibly-ai", "likely-ai", "low", "medium", "high"] as const;
 
-/** A lower-case site path with no query: /, /ai-detector, /bypass/turnitin, /blog/<slug>. */
+/** A lower-case site path with no query: /, /ai-detector, /detectors/turnitin, /blog/<slug>. */
 const PAGE_PATH = /^\/(?:[a-z0-9][a-z0-9/-]{0,119})?$/;
 
 /** The page path to store, or null for anything that isn't one of our plain paths. */

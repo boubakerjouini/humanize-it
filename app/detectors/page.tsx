@@ -4,27 +4,29 @@ import { OG_IMAGES } from "@/lib/seo/og";
 import { kitStyles, Breadcrumbs, FaqSection, PageCta } from "@/components/seo/page-kit";
 import { THEME } from "@/lib/theme";
 
-const URL = "https://humanizeit.app/bypass";
+const URL = "https://humanizeit.app/detectors";
+
+const TITLE = "AI Detector Guides: How Each One Scores Your Writing";
+const DESCRIPTION =
+  "How Turnitin, GPTZero, ZeroGPT, Originality.ai, Copyleaks and Winston AI score text, why they flag honest writing, and how to read a result before you submit.";
 
 export const metadata: Metadata = {
-  title: "Bypass AI Detection: Guide to Every Major Detector",
-  description:
-    "A practical guide to bypassing AI detection. Learn how Turnitin, GPTZero, ZeroGPT, Originality.ai, Copyleaks, and Winston AI each work and how to read their scores.",
+  title: TITLE,
+  description: DESCRIPTION,
   keywords: [
-    "bypass AI detection",
-    "bypass AI detectors",
-    "beat Turnitin",
-    "bypass GPTZero",
-    "bypass ZeroGPT",
-    "bypass Originality.ai",
-    "bypass Copyleaks",
-    "bypass Winston AI",
-    "AI detection bypass",
+    "AI detector guide",
+    "how AI detectors work",
+    "AI detector false positive",
+    "Turnitin AI detection",
+    "GPTZero false positive",
+    "ZeroGPT accuracy",
+    "Originality.ai false positive",
+    "Copyleaks AI detector",
+    "Winston AI accuracy",
   ],
   openGraph: {
-    title: "Bypass AI Detection: Guide to Every Major Detector",
-    description:
-      "A practical guide to bypassing AI detection. Learn how Turnitin, GPTZero, ZeroGPT, Originality.ai, Copyleaks, and Winston AI each work and how to read their scores.",
+    title: TITLE,
+    description: DESCRIPTION,
     url: URL,
     siteName: "HumanizeIt",
     type: "website",
@@ -41,27 +43,26 @@ const detectorLink = {
   textDecoration: "none",
 };
 
-export default function BypassHubPage() {
+export default function DetectorsHubPage() {
   return (
     <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "40px 16px" }}>
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Bypass AI Detection" }]} />
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "AI Detector Guides" }]} />
 
-      <div className="kicker" style={{ marginBottom: "14px" }}>Bypass guides</div>
+      <div className="kicker" style={{ marginBottom: "14px" }}>Detector guides</div>
 
       <h1 style={kitStyles.h1}>
-        Bypass AI Detection: A Detector-by-Detector Guide
+        AI Detector Guides: How Each One Scores Your Writing
       </h1>
 
       <p style={{ ...kitStyles.p, fontSize: "17px" }}>
-        &quot;Bypass AI detection&quot; sounds like one task, but it isn&apos;t. Every detector measures
+        &quot;AI detection&quot; sounds like one test, but it isn&apos;t. Every detector measures
         something slightly different, weights its signals differently, and draws its
-        AI-versus-human line in a different place. A passage that sails through one tool can light up
-        another. This hub explains how the six most common detectors actually work and links to a
-        focused guide for each, so you can understand a flag instead of guessing at it. If you just
-        want to test some text right now, run it through our free{" "}
-        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>AI detector</Link> or rewrite it
-        with the{" "}
-        <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link>.
+        AI-versus-human line in a different place. A passage that one tool calls human can light up
+        another, and honest human writing gets flagged more often than most people expect. This hub
+        explains how the six most common detectors actually work and links to a focused guide for
+        each, so you can understand a flag instead of guessing at it. If you want to see which
+        sentences in your own draft read as machine-like, run it through our free{" "}
+        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>AI detector</Link>.
       </p>
 
       <h2 style={kitStyles.h2}>What every AI detector is really measuring</h2>
@@ -80,7 +81,8 @@ export default function BypassHubPage() {
         on older GPT output and lag behind newer models; others retrain frequently. The practical
         consequence is that detector scores are estimates of how AI-like a pattern looks, not proof
         of authorship &mdash; which is exactly why false positives on genuine human writing remain a
-        well-documented problem. For a deeper walkthrough, see{" "}
+        well-documented problem, especially for non-native English writers. For a deeper
+        walkthrough, see{" "}
         <Link href="/blog/ai-detection-how-it-works" style={{ color: THEME.brandHi }}>how AI detection works</Link>.
       </p>
 
@@ -95,7 +97,7 @@ export default function BypassHubPage() {
         happen.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/turnitin" style={detectorLink}>Read the Turnitin guide</Link>
+        <Link href="/detectors/turnitin" style={detectorLink}>Read the Turnitin guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>GPTZero</h2>
@@ -108,7 +110,7 @@ export default function BypassHubPage() {
         <Link href="/gptzero-checker" style={{ color: THEME.brandHi }}>GPTZero checker</Link>.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/gptzero" style={detectorLink}>Read the GPTZero guide</Link>
+        <Link href="/detectors/gptzero" style={detectorLink}>Read the GPTZero guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>ZeroGPT</h2>
@@ -117,11 +119,11 @@ export default function BypassHubPage() {
         and highlights the spans it considers machine-written. It is popular precisely because it has
         no sign-up wall, but it is also known for being noisy: it can swing hard on short inputs and
         sometimes flags plainly human text. Treat its number as a rough temperature reading rather
-        than a precise measurement, and never assume a clean ZeroGPT score means a stricter detector
-        will agree.
+        than a precise measurement, and never assume a ZeroGPT score predicts what a stricter
+        detector will say.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/zerogpt" style={detectorLink}>Read the ZeroGPT guide</Link>
+        <Link href="/detectors/zerogpt" style={detectorLink}>Read the ZeroGPT guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Originality.ai</h2>
@@ -134,7 +136,7 @@ export default function BypassHubPage() {
         but it also produces more false positives on dense, formal human writing.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/originality-ai" style={detectorLink}>Read the Originality.ai guide</Link>
+        <Link href="/detectors/originality-ai" style={detectorLink}>Read the Originality.ai guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Copyleaks</h2>
@@ -147,7 +149,7 @@ export default function BypassHubPage() {
         consumer check.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/copyleaks" style={detectorLink}>Read the Copyleaks guide</Link>
+        <Link href="/detectors/copyleaks" style={detectorLink}>Read the Copyleaks guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Winston AI</h2>
@@ -159,33 +161,34 @@ export default function BypassHubPage() {
         especially on short, plain, or highly templated writing.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/winston-ai" style={detectorLink}>Read the Winston AI guide</Link>
+        <Link href="/detectors/winston-ai" style={detectorLink}>Read the Winston AI guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>How to use these guides</h2>
       <p style={kitStyles.p}>
-        The reliable approach is the same regardless of detector: start with writing you actually own,
-        check it against the specific tool that matters to you, and rewrite passages that read as
-        flat or mechanical so they recover natural variation in word choice and sentence length. A
-        humanizer like ours rephrases text to restore that variation while preserving your meaning;
-        it is a polishing step, not a substitute for doing the work. Detectors update their models
-        regularly, so no result &mdash; clean or flagged &mdash; should be treated as permanent or
-        absolute.
+        The approach is the same regardless of detector: start with writing you actually own, check
+        it to see which passages read as flat or mechanical, and revise them so they recover the
+        natural variation in word choice and sentence length your writing usually has. Our rewriting
+        assistant can suggest a more natural version of a passage while keeping your meaning; it is a
+        polishing step, not a substitute for doing the work, and it cannot promise any detector
+        score. Detectors update their models regularly, so no result &mdash; clean or flagged
+        &mdash; should be treated as permanent or absolute. Always follow your school&apos;s or
+        employer&apos;s rules on AI use.
       </p>
       <p style={kitStyles.p}>
-        If your goal is to stop your own honest writing from being mislabeled, the workflow is simple:
-        run it through the{" "}
-        <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free AI humanizer</Link>,
-        re-check it with the{" "}
-        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>AI detector</Link>, and review the
-        output yourself to make sure it still says what you mean.
+        If your own honest writing keeps getting mislabeled, the workflow is simple: check it with
+        the{" "}
+        <Link href="/ai-detector" style={{ color: THEME.brandHi }}>AI detector</Link> to see which
+        sentences trigger the flag, revise them in your own voice (or with the{" "}
+        <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>rewriting assistant</Link>),
+        and read the result yourself to make sure it still says what you mean.
       </p>
 
       <FaqSection
         faqs={[
           {
-            q: "Can you actually bypass AI detection?",
-            a: "You can meaningfully reduce how AI-like text reads to a given detector by rewriting it so word choice and sentence rhythm vary the way human writing naturally does. But no method guarantees a clean score on every detector forever &mdash; detectors retrain, and each one weights its signals differently. Treat any pass as a snapshot, not a permanent result.",
+            q: "Can any tool guarantee a detector score?",
+            a: "No. Writing that varies its word choice and sentence rhythm the way human writing naturally does tends to read as less machine-like, but no tool or method can guarantee what any detector will say &mdash; detectors retrain, and each one weights its signals differently. We do not promise detector outcomes, and you should be wary of anyone who does.",
           },
           {
             q: "Are AI detectors accurate?",
@@ -193,24 +196,24 @@ export default function BypassHubPage() {
           },
           {
             q: "Why does one detector flag my text while another clears it?",
-            a: "Each tool was trained on different data, classifies at a different level (whole-document versus sentence-by-sentence), and sets its threshold in a different place. A passage that looks borderline to a strict tool like Originality.ai can read as clean to a more lenient one. That is why we publish a separate guide per detector instead of one universal trick.",
+            a: "Each tool was trained on different data, classifies at a different level (whole-document versus sentence-by-sentence), and sets its threshold in a different place. A passage that looks borderline to a strict tool like Originality.ai can read as clean to a more lenient one. That is why we publish a separate guide per detector.",
           },
           {
-            q: "Is it ethical to bypass AI detection?",
-            a: "It depends entirely on what you are doing. Using a humanizer to keep your own writing from being falsely flagged, or to make AI-assisted drafting read more naturally, is reasonable. Passing off generated work as original where rules forbid it is not. Always follow your school's or employer's policies &mdash; these guides explain how the tools work, not how to commit misconduct.",
+            q: "What should I do if my own writing is flagged?",
+            a: "Keep your drafts, notes and version history, which are the strongest evidence of authorship. Ask which tool produced the score, and point out that detector vendors describe their scores as indicators, not proof. Passing off generated work as your own where rules forbid it is never acceptable; these guides explain how the tools work so honest writers can understand and contest a false flag.",
           },
           {
-            q: "Will humanizing my text change its meaning?",
-            a: "A good humanizer rephrases for natural variation while preserving your argument and facts, but no rewrite is perfect. Always read the output before you use it to confirm it still says what you intended and hasn't introduced errors, especially in technical or cited passages.",
+            q: "Will rewriting my text change its meaning?",
+            a: "A good rewrite varies phrasing while preserving your argument and facts, but no rewrite is perfect. Always read the output before you use it to confirm it still says what you intended and hasn't introduced errors, especially in technical or cited passages.",
           },
         ]}
       />
 
       <PageCta
-        heading="Test, humanize, and re-check in one place"
-        body="Paste your draft into the free AI detector to see how it scores, then humanize it to recover natural variation &mdash; no credit card required to start."
-        href="/free-ai-humanizer"
-        cta="Try the Free Humanizer"
+        heading="See which sentences read as AI, before you submit"
+        body="Paste your draft into the free AI detector to see which sentences trigger the patterns detectors look for, and why. No account needed."
+        href="/ai-detector"
+        cta="Check My Writing"
       />
     </div>
   );

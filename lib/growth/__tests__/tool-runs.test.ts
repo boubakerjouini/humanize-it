@@ -13,7 +13,7 @@ beforeEach(() => mockCreate.mockReset());
 describe("cleanToolPage", () => {
   it("keeps a lower-cased path without query, hash or trailing slash", () => {
     expect(cleanToolPage("/AI-Detector/")).toBe("/ai-detector");
-    expect(cleanToolPage("/bypass/turnitin?utm_source=x#top")).toBe("/bypass/turnitin");
+    expect(cleanToolPage("/detectors/turnitin?utm_source=x#top")).toBe("/detectors/turnitin");
     expect(cleanToolPage("/blog/best-ai-humanizer-tools")).toBe("/blog/best-ai-humanizer-tools");
     // The homepage hero has its own demo detector.
     expect(cleanToolPage("/")).toBe("/");

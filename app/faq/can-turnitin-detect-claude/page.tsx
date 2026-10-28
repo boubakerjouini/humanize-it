@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     "Claude AI detection",
     "Anthropic Claude Turnitin",
     "humanize Claude text",
-    "AI detection bypass",
     "Turnitin AI detector",
   ],
   openGraph: {
@@ -143,7 +142,7 @@ export default function CanTurnitinDetectClaudePage() {
         You do not have to guess where to start. A detector that names the patterns it reacts to shows you which passages
         read flat, so you can revise those and leave the rest of your voice alone. For a checklist framed specifically
         around Turnitin, our{" "}
-        <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
+        <Link href="/detectors/turnitin" style={{ color: THEME.brandHi }}>
           Turnitin AI detection guide
         </Link>{" "}
         walks through each lever in more depth, including how the per-segment scoring shapes what you should revise first.

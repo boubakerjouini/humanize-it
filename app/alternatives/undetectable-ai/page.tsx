@@ -89,8 +89,8 @@ export default function UndetectableAiAlternativePage() {
       </p>
       <p style={kitStyles.p}>
         Beyond the free tier, look for honesty about what the tool can and cannot do. AI detection is a
-        moving target: detectors update their models, and no humanizer can promise a permanent 100%
-        bypass against every tool forever. Be skeptical of any product that guarantees it. Instead,
+        moving target: detectors update their models, and no humanizer can promise a permanent clean
+        score on every tool forever. Be skeptical of any product that guarantees it. Instead,
         weigh meaning preservation (does the rewrite still say what you wrote?), tone control, billing
         transparency (can you see and cancel your plan in one click?), and whether you can verify the
         result against the detectors you actually care about, such as GPTZero, Turnitin, or
@@ -180,8 +180,8 @@ export default function UndetectableAiAlternativePage() {
             a: "No. Humanizers process text on demand rather than storing a library, so there is nothing to migrate. Just cancel your existing plan before its next renewal date and start pasting text into the new tool.",
           },
           {
-            q: "Can any humanizer guarantee it bypasses every AI detector?",
-            a: "No honest tool can promise a permanent 100% bypass. Detectors update their models regularly and results vary by text length and topic. A good humanizer focuses on natural, meaning-preserving output and lets you verify results against the detectors you care about.",
+            q: "Can any humanizer guarantee a clean score on every AI detector?",
+            a: "No honest tool can promise that. Detectors update their models regularly and results vary by text length and topic. A good humanizer focuses on natural, meaning-preserving output and lets you verify results against the detectors you care about.",
           },
         ]}
       />

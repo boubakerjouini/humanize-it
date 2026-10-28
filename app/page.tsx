@@ -344,38 +344,9 @@ export default function LandingPage() {
         }
       `}</style>
 
-      {/* ── LAUNCH BANNER ──
-          The fixed nav sits 30px below the top, so the banner must stay one
-          line: on phones the full text wrapped to three lines and hid the
-          whole nav (logo, CTA, menu button). The prefix and the "Claim offer"
-          link are desktop-only for that reason. */}
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 51,
-        padding: "7px 16px",
-        background: THEME.gradient, color: "#ffffff",
-        textAlign: "center", fontSize: "13px", fontWeight: 500,
-        fontFamily: THEME.fontSans, letterSpacing: "-0.005em",
-        display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap",
-      }}>
-        <span>
-          <span className="desktop-only">Launch offer: </span>50% off Pro forever — use code{" "}
-          <strong className="tnum" style={{
-            fontWeight: 700, padding: "1px 7px", borderRadius: "6px",
-            background: "rgba(255,255,255,0.18)", letterSpacing: "0.02em",
-          }}>LAUNCH50</strong>
-        </span>
-        <a href="#pricing" className="desktop-only" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
-          color: "#ffffff", fontWeight: 600, textDecoration: "none",
-          display: "inline-flex", alignItems: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.6)", paddingBottom: "1px",
-        }}>
-          Claim offer
-        </a>
-      </div>
-
       {/* ── NAVBAR ── */}
       <nav style={{
-        position: "fixed", top: "30px", left: 0, right: 0, zIndex: 50,
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         height: "56px",
         display: "flex", alignItems: "center",
         borderBottom: `1px solid ${THEME.border}`,
@@ -462,7 +433,7 @@ export default function LandingPage() {
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <div className="mobile-nav-links" style={{
-          position: "fixed", top: "86px", left: 0, right: 0, zIndex: 49,
+          position: "fixed", top: "56px", left: 0, right: 0, zIndex: 49,
           background: "rgba(255,255,255,0.97)", backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: `1px solid ${THEME.border}`,
@@ -495,7 +466,7 @@ export default function LandingPage() {
       <main>
       {/* ── SECTION 1: HERO ── */}
       <section style={{
-        padding: "150px 24px 72px",
+        padding: "120px 24px 72px",
         position: "relative",
         overflow: "hidden",
       }}>
@@ -1313,7 +1284,7 @@ export default function LandingPage() {
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
-                  { label: "Detector Guides", href: "/bypass" },
+                  { label: "Detector Guides", href: "/detectors" },
                   { label: "Compare", href: "/compare" },
                   { label: "Alternatives", href: "/alternatives" },
                   { label: "Use Cases", href: "/use-cases" },

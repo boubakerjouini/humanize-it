@@ -115,7 +115,7 @@ export default function AlternativesHubPage() {
       <p style={kitStyles.p}>
         StealthGPT positions itself squarely as a detection-bypass tool and leans into that identity,
         including a &quot;stealth&quot; generation mode that aims to produce content already shaped to
-        read as human rather than rewriting text after the fact. That generate-and-bypass angle
+        read as human rather than rewriting text after the fact. That generate-first angle
         appeals to people who want to start from a prompt instead of pasting an existing draft. The
         common critiques are output quality that varies with the topic and length of the request, and
         a feature set narrowly built around evading detection, which makes it less useful if you also
@@ -140,7 +140,7 @@ export default function AlternativesHubPage() {
         It tends to fit best for students, copywriters, and small teams who write steadily and want a
         fast, repeatable loop rather than a sprawling toolkit. If your needs lean heavily toward
         grammar and general paraphrasing, a suite like Quillbot may serve you better; if you mainly
-        generate fresh content from prompts, a generate-and-bypass tool may match your habits more
+        generate fresh content from prompts, a generate-first tool may match your habits more
         closely. The point of these pages is to help you pick honestly rather than to claim one tool
         wins every case.
       </p>

@@ -5,27 +5,26 @@ import { THEME } from "@/lib/theme";
 import { kitStyles, Breadcrumbs, FaqSection, PageCta } from "@/components/seo/page-kit";
 import { DetectorTool } from "@/components/tools/detector-tool";
 
-const PAGE_PATH = "/bypass/turnitin";
+const PAGE_PATH = "/detectors/turnitin";
 const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 
 export const metadata: Metadata = {
-  title: "How to Bypass Turnitin AI Detection (2026 Guide)",
+  title: "How Turnitin's AI Detector Works, and Why It Flags Honest Writing",
   description:
-    "How Turnitin's AI detector scores text sentence by sentence, why honest students get flagged, and legitimate ways to make your writing read human.",
+    "How Turnitin's AI detector scores text sentence by sentence, why honest students get flagged, and what to do if your own writing is flagged.",
   keywords: [
-    "bypass Turnitin AI detection",
+    "Turnitin AI detection",
     "Turnitin AI detector",
-    "beat Turnitin AI",
+    "how Turnitin detects AI",
     "Turnitin false positive",
-    "humanize AI text",
-    "AI detection bypass",
-    "make text undetectable",
+    "Turnitin AI score",
+    "Turnitin flagged my essay",
     "Turnitin ChatGPT detection",
   ],
   openGraph: {
-    title: "How to Bypass Turnitin AI Detection (2026 Guide)",
+    title: "How Turnitin's AI Detector Works, and Why It Flags Honest Writing",
     description:
-      "How Turnitin's AI detector works, why honest students get flagged, and the legitimate techniques that make writing read human.",
+      "How Turnitin's AI detector works, why honest students get flagged, and what to do if your own writing is flagged.",
     url: ABSOLUTE_URL,
     siteName: "HumanizeIt",
     type: "article",
@@ -36,13 +35,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BypassTurnitinPage() {
+export default function TurnitinDetectorGuidePage() {
   return (
     <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "40px 16px" }}>
       <Breadcrumbs
         items={[
           { label: "Home", href: "/" },
-          { label: "Bypass", href: "/bypass" },
+          { label: "AI Detector Guides", href: "/detectors" },
           { label: "Turnitin" },
         ]}
       />
@@ -51,14 +50,14 @@ export default function BypassTurnitinPage() {
         Turnitin AI detection
       </div>
 
-      <h1 style={kitStyles.h1}>How to Bypass Turnitin AI Detection (2026)</h1>
+      <h1 style={kitStyles.h1}>How Turnitin&apos;s AI Detector Works, and Why It Flags Honest Writing (2026)</h1>
 
       <p style={{ ...kitStyles.p, fontSize: "17px" }}>
         Turnitin&apos;s AI writing indicator has become one of the most-feared steps between you and a submitted
         assignment. The score it produces is opaque, the appeals process is slow, and a single percentage can derail a
         grade you earned honestly. This guide explains exactly how the detector works, why genuine human writing still
-        gets flagged, and the legitimate, writing-focused techniques that make text read the way a person actually
-        wrote it. Start by checking what you have with the free{" "}
+        gets flagged, and what you can do to keep your own writing reading the way you actually wrote it. Start by
+        checking what you have with the free{" "}
         <Link href="/ai-detector" style={{ color: THEME.brandHi }}>
           AI detector
         </Link>{" "}
@@ -105,26 +104,26 @@ export default function BypassTurnitinPage() {
         walks through what the score does and does not mean.
       </p>
 
-      <h2 style={kitStyles.h2}>Legitimate techniques that make writing read human</h2>
+      <h2 style={kitStyles.h2}>How to keep your own writing from reading as machine-like</h2>
       <p style={kitStyles.p}>
-        Because the detector keys on predictability, the most reliable way to read as human is to write with the
-        variation that humans naturally produce. The first lever is burstiness &mdash; the variance in sentence length.
+        Because the detector keys on predictability, the writing habits that help most are the ones that make your
+        prose better anyway: the variation that humans naturally produce. The first lever is burstiness &mdash; the variance in sentence length.
         Human paragraphs mix long, clause-heavy sentences with short, punchy ones. AI output tends to hover around a
         uniform length. Deliberately alternating a twenty-five-word sentence with a five-word one restores the rhythm
         detectors expect from a person.
       </p>
       <p style={kitStyles.p}>
         The second lever is perplexity &mdash; how surprising your word choices are. LLMs reach for the safest, most
-        common phrasing, so swapping generic connectors and filler for specific, concrete language raises perplexity in a
-        way that reads as authentically human rather than evasive. Name the actual study, the actual date, the actual
+        common phrasing, so swapping generic connectors and filler for specific, concrete language makes your writing
+        sharper and more clearly your own. Name the actual study, the actual date, the actual
         example instead of writing &quot;research has shown&quot; for the third time in a paragraph.
       </p>
       <p style={kitStyles.p}>
         The third lever is register and voice. Inject a real point of view, a hedge, an aside, a transition that only
         makes sense if you actually understand the material. AI text is famously even-tempered and hedge-free in a
         machine way; human academic writing carries small inconsistencies of tone, opinion, and emphasis. Editing your
-        own draft to add those &mdash; rather than smoothing them out &mdash; is genuinely good writing advice that also
-        happens to lower an AI score.
+        own draft to keep those &mdash; rather than smoothing them out &mdash; is simply good writing advice. None of it
+        guarantees a particular score.
       </p>
 
       <h2 style={kitStyles.h2}>Check your own writing before you submit</h2>
@@ -136,7 +135,7 @@ export default function BypassTurnitinPage() {
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>
           free AI humanizer
         </Link>{" "}
-        suggest a more natural version, then read the result and keep only what still sounds like you.
+        suggest a more natural version of your own draft, then read the result and keep only what still sounds like you.
       </p>
       <p style={kitStyles.p}>
         Keep your drafts, notes, and version history as you go. A detector score is an indicator, not proof, and if your
@@ -150,11 +149,11 @@ export default function BypassTurnitinPage() {
 
       <h2 style={kitStyles.h2}>Reliability and honest limits</h2>
       <p style={kitStyles.p}>
-        No tool can promise a guaranteed Turnitin pass, and anyone who claims a fixed success rate is selling certainty
-        that does not exist. Turnitin updates its model, your institution may run additional checkers, and the same text
+        No tool can promise any Turnitin score, and anyone who claims a fixed success rate is selling certainty that
+        does not exist. Turnitin updates its model, your institution may run additional checkers, and the same text
         can score differently across detectors and across re-runs. Since August 2025 Turnitin has also flagged text it
-        believes was modified by AI humanizers and other &quot;bypasser&quot; tools, so running AI-written work through a
-        humanizer is not a way around it. Our detector uses a transparent, pattern-based engine that runs in your
+        believes was modified by AI rewriting tools, so running AI-written work through a rewriter is not a way around
+        it, and we do not offer it as one. Our detector uses a transparent, pattern-based engine that runs in your
         browser; it is a useful directional signal, but it is not Turnitin itself, so treat its score as guidance rather
         than a verdict.
       </p>
@@ -176,7 +175,7 @@ export default function BypassTurnitinPage() {
         in. The most defensible position is always the one where you understand and can defend every sentence you submit.
       </p>
       <p style={kitStyles.p}>
-        Used this way, a humanizer is closer to an editor than to an evasion tool: it helps the parts of your own draft
+        Used this way, a rewriting assistant is an editor: it helps the parts of your own draft
         that happen to read robotically carry the variation, specificity, and voice of a person who actually engaged
         with the material.
       </p>
@@ -192,16 +191,16 @@ export default function BypassTurnitinPage() {
             a: "It is reasonably accurate on clearly machine-written text and is tuned toward a low false-positive rate of roughly one percent at the document level. But across millions of submissions, even a small error rate flags many innocent students, and concise, formulaic, or non-native writing is disproportionately affected. Treat the score as an estimate, not a fact.",
           },
           {
-            q: "Does paraphrasing beat Turnitin?",
-            a: "Light synonym-swapping paraphrasers usually do not, because they keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
+            q: "Does paraphrasing change a Turnitin AI score?",
+            a: "Light synonym-swapping paraphrasers usually keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI rewriting tools, so no tool is a way around it, and none should be used as one.",
           },
           {
-            q: "Will humanizing change my meaning?",
-            a: "A good humanizer rewrites the surface texture while preserving your argument and structure, but no rewrite is risk-free. Always read the output, confirm that citations and claims are still accurate, and fix anything that drifted. The tool changes how the text reads, not what you intended to say, so the final accuracy check is yours.",
+            q: "Will rewriting change my meaning?",
+            a: "A good rewrite changes the surface texture while preserving your argument and structure, but no rewrite is risk-free. Always read the output, confirm that citations and claims are still accurate, and fix anything that drifted. The tool changes how the text reads, not what you intended to say, so the final accuracy check is yours.",
           },
           {
-            q: "Can any tool guarantee I pass Turnitin?",
-            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A humanizer can reduce the patterns that make writing read as AI, but Turnitin now also looks for humanizer-modified text, and a guaranteed pass is not something any honest service can offer.",
+            q: "Can any tool guarantee a Turnitin score?",
+            a: "No, and you should be skeptical of any that promises it. Turnitin updates its model, institutions layer on other checkers, and the same text can score differently across detectors and re-runs. A guaranteed result is not something any honest service can offer, and we do not offer one.",
           },
         ]}
       />

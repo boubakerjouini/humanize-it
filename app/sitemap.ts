@@ -19,13 +19,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Generated from route lists so the sitemap can't silently drift out of sync
   // with the app. Add a new route (with its date) to the relevant list below
   // and it appears.
-  const bypassDetectors: [slug: string, lastModified: string][] = [
-    ["turnitin", "2026-10-06"],
-    ["gptzero", "2026-10-06"],
-    ["zerogpt", "2026-06-09"],
-    ["originality-ai", "2026-06-09"],
-    ["copyleaks", "2026-06-09"],
-    ["winston-ai", "2026-06-09"],
+  const detectorGuides: [slug: string, lastModified: string][] = [
+    ["turnitin", "2026-10-28"],
+    ["gptzero", "2026-10-28"],
+    ["zerogpt", "2026-10-28"],
+    ["originality-ai", "2026-10-28"],
+    ["copyleaks", "2026-10-28"],
+    ["winston-ai", "2026-10-28"],
   ];
   const compareSpokes: [slug: string, lastModified: string][] = [
     ["undetectable-ai", "2026-10-06"],
@@ -74,9 +74,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...MAGNET_LIST.map((m) => e(`/free/${m.slug}`, "2026-10-07", 0.8)),
     e("/extension", "2026-10-07", 0.6),
 
-    // Bypass cluster
-    e("/bypass", "2026-06-09", 0.8, "weekly"),
-    ...bypassDetectors.map(([d, lm]) => e(`/bypass/${d}`, lm, 0.8)),
+    // Detector guides cluster
+    e("/detectors", "2026-10-28", 0.8, "weekly"),
+    ...detectorGuides.map(([d, lm]) => e(`/detectors/${d}`, lm, 0.8)),
 
     // Comparison spokes
     ...compareSpokes.map(([s, lm]) => e(`/compare/humanizeit-vs-${s}`, lm, 0.8)),
