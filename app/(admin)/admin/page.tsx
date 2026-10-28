@@ -4,6 +4,8 @@ import { getAdminMetrics, getLast24hMetrics, getOpsHealth, getSignupSeries, type
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { KpiCard, SectionTitle, Sparkline } from "@/components/admin/kpi";
+import { DigestTestButton } from "@/components/admin/digest-test-button";
+import { founderDigestEnabled } from "@/lib/growth/founder-digest";
 import {
   Users, FileText, DollarSign, Building2, Sparkles, TrendingUp, Crown, Zap,
   Gift, AlertTriangle, UserCheck, Hash, ScanSearch, CreditCard, Mail, Inbox, Activity,
@@ -50,6 +52,7 @@ export default async function AdminOverviewPage() {
           <KpiCard icon={Inbox} label="Waiting for you" value={(day.openSupportEmails + day.openHighTasks).toLocaleString()} sub={`${day.openSupportEmails} support emails · ${day.openHighTasks} high-priority tasks`} accent={day.openSupportEmails + day.openHighTasks > 0 ? THEME.accent : undefined} />
         </Link>
       </div>
+      <DigestTestButton enabled={founderDigestEnabled()} />
 
       <HealthLine health={health} />
 

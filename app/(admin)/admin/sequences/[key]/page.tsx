@@ -3,14 +3,15 @@
 // ===========================================================
 // /admin/sequences/[key] — One flow in detail: its steps (timing, template,
 // stream, condition) with per-step results, a sandboxed preview of each step,
-// the enrollments with pause / resume / exit, and Backfill (dry run first,
+// a "[TEST]" send of each step to your own inbox (a sequence only switches on
+// once every step's current content was tested), the enrollments with pause / resume / exit, and Backfill (dry run first,
 // then an explicit confirm) for people who qualified before it was switched on.
 // ===========================================================
 
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Eye, Users } from "lucide-react";
+import { ArrowLeft, Eye, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { THEME } from "@/lib/theme";
 import {
@@ -38,6 +39,7 @@ import { toggleBody, type BackfillCount } from "@/components/admin/email/flow-co
 
 type Step = { key: string; offsetHours: number; template: string; stream: string; topic: string | null; condition: string | null; maxLateHours: number | null };
 type StepStats = { key: string; counts: Record<string, number>; skipped: Record<string, number> };
+type StepTest = { key: string; tested: boolean; testedAt: string | null };
 type Enrollment = {
   id: string;
   status: string;
@@ -63,6 +65,7 @@ type Detail = {
   enabled: boolean;
   steps: Step[];
   stepStats: StepStats[];
+  stepTests: StepTest[];
   enrollments: Enrollment[];
   total: number;
   page: number;
@@ -86,11 +89,21 @@ export default function SequenceDetailPage() {
   const [dryBusy, setDryBusy] = useState(false);
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
+  const [testBusy, setTestBusy] = useState<string | null>(null);
 
   const showPreview = async (stepKey: string) => {
     setPreview({ step: stepKey, email: null, error: null });
     const res = await api<RenderedEmail>("/api/admin/email/preview", { method: "POST", json: { sequenceKey: key, stepKey } });
     setPreview({ step: stepKey, email: res.ok ? res.data : null, error: res.ok ? null : res.message });
+  };
+
+  const sendTest = async (stepKey: string) => {
+    setTestBusy(stepKey);
+    const res = await api<{ message: string }>(`/api/admin/sequences/${key}/test`, { method: "POST", json: { stepKey } });
+    setTestBusy(null);
+    if (!res.ok) return void toast.error(res.message);
+    toast.success(res.data.message);
+    reload();
   };
 
   const openToggle = async () => {
@@ -137,6 +150,10 @@ export default function SequenceDetailPage() {
     reload();
   };
 
+  // Turning off is never gated; turning a sequence on needs every step tested.
+  const untested = data?.isSequence ? data.stepTests.filter((t) => !t.tested).length : 0;
+  const toggleLocked = !!data && !data.enabled && untested > 0;
+
   if (error) {
     return (
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 28px" }}>
@@ -155,18 +172,41 @@ export default function SequenceDetailPage() {
       <PageHeader
         title={data?.name ?? "…"}
         description={data ? `${data.description} Audience: ${data.audience}. Trigger: ${data.trigger}.` : null}
-        actions={data ? <FlowSwitch on={data.enabled} label={`${data.name} ${data.enabled ? "on" : "off"}`} onClick={() => void openToggle()} /> : null}
+        actions={
+          data ? (
+            <Row gap={10}>
+              {toggleLocked ? (
+                <span style={{ fontSize: 12, color: THEME.textMuted }}>
+                  Test {untested} more step{untested === 1 ? "" : "s"} to turn on
+                </span>
+              ) : null}
+              <FlowSwitch
+                on={data.enabled}
+                label={`${data.name} ${data.enabled ? "on" : "off"}`}
+                disabled={toggleLocked}
+                onClick={() => void openToggle()}
+              />
+            </Row>
+          ) : null
+        }
       />
       <EmailStatusBanner />
 
       {data ? (
         <>
-          <Panel title="Steps" description="Counts are all-time. A step more than its late limit past due is skipped, never sent days late." flush style={{ marginBottom: 20 }}>
+          <Panel
+            title="Steps"
+            description={
+              data.isSequence
+                ? "Counts are all-time. A step more than its late limit past due is skipped, never sent days late. Send each step to yourself before turning the flow on; a test counts for 7 days, and any copy change needs a new one."
+                : "Counts are all-time. A step more than its late limit past due is skipped, never sent days late."
+            }
+            flush style={{ marginBottom: 20 }}>
             <div style={{ overflowX: "auto" }}>
               <table style={tableStyles.table}>
                 <thead>
                   <tr>
-                    {["Step", "When", "Stream", "Condition", "Sent", "Delivered", "Bounced", "Skipped", ""].map((h) => (
+                    {["Step", "When", "Stream", "Condition", "Sent", "Delivered", "Bounced", "Skipped", ...(data.isSequence ? ["Test"] : []), ""].map((h) => (
                       <th key={h || "actions"} scope="col" style={tableStyles.th}>
                         {h}
                       </th>
@@ -180,6 +220,7 @@ export default function SequenceDetailPage() {
                     const delivered = sum(st.counts, ["delivered", "complained"]);
                     const bounced = sum(st.counts, ["bounced"]);
                     const skippedTotal = Object.values(st.skipped).reduce((a, b) => a + b, 0);
+                    const test = data.stepTests.find((t) => t.key === s.key);
                     return (
                       <tr key={s.key} style={tableStyles.tr}>
                         <td style={tableStyles.td}>
@@ -205,11 +246,33 @@ export default function SequenceDetailPage() {
                                 .map(([r, n]) => `${n} ${reasonLabel(r)}`)
                                 .join(", ")}
                         </td>
-                        <td style={{ ...tableStyles.td, textAlign: "right" }}>
+                        {data.isSequence ? (
+                          <td style={tableStyles.td}>
+                            <Pill
+                              color={test?.tested ? THEME.human : THEME.textMuted}
+                              dashed={!test?.tested}
+                              title={test?.testedAt ? `Tested ${fmtDateTime(test.testedAt)}` : "No test of this content in the last 7 days"}
+                            >
+                              {test?.tested ? "tested" : "untested"}
+                            </Pill>
+                          </td>
+                        ) : null}
+                        <td style={{ ...tableStyles.td, textAlign: "right", whiteSpace: "nowrap" }}>
                           {data.isSequence ? (
-                            <button type="button" onClick={() => void showPreview(s.key)} style={ghostBtn} aria-label={`Preview ${s.key}`}>
-                              <Eye size={14} aria-hidden="true" /> Preview
-                            </button>
+                            <>
+                              <button type="button" onClick={() => void showPreview(s.key)} style={ghostBtn} aria-label={`Preview ${s.key}`}>
+                                <Eye size={14} aria-hidden="true" /> Preview
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void sendTest(s.key)}
+                                disabled={testBusy !== null}
+                                style={{ ...disabledStyle(ghostBtn, testBusy !== null), marginLeft: 6 }}
+                                aria-label={`Send a test of ${s.key} to me`}
+                              >
+                                <Send size={14} aria-hidden="true" /> {testBusy === s.key ? "Sending…" : "Send test to me"}
+                              </button>
+                            </>
                           ) : null}
                         </td>
                       </tr>

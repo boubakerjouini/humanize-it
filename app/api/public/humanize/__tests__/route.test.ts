@@ -1,6 +1,6 @@
-// POST /api/public/humanize: a finished free rewrite is counted in PostHog
-// under a fresh, anonymous id with no person profile, never with the text; a
-// refused or failed rewrite counts nothing.
+// POST /api/public/humanize: a finished free rewrite is recorded as a ToolRun,
+// never with the text; a refused or failed rewrite records nothing. Its PostHog
+// event is captured by the tool in the browser, so the route sends none.
 
 jest.mock("@/lib/db", () => ({ db: {} }));
 jest.mock("@/lib/llm", () => ({ activeProvider: () => "anthropic" }));
@@ -40,32 +40,16 @@ beforeEach(() => {
   (humanizeText as jest.Mock).mockResolvedValue({ humanizedText: "A plain rewrite of secretphrase.", model: "test-model" });
 });
 
-it("counts a finished rewrite without the text, under a fresh anonymous id", async () => {
+it("sends no server-side PostHog event for a finished rewrite", async () => {
   expect((await rewrite()).status).toBe(200);
-  expect(trackServer).toHaveBeenCalledTimes(1);
-  const [id, event, props] = (trackServer as jest.Mock).mock.calls[0];
-  expect(event).toBe("free_humanize_completed");
-  expect(id).toMatch(/^[0-9a-f-]{36}$/);
-  expect(props).toEqual({
-    word_count: TEXT.split(/\s+/).length,
-    tone: "standard",
-    intensity: "medium",
-    channel: "unknown",
-    $process_person_profile: false,
-  });
-  expect(JSON.stringify(props)).not.toContain("secretphrase");
+  expect(trackServer).not.toHaveBeenCalled();
 });
 
-it("adds the channel and campaign from the attribution cookie", async () => {
+it("records the ToolRun source from the attribution cookie", async () => {
   const first = buildTouch({ href: "https://humanizeit.app/free-ai-humanizer?utm_source=linkedin&utm_medium=dm&utm_campaign=warm-seg-2", now: Date.now() });
   (readAttribution as jest.Mock).mockResolvedValueOnce({ first, last: first });
-  await rewrite({ text: TEXT, intensity: "light" });
-  expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({
-    intensity: "light",
-    channel: "outreach",
-    utm_source: "linkedin",
-    utm_campaign: "warm-seg-2",
-  });
+  await rewrite({ text: TEXT, page: "/free-ai-humanizer" });
+  expect(mockRecordToolRun.mock.calls[0][0]).toMatchObject({ source: "linkedin" });
 });
 
 it("says exactly what a free account adds once the daily cap is reached", async () => {
@@ -89,7 +73,7 @@ it("counts nothing when the rewrite fails or is refused", async () => {
   expect((await rewrite({ text: TEXT, tone: "formal" })).status).toBe(403);
   (checkDailyLimit as jest.Mock).mockResolvedValueOnce({ ok: false, limit: 2, remaining: 0, retryAfterSeconds: 60 });
   expect((await rewrite()).status).toBe(429);
-  expect(trackServer).not.toHaveBeenCalled();
+  expect(mockRecordToolRun).not.toHaveBeenCalled();
 });
 
 it("records a ToolRun with the page and the before and after scores, never the text", async () => {
@@ -100,5 +84,4 @@ it("records a ToolRun with the page and the before and after scores, never the t
   expect(typeof run.score).toBe("number");
   expect(typeof run.scoreAfter).toBe("number");
   expect(JSON.stringify(run)).not.toContain("secretphrase");
-  expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({ tool_page: "/free-ai-humanizer" });
 });

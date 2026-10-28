@@ -22,6 +22,9 @@ export const PERSONAL_TEST_TTL_MS = 24 * 3_600_000;
 /** Daily cap on personal emails, and separately on their tests, whoever sends them. */
 export const PERSONAL_DAILY_LIMIT = 40;
 
+/** Rate-limit key of every admin "[TEST]" send (personal notes and sequence steps share it). */
+export const PERSONAL_TEST_LIMIT_KEY = "admin:personal-test";
+
 /** Statuses that mean the test reached Resend (later webhooks move sent → delivered or bounced). */
 const TEST_WENT_OUT = ["sent", "delivered"];
 
@@ -62,7 +65,7 @@ export async function hasRecentPersonalTest(adminContactId: string, digest: stri
 
 /** Send the "[TEST]" copy to the sender's own contact. Null when today's test cap is used up. */
 export async function sendPersonalTest(ownContactId: string, email: PersonalEmail): Promise<SendOutcome | null> {
-  const limit = await checkDailyLimit("admin:personal-test", PERSONAL_DAILY_LIMIT);
+  const limit = await checkDailyLimit(PERSONAL_TEST_LIMIT_KEY, PERSONAL_DAILY_LIMIT);
   if (!limit.ok) return null;
   return sendEmail({
     contactId: ownContactId,

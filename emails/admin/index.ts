@@ -5,6 +5,6 @@
 // ===========================================================
 
 import type { TemplateRegistry } from "@/emails/registry";
-import { campaign, personal_note } from "@/emails/admin/templates";
+import { campaign, founder_digest, personal_note } from "@/emails/admin/templates";
 
-export const ADMIN: TemplateRegistry = { campaign, personal_note };
+export const ADMIN: TemplateRegistry = { campaign, founder_digest, personal_note };

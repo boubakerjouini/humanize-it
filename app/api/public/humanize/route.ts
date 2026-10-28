@@ -7,12 +7,12 @@
 // pushed to sign up. A global daily ceiling across all IPs bounds the worst
 // case (rotating proxies). This is the only place anonymous LLM rewrites run.
 // Tones follow the Free plan (Standard only), so signing up is never a step down.
-// A finished rewrite is counted in PostHog (free_humanize_completed) under a
-// fresh id per rewrite, with no person profile and never the text, and as a
-// ToolRun row (lib/growth/tool-runs.ts) with its page, for the admin view.
+// A finished rewrite is counted as a ToolRun row (lib/growth/tool-runs.ts) with
+// its page, for the admin view. Its PostHog event (free_humanize_completed) is
+// captured by the tool in the browser, so it joins the visitor's funnel; a
+// server event here could only use a throwaway id.
 // ===========================================================
 
-import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
@@ -20,10 +20,8 @@ import { activeProvider } from "@/lib/llm";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { clientIp, ipBucket } from "@/lib/client-ip";
 import { PLANS, isToneAllowed } from "@/lib/plans";
-import { touchEventProps } from "@/lib/growth/attribution";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
-import { trackServer } from "@/lib/posthog";
 import { cleanToolPage, recordToolRun, refererPage, toolRunSource } from "@/lib/growth/tool-runs";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
@@ -158,16 +156,6 @@ export async function POST(req: Request) {
   const after = analyzeText(humanizedText);
   const touch = firstTouchOf(await readAttribution());
   const page = toolPage ?? refererPage(req);
-  runAfter("public-humanize:analytics", () =>
-    trackServer(randomUUID(), "free_humanize_completed", {
-      word_count: before.wordCount,
-      tone,
-      intensity,
-      ...touchEventProps(touch),
-      ...(page ? { tool_page: page } : {}),
-      $process_person_profile: false,
-    })
-  );
   if (page) {
     runAfter("public-humanize:tool-run", () =>
       recordToolRun({
