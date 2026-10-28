@@ -15,7 +15,6 @@ export const metadata: Metadata = {
     "team AI writing",
     "API AI humanizer",
     "content agency tools",
-    "undetectable AI bulk",
   ],
   openGraph: {
     title: "AI Humanizer for Agencies: Content at Scale | HumanizeIt",

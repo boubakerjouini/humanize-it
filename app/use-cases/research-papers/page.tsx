@@ -19,7 +19,6 @@ export const metadata: Metadata = {
     "dissertation AI humanizer",
     "academic AI humanizer",
     "humanize AI text",
-    "AI detection bypass",
   ],
   openGraph: {
     title: "AI Humanizer for Research Papers & Thesis | HumanizeIt",
@@ -128,7 +127,7 @@ export default function ResearchPapersUseCasePage() {
           how AI detection works
         </Link>
         , and we cover the specific situation around Turnitin in our overview of{" "}
-        <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
+        <Link href="/detectors/turnitin" style={{ color: THEME.brandHi }}>
           Turnitin AI detection
         </Link>
         . The practical goal is not to chase a number for its own sake. It is to make sure genuinely human reasoning

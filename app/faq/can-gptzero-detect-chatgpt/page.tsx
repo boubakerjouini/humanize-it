@@ -17,7 +17,6 @@ export const metadata: Metadata = {
     "GPTZero accuracy",
     "GPTZero false positives",
     "perplexity burstiness",
-    "bypass GPTZero",
     "detect AI text",
     "AI detection",
   ],
@@ -143,7 +142,7 @@ export default function CanGptzeroDetectChatgptPage() {
           free AI humanizer
         </Link>{" "}
         to see the difference, and we keep a focused walkthrough specifically for{" "}
-        <Link href="/bypass/gptzero" style={{ color: THEME.brandHi }}>
+        <Link href="/detectors/gptzero" style={{ color: THEME.brandHi }}>
           GPTZero
         </Link>{" "}
         with practical before-and-after examples. As always, use these tools to make honest writing read naturally, and
@@ -173,7 +172,7 @@ export default function CanGptzeroDetectChatgptPage() {
             a: "It can. Varying sentence length, removing formulaic transitions, and adding concrete, specific detail all push the text away from the AI fingerprint. The more you restructure and personalize it, the weaker the signal becomes.",
           },
           {
-            q: "Will a humanizer reliably beat GPTZero?",
+            q: "Can a humanizer guarantee a GPTZero score?",
             a: "Not reliably, and no tool can promise it. A good humanizer restores natural variation in rhythm and word choice, which reduces the patterns detectors react to, but GPTZero updates its models often and the same text can score differently over time. Review the output and use it to present your own work naturally.",
           },
         ]}
