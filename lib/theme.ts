@@ -29,14 +29,21 @@ export const THEME = {
   accent: "#f97316",
   accentHi: "#ea580c",  // hover
   accentDim: "#fff2e6", // light orange tint surface
+  accentText: "#c2410c", // orange for text and white-text badges (4.7:1 on accentDim)
 
   // Semantic score colors (readable on white)
   human: "#16a34a",     // green — human / good
   humanDim: "#e7f7ee",
   ai: "#e11d48",        // red/rose — AI / bad
   aiDim: "#fdebef",
+  // Text on the tints (humanText, aiText, warnText). The base hues stay for
+  // rings, dots and icons; as text they read under 4.5:1 on their own tint
+  // (human 2.97, ai 4.09, warn 1.95).
+  humanText: "#15803d", // 4.5:1 on humanDim
+  aiText: "#be123c",    // 5.5:1 on aiDim
   warn: "#f59e0b",      // amber — mid score
   warnDim: "#fef3e2",
+  warnText: "#b45309",  // 4.6:1 on warnDim
 
   // Fonts (resolved via next/font CSS vars set in layout.tsx)
   fontHeading: "var(--font-heading)",

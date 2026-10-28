@@ -401,8 +401,8 @@ export default function LandingPage() {
           <div className="desktop-only" style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/ai-detector" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>AI Detector</Link>
             <Link href="/free-ai-humanizer" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Humanizer</Link>
-            <a onClick={() => smoothScroll("how-it-works")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
-            <a onClick={() => smoothScroll("pricing")} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
+            <a href="#how-it-works" onClick={(e) => { e.preventDefault(); smoothScroll("how-it-works"); }} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>How it works</a>
+            <a href="#pricing" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer" }}>Pricing</a>
             <Link href="/compare" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Compare</Link>
             <Link href="/use-cases" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Use Cases</Link>
             <Link href="/blog" style={{ color: THEME.textDim, fontSize: "14px", textDecoration: "none" }}>Blog</Link>
@@ -475,7 +475,7 @@ export default function LandingPage() {
             { label: "How it works", id: "how-it-works" },
             { label: "Pricing", id: "pricing" },
           ].map(({ label, id }) => (
-            <a key={id} onClick={() => { smoothScroll(id); setMobileMenuOpen(false); }} style={{
+            <a key={id} href={`#${id}`} onClick={(e) => { e.preventDefault(); smoothScroll(id); setMobileMenuOpen(false); }} style={{
               color: THEME.textDim, fontSize: "14px", textDecoration: "none", cursor: "pointer",
             }}>{label}</a>
           ))}
@@ -493,6 +493,7 @@ export default function LandingPage() {
         </div>
       )}
 
+      <main>
       {/* ── SECTION 1: HERO ── */}
       <section style={{
         padding: "150px 24px 72px",
@@ -562,7 +563,7 @@ export default function LandingPage() {
 
               {/* Secondary = orange-tinted ghost button → the no-signup tool */}
               <Link href="/free-ai-humanizer" style={{
-                background: THEME.accentDim, color: THEME.accentHi, fontWeight: 600,
+                background: THEME.accentDim, color: THEME.accentText, fontWeight: 600,
                 padding: "15px 24px", borderRadius: THEME.radius,
                 border: `1px solid ${THEME.accent}33`,
                 fontSize: "15px", textDecoration: "none",
@@ -635,7 +636,7 @@ export default function LandingPage() {
                   display: "inline-flex", alignItems: "center", gap: "8px",
                   fontSize: "12px", fontWeight: 600,
                   padding: "5px 12px", borderRadius: "999px",
-                  background: THEME.aiDim, color: THEME.ai,
+                  background: THEME.aiDim, color: THEME.aiText,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.ai, display: "inline-block" }} />
                   <span className="tnum">20</span>/100 human
@@ -673,7 +674,7 @@ export default function LandingPage() {
                   display: "inline-flex", alignItems: "center", gap: "8px",
                   fontSize: "12px", fontWeight: 600,
                   padding: "5px 12px", borderRadius: "999px",
-                  background: THEME.humanDim, color: THEME.human,
+                  background: THEME.humanDim, color: THEME.humanText,
                 }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: THEME.human, display: "inline-block" }} />
                   <span className="tnum">90</span>/100 human
@@ -757,7 +758,7 @@ export default function LandingPage() {
                     <Icon size={22} color={THEME.brandHi} aria-hidden="true" />
                   </div>
                   <span className="tnum" style={{
-                    fontSize: "13px", fontWeight: 700, color: THEME.accent,
+                    fontSize: "13px", fontWeight: 700, color: THEME.accentText,
                   }}>{step}</span>
                 </div>
                 <h3 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "10px", color: THEME.text, fontFamily: THEME.fontHeading }}>{title}</h3>
@@ -798,7 +799,7 @@ export default function LandingPage() {
                 A Chrome extension is on the way
                 <span style={{
                   fontSize: "12px", fontWeight: 700, letterSpacing: "0.04em",
-                  color: "#ffffff", background: THEME.accent,
+                  color: "#ffffff", background: THEME.accentText,
                   padding: "3px 10px", borderRadius: "999px",
                   fontFamily: THEME.fontSans, textTransform: "uppercase",
                 }}>Coming soon</span>
@@ -862,16 +863,16 @@ export default function LandingPage() {
             }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
-                  <th style={{ padding: "14px 16px", textAlign: "left", color: THEME.textMuted, fontWeight: 600, fontSize: "12px" }}></th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.brandHi, fontWeight: 700, fontSize: "14px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>HumanizeIt</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>Undetectable<wbr />.ai</th>
+                  <th scope="col" style={{ padding: "14px 16px", textAlign: "left", color: THEME.textMuted, fontWeight: 600, fontSize: "12px" }}><span className="sr-only">Feature</span></th>
+                  <th scope="col" style={{ padding: "14px 16px", textAlign: "center", color: THEME.brandHi, fontWeight: 700, fontSize: "14px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>HumanizeIt</th>
+                  <th scope="col" style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
+                  <th scope="col" style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>Undetectable<wbr />.ai</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
                   <tr key={row.label} style={{ borderBottom: i < COMPARISON.length - 1 ? `1px solid ${THEME.border}` : "none" }}>
-                    <td style={{ padding: "12px 16px", color: THEME.text, fontWeight: 500 }}>{row.label}</td>
+                    <th scope="row" style={{ padding: "12px 16px", color: THEME.text, fontWeight: 500, textAlign: "left" }}>{row.label}</th>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.us}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.quill}</td>
                     <td style={{ padding: "12px 16px", textAlign: "center" }}>{row.undet}</td>
@@ -929,7 +930,7 @@ export default function LandingPage() {
             {billingAnnual && (
               <span style={{
                 fontSize: "12px", fontWeight: 700, color: "#ffffff",
-                background: THEME.accent,
+                background: THEME.accentText,
                 padding: "3px 10px", borderRadius: "999px", letterSpacing: "0.02em",
               }}>
                 About {ANNUAL_FREE_MONTHS} months free
@@ -954,7 +955,7 @@ export default function LandingPage() {
                 {plan.pro && (
                   <div style={{
                     position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
-                    background: THEME.accent, color: "#ffffff",
+                    background: THEME.accentText, color: "#ffffff",
                     fontSize: "12px", fontWeight: 700,
                     padding: "4px 14px", borderRadius: "999px",
                     whiteSpace: "nowrap", letterSpacing: "0.04em", textTransform: "uppercase",
@@ -1049,7 +1050,7 @@ export default function LandingPage() {
               <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: two years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
               For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
             </p>
-            <Link href="/lifetime" className="tap-pad" style={{ display: "inline-flex", alignItems: "center", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link href="/lifetime" className="tap-pad" style={{ display: "inline-flex", alignItems: "center", fontSize: "13px", fontWeight: 700, color: THEME.accentText, textDecoration: "none", whiteSpace: "nowrap" }}>
               See Founding {FOUNDING.seats}
             </Link>
           </div>
@@ -1237,7 +1238,7 @@ export default function LandingPage() {
             </SignedIn>
             <Link href="/free-ai-humanizer" style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
-              background: "transparent", color: THEME.accentHi, fontWeight: 600,
+              background: "transparent", color: THEME.accentText, fontWeight: 600,
               padding: "15px 18px", borderRadius: THEME.radius,
               border: `1px solid ${THEME.accent}33`,
               fontSize: "15px", textDecoration: "none",
@@ -1247,6 +1248,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* ── SECTION 10: FOOTER ── */}
       <footer style={{
@@ -1449,7 +1452,7 @@ function DemoPanel({
           marginLeft: "auto",
           display: "inline-flex", alignItems: "center", gap: "6px",
           fontSize: "12px", fontWeight: 600, letterSpacing: "0.02em",
-          color: THEME.accentHi, background: THEME.accentDim,
+          color: THEME.accentText, background: THEME.accentDim,
           padding: "3px 10px", borderRadius: "999px",
           border: `1px solid ${THEME.accent}26`,
         }}>
@@ -1557,7 +1560,7 @@ function DemoPanel({
                   )) : (
                     <div style={{
                       display: "flex", alignItems: "center", gap: "9px",
-                      fontSize: "13px", fontWeight: 500, color: THEME.human,
+                      fontSize: "13px", fontWeight: 500, color: THEME.humanText,
                     }}>
                       <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: THEME.human }} aria-hidden="true" />
                       No strong AI patterns detected
