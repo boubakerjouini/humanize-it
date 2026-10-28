@@ -8,6 +8,7 @@ import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { PATTERN_COUNT } from "@/lib/algorithms/patterns";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
+import { savePrefill } from "@/lib/prefill";
 
 const COMPETITORS = [
   {
@@ -89,12 +90,13 @@ export default function ComparePage() {
   }
 
   function handleHumanizeClick() {
+    // Saved either way: the signup modal also ends on /dashboard, which picks it up.
+    savePrefill(text);
     if (!isSignedIn) {
       setShowAuthModal(true);
       return;
     }
-    sessionStorage.setItem("prefill-text", text);
-    router.push("/dashboard/editor");
+    router.push("/dashboard");
   }
 
   const conf = result ? CONFIDENCE_LABELS[result.confidenceBand] : null;
