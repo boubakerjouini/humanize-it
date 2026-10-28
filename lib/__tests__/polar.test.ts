@@ -5,14 +5,15 @@
 // deleteCustomerOf: account deletion cancels billing, best effort.
 
 const mockDeleteExternal = jest.fn();
+const mockOrgList = jest.fn();
 jest.mock("@polar-sh/sdk/2026-10", () => ({
   ...jest.requireActual("@polar-sh/sdk/2026-10"),
-  createPolar: () => ({ customers: { deleteExternal: mockDeleteExternal } }),
+  createPolar: () => ({ customers: { deleteExternal: mockDeleteExternal }, organizations: { list: mockOrgList } }),
 }));
 
 import { errors } from "@polar-sh/sdk/2026-10";
 import type { Polar } from "@polar-sh/sdk/2026-10";
-import { BillingAccountError, customerPortalUrl, deleteCustomerOf, ensureCustomer } from "@/lib/polar";
+import { BillingAccountError, checkoutPaymentsEnabled, customerPortalUrl, deleteCustomerOf, ensureCustomer } from "@/lib/polar";
 
 const notFound = () => new errors.ResourceNotFound(404, { error: "ResourceNotFound", detail: "Not found" });
 const invalid = (field: string, msg: string) =>
@@ -134,5 +135,42 @@ describe("deleteCustomerOf", () => {
     process.env = { ...savedEnv, POLAR_ACCESS_TOKEN: "" };
     await deleteCustomerOf("user_1");
     expect(mockDeleteExternal).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkoutPaymentsEnabled", () => {
+  const org = (checkoutPayments: unknown) => ({ items: [{ id: "org_1", capabilities: { checkout_payments: checkoutPayments } }] });
+  let token = 0;
+  // A fresh token per test is a fresh client, so the module's cache starts empty.
+  beforeEach(() => {
+    process.env = { ...savedEnv, POLAR_ACCESS_TOKEN: `polar_oat_test_${++token}` };
+    mockOrgList.mockReset();
+  });
+
+  it("reads Polar's checkout_payments capability and keeps it five minutes", async () => {
+    mockOrgList.mockResolvedValue(org(false));
+    expect(await checkoutPaymentsEnabled(1_000)).toBe(false);
+    expect(await checkoutPaymentsEnabled(1_000 + 4 * 60_000)).toBe(false);
+    expect(mockOrgList).toHaveBeenCalledTimes(1);
+
+    mockOrgList.mockResolvedValue(org(true));
+    expect(await checkoutPaymentsEnabled(1_000 + 6 * 60_000)).toBe(true);
+    expect(mockOrgList).toHaveBeenCalledTimes(2);
+  });
+
+  it("is null, never false, when Polar can't be read, and tries again after a minute", async () => {
+    mockOrgList.mockRejectedValue(new Error("network"));
+    expect(await checkoutPaymentsEnabled(1_000)).toBeNull();
+    mockOrgList.mockResolvedValue(org("yes"));
+    expect(await checkoutPaymentsEnabled(1_000 + 30_000)).toBeNull();
+    expect(mockOrgList).toHaveBeenCalledTimes(1);
+    expect(await checkoutPaymentsEnabled(1_000 + 61_000)).toBeNull();
+    expect(mockOrgList).toHaveBeenCalledTimes(2);
+  });
+
+  it("is null while billing is off", async () => {
+    delete process.env.POLAR_ACCESS_TOKEN;
+    expect(await checkoutPaymentsEnabled()).toBeNull();
+    expect(mockOrgList).not.toHaveBeenCalled();
   });
 });

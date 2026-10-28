@@ -50,8 +50,8 @@ export type TaskRuleSnapshot = {
     payingOrgSeat: boolean;
   } | null;
   quotaHits7d: number;
-  /** The most recent checkout_started event. */
-  lastCheckout: { id: string; at: Date; plan: string | null } | null;
+  /** The most recent checkout_started event; paused when Polar couldn't take payments yet. */
+  lastCheckout: { id: string; at: Date; plan: string | null; paused: boolean } | null;
   /** A subscription_started event happened after lastCheckout. */
   subscribedAfterCheckout: boolean;
 };
@@ -131,7 +131,8 @@ export const TASK_RULES: Record<TaskRuleKey, Rule> = {
   },
   checkout_abandoned: (s, now) => {
     const c = s.lastCheckout;
-    if (!c || s.subscribedAfterCheckout || isPaying(s)) return null;
+    // A paused attempt already got its own task (checkout_paused, lib/crm/hooks.ts).
+    if (!c || c.paused || s.subscribedAfterCheckout || isPaying(s)) return null;
     const age = now.getTime() - c.at.getTime();
     if (age < 24 * HOUR_MS || age > 72 * HOUR_MS) return null;
     return { cycle: c.id, title: `Follow up on abandoned ${planName(c.plan)} checkout`, kind: "follow_up", priority: "high" };
@@ -228,6 +229,10 @@ function candidateWhere(now: Date): Prisma.ContactWhereInput {
   };
 }
 
+function propFlag(props: unknown, key: string): boolean {
+  return !!props && typeof props === "object" && !Array.isArray(props) && (props as Record<string, unknown>)[key] === true;
+}
+
 function propString(props: unknown, key: string): string | null {
   if (!props || typeof props !== "object" || Array.isArray(props)) return null;
   const value = (props as Record<string, unknown>)[key];
@@ -258,7 +263,9 @@ export function toSnapshot(row: CandidateRow): TaskRuleSnapshot {
         }
       : null,
     quotaHits7d: row.events.filter((e) => e.type === "quota_hit").length,
-    lastCheckout: checkout ? { id: checkout.id, at: checkout.occurredAt, plan: propString(checkout.props, "plan") } : null,
+    lastCheckout: checkout
+      ? { id: checkout.id, at: checkout.occurredAt, plan: propString(checkout.props, "plan"), paused: propFlag(checkout.props, "paused") }
+      : null,
     subscribedAfterCheckout: !!checkout && row.events.some((e) => e.type === "subscription_started" && e.occurredAt > checkout.occurredAt),
   };
 }

@@ -18,6 +18,11 @@ jest.mock("@/lib/growth/attribution-server", () => ({
 }));
 jest.mock("@/lib/growth/safe", () => ({ runAfter: (_l: string, fn: () => unknown) => void fn(), logGrowthError: jest.fn() }));
 jest.mock("@/lib/posthog", () => ({ trackServer: jest.fn() }));
+const mockRecordToolRun = jest.fn();
+jest.mock("@/lib/growth/tool-runs", () => ({
+  ...jest.requireActual("@/lib/growth/tool-runs"),
+  recordToolRun: (...args: unknown[]) => mockRecordToolRun(...args),
+}));
 
 import { POST } from "@/app/api/detect/route";
 import { auth } from "@clerk/nextjs/server";
@@ -89,4 +94,35 @@ it("counts nothing when the scan fails or is refused", async () => {
   (checkDailyLimit as jest.Mock).mockResolvedValueOnce({ ok: false, limit: 15, remaining: 0, retryAfterSeconds: 60 });
   expect((await scan()).status).toBe(429);
   expect(trackServer).not.toHaveBeenCalled();
+});
+
+describe("the ToolRun for the admin view", () => {
+  const scanFrom = (body: Record<string, unknown>, headers: Record<string, string> = {}) =>
+    POST(new Request("http://localhost/api/detect", { method: "POST", body: JSON.stringify({ text: TEXT, ...body }), headers: { "x-real-ip": "203.0.113.7", ...headers } }));
+
+  it("records the page the tool sent, the score and confidence, never the text", async () => {
+    await scanFrom({ page: "/bypass/Turnitin/" });
+    expect(mockRecordToolRun).toHaveBeenCalledWith({ tool: "detector_deep", page: "/bypass/turnitin", wordCount: 40, score: 71.6, band: "medium", userId: null, source: null });
+    expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({ tool_page: "/bypass/turnitin" });
+    expect(JSON.stringify(mockRecordToolRun.mock.calls)).not.toContain("secretword");
+  });
+
+  it("falls back to our own Referer, ignores another site's, and links a signed-in visitor", async () => {
+    (auth as unknown as jest.Mock).mockResolvedValueOnce({ userId: "user_1" });
+    (ensureUser as jest.Mock).mockResolvedValueOnce({ id: "u_1", plan: "FREE" });
+    await scanFrom({}, { referer: "http://localhost/gptzero-checker?utm_source=x" });
+    expect(mockRecordToolRun).toHaveBeenLastCalledWith(expect.objectContaining({ page: "/gptzero-checker", userId: "u_1" }));
+
+    mockRecordToolRun.mockClear();
+    await scanFrom({}, { referer: "https://evil.example/ai-detector" });
+    expect(mockRecordToolRun).not.toHaveBeenCalled();
+  });
+
+  it("records nothing for a refused or failed scan", async () => {
+    (deepScanText as jest.Mock).mockRejectedValueOnce(new Error("model down"));
+    const quiet = jest.spyOn(console, "error").mockImplementation(() => {});
+    await scanFrom({ page: "/ai-detector" });
+    quiet.mockRestore();
+    expect(mockRecordToolRun).not.toHaveBeenCalled();
+  });
 });

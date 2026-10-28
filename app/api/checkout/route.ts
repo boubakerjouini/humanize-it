@@ -4,16 +4,24 @@
 // A user who already has a live subscription gets the Polar customer portal
 // instead: Polar allows one billable subscription per customer, so a second
 // checkout could never be paid. Plan and billing-period changes happen there.
+//
+// While Polar can't take payments yet (account under review), a new checkout
+// is paused: 409 CHECKOUT_PAUSED with a friendly message instead of a Polar
+// page that says "Payments are currently unavailable". The attempt is still
+// recorded, and a task asks the founder to follow up personally.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { appUrl, BillingAccountError, customerPortalUrl, ensureCustomer, getPolar, POLAR_CALLS_PER_MINUTE } from "@/lib/polar";
+import { appUrl, BillingAccountError, checkoutPaymentsEnabled, customerPortalUrl, ensureCustomer, getPolar, POLAR_CALLS_PER_MINUTE } from "@/lib/polar";
 import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
-import { trackCheckoutStarted } from "@/lib/crm/hooks";
+import { trackCheckoutPaused, trackCheckoutStarted } from "@/lib/crm/hooks";
 import { runAfter } from "@/lib/growth/safe";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
+
+const CHECKOUT_PAUSED_MESSAGE =
+  "Upgrades open soon: our payment provider is finishing its review of our account. We've saved your request and will email you as soon as checkout opens.";
 
 /** Local statuses of a subscription Polar still bills (lib/crm/lifecycle.ts vocabulary). */
 const LIVE_STATUSES = ["active", "on_trial", "past_due"];
@@ -98,6 +106,12 @@ export async function POST(req: Request) {
     if (hasLiveSubscription(user.subscription)) {
       const portal = await customerPortalUrl(polar, user.id);
       if (portal) return NextResponse.json({ url: portal });
+    }
+
+    // Only an explicit "no" pauses: an unreadable capability keeps today's checkout.
+    if ((await checkoutPaymentsEnabled()) === false) {
+      runAfter("checkout-paused", () => trackCheckoutPaused(user.id, planId, isAnnual));
+      return NextResponse.json({ error: { code: "CHECKOUT_PAUSED", message: CHECKOUT_PAUSED_MESSAGE } }, { status: 409 });
     }
 
     let customerId: string;

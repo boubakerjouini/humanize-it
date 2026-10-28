@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Loader2, FileText, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import { THEME, humanScore, humanScoreColor } from "@/lib/theme";
+import { ToolRunsPanel } from "@/components/admin/tool-runs-panel";
 
 interface AdminDocument {
   id: string;
@@ -39,6 +40,20 @@ export default function AdminDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // "tools": the free-tool runs (public detector pages, blog widget, free humanizer), which aren't documents.
+  const [tab, setTab] = useState<"documents" | "tools">("documents");
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "tools") setTab("tools");
+  }, []);
+
+  const showTab = (next: "documents" | "tools") => {
+    setTab(next);
+    const url = new URL(window.location.href);
+    if (next === "tools") url.searchParams.set("tab", "tools");
+    else url.searchParams.delete("tab");
+    window.history.replaceState(null, "", url);
+  };
 
   const load = useCallback(async (query: string, p: number) => {
     setLoading(true);
@@ -61,9 +76,13 @@ export default function AdminDocumentsPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 16, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: THEME.text, fontFamily: THEME.fontHeading, letterSpacing: "-0.02em" }}>Documents</h1>
-          <p style={{ fontSize: 14, color: THEME.textDim, marginTop: 4 }}>Browse every document, its author, and humanization results.</p>
+          <p style={{ fontSize: 14, color: THEME.textDim, marginTop: 4 }}>
+            {tab === "tools"
+              ? "Every use of the free tools: detector pages, deep scans, the blog widget and the free humanizer."
+              : "Browse every document, its author, and humanization results."}
+          </p>
         </div>
-        <form onSubmit={onSearch} style={{ display: "flex", gap: 8 }}>
+        {tab === "documents" && <form onSubmit={onSearch} style={{ display: "flex", gap: 8 }}>
           <div style={{ position: "relative" }}>
             <Search size={14} color={THEME.textMuted} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} aria-hidden="true" />
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by title…" style={{
@@ -72,8 +91,29 @@ export default function AdminDocumentsPage() {
             }} />
           </div>
           <button type="submit" style={{ padding: "9px 16px", borderRadius: 9, border: "none", background: THEME.brand, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Search</button>
-        </form>
+        </form>}
       </div>
+
+      <div role="tablist" aria-label="Documents or free tools" style={{ display: "flex", gap: 4, borderBottom: `1px solid ${THEME.border}`, marginBottom: 18 }}>
+        {([["documents", "Documents"], ["tools", "Free tools"]] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => showTab(key)}
+            style={{
+              padding: "9px 14px", border: "none", background: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+              color: tab === key ? THEME.brand : THEME.textDim,
+              borderBottom: `2px solid ${tab === key ? THEME.brand : "transparent"}`, marginBottom: -1,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "tools" ? <ToolRunsPanel /> : <>
 
       <div style={{ background: THEME.surface2, border: `1px solid ${THEME.border}`, borderRadius: THEME.radiusLg, overflow: "hidden" }}>
         {loading ? (
@@ -135,6 +175,7 @@ export default function AdminDocumentsPage() {
           <button disabled={page >= totalPages} onClick={() => { const p = page + 1; setPage(p); void load(q, p); }} style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.surface2, color: THEME.textDim, fontSize: 13, cursor: page >= totalPages ? "not-allowed" : "pointer", opacity: page >= totalPages ? 0.5 : 1 }}>Next</button>
         </div>
       )}
+      </>}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

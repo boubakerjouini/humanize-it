@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import posthog from "posthog-js";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { ReportCapture, buildReportContext } from "@/components/growth/report-capture";
 import { THEME, glow } from "@/lib/theme";
+import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
@@ -36,10 +38,12 @@ const DEEP_MIN_WORDS = 25;
  * /api/detect (and on to the AI provider). The emailed report carries scores
  * and pattern labels, never the text. Shows the full transparent breakdown
  * competitors hide, then converts to the humanizer / signup. A finished
- * instant check is counted in PostHog (free_check_completed) with its word
- * count and score band only; the deep scan is counted by its API route.
+ * instant check is counted in PostHog (free_check_completed) and as a ToolRun
+ * (/api/public/tool-run) with its page, word count and score only; the deep
+ * scan is counted by its API route, which gets the page too.
  */
 export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: string }) {
+  const pathname = usePathname();
   const [text, setText] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [deep, setDeep] = useState<DeepScan | null>(null);
@@ -62,8 +66,10 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
     setDeepError(null);
     const r = canAnalyze ? analyzeText(text) : null;
     setResult(r);
-    // PostHog only runs where instrumentation-client.ts allows it; never send the text.
-    if (r && posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand });
+    if (!r) return;
+    // PostHog only runs where instrumentation-client.ts allows it; the ToolRun counts the check either way. Never the text.
+    if (posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand, tool_page: pathname });
+    sendInstantCheckRun({ page: pathname, wordCount: r.wordCount, score: r.score, band: r.confidenceBand });
   }
 
   async function runDeepScan() {
@@ -74,7 +80,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
       const res = await fetch("/api/detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, page: pathname }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -115,7 +121,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
               fontFamily: THEME.fontSans,
             }}
           >
-            Check for AI &rarr;
+            Check for AI
           </button>
         </div>
       </div>
@@ -141,7 +147,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
                   boxShadow: glow(THEME.brand, 0.3),
                 }}
               >
-                Humanize this text free &rarr;
+                Humanize this text free
               </Link>
             </div>
           </div>
@@ -181,7 +187,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
                   <>
                     {" "}
                     <Link href="/sign-up" style={{ color: THEME.brandHi, fontWeight: 600 }}>
-                      Create a free account &rarr;
+                      Create a free account
                     </Link>
                   </>
                 ) : null}

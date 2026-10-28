@@ -7,7 +7,8 @@
 // pushed to sign up. This is the only place anonymous LLM calls are allowed.
 // Tones follow the Free plan (Standard only), so signing up is never a step down.
 // A finished rewrite is counted in PostHog (free_humanize_completed) under a
-// fresh id per rewrite, with no person profile and never the text.
+// fresh id per rewrite, with no person profile and never the text, and as a
+// ToolRun row (lib/growth/tool-runs.ts) with its page, for the admin view.
 // ===========================================================
 
 import { randomUUID } from "node:crypto";
@@ -22,6 +23,7 @@ import { touchEventProps } from "@/lib/growth/attribution";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
 import { trackServer } from "@/lib/posthog";
+import { cleanToolPage, recordToolRun, refererPage, toolRunSource } from "@/lib/growth/tool-runs";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
 const MAX_CHARS = 2500;
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
   }
 
   // 1. Parse + validate input
-  let body: { text?: unknown; tone?: unknown; intensity?: unknown };
+  let body: { text?: unknown; tone?: unknown; intensity?: unknown; page?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -58,6 +60,7 @@ export async function POST(req: Request) {
   }
 
   const text = typeof body.text === "string" ? body.text : "";
+  const toolPage = cleanToolPage(body.page);
   if (text.trim().length < 10) {
     return NextResponse.json(
       { error: { code: "TEXT_TOO_SHORT", message: "Paste at least a sentence or two to humanize." } },
@@ -141,15 +144,30 @@ export async function POST(req: Request) {
 
   const after = analyzeText(humanizedText);
   const touch = firstTouchOf(await readAttribution());
+  const page = toolPage ?? refererPage(req);
   runAfter("public-humanize:analytics", () =>
     trackServer(randomUUID(), "free_humanize_completed", {
       word_count: before.wordCount,
       tone,
       intensity,
       ...touchEventProps(touch),
+      ...(page ? { tool_page: page } : {}),
       $process_person_profile: false,
     })
   );
+  if (page) {
+    runAfter("public-humanize:tool-run", () =>
+      recordToolRun({
+        tool: "humanizer_free",
+        page,
+        wordCount: before.wordCount,
+        score: before.score,
+        scoreAfter: after.score,
+        band: before.confidenceBand,
+        source: toolRunSource(touch),
+      })
+    );
+  }
   return NextResponse.json(
     {
       humanizedText,
