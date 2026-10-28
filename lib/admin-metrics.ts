@@ -198,3 +198,34 @@ export async function getRedemptionAnalytics(): Promise<{ codes: CodeRow[]; tota
   });
   return { codes: rows, total, byPlan };
 }
+
+export interface Last24hMetrics {
+  signups: number;
+  toolRuns: number;
+  documents: number;
+  upgradeAttempts: number;
+  pausedAttempts: number;
+  emailsSent: number;
+  openSupportEmails: number;
+  openHighTasks: number;
+}
+
+/**
+ * The last 24 hours at a glance for the admin home. Each count falls back to
+ * 0 on its own, so a growth table a preview database lacks never breaks the page.
+ */
+export async function getLast24hMetrics(): Promise<Last24hMetrics> {
+  const from = since(1);
+  const safe = (p: Promise<number>) => p.catch(() => 0);
+  const [signups, toolRuns, documents, upgradeAttempts, pausedAttempts, emailsSent, openSupportEmails, openHighTasks] = await Promise.all([
+    safe(db.user.count({ where: { createdAt: { gte: from } } })),
+    safe(db.toolRun.count({ where: { createdAt: { gte: from } } })),
+    safe(db.document.count({ where: { createdAt: { gte: from } } })),
+    safe(db.contactEvent.count({ where: { type: "checkout_started", occurredAt: { gte: from } } })),
+    safe(db.contactEvent.count({ where: { type: "checkout_started", occurredAt: { gte: from }, props: { path: ["paused"], equals: true } } })),
+    safe(db.emailMessage.count({ where: { sentAt: { gte: from }, NOT: { dedupeKey: { startsWith: "test:" } } } })),
+    safe(db.crmTask.count({ where: { ruleKey: "inbound_email", status: "open", dedupeKey: { startsWith: "inbound:" } } })),
+    safe(db.crmTask.count({ where: { status: "open", priority: "high" } })),
+  ]);
+  return { signups, toolRuns, documents, upgradeAttempts, pausedAttempts, emailsSent, openSupportEmails, openHighTasks };
+}

@@ -23,6 +23,8 @@ interface AdminUser {
   _count: { documents: number; memberships: number };
   // CRM (null until the contact exists)
   contactId: string | null;
+  /** First-touch source: utm_source, referrer host or channel. */
+  cameFrom?: string | null;
   stage: string | null;
   stageOverridden: boolean;
   score: number | null;
@@ -130,7 +132,7 @@ export default function AdminUsersPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
-                  {["User", "Status", "Stage", "Plan", "Role", "Usage", "Joined", ""].map(h => (
+                  {["User", "Status", "Stage", "Came from", "Plan", "Role", "Usage", "Joined", ""].map(h => (
                     <th key={h} style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
                   ))}
                 </tr>
@@ -158,6 +160,9 @@ export default function AdminUsersPage() {
                           {u.score !== null && <ScoreBadge score={u.score} />}
                         </Link>
                       ) : <span style={{ fontSize: 12, color: THEME.textMuted }}>—</span>}
+                    </td>
+                    <td style={{ padding: "12px 14px", fontSize: 12, color: u.cameFrom ? THEME.textDim : THEME.textMuted, whiteSpace: "nowrap", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis" }} title={u.cameFrom ?? undefined}>
+                      {u.cameFrom ? u.cameFrom.replace(/_/g, " ") : "—"}
                     </td>
                     <td style={{ padding: "12px 14px" }}>
                       <select value={u.plan} disabled={savingId === u.id} onChange={e => patch(u.id, { plan: e.target.value })} style={selectStyle}>
