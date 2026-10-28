@@ -73,6 +73,19 @@ describe("GET /api/usage", () => {
     expect(body).toMatchObject({ plan: "PRO", effectivePlan: "FREE", wordsUsed: 0, rewriteCount: 0, wordsLimit: 500, rewriteLimit: 1, planExpiresAt: ended.toISOString() });
   });
 
+  it("restarts the window of a lapsed grant now, not at its old monthly reset", async () => {
+    const ended = new Date(Date.now() - DAY);
+    mockDb.user.findUnique.mockResolvedValue(row({ plan: "PRO", planExpiresAt: ended, quotaResetAt: new Date(Date.now() - 20 * DAY) }));
+    const { body } = await usage();
+    expect(Math.abs(new Date(body.quotaResetAt).getTime() - Date.now())).toBeLessThan(5_000);
+  });
+
+  it("keeps the stored reset date while the grant runs", async () => {
+    const resetAt = new Date(Date.now() - 20 * DAY);
+    mockDb.user.findUnique.mockResolvedValue(row({ plan: "PRO", planExpiresAt: new Date(Date.now() + 10 * DAY), quotaResetAt: resetAt }));
+    expect((await usage()).body.quotaResetAt).toBe(resetAt.toISOString());
+  });
+
   it.each([
     ["prod_pro_y", "year"],
     ["prod_pro_m", "month"],
