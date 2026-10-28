@@ -6,8 +6,9 @@
 export const TASK_VIEWS = ["today", "overdue", "upcoming", "done"] as const;
 export type TaskView = (typeof TASK_VIEWS)[number];
 
-/** CrmTask.kind values. founder_review and team_setup come from the in-app service requests. */
-export const TASK_KINDS = ["follow_up", "outreach", "email", "call", "review", "founder_review", "team_setup", "other"] as const;
+/** CrmTask.kind values. founder_review and team_setup come from the in-app service requests;
+ *  priority is the founder's own list, shown at the top of the morning digest. */
+export const TASK_KINDS = ["follow_up", "outreach", "email", "call", "review", "founder_review", "team_setup", "priority", "other"] as const;
 export type TaskKind = (typeof TASK_KINDS)[number];
 
 export const TASK_KIND_LABELS: Record<TaskKind, string> = {
@@ -18,6 +19,7 @@ export const TASK_KIND_LABELS: Record<TaskKind, string> = {
   review: "Review",
   founder_review: "First-document review",
   team_setup: "Team setup call",
+  priority: "Founder priority",
   other: "Other",
 };
 
