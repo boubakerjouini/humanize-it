@@ -934,7 +934,8 @@ export default function LandingPage() {
                     fontFamily: THEME.fontSans,
                     boxShadow: glow(THEME.accent, 0.3),
                   }}>
-                    Most Popular
+                    {/* Same badge as the plan menu: no sales figure backs "Most popular" yet. */}
+                    Recommended
                   </div>
                 )}
 
