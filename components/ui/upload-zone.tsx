@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileUp, AlertTriangle, CheckCircle2, FileText, ArrowRight, RotateCcw, Lock } from "lucide-react";
+import { Upload, FileUp, AlertTriangle, CheckCircle2, FileText, RotateCcw, Lock } from "lucide-react";
 import { extractTextFromFile, type ExtractResult } from "@/lib/extract-document";
 import { PLANS, type PlanId } from "@/lib/plans";
 import { THEME, glow } from "@/lib/theme";
@@ -218,14 +218,14 @@ export function UploadZone({ onExtracted, plan, uploadEnabled }: UploadZoneProps
           <button
             onClick={() => onExtracted(result)}
             style={{
-              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
               padding: "10px", borderRadius: "8px", border: "none",
               background: THEME.brand,
               color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer",
               boxShadow: glow(THEME.brand, 0.28),
             }}
           >
-            Use this text <ArrowRight size={12} aria-hidden="true" />
+            Use this text
           </button>
           <button
             onClick={reset}

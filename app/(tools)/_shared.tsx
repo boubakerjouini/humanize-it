@@ -111,7 +111,7 @@ export function ToolCta({ heading, body }: { heading: string; body: string }) {
         href="/sign-up"
         style={{ display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "16px", padding: "12px 30px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}
       >
-        Get Started Free &rarr;
+        Get Started Free
       </Link>
     </div>
   );

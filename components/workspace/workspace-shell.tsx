@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, ArrowUpRight, Gift, AudioLines } from "lucide-react";
+import { Wand2, Settings, Building2, ShieldCheck, Crown, Sparkles, Zap, Gift, AudioLines } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -127,8 +127,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
       )}
       {isFree ? (
         <button onClick={upgrade}
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28), fontFamily: THEME.fontSans }}>
-          Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 12px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28), fontFamily: THEME.fontSans }}>
+          Upgrade to Pro
         </button>
       ) : (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

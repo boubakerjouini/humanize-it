@@ -501,7 +501,7 @@ export default function HumanizeChatGPTTextPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Try the Free Humanizer &rarr;
+          Try the Free Humanizer
         </Link>
       </div>
 

@@ -95,7 +95,7 @@ export default function BypassHubPage() {
         happen.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/turnitin" style={detectorLink}>Read the Turnitin guide &rarr;</Link>
+        <Link href="/bypass/turnitin" style={detectorLink}>Read the Turnitin guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>GPTZero</h2>
@@ -108,7 +108,7 @@ export default function BypassHubPage() {
         <Link href="/gptzero-checker" style={{ color: THEME.brandHi }}>GPTZero checker</Link>.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/gptzero" style={detectorLink}>Read the GPTZero guide &rarr;</Link>
+        <Link href="/bypass/gptzero" style={detectorLink}>Read the GPTZero guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>ZeroGPT</h2>
@@ -121,7 +121,7 @@ export default function BypassHubPage() {
         will agree.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/zerogpt" style={detectorLink}>Read the ZeroGPT guide &rarr;</Link>
+        <Link href="/bypass/zerogpt" style={detectorLink}>Read the ZeroGPT guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Originality.ai</h2>
@@ -134,7 +134,7 @@ export default function BypassHubPage() {
         but it also produces more false positives on dense, formal human writing.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/originality-ai" style={detectorLink}>Read the Originality.ai guide &rarr;</Link>
+        <Link href="/bypass/originality-ai" style={detectorLink}>Read the Originality.ai guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Copyleaks</h2>
@@ -147,7 +147,7 @@ export default function BypassHubPage() {
         consumer check.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/copyleaks" style={detectorLink}>Read the Copyleaks guide &rarr;</Link>
+        <Link href="/bypass/copyleaks" style={detectorLink}>Read the Copyleaks guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>Winston AI</h2>
@@ -159,7 +159,7 @@ export default function BypassHubPage() {
         especially on short, plain, or highly templated writing.
       </p>
       <p style={kitStyles.p}>
-        <Link href="/bypass/winston-ai" style={detectorLink}>Read the Winston AI guide &rarr;</Link>
+        <Link href="/bypass/winston-ai" style={detectorLink}>Read the Winston AI guide</Link>
       </p>
 
       <h2 style={kitStyles.h2}>How to use these guides</h2>

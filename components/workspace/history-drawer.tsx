@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Search, Trash2, ChevronDown, Copy, FileText, Wand2, Lock, ArrowUpRight, X, FileInput } from "lucide-react";
+import { Search, Trash2, ChevronDown, Copy, FileText, Lock, X, FileInput } from "lucide-react";
 import { THEME, glow, humanScore, humanScoreColor } from "@/lib/theme";
 
 interface Doc {
@@ -210,7 +210,7 @@ export function HistoryDrawer({ open, onClose, onOpen }: { open: boolean; onClos
 
           {hiddenFree > 0 && (
             <Link href="/dashboard/settings" onClick={onClose} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 14, background: THEME.brandDim, border: `1px solid ${THEME.brand}33`, borderRadius: THEME.radius, padding: "11px 14px", fontSize: 13, color: THEME.brandHi, fontWeight: 600, textDecoration: "none", boxShadow: glow(THEME.brand, 0.08) }}>
-              <Lock size={14} aria-hidden="true" /> {hiddenFree.toLocaleString()} older document{hiddenFree === 1 ? "" : "s"} hidden on Free — upgrade <ArrowUpRight size={14} aria-hidden="true" />
+              <Lock size={14} aria-hidden="true" /> {hiddenFree.toLocaleString()} older document{hiddenFree === 1 ? "" : "s"} hidden on Free — upgrade
             </Link>
           )}
 
