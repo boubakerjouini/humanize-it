@@ -19,10 +19,8 @@ export const metadata: Metadata = {
     "burstiness AI text",
     "GPTZero",
     "Turnitin AI detection",
-    "bypass AI detection",
     "humanize AI text",
     "AI text humanizer",
-    "undetectable AI",
     "AI writing detection",
     "HumanizeIt",
   ],
@@ -289,7 +287,7 @@ export default function AiDetectionHowItWorksPage() {
         </p>
         <p>
           Each detector weighs these signals a little differently. Our{" "}
-          <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
+          <Link href="/detectors" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
           cover how Turnitin, GPTZero, Originality.ai, and others score text.
         </p>
 

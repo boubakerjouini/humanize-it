@@ -149,7 +149,7 @@ export default function RootLayout({
               }),
             }}
           />
-          {/* FAQPage JSON-LD is emitted per-page (homepage, /bypass/*, /faq) from
+          {/* FAQPage JSON-LD is emitted per-page (homepage, /detectors/*, /faq) from
               that page's *visible* FAQ — Google requires the markup to match
               visible content, so it must not live in the global <head>. */}
         </head>

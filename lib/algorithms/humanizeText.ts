@@ -1,6 +1,7 @@
 // ===========================================================
 // HumanizeIt — Text Humanization Engine V3
-// Multi-pass feedback loop + post-processing to beat detectors
+// Multi-pass feedback loop + post-processing so drafts read naturally,
+// in the author's own meaning and voice
 // ===========================================================
 
 import { complete } from "@/lib/llm";
@@ -120,12 +121,12 @@ const INTENSITY_INSTRUCTIONS: Record<IntensityLevel, string> = {
     "INTENSITY: HEAVY. Completely overhaul this text. Restructure every paragraph. Rewrite every sentence from scratch. Change the opening, reorganize the flow, vary paragraph lengths dramatically. The output should share the same meaning but read like a completely different person wrote it. Be bold and creative.",
 };
 
-// ---- Layer 1: Radical system prompt ----
+// ---- Layer 1: System prompt ----
 
 function buildSystemPrompt(intensity: IntensityLevel = "medium"): string {
-  return `You are a human rewriter. Your ONLY job: make AI-generated text completely undetectable by GPTZero, Turnitin, Originality.ai, and Copyleaks.
+  return `You are a careful human editor. Your job: rewrite the author's draft so it reads as natural, varied, human writing, while staying faithful to the author's meaning, facts and voice.
 
-THESE ARE THE EXACT SIGNALS DETECTORS USE — ELIMINATE ALL OF THEM:
+THESE PATTERNS MAKE WRITING READ AS STIFF AND MACHINE-GENERATED — REMOVE ALL OF THEM:
 
 1. EM DASH (—): The single biggest ChatGPT fingerprint. NEVER use —. Replace with a comma, period, or rewrite the sentence entirely. This is non-negotiable.
 2. Uniform sentence length — AI writes 18-22 word sentences repeatedly. Break this pattern.
@@ -168,10 +169,10 @@ E) HUMAN PERSONALITY — pick ONE per rewrite:
    - A short opinion sentence standing alone as its own paragraph.
    - A question mid-text: "Why does this matter? Because..."
 
-F) SPECIFICITY — replace every vague claim:
-   - "many companies" → "companies like Figma, Linear, or Notion"
-   - "experts say" → "a 2024 MIT study showed" or just state it as your view
-   - "significant results" → "37% improvement" (plausible number if none given)
+F) SPECIFICITY — make vague claims concrete without inventing anything:
+   - "many companies" → name the companies only if the original names them; otherwise say it plainly
+   - "experts say" → state it as the author's view, or cite the source only if the original gives one
+   - "significant results" → use the original's figure if it has one; never make up numbers, studies or names
 
 G) BANNED STRUCTURES:
    - "Not only X, but also Y"
@@ -221,7 +222,7 @@ function buildUserPrompt(
     ? `\n## Language: Write the output in ${language}. Preserve the meaning while writing naturally in ${language}.\n`
     : "";
 
-  return `Rewrite this text to be completely undetectable as AI-generated.
+  return `Rewrite this draft so it reads as natural, human writing in the author's own voice.
 
 ## Detected AI patterns in this text:
 ${detectedPatternDescriptions}
@@ -246,7 +247,7 @@ function buildRetryPrompt(
 ): string {
   const toneNote = TONE_INSTRUCTIONS[tone];
 
-  return `FAILED: The previous rewrite still scored ${score}% on AI detectors. That's too high.
+  return `NOT THERE YET: The previous rewrite still scored ${score}% on our AI-pattern check. It still reads too mechanical.
 Issues remaining: ${topPatterns}
 
 BE MORE AGGRESSIVE THIS TIME:

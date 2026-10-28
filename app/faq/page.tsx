@@ -15,7 +15,6 @@ export const metadata: Metadata = {
     "AI humanizer FAQ",
     "can AI detectors be wrong",
     "humanize AI text",
-    "bypass AI detection",
     "ChatGPT detection",
     "free AI humanizer",
     "is humanizing AI cheating",
@@ -150,7 +149,7 @@ export default function FaqHubPage() {
       <p style={kitStyles.p}>
         If you want to understand a specific detector in depth &mdash; Turnitin, GPTZero, ZeroGPT,
         Originality.ai, Copyleaks, or Winston AI &mdash; the{" "}
-        <Link href="/bypass" style={{ color: THEME.brandHi }}>bypass detection hub</Link> has a
+        <Link href="/detectors" style={{ color: THEME.brandHi }}>AI detector guides</Link> has a
         focused guide for each one, including how it scores text and what a flag actually means. For a
         broader conceptual primer, see{" "}
         <Link href="/blog/ai-detection-how-it-works" style={{ color: THEME.brandHi }}>how AI detection works</Link>.

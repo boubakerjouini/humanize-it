@@ -101,9 +101,9 @@ describe("the ToolRun for the admin view", () => {
     POST(new Request("http://localhost/api/detect", { method: "POST", body: JSON.stringify({ text: TEXT, ...body }), headers: { "x-real-ip": "203.0.113.7", ...headers } }));
 
   it("records the page the tool sent, the score and confidence, never the text", async () => {
-    await scanFrom({ page: "/bypass/Turnitin/" });
-    expect(mockRecordToolRun).toHaveBeenCalledWith({ tool: "detector_deep", page: "/bypass/turnitin", wordCount: 40, score: 71.6, band: "medium", userId: null, source: null });
-    expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({ tool_page: "/bypass/turnitin" });
+    await scanFrom({ page: "/detectors/Turnitin/" });
+    expect(mockRecordToolRun).toHaveBeenCalledWith({ tool: "detector_deep", page: "/detectors/turnitin", wordCount: 40, score: 71.6, band: "medium", userId: null, source: null });
+    expect((trackServer as jest.Mock).mock.calls[0][2]).toMatchObject({ tool_page: "/detectors/turnitin" });
     expect(JSON.stringify(mockRecordToolRun.mock.calls)).not.toContain("secretword");
   });
 

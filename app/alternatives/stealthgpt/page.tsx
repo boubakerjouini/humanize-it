@@ -16,7 +16,6 @@ export const metadata: Metadata = {
     "best StealthGPT alternative",
     "StealthGPT vs HumanizeIt",
     "AI humanizer alternative",
-    "undetectable AI alternative",
     "humanize AI text",
     "free AI humanizer",
   ],

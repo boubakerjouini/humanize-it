@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Free GPTZero Checker — Test Your Text Before You Submit",
   description:
     "Free GPTZero-style checker. Paste your text to estimate its AI score and see the perplexity and burstiness patterns GPTZero looks for — in your browser, no signup.",
-  keywords: ["gptzero checker", "gptzero", "check gptzero score", "gptzero detector", "beat gptzero", "ai detector"],
+  keywords: ["gptzero checker", "gptzero", "check gptzero score", "gptzero detector", "ai detector"],
   openGraph: {
     title: "Free GPTZero Checker — Test Your Text Before You Submit",
     description: "Estimate your GPTZero AI score and see the perplexity & burstiness patterns it looks for. Free, no signup.",
@@ -64,7 +64,7 @@ export default function GptzeroCheckerPage() {
         When you score high, the fix is to add genuine variation rather than swap synonyms. Our{" "}
         <Link href="/free-ai-humanizer" style={{ color: THEME.brandHi }}>free humanizer</Link> does this automatically,
         and our{" "}
-        <Link href="/bypass/gptzero" style={{ color: THEME.brandHi }}>GPTZero guide</Link> covers the manual
+        <Link href="/detectors/gptzero" style={{ color: THEME.brandHi }}>GPTZero guide</Link> covers the manual
         techniques.
       </p>
 

@@ -150,7 +150,7 @@ export default function CanTurnitinDetectChatGptPage() {
         Keep your drafts, notes, and version history as you write: a detector score is an indicator, not proof, and your
         writing process is the evidence that settles a dispute. If your concern is specifically the Turnitin score, our
         guide on{" "}
-        <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
+        <Link href="/detectors/turnitin" style={{ color: THEME.brandHi }}>
           how Turnitin&apos;s AI detector works
         </Link>{" "}
         walks through what it keys on in the context of a graded submission. And remember the honest limit: no tool can
@@ -187,7 +187,7 @@ export default function CanTurnitinDetectChatGptPage() {
             a: "Yes. Because the detector keys on predictability rather than authorship, genuinely human writing that happens to be plain, even, and low in surprise can be flagged. Students taught a rigid template, and non-native English writers, are statistically more likely to trip the indicator even when every word is their own. A high score is a prompt for human review, not proof of misconduct.",
           },
           {
-            q: "Does paraphrasing ChatGPT text beat Turnitin?",
+            q: "Does paraphrasing ChatGPT text change the Turnitin result?",
             a: "Usually not on its own. Synonym-swapping paraphrasers keep the uniform sentence length and predictable rhythm the detector keys on, and they often make the text read worse. What actually helps your own writing is genuinely varying sentence length and word choice and adding real voice. Since August 2025 Turnitin also flags text it believes was run through AI humanizers or bypasser tools, so no rewriting tool is a reliable way around it.",
           },
           {

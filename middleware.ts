@@ -12,6 +12,9 @@ const isPublicRoute = createRouteMatcher([
   "/lifetime",
   "/use-cases(.*)",
   "/docs(.*)",
+  "/detectors(.*)",
+  // Old address of the detector guides: must stay public so it reaches the 301
+  // to /detectors in next.config.ts instead of the sign-in redirect.
   "/bypass(.*)",
   "/alternatives(.*)",
   "/ai-detector(.*)",

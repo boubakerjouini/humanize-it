@@ -117,7 +117,7 @@ export default function SeoContentUseCasePage() {
         sometimes reads &quot;too clean&quot; to the classifier. For an agency, that flag is a client-facing event: a
         rejected invoice, a rewrite at the writer&apos;s expense, or a strained relationship. If Originality.ai is the
         gate you keep hitting, our{" "}
-        <Link href="/bypass/originality-ai" style={{ color: THEME.brandHi }}>guide to how Originality.ai scores text</Link>{" "}
+        <Link href="/detectors/originality-ai" style={{ color: THEME.brandHi }}>guide to how Originality.ai scores text</Link>{" "}
         breaks down what its classifier reacts to and why human-written copy still gets flagged. No tool can promise a
         pass &mdash; detectors retrain constantly &mdash; so always re-check output before you ship.
       </p>

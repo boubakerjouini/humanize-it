@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   keywords: [
     "AI humanizer use cases",
     "humanize AI text",
-    "bypass AI detection",
     "AI writing for students",
     "AI content for agencies",
   ],

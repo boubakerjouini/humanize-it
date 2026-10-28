@@ -1,5 +1,5 @@
 // Shared marketing chrome (sticky nav + footer) for content-cluster sections.
-// Server component. Used by the /bypass, /alternatives, /faq layouts; the
+// Server component. Used by the /detectors, /alternatives, /faq layouts; the
 // footer link row (MarketingFooterLinks) is also used by the tools, blog,
 // compare and use-cases layouts.
 import Link from "next/link";
@@ -19,7 +19,7 @@ const SITE_LINKS = [
   { label: "AI Detector", href: "/ai-detector" },
   { label: "Free AI Humanizer", href: "/free-ai-humanizer" },
   { label: "GPTZero Checker", href: "/gptzero-checker" },
-  { label: "Detector Guides", href: "/bypass" },
+  { label: "Detector Guides", href: "/detectors" },
   { label: "Compare", href: "/compare" },
   { label: "Alternatives", href: "/alternatives" },
   { label: "Use Cases", href: "/use-cases" },

@@ -14,10 +14,8 @@ export const metadata: Metadata = {
   keywords: [
     "humanize ChatGPT text",
     "AI text humanizer",
-    "bypass AI detection",
     "ChatGPT to human text",
     "humanize AI content",
-    "undetectable AI text",
     "HumanizeIt",
     "AI content rewriter",
     "make ChatGPT sound human",
@@ -429,7 +427,7 @@ export default function HumanizeChatGPTTextPage() {
         through humanizers. Check your result with our{" "}
         <Link href="/ai-detector" style={{ color: THEME.brandHi }}>free AI detector</Link>,
         and see our{" "}
-        <Link href="/bypass" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
+        <Link href="/detectors" style={{ color: THEME.brandHi }}>detector-by-detector guides</Link>{" "}
         for how each one works.
       </p>
 

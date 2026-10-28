@@ -83,7 +83,7 @@ export const MAGNETS: Record<MagnetSlug, Magnet> = {
     faqs: [
       ...SHARED_FAQS,
       {
-        q: "Will this help me beat Turnitin or GPTZero?",
+        q: "Will this guarantee a Turnitin or GPTZero result?",
         a: "No. No tool can promise what a detector will say. The kit helps you do the thing that settles these cases: show how you wrote the work, calmly and with evidence.",
       },
       {

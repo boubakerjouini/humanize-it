@@ -13,12 +13,9 @@ export const metadata: Metadata = {
   keywords: [
     "AI humanizer for essays",
     "humanize essay text",
-    "humanize AI essay",
     "essay AI detection",
     "essay flagged as AI",
-    "AI essay rewriter",
     "Turnitin false positive essay",
-    "humanize ChatGPT essay",
   ],
   openGraph: {
     title: "AI Humanizer for Essays: Polish Your Own Drafts | HumanizeIt",
@@ -125,7 +122,7 @@ export default function EssaysUseCasePage() {
         Unlike basic synonym-swapping paraphrasers that mangle academic vocabulary, HumanizeIt is built to keep
         scholarly prose readable. Read every suggestion and keep only what still sounds like you. If your school checks
         essays with Turnitin, our{" "}
-        <Link href="/bypass/turnitin" style={{ color: THEME.brandHi }}>
+        <Link href="/detectors/turnitin" style={{ color: THEME.brandHi }}>
           Turnitin guide
         </Link>{" "}
         covers what that detector keys on and what its score does and does not mean. Students juggling several
