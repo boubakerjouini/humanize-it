@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Guide: { bg: THEME.humanDim, text: THEME.human },
+  Guide: { bg: THEME.humanDim, text: THEME.humanText },
   Comparison: { bg: THEME.brandDim, text: THEME.brandHi },
-  "Deep Dive": { bg: THEME.warnDim, text: THEME.warn },
+  "Deep Dive": { bg: THEME.warnDim, text: THEME.warnText },
 };
 
 export default function BlogPage() {
