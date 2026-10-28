@@ -101,3 +101,34 @@ export function planShortLabel(status: PlanStatus): string {
 export function isOnFree(status: PlanStatus): boolean {
   return status.kind === "free" || status.kind === "gift_expired";
 }
+
+export interface RefillLine {
+  text: string;
+  /** The plan ends before the allowance would refill: the next words come from Free. */
+  planEnds: boolean;
+}
+
+/**
+ * When the user gets more words. A gift, Founding grant or cancelled
+ * subscription can end before the monthly refill: then the honest answer is
+ * the end date and Free's daily allowance, not a refill that never comes
+ * (lib/quota.ts drops the row to Free on the end date).
+ */
+export function usageRefillLine(status: PlanStatus, resetsAt: Date | null, freeDailyWords: number): RefillLine {
+  const free = `${freeDailyWords.toLocaleString("en-US")} words a day`;
+  if (resetsAt) {
+    if ((status.kind === "gift" || status.kind === "founding") && status.until.getTime() <= resetsAt.getTime()) {
+      const who = status.kind === "gift" ? "Your gift" : "Founding access";
+      return { text: `${who} ends ${mediumDate(status.until)}. Then Free: ${free}`, planEnds: true };
+    }
+    if (status.kind === "subscription" && status.status === "cancelled" && status.periodEnd && status.periodEnd.getTime() <= resetsAt.getTime()) {
+      return { text: `${planName(status.plan)} ends ${mediumDate(status.periodEnd)}, then Free: ${free}`, planEnds: true };
+    }
+  }
+  if (!resetsAt) return { text: "Words refill soon", planEnds: false };
+  // Free refills daily, so the hour matters; paid plans refill monthly.
+  const when = isOnFree(status)
+    ? resetsAt.toLocaleString("en-US", { month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })
+    : longDate(resetsAt);
+  return { text: `Words refill ${when}`, planEnds: false };
+}

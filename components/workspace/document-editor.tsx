@@ -21,6 +21,7 @@ import type { VoiceProfileRow } from "@/components/growth/voice-manager";
 import { InlineError } from "@/components/workspace/inline-error";
 import { notify, copyText } from "@/components/workspace/notify";
 import { humanizeError, USAGE_CHANGED_EVENT, type FriendlyError } from "@/components/workspace/feedback";
+import { takePrefill } from "@/lib/prefill";
 
 type Lang = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
 const TONES: ToneOption[] = [...PLAN_TONES];
@@ -75,6 +76,9 @@ export function DocumentEditor() {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Text handed over from a public tool (detector, free humanizer, home, compare).
+  // Never auto-run: pressing Humanize is what turns it into a stored Document.
+  useEffect(() => { const t = takePrefill(); if (t) setText(t); }, []);
   useEffect(() => { fetch("/api/user-plan").then((r) => r.json()).then((d) => setPlan(d.plan ?? "FREE")).catch(() => {}); }, []);
   useEffect(() => {
     fetch("/api/voice-profiles").then((r) => (r.ok ? r.json() : null))

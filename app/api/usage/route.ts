@@ -55,7 +55,9 @@ export async function GET() {
       wordsLimit: plan.wordsLimit,
       rewriteCount: lapsed ? 0 : user.rewriteCount,
       rewriteLimit: plan.rewriteLimit,
-      quotaResetAt: user.quotaResetAt,
+      // The downgrade restarts the window now (quota.ts writes quotaResetAt = now):
+      // the old date would put the next Free refill in the past.
+      quotaResetAt: lapsed ? new Date() : user.quotaResetAt,
       // Expose subscription status so the UI can show payment failure banners
       subscriptionStatus: user.subscription?.status ?? null,
       currentPeriodEnd: user.subscription?.currentPeriodEnd ?? null,

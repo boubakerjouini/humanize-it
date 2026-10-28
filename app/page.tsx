@@ -37,6 +37,7 @@ import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, humanScore, humanScoreColor, humanScoreLabel, glow } from "@/lib/theme";
 import posthog from "posthog-js";
 import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
+import { savePrefill } from "@/lib/prefill";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then(m => m.ExitIntent), { ssr: false });
 
@@ -245,9 +246,7 @@ export default function LandingPage() {
   }, [showResult]);
 
   const persistAndGo = useCallback((path: string) => {
-    if (text.trim()) {
-      try { sessionStorage.setItem("prefill-text", text); } catch {}
-    }
+    savePrefill(text);
     router.push(path);
   }, [router, text]);
 
@@ -608,7 +607,7 @@ export default function LandingPage() {
               human={human}
               humanColor={humanColor}
               topPatterns={topPatterns}
-              onContinueSignedIn={() => persistAndGo("/dashboard/editor")}
+              onContinueSignedIn={() => persistAndGo("/dashboard")}
             />
           </div>
         </div>
@@ -1582,8 +1581,9 @@ function DemoPanel({
             {/* Exactly ONE next step */}
             <div style={{ marginTop: "16px" }}>
               <SignedOut>
+                {/* Saved before the modal opens: signup lands on /dashboard, which picks it up. */}
                 <SignUpButton mode="modal">
-                  <button style={{
+                  <button onClick={() => savePrefill(text)} style={{
                     display: "flex", width: "100%", textAlign: "center",
                     alignItems: "center", justifyContent: "center",
                     padding: "14px",
