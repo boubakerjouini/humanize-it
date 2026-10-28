@@ -8,7 +8,7 @@ import posthog from "posthog-js";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { ReportCapture, buildReportContext } from "@/components/growth/report-capture";
-import { THEME, glow } from "@/lib/theme";
+import { THEME, glow, humanScore } from "@/lib/theme";
 import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
@@ -26,6 +26,41 @@ interface DeepScan {
   signals: string[];
   reasoning: string;
   remainingToday?: number;
+}
+
+/** The ring's human-score labels (lib/theme humanScoreLabel), as a scale: the score reads as a range, not a verdict. */
+const SCORE_BANDS = [
+  { min: 0, label: "Very likely AI", range: "0-24", color: THEME.ai },
+  { min: 25, label: "Likely AI", range: "25-44", color: THEME.ai },
+  { min: 45, label: "Mixed signals", range: "45-69", color: THEME.warn },
+  { min: 70, label: "Mostly human", range: "70-84", color: THEME.human },
+  { min: 85, label: "Reads human", range: "85-100", color: THEME.human },
+] as const;
+
+function ScoreScale({ human }: { human: number }) {
+  const current = [...SCORE_BANDS].reverse().find((b) => human >= b.min) ?? SCORE_BANDS[0];
+  return (
+    <div style={{ margin: "0 0 14px" }}>
+      <div role="list" aria-label="How to read the human score" style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "4px" }}>
+        {SCORE_BANDS.map((b) => {
+          const active = b === current;
+          return (
+            <div key={b.label} role="listitem" aria-current={active ? "true" : undefined} style={{ textAlign: "center" }}>
+              <div style={{ height: "6px", borderRadius: "999px", background: b.color, opacity: active ? 1 : 0.25 }} />
+              <div style={{ fontSize: "11px", marginTop: "5px", color: active ? THEME.text : THEME.textMuted, fontWeight: active ? 700 : 500, lineHeight: 1.3 }}>
+                {b.label}
+                <br />
+                <span style={{ fontWeight: 500 }}>{b.range}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p style={{ fontSize: "12px", color: THEME.textMuted, lineHeight: 1.5, margin: "8px 0 0" }}>
+        Human score out of 100: an estimate from writing patterns, not proof. Turnitin, GPTZero and other detectors use their own models, so their scores can differ.
+      </p>
+    </div>
+  );
 }
 
 /** API word floor for a reliable deep scan — mirrors app/api/detect MIN_WORDS. */
@@ -132,8 +167,9 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
             <ScoreRing score={result.score} size={130} />
             <div style={{ flex: "1 1 240px", minWidth: "240px" }}>
               <div style={{ fontSize: "13px", color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
-                Instant AI-likelihood: {result.score}/100
+                Instant check · AI-likelihood {Math.round(result.score)}/100
               </div>
+              <ScoreScale human={humanScore(result.score)} />
               <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.6, margin: "0 0 14px" }}>
                 {triggered.length === 0
                   ? "No strong AI patterns found by the instant check. Run a deep scan for a second opinion."
