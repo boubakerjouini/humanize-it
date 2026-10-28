@@ -13,6 +13,8 @@
 // marks the in-app prompt as answered, so the consent card never comes back
 // after Save or Not now.
 // `prompt` stays false for anyone who unsubscribed before: we don't re-ask.
+// The checkout note (source checkout_paused) answers a different question, so
+// it neither marks the tips card as answered nor counts against showing it.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -32,13 +34,14 @@ const bodySchema = z.object({
   unsubscribe: topicList.optional(),
   lifecycleEmails: z.boolean().optional(),
   dismissPrompt: z.boolean().optional(),
-  source: z.enum(["consent_card", "settings"]).optional(),
+  source: z.enum(["consent_card", "settings", "checkout_paused"]).optional(),
 });
 
 /** The wording shown next to each topic's in-app checkbox (ConsentRecord proof). */
 const IN_APP_WORDING: Record<Topic, ConsentWordingId> = {
   tips: "inapp-tips-v1",
   extension_launch: "ext-v1",
+  checkout_open: "checkout-v1",
 };
 
 function unauthorized() {
@@ -77,7 +80,10 @@ async function snapshot(contactId: string | null, fallbackEmail: string) {
     topics: contact.subscribedTopics,
     pendingTopics: contact.pendingTopics,
     lifecycleEmails: contact.lifecycleEmails,
-    prompt: !contact.consentPromptedAt && !contact.unsubscribedAt && contact.subscribedTopics.length === 0,
+    prompt:
+      !contact.consentPromptedAt &&
+      !contact.unsubscribedAt &&
+      contact.subscribedTopics.every((t) => t === "checkout_open"),
   };
 }
 
@@ -129,7 +135,7 @@ export async function POST(req: Request) {
       await setLifecycleEmails(contactId, body.lifecycleEmails, { ...meta, method: "preferences" });
     }
 
-    await markConsentPrompted(contactId);
+    if (source !== "checkout_paused") await markConsentPrompted(contactId);
     return NextResponse.json(await snapshot(contactId, email));
   } catch (err) {
     return internalError("POST", err);

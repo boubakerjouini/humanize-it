@@ -151,7 +151,7 @@ export async function POST(req: Request) {
     if (!pool) {
       runAfter("quota-hit", () => trackQuotaHit(freshUser.id, "upload_words", plan.id));
       return NextResponse.json(
-        { error: { code: "QUOTA_EXCEEDED", message: `You've used your ${plan.wordsLimitPeriod}ly word allowance. Upgrade for more.` } },
+        { error: { code: "QUOTA_EXCEEDED", message: `You've used your ${plan.wordsLimitPeriod}ly word allowance. Upgrade for more.`, reason: "words" } },
         { status: 402, headers: rlHeaders }
       );
     }

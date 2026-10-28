@@ -71,6 +71,8 @@ describe("leadRequestSchema", () => {
       leadRequestSchema.safeParse({ ...base, source: "magnet_page", magnet: "ai-detection-field-guide", topics: ["extension_launch"] }).success
     ).toBe(false);
     expect(leadRequestSchema.safeParse({ ...base, source: "magnet_page", magnet: "ai-detection-field-guide", topics: ["spam"] }).success).toBe(false);
+    // The checkout note is an in-app opt-in for signed-in accounts only.
+    expect(leadRequestSchema.safeParse({ ...base, source: "founding_waitlist", topics: ["tips", "checkout_open"] }).success).toBe(false);
   });
 });
 
