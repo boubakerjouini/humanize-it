@@ -25,6 +25,8 @@ import {
 import { getOrCreateContactForUser, syncContactForUser, writeDepartureSuppressions, type UserIdentity } from "@/lib/crm/contacts";
 import { recordEvent, recordUserActivity } from "@/lib/crm/events";
 import { recomputeContact } from "@/lib/crm/recompute";
+import { isoWeek, taskDedupeKey } from "@/lib/crm/task-rules";
+import { PLANS, type PlanId } from "@/lib/plans";
 
 export type IdentifyVia = "ensure_user" | "clerk_webhook" | "backfill";
 export type DocumentEventKind = "analyzed" | "humanized" | "uploaded";
@@ -185,6 +187,43 @@ export async function trackCheckoutStarted(userId: string, plan: string, annual:
     await recomputeContact(contactId);
   } catch (err) {
     logGrowthError("checkout-started", err);
+  }
+}
+
+/**
+ * An upgrade attempt while Polar can't take payments yet (/api/checkout
+ * answered CHECKOUT_PAUSED). Still a checkout_started, marked paused, so the
+ * funnel and the score count it; and, instead of the abandoned-checkout rule's
+ * follow-up a day later (it skips paused attempts), one high-priority task a
+ * week per contact right away: these buyers wanted to pay and couldn't.
+ */
+export async function trackCheckoutPaused(userId: string, plan: string, annual: boolean, now: Date = new Date()): Promise<void> {
+  try {
+    const contactId = await getOrCreateContactForUser(userId);
+    if (!contactId) return;
+    await recordEvent({ contactId, type: "checkout_started", props: { plan, annual, paused: true } });
+    const planName = PLANS[plan as PlanId]?.name ?? plan;
+    await db.crmTask.createMany({
+      data: [
+        {
+          contactId,
+          title: `Wanted ${planName} but checkout is paused: follow up personally`,
+          body: "They tried to upgrade while Polar can't take payments yet (account under review). Offer a trial or tell them when checkout opens.",
+          kind: "email",
+          priority: "high",
+          status: "open",
+          dueAt: now,
+          source: "rule",
+          ruleKey: "checkout_paused",
+          dedupeKey: taskDedupeKey("checkout_paused", contactId, isoWeek(now)),
+          createdBy: "system",
+        },
+      ],
+      skipDuplicates: true,
+    });
+    await recomputeContact(contactId);
+  } catch (err) {
+    logGrowthError("checkout-paused", err);
   }
 }
 

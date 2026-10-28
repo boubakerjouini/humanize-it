@@ -8,10 +8,12 @@ jest.mock("@clerk/nextjs/server", () => ({ auth: jest.fn(async () => ({ userId: 
 const mockPolar = { checkouts: { create: jest.fn() } };
 const mockEnsureCustomer = jest.fn();
 const mockPortalUrl = jest.fn();
+const mockPaymentsEnabled = jest.fn();
 jest.mock("@/lib/polar", () => ({
   getPolar: () => mockPolar,
   ensureCustomer: (...args: unknown[]) => mockEnsureCustomer(...args),
   customerPortalUrl: (...args: unknown[]) => mockPortalUrl(...args),
+  checkoutPaymentsEnabled: () => mockPaymentsEnabled(),
   BillingAccountError: class BillingAccountError extends Error {
     constructor(readonly code: string, message: string) {
       super(message);
@@ -29,14 +31,14 @@ jest.mock("@/lib/plans", () => {
   process.env.POLAR_TEAM_PRODUCT_ID = "prod_team";
   return jest.requireActual("@/lib/plans");
 });
-jest.mock("@/lib/crm/hooks", () => ({ trackCheckoutStarted: jest.fn() }));
+jest.mock("@/lib/crm/hooks", () => ({ trackCheckoutStarted: jest.fn(), trackCheckoutPaused: jest.fn() }));
 jest.mock("@/lib/growth/safe", () => ({ runAfter: (_label: string, fn: () => unknown) => void fn() }));
 
 const mockDb = { user: { findUnique: jest.fn() } };
 jest.mock("@/lib/db", () => ({ db: mockDb }));
 
 import { POST } from "@/app/api/checkout/route";
-import { trackCheckoutStarted } from "@/lib/crm/hooks";
+import { trackCheckoutPaused, trackCheckoutStarted } from "@/lib/crm/hooks";
 
 const DAY = 86_400_000;
 const buyer = { id: "user_1", email: "buyer@example.org", name: "Buyer", plan: "FREE", subscription: null };
@@ -51,6 +53,7 @@ beforeEach(() => {
   mockEnsureCustomer.mockResolvedValue("cus_1");
   mockPortalUrl.mockResolvedValue("https://polar.example/portal/xyz");
   mockPolar.checkouts.create.mockResolvedValue({ url: "https://polar.example/checkout/abc" });
+  mockPaymentsEnabled.mockResolvedValue(true);
 });
 
 it("opens the checkout on the buyer's own Polar customer, with our user id in the metadata", async () => {
@@ -146,4 +149,38 @@ it("stops an account that calls it too often before it reaches Polar", async () 
   expect(mockEnsureCustomer).not.toHaveBeenCalled();
   expect(mockPolar.checkouts.create).not.toHaveBeenCalled();
   expect(trackCheckoutStarted).not.toHaveBeenCalled();
+});
+
+describe("while Polar can't take payments yet", () => {
+  it("pauses a new checkout instead of opening a page that can't be paid, and records the attempt", async () => {
+    mockPaymentsEnabled.mockResolvedValue(false);
+
+    const res = await checkout({ plan: "PRO", annual: true });
+
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error.code).toBe("CHECKOUT_PAUSED");
+    expect(json.error.message).toMatch(/email you/);
+    expect(mockPolar.checkouts.create).not.toHaveBeenCalled();
+    expect(mockEnsureCustomer).not.toHaveBeenCalled();
+    expect(trackCheckoutPaused).toHaveBeenCalledWith("user_1", "PRO", true);
+    expect(trackCheckoutStarted).not.toHaveBeenCalled();
+  });
+
+  it("still sends a live subscriber to the portal", async () => {
+    mockPaymentsEnabled.mockResolvedValue(false);
+    mockDb.user.findUnique.mockResolvedValue({ ...buyer, plan: "PRO", subscription: { polarSubscriptionId: "sub_1", status: "active", currentPeriodEnd: null } });
+
+    expect(await (await checkout({ plan: "TEAM" })).json()).toEqual({ url: "https://polar.example/portal/xyz" });
+  });
+
+  it("goes to checkout as before when the capability can't be read", async () => {
+    mockPaymentsEnabled.mockResolvedValue(null);
+
+    const res = await checkout({ plan: "PRO" });
+
+    expect(res.status).toBe(200);
+    expect(mockPolar.checkouts.create).toHaveBeenCalled();
+    expect(trackCheckoutPaused).not.toHaveBeenCalled();
+  });
 });

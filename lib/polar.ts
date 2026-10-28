@@ -37,6 +37,39 @@ export function getPolar(): Polar | null {
  */
 export const POLAR_CALLS_PER_MINUTE = 5;
 
+const PAYMENTS_CHECK_TTL_MS = 5 * 60_000;
+/** A failed read is retried sooner, so a Polar hiccup never pauses anything for long. */
+const PAYMENTS_CHECK_RETRY_MS = 60_000;
+let paymentsCheck: { key: string; enabled: boolean | null; at: number } | null = null;
+
+/**
+ * Can Polar take checkout payments for our organization yet? False until the
+ * account passes Polar's review: every checkout page then says "Payments are
+ * currently unavailable", so /api/checkout pauses instead of sending buyers
+ * there, and resumes on its own once Polar flips the capability. Read from
+ * the organization's capabilities, cached five minutes. Null when it can't be
+ * read (billing off, API error): callers then go to checkout as before.
+ */
+export async function checkoutPaymentsEnabled(now: number = Date.now()): Promise<boolean | null> {
+  const polar = getPolar();
+  if (!polar) return null;
+  if (paymentsCheck && paymentsCheck.key === clientKey) {
+    const ttl = paymentsCheck.enabled === null ? PAYMENTS_CHECK_RETRY_MS : PAYMENTS_CHECK_TTL_MS;
+    if (now - paymentsCheck.at < ttl) return paymentsCheck.enabled;
+  }
+  let enabled: boolean | null = null;
+  try {
+    // An organization access token sees exactly one organization: ours.
+    const page = await polar.organizations.list({ limit: 1 });
+    const value = page.items[0]?.capabilities?.checkout_payments;
+    enabled = typeof value === "boolean" ? value : null;
+  } catch {
+    enabled = null;
+  }
+  paymentsCheck = { key: clientKey, enabled, at: now };
+  return enabled;
+}
+
 /** Why a buyer's Polar customer can't be set up. The checkout routes show the message. */
 export class BillingAccountError extends Error {
   constructor(

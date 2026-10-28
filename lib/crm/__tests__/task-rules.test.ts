@@ -127,7 +127,7 @@ describe("rules", () => {
   });
 
   it("checkout_abandoned: a checkout 24 to 72 hours ago with no subscription since", () => {
-    const checkout = (hours: number) => ({ id: "evt1", at: new Date(NOW.getTime() - hours * 3600_000), plan: "PRO" });
+    const checkout = (hours: number, paused = false) => ({ id: "evt1", at: new Date(NOW.getTime() - hours * 3600_000), plan: "PRO", paused });
     const [task] = evaluateTaskRules(snap({ lastCheckout: checkout(30) }, {}), NOW);
     expect(task.ruleKey).toBe("checkout_abandoned");
     expect(task.dedupeKey).toBe("checkout_abandoned:c1:evt1");
@@ -135,6 +135,8 @@ describe("rules", () => {
     expect(rules(snap({ lastCheckout: checkout(10) }, {}))).toEqual([]);
     expect(rules(snap({ lastCheckout: checkout(80) }, {}))).toEqual([]);
     expect(rules(snap({ lastCheckout: checkout(30), subscribedAfterCheckout: true }, {}))).toEqual([]);
+    // A paused attempt (Polar not taking payments yet) got its own task right away.
+    expect(rules(snap({ lastCheckout: checkout(30, true) }, {}))).toEqual([]);
   });
 
   it("churned_recent: churned within 3 days, keyed by the subscription", () => {
@@ -190,7 +192,7 @@ describe("toSnapshot", () => {
     );
     expect(s.tags).toEqual(["testimonial"]);
     expect(s.quotaHits7d).toBe(1);
-    expect(s.lastCheckout).toEqual({ id: "e2", at: ago(2), plan: "TEAM" });
+    expect(s.lastCheckout).toEqual({ id: "e2", at: ago(2), plan: "TEAM", paused: false });
     expect(s.subscribedAfterCheckout).toBe(true);
   });
 });
