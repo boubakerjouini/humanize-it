@@ -25,7 +25,7 @@ export const TASK_PRIORITIES = ["high", "normal", "low"] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
 /** Badge text for rule-generated tasks (keys match lib/crm/task-rules.ts, which imports the DB, plus
- *  inbound_email from lib/email/inbound.ts and checkout_paused from lib/crm/hooks.ts). */
+ *  inbound_email from lib/email/inbound.ts, checkout_paused from lib/crm/hooks.ts and ops from lib/ops/checks.ts). */
 export const TASK_RULE_LABELS: Record<string, string> = {
   comped_expiring: "Comped plan ending",
   paid_inactive: "Paying, inactive",
@@ -36,4 +36,5 @@ export const TASK_RULE_LABELS: Record<string, string> = {
   testimonial_ask: "Testimonial ask",
   inbound_email: "Support email",
   checkout_paused: "Couldn't pay (checkout paused)",
+  ops: "Ops alert",
 };

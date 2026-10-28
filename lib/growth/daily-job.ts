@@ -8,6 +8,7 @@
 //   5. due sequence steps          6. campaign draining
 //   7. retry failed or held one-off sends
 //   8. reset rows stuck in "sending"
+//   9. ops checks (lib/ops/checks.ts): a high-priority task per failure
 // It runs under a 10-minute JobLock lease, so the cron and an admin "Run now"
 // never overlap, and records a JobRun with per-step stats. New work stops at
 // 240s to stay inside the 300s function limit. Steps fail independently: one
@@ -28,6 +29,7 @@ import { runAutoTaskRules } from "@/lib/crm/task-rules";
 import { emailSendingMode } from "@/lib/growth/flags";
 import { finishJobRun, recordLockedRun, startJobRun, withJobLock, type JobTrigger } from "@/lib/growth/locks";
 import { logGrowthError } from "@/lib/growth/safe";
+import { runOpsChecks } from "@/lib/ops/checks";
 
 export const DAILY_JOB = "growth-daily";
 const LOCK_TTL_MS = 10 * 60_000;
@@ -131,6 +133,7 @@ export async function runDailyJob(opts: { trigger: JobTrigger; actorEmail?: stri
     else await step("campaigns", () => drainCampaigns({ deadlineMs }));
     await step("retries", () => retryFailedMessages(now, deadlineMs));
     await step("stuckReset", () => resetStuckSending(now));
+    await step("ops", () => runOpsChecks(now, { name: DAILY_JOB, runId }));
 
     stats.durationMs = Date.now() - startedAt;
     if (errors.length) stats.errors = errors;

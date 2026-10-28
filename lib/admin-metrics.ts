@@ -229,3 +229,34 @@ export async function getLast24hMetrics(): Promise<Last24hMetrics> {
   ]);
   return { signups, toolRuns, documents, upgradeAttempts, pausedAttempts, emailsSent, openSupportEmails, openHighTasks };
 }
+
+export interface OpsHealth {
+  /** Server errors counted today (UTC), by area; areas with none are left out. */
+  errorsToday: { area: string; count: number }[];
+  webhookFailsToday: number;
+  /** Emails that failed for good in the last 24 hours. */
+  emailsFailed: number;
+  lastJob: { status: string; startedAt: Date } | null;
+}
+
+/**
+ * The ops counters behind the daily ops check (lib/ops/checks.ts), for the
+ * Health line on the admin home. Each part falls back on its own.
+ */
+export async function getOpsHealth(): Promise<OpsHealth> {
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const [metrics, emailsFailed, lastJob] = await Promise.all([
+    db.dailyMetric.findMany({ where: { day: today, key: { startsWith: "ops." } }, select: { key: true, count: true } }).catch(() => []),
+    db.emailMessage.count({ where: { status: "failed", attempts: { gte: 3 }, updatedAt: { gte: since(1) } } }).catch(() => 0),
+    db.jobRun
+      .findFirst({ where: { job: "growth-daily", status: { in: ["ok", "error"] } }, orderBy: { startedAt: "desc" }, select: { status: true, startedAt: true } })
+      .catch(() => null),
+  ]);
+  const errorsToday = metrics
+    .filter((m) => m.key.startsWith("ops.5xx."))
+    .map((m) => ({ area: m.key.slice("ops.5xx.".length), count: m.count }))
+    .sort((a, b) => b.count - a.count);
+  const webhookFailsToday = metrics.filter((m) => m.key.startsWith("ops.webhook_fail.")).reduce((n, m) => n + m.count, 0);
+  return { errorsToday, webhookFailsToday, emailsFailed, lastJob };
+}
