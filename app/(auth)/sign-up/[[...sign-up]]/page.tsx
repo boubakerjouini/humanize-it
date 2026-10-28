@@ -9,7 +9,7 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { THEME } from "@/lib/theme";
-import { AuthShell, signUpAppearance } from "@/components/auth/auth-shell";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { afterAuthPath, authPageUrl } from "@/lib/checkout-intent";
 import { normalizeRef } from "@/lib/growth/attribution";
 import { referralsEnabled } from "@/lib/growth/flags";
@@ -46,7 +46,7 @@ export default async function SignUpPage({ searchParams }: Props) {
         </div>
       ) : null}
       <SignUp
-        appearance={signUpAppearance} routing="path" path="/sign-up"
+        routing="path" path="/sign-up"
         signInUrl={authPageUrl("/sign-in", afterSignUp)}
         forceRedirectUrl={afterSignUp} fallbackRedirectUrl={afterSignUp}
         // An existing account that signs in from here (Google) goes to the same place.
