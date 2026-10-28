@@ -2,17 +2,20 @@
 // lib/growth/daily-metrics.ts — Durable per-day counters for the funnel.
 // RateLimit rows are reaped after ~25h, so they can't hold history; DailyMetric
 // keeps one row per (UTC day, key). Only lead capture and confirmation are
-// counted, plus forwarded support mail (it shares the Resend send budget):
-// anonymous tool usage counters were cut (public, spammable, and PostHog
+// counted, plus forwarded support mail (it shares the Resend send budget) and
+// the ops counters (server errors per area, failed webhooks; lib/ops): their
+// keys are bounded, so a flood can only inflate a count, never add rows.
+// Anonymous tool usage counters were cut (public, spammable, and PostHog
 // already covers them).
 // ===========================================================
 
 import { db } from "@/lib/db";
 import type { LeadSource } from "@/lib/growth/constants";
+import type { OpsMetricKey } from "@/lib/ops/areas";
 import { logGrowthError } from "@/lib/growth/safe";
 
 /** inbound.forwarded: support mail forwarded to the founder (lib/email/inbound.ts); it counts against the send budget. */
-export type DailyMetricKey = `lead.captured.${LeadSource}` | "lead.confirmed" | "inbound.forwarded";
+export type DailyMetricKey = `lead.captured.${LeadSource}` | "lead.confirmed" | "inbound.forwarded" | OpsMetricKey;
 
 /** UTC midnight of the given instant. */
 export function utcDay(at: Date = new Date()): Date {

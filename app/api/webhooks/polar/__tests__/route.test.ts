@@ -52,10 +52,12 @@ jest.mock("@/lib/growth/safe", () => ({
   runAfter: (_label: string, fn: () => unknown) => void fn(),
   isUniqueViolation: (err: unknown) => (err as { code?: string })?.code === "P2002",
 }));
+jest.mock("@/lib/growth/daily-metrics", () => ({ bumpDailyMetric: jest.fn(async () => {}) }));
 
 import { POST } from "@/app/api/webhooks/polar/route";
 import { getPolar } from "@/lib/polar";
 import { grantBonusWords } from "@/lib/crm/bonus";
+import { bumpDailyMetric } from "@/lib/growth/daily-metrics";
 import { recordEvent } from "@/lib/crm/events";
 import { trackBillingEvent } from "@/lib/crm/hooks";
 
@@ -199,6 +201,7 @@ describe("delivery checks", () => {
     const res = await deliver(order("order.paid", "prod_wordpack", { id: "order_3" }));
     expect(res.status).toBe(500);
     expect(mockDb.webhookEvent.create).not.toHaveBeenCalled();
+    expect(bumpDailyMetric).toHaveBeenCalledWith("ops.webhook_fail.polar");
   });
 });
 
