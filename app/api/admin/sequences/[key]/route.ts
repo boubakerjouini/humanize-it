@@ -3,8 +3,10 @@
 //   GET    the flow's steps (offset, template, stream, condition) with per-step
 //          counts by status and skip reason, plus a page of enrollments
 //   PATCH  { enabled }: switch the flow on or off (audited sequence.enable /
-//          sequence.disable). Turning a flow on enrolls nobody retroactively;
-//          the Backfill action does that, explicitly.
+//          sequence.disable). Turning a sequence on is refused (409
+//          TEST_REQUIRED) until every step's current content went out as a
+//          test (POST ./test); turning off is never gated. Turning a flow on
+//          enrolls nobody retroactively; the Backfill action does that.
 // ===========================================================
 
 import { NextResponse } from "next/server";
@@ -12,8 +14,9 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
-import { FLOW_META, TEMPLATES, isFlowKey, templatesOfFlow } from "@/lib/email/catalog";
+import { FLOW_META, TEMPLATES, isFlowKey, isSequenceKey, templatesOfFlow } from "@/lib/email/catalog";
 import { invalidateFlowCache } from "@/lib/email/enroll";
+import { stepTestStates, untestedSteps } from "@/lib/email/sequence-test";
 import { getSequence } from "@/lib/email/sequences";
 import { SWEPT_SEQUENCES } from "@/lib/email/sweeps";
 import { fail, handleError, readJson } from "../../email/_lib/respond";
@@ -72,8 +75,9 @@ export async function GET(req: Request, { params }: Ctx) {
     });
 
     const where = { sequenceKey: key, ...(statusFilter && ENROLLMENT_STATUSES.includes(statusFilter) ? { status: statusFilter } : {}) };
-    const [setting, active, total, enrollments] = await Promise.all([
+    const [setting, stepTests, active, total, enrollments] = await Promise.all([
       db.emailFlowSetting.findUnique({ where: { key } }),
+      isSequenceKey(key) ? stepTestStates(key) : Promise.resolve([]),
       seq ? db.sequenceEnrollment.count({ where: { sequenceKey: key, status: "active" } }) : Promise.resolve(0),
       seq ? db.sequenceEnrollment.count({ where }) : Promise.resolve(0),
       seq
@@ -101,6 +105,7 @@ export async function GET(req: Request, { params }: Ctx) {
       updatedAt: setting?.updatedAt ?? null,
       steps,
       stepStats,
+      stepTests,
       enrollments: enrollments.map((e) => ({
         id: e.id,
         status: e.status,
@@ -133,6 +138,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const json = await readJson(req);
     if (!json.ok) return json.response;
     const { enabled } = patchSchema.parse(json.body);
+    if (enabled && isSequenceKey(key)) {
+      const untested = await untestedSteps(key);
+      if (untested.length > 0) {
+        return fail("TEST_REQUIRED", `Send yourself a test of every step first. Untested: ${untested.join(", ")}.`, 409);
+      }
+    }
     const row = await db.emailFlowSetting.upsert({
       where: { key },
       create: { key, enabled, updatedBy: admin.email },
