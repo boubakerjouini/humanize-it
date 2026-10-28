@@ -14,6 +14,7 @@ interface AdminDocument {
   overallScore: number;
   humanizedScore: number | null;
   status: string;
+  sourceType: string | null;
   createdAt: string;
   user: { id: string; email: string; name: string | null };
 }
@@ -40,6 +41,8 @@ export default function AdminDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [source, setSource] = useState("");
+  const [status, setStatus] = useState("");
   // "tools": the free-tool runs (public detector pages, blog widget, free humanizer), which aren't documents.
   const [tab, setTab] = useState<"documents" | "tools">("documents");
 
@@ -58,16 +61,16 @@ export default function AdminDocumentsPage() {
   const load = useCallback(async (query: string, p: number) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/documents?q=${encodeURIComponent(query)}&page=${p}`);
+      const res = await fetch(`/api/admin/documents?q=${encodeURIComponent(query)}&page=${p}&source=${source}&status=${status}`);
       const data = await res.json() as { documents?: AdminDocument[]; totalPages?: number; error?: { message: string } };
       if (!res.ok) { toast.error(data.error?.message ?? "Failed to load documents."); return; }
       setDocuments(data.documents ?? []);
       setTotalPages(data.totalPages ?? 1);
     } catch { toast.error("Network error."); }
     finally { setLoading(false); }
-  }, []);
+  }, [source, status]);
 
-  useEffect(() => { void load("", 1); }, [load]);
+  useEffect(() => { setPage(1); void load(q, 1); }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(1); void load(q, 1); };
 
@@ -82,7 +85,20 @@ export default function AdminDocumentsPage() {
               : "Browse every document, its author, and humanization results."}
           </p>
         </div>
-        {tab === "documents" && <form onSubmit={onSearch} style={{ display: "flex", gap: 8 }}>
+        {tab === "documents" && <form onSubmit={onSearch} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <select aria-label="Source" value={source} onChange={e => setSource(e.target.value)} style={{ padding: "9px 10px", borderRadius: 9, border: `1px solid ${THEME.border}`, background: THEME.surface2, color: THEME.text, fontSize: 13 }}>
+            <option value="">All sources</option>
+            <option value="paste">Pasted</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">Word</option>
+            <option value="txt">Text file</option>
+          </select>
+          <select aria-label="Status" value={status} onChange={e => setStatus(e.target.value)} style={{ padding: "9px 10px", borderRadius: 9, border: `1px solid ${THEME.border}`, background: THEME.surface2, color: THEME.text, fontSize: 13 }}>
+            <option value="">All statuses</option>
+            <option value="complete">Complete</option>
+            <option value="processing">Processing</option>
+            <option value="error">Error</option>
+          </select>
           <div style={{ position: "relative" }}>
             <Search size={14} color={THEME.textMuted} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} aria-hidden="true" />
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by title…" style={{
@@ -127,7 +143,7 @@ export default function AdminDocumentsPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
-                  {["Document", "User", "Words", "Score", "Status", "Created"].map(h => (
+                  {["Document", "User", "Source", "Words", "Score", "Status", "Created"].map(h => (
                     <th key={h} style={{ textAlign: "left", padding: "10px 14px", fontSize: 11, fontWeight: 600, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.04em" }}>{h}</th>
                   ))}
                 </tr>
@@ -150,6 +166,7 @@ export default function AdminDocumentsPage() {
                         </span>
                       </Link>
                     </td>
+                    <td style={{ padding: "12px 14px", color: THEME.textDim, whiteSpace: "nowrap", fontSize: 12 }}>{({ pdf: "PDF", docx: "Word", txt: "Text file" } as Record<string, string>)[doc.sourceType ?? ""] ?? "Pasted"}</td>
                     <td className="tnum" style={{ padding: "12px 14px", color: THEME.textDim, whiteSpace: "nowrap" }}>{doc.wordCount.toLocaleString()}</td>
                     <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
