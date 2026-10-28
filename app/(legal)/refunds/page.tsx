@@ -74,7 +74,7 @@ export default function RefundsPage() {
           <li style={li}>Include your order number (it&apos;s in your receipt email from Polar)</li>
           <li style={li}>A reason is optional within the guarantee period</li>
         </ol>
-        <p style={{ marginTop: '12px' }}>We reply within 3–5 business days. Refunds go through Polar, our payment provider, back to your original payment method.</p>
+        <p style={{ marginTop: '12px' }}>We reply within 2 business days. Refunds go through Polar, our payment provider, back to your original payment method.</p>
       </Section>
 
       <Section title="8. Free plan">
