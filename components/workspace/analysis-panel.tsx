@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
 import { Wand2, Pencil, ScanSearch, Sparkles } from "lucide-react";
 import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 import type { Severity } from "@/lib/algorithms/patterns";
 import { buildFlaggedSegments, isHighlightable } from "@/lib/algorithms/flagged-spans";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, glow } from "@/lib/theme";
+import { InlineError } from "@/components/workspace/inline-error";
+import { deepScanError, type FriendlyError } from "@/components/workspace/feedback";
 
 /** Min words for a reliable deep scan — mirrors app/api/detect MIN_WORDS. */
 const DEEP_MIN_WORDS = 25;
@@ -42,6 +43,7 @@ export function AnalysisPanel({
 }) {
   const [deep, setDeep] = useState<DeepScan | null>(null);
   const [deepLoading, setDeepLoading] = useState(false);
+  const [deepError, setDeepError] = useState<FriendlyError | null>(null);
 
   const words = useMemo(() => (text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0), [text]);
   const segments = useMemo(() => buildFlaggedSegments(text, result.patterns), [text, result]);
@@ -55,20 +57,21 @@ export function AnalysisPanel({
   async function runDeepScan() {
     if (words < DEEP_MIN_WORDS || deepLoading) return;
     setDeepLoading(true);
+    setDeepError(null);
     try {
       const res = await fetch("/api/detect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data?.error?.message ?? "Deep scan failed. Please try again.");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data) {
+        setDeepError(deepScanError(res.status, data));
         return;
       }
       setDeep(data as DeepScan);
     } catch {
-      toast.error("Couldn't reach the deep scan. Check your connection and try again.");
+      setDeepError(deepScanError(0));
     } finally {
       setDeepLoading(false);
     }
@@ -148,6 +151,11 @@ export function AnalysisPanel({
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: deepLoading || words < DEEP_MIN_WORDS ? THEME.surface3 : THEME.brand, color: deepLoading || words < DEEP_MIN_WORDS ? THEME.textMuted : "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 700, cursor: deepLoading || words < DEEP_MIN_WORDS ? "not-allowed" : "pointer", fontFamily: THEME.fontSans, whiteSpace: "nowrap" }}>
               <ScanSearch size={15} aria-hidden="true" /> {deepLoading ? "Scanning…" : "Run deep scan"}
             </button>
+            {deepError && (
+              <div style={{ flexBasis: "100%" }}>
+                <InlineError error={deepError} onRetry={() => void runDeepScan()} retrying={deepLoading} onDismiss={() => setDeepError(null)} compact />
+              </div>
+            )}
           </div>
         ) : (
           <div className="animate-fade-up">
