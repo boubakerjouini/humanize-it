@@ -12,6 +12,7 @@ import { ReferralCard, useReferralInfo } from "@/components/growth/referral-card
 import { FoundingBadge } from "@/components/growth/founding-badge";
 import { useOffers } from "@/components/growth/founding-offers";
 import { readCheckoutIntent, withoutCheckoutIntent, type CheckoutIntent } from "@/lib/checkout-intent";
+import { describePlan, isOnFree, planShortLabel } from "@/lib/plan-status";
 
 interface PlanInfo {
   plan: string;
@@ -25,6 +26,9 @@ interface Usage {
   quotaResetAt: string | null;
   /** Bonus words drawn after the plan allowance (referrals, word packs). */
   bonusWords?: number;
+  subscriptionStatus?: string | null;
+  /** Set by grants (a gift, a redeem code, the Founding 100), which have no subscription. */
+  planExpiresAt?: string | null;
 }
 
 const PLAN_META: Record<string, { label: string; icon: typeof Crown; }> = {
@@ -69,7 +73,10 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
   const planMeta = PLAN_META[info.plan] ?? PLAN_META.FREE;
-  const isFree = info.plan === "FREE";
+  // /api/usage knows how the plan is held: a gift shows its end date, a lapsed one reads as Free.
+  const planStatus = usage ? describePlan(usage, { founding }) : null;
+  const isFree = planStatus ? isOnFree(planStatus) : info.plan === "FREE";
+  const planLabel = planStatus ? planShortLabel(planStatus) : planMeta.label;
 
   // The plan menu (monthly or annual) rather than a straight monthly checkout.
   const upgrade = () => setUpgradeOpen(true);
@@ -134,7 +141,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
             <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planLabel}</span>
           </div>
           {founding && <FoundingBadge />}
         </div>
