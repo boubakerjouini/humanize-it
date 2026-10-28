@@ -54,13 +54,13 @@ export function ToolFaq({ faqs }: { faqs: Faq[] }) {
               background: THEME.surface1,
               border: `1px solid ${THEME.border}`,
               borderRadius: THEME.radius,
-              padding: "14px 18px",
+              padding: 0,
             }}
           >
-            <summary style={{ cursor: "pointer", fontWeight: 600, color: THEME.text, fontSize: "15px" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 600, color: THEME.text, fontSize: "15px", padding: "14px 18px" }}>
               {f.q}
             </summary>
-            <p style={{ ...toolStyles.p, marginTop: "10px", marginBottom: 0, fontSize: "15px" }}>{f.a}</p>
+            <p style={{ ...toolStyles.p, margin: "-4px 18px 0", paddingBottom: "14px", fontSize: "15px" }}>{f.a}</p>
           </details>
         ))}
       </div>
@@ -109,6 +109,7 @@ export function ToolCta({ heading, body }: { heading: string; body: string }) {
       <p style={{ fontSize: "16px", lineHeight: 1.7, marginBottom: "22px", color: THEME.textDim }}>{body}</p>
       <Link
         href="/sign-up"
+        className="cta-full"
         style={{ display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "16px", padding: "12px 30px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}
       >
         Get Started Free

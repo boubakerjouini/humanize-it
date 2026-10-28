@@ -148,6 +148,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
           <span style={{ fontSize: "13px", color: THEME.textMuted }}>{words} words</span>
           <button
             onClick={runInstant}
+            className="tool-cta"
             disabled={!canAnalyze}
             style={{
               background: canAnalyze ? THEME.brand : THEME.border,

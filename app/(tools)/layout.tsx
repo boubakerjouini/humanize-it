@@ -13,6 +13,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   return (
     <div style={{ minHeight: "100vh", background: THEME.bg, color: THEME.text }}>
       <nav
+        className="mkt-nav"
         style={{
           position: "sticky", top: 0, zIndex: 50, height: "56px", display: "flex", alignItems: "center",
           borderBottom: `1px solid ${THEME.border}`, backdropFilter: "blur(16px) saturate(180%)",
