@@ -18,6 +18,7 @@ import { db } from "@/lib/db";
 import { PLANS } from "@/lib/plans";
 import { trackCheckoutPaused, trackCheckoutStarted } from "@/lib/crm/hooks";
 import { runAfter } from "@/lib/growth/safe";
+import { trackServer } from "@/lib/posthog";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 const CHECKOUT_PAUSED_MESSAGE =
@@ -111,6 +112,7 @@ export async function POST(req: Request) {
     // Only an explicit "no" pauses: an unreadable capability keeps today's checkout.
     if ((await checkoutPaymentsEnabled()) === false) {
       runAfter("checkout-paused", () => trackCheckoutPaused(user.id, planId, isAnnual));
+      trackServer(clerkId, "checkout_paused", { plan: planId, annual: isAnnual });
       return NextResponse.json({ error: { code: "CHECKOUT_PAUSED", message: CHECKOUT_PAUSED_MESSAGE } }, { status: 409 });
     }
 
@@ -127,6 +129,7 @@ export async function POST(req: Request) {
 
     // Feeds the checkout_abandoned sequence; it exits once a subscription starts.
     runAfter("checkout-started", () => trackCheckoutStarted(user.id, planId, isAnnual));
+    trackServer(clerkId, "checkout_started", { plan: planId, annual: isAnnual });
 
     const checkout = await polar.checkouts.create({
       products: [productId],
