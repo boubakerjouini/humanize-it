@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import posthog from "posthog-js";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
 import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, glow } from "@/lib/theme";
+import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 
 export function DetectorWidget() {
+  const pathname = usePathname();
   const [text, setText] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,6 +23,9 @@ export function DetectorWidget() {
       const r = analyzeText(text);
       setResult(r);
       setLoading(false);
+      // Counted like the detector pages' instant check: metadata only, never the text.
+      if (posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand, tool_page: pathname });
+      sendInstantCheckRun({ page: pathname, wordCount: r.wordCount, score: r.score, band: r.confidenceBand });
     }, 50);
   }
 
@@ -75,7 +82,7 @@ export function DetectorWidget() {
           boxShadow: glow(THEME.brand, 0.3),
         }}
       >
-        {loading ? "Analyzing..." : "Analyze →"}
+        {loading ? "Analyzing..." : "Analyze"}
       </button>
 
       {result && (
@@ -193,7 +200,7 @@ export function DetectorWidget() {
       >
         Get full analysis + humanization at{" "}
         <a href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>
-          humanizeit.app &rarr;
+          humanizeit.app
         </a>
       </div>
     </div>
