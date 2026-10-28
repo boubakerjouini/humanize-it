@@ -27,6 +27,9 @@ import { recordEvent, recordUserActivity } from "@/lib/crm/events";
 import { recomputeContact } from "@/lib/crm/recompute";
 import { isoWeek, taskDedupeKey } from "@/lib/crm/task-rules";
 import { PLANS, type PlanId } from "@/lib/plans";
+import { trackServer } from "@/lib/posthog";
+import { touchEventProps } from "@/lib/growth/attribution";
+import { firstTouchOf } from "@/lib/growth/attribution-server";
 
 export type IdentifyVia = "ensure_user" | "clerk_webhook" | "backfill";
 export type DocumentEventKind = "analyzed" | "humanized" | "uploaded";
@@ -79,13 +82,19 @@ export async function onUserIdentified(
   try {
     const { contactId } = await syncContactForUser(user, { attribution: opts.attribution });
     if (opts.isNew) {
-      await recordEvent({
+      const signedUp = await recordEvent({
         contactId,
         type: "signed_up",
         dedupeKey: `signed_up:${user.id}`,
         occurredAt: user.createdAt,
         props: { via: opts.via },
       });
+      // Once per user (the dedupe key): the funnel's signup step in PostHog, under the
+      // Clerk id the app's other server events use. Never the email or name.
+      if (signedUp) {
+        const row = await db.user.findUnique({ where: { id: user.id }, select: { clerkId: true } });
+        if (row) trackServer(row.clerkId, "user_signed_up", { via: opts.via, ...touchEventProps(firstTouchOf(opts.attribution)) });
+      }
       const ref = opts.attribution?.last?.ref ?? opts.attribution?.first?.ref;
       if (ref) await step("referral-attach", () => attachReferralOnSignup(contactId, ref));
       await step("trigger-signup", () => onSignup(contactId));
