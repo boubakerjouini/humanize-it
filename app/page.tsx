@@ -35,6 +35,8 @@ import {
 } from "@/lib/plans";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, humanScore, humanScoreColor, humanScoreLabel, glow } from "@/lib/theme";
+import posthog from "posthog-js";
+import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then(m => m.ExitIntent), { ssr: false });
 
@@ -231,7 +233,11 @@ export default function LandingPage() {
       setShowResult(true);
       setAnalyzing(false);
     }, 300);
-  }, [canAnalyze]);
+    // The hero demo is a detector too: count it like the detector pages (metadata only, never the text).
+    const r = analyzeText(text);
+    if (posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand, tool_page: "/" });
+    sendInstantCheckRun({ page: "/", wordCount: r.wordCount, score: r.score, band: r.confidenceBand });
+  }, [canAnalyze, text]);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
