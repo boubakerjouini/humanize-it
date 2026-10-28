@@ -64,7 +64,7 @@ export default async function FoundingPage() {
   return (
     <div style={{ background: THEME.bg, minHeight: "100vh", color: THEME.text, fontFamily: THEME.fontSans }}>
       {/* Navbar */}
-      <nav style={{ height: "56px", display: "flex", alignItems: "center", borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
+      <nav className="mkt-nav" style={{ height: "56px", display: "flex", alignItems: "center", borderBottom: `1px solid ${THEME.border}`, background: THEME.surface1 }}>
         <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 24px", width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "7px", textDecoration: "none" }}>
             <span style={{ fontSize: "19px", fontWeight: 800, color: THEME.brand, letterSpacing: "-0.5px", lineHeight: 1, fontFamily: THEME.fontHeading }}>H.</span>
@@ -153,10 +153,10 @@ export default async function FoundingPage() {
       <footer style={{ borderTop: `1px solid ${THEME.border}`, padding: "24px", textAlign: "center" }}>
         <p style={{ fontSize: "12px", color: THEME.textDim }}>
           &copy; 2026 HumanizeIt &middot;{" "}
-          <Link href="/" style={{ color: THEME.textDim, textDecoration: "none" }}>Home</Link> &middot;{" "}
-          <Link href="/refunds" style={{ color: THEME.textDim, textDecoration: "none" }}>Refunds</Link> &middot;{" "}
-          <Link href="/privacy" style={{ color: THEME.textDim, textDecoration: "none" }}>Privacy</Link> &middot;{" "}
-          <Link href="/terms" style={{ color: THEME.textDim, textDecoration: "none" }}>Terms</Link>
+          <Link href="/" className="tap-pad" style={{ color: THEME.textDim, textDecoration: "none" }}>Home</Link> &middot;{" "}
+          <Link href="/refunds" className="tap-pad" style={{ color: THEME.textDim, textDecoration: "none" }}>Refunds</Link> &middot;{" "}
+          <Link href="/privacy" className="tap-pad" style={{ color: THEME.textDim, textDecoration: "none" }}>Privacy</Link> &middot;{" "}
+          <Link href="/terms" className="tap-pad" style={{ color: THEME.textDim, textDecoration: "none" }}>Terms</Link>
         </p>
       </footer>
     </div>

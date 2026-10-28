@@ -92,6 +92,7 @@ export function HumanizerTool() {
                 }
               }}
               aria-label="Tone"
+              className="tool-select"
               style={{
                 fontSize: "13px", color: THEME.textDim, background: THEME.surface1,
                 border: `1px solid ${THEME.border}`, borderRadius: THEME.radius, padding: "6px 10px",
@@ -107,6 +108,7 @@ export function HumanizerTool() {
           </div>
           <button
             onClick={run}
+            className="tool-cta tool-cta-full"
             disabled={!canRun}
             style={{
               background: canRun ? THEME.brand : THEME.border, color: "#fff", fontSize: "14px", fontWeight: 600,

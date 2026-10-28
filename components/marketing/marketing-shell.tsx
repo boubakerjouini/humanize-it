@@ -32,7 +32,7 @@ const SITE_LINKS = [
 
 export function MarketingFooterLinks() {
   return (
-    <nav aria-label="Free tools and guides" style={{ display: "flex", gap: "18px", justifyContent: "center", flexWrap: "wrap" }}>
+    <nav aria-label="Free tools and guides" className="mkt-footer-links" style={{ display: "flex", gap: "18px", justifyContent: "center", flexWrap: "wrap" }}>
       {SITE_LINKS.map((n) => (
         <Link key={n.href} href={n.href} style={{ color: THEME.textDim, textDecoration: "none" }}>{n.label}</Link>
       ))}
@@ -44,6 +44,7 @@ export function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", background: THEME.bg, color: THEME.text }}>
       <nav
+        className="mkt-nav"
         style={{
           position: "sticky", top: 0, zIndex: 50, height: "56px", display: "flex", alignItems: "center",
           borderBottom: `1px solid ${THEME.border}`, backdropFilter: "blur(16px) saturate(180%)",

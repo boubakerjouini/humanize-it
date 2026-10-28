@@ -320,6 +320,31 @@
   .mkt-nav-link { display: none !important; }
 }
 
+/* ── Marketing pages on phones: thumb-sized targets, full-width CTAs ───────
+   Most visitors land on these pages from search on a phone. The inline
+   styles are sized for a mouse, so these rules only grow the hit areas
+   (padding paired with a negative margin where the layout must not move).
+   Hit areas grow on any touch screen, tablets included; full-width buttons
+   only on phone widths. */
+@media (max-width: 640px), (pointer: coarse) {
+  .mkt-nav a { min-height: 40px; display: inline-flex; align-items: center; }
+  .mkt-footer-links { row-gap: 0 !important; }
+  .mkt-footer-links a { padding: 12px 0; }
+  .tap-pad,
+  nav[aria-label="Breadcrumb"] a { display: inline-block; padding-block: 12px; margin-block: -12px; }
+  .tool-cta { min-height: 44px; }
+  .tool-select { min-height: 40px; }
+}
+@media (max-width: 640px) {
+  /* Email capture: the submit button drops under the field at full width */
+  .lead-form-row > input,
+  .lead-form-row > button { min-height: 44px; }
+  .lead-form-row > button { flex: 1 1 100% !important; }
+  .lead-tips-box { width: 18px; height: 18px; }
+  .cta-full { display: block !important; width: 100%; text-align: center; }
+  .tool-cta-full { flex: 1 1 100%; }
+}
+
 /* ── Admin shell: the sidebar turns into a top bar on narrow screens ─────── */
 @media (max-width: 768px) {
   .admin-shell { flex-direction: column !important; }

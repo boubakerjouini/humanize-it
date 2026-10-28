@@ -47,7 +47,7 @@ export function LeadMagnetInline({
             {heading ?? magnet.title}
           </h2>
           <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.6, margin: "0 0 8px" }}>{magnet.promise}</p>
-          <Link href={magnetPath(slug)} style={{ fontSize: "13px", color: THEME.brandHi }}>
+          <Link href={magnetPath(slug)} className="tap-pad" style={{ fontSize: "13px", color: THEME.brandHi }}>
             See what&apos;s inside
           </Link>
         </div>

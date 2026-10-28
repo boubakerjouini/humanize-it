@@ -316,8 +316,27 @@ export default function LandingPage() {
           .footer-grid { grid-template-columns: 1fr 1fr !important; }
           .footer-bottom { flex-direction: column !important; text-align: center !important; gap: 8px !important; }
           .extension-card-inner { flex-direction: column !important; text-align: center !important; }
-          .pricing-toggle-row { flex-direction: column !important; align-items: center !important; gap: 16px !important; }
+          .pricing-toggle-row { flex-wrap: wrap !important; row-gap: 10px !important; }
           .before-after-row { flex-direction: column !important; }
+          /* Phones: 40px+ hit areas and full-width calls to action */
+          .nav-cta, .mobile-menu-btn { min-height: 40px; }
+          .mobile-menu-btn { min-width: 40px; justify-content: center; }
+          .mobile-nav-links { gap: 0 !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+          .mobile-nav-links a { padding: 12px 0; font-size: 15px !important; }
+          .mobile-nav-links a + a { border-top: 1px solid ${THEME.border}; }
+          .demo-cta { min-height: 44px; }
+          .ext-cta-row { flex-direction: column !important; align-items: stretch !important; }
+          .ext-cta-row a, .two-cta-row > * { justify-content: center; }
+          .two-cta-row { align-items: stretch !important; }
+          .footer-links { gap: 0 !important; margin-top: -12px; }
+          .footer-links a { padding: 12px 0; }
+          .billing-switch::before { content: ""; position: absolute; inset: -10px -6px; }
+        }
+        @media (max-width: 480px) {
+          .hero-cta-row > * { flex: 1 1 100%; justify-content: center; }
+          /* Lets the four comparison columns fit down to 360px wide */
+          table.comparison-table td, table.comparison-table th { padding: 10px 6px !important; }
+          table.comparison-table th { font-size: 12px !important; }
         }
         @media (min-width: 769px) {
           .mobile-nav-links { display: none !important; }
@@ -370,7 +389,7 @@ export default function LandingPage() {
           maxWidth: "1140px", margin: "0 auto", padding: "0 24px",
           width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
+          <Link href="/" className="nav-cta" style={{ display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
             <span style={{
               fontSize: "18px", fontWeight: 700, color: THEME.text,
               fontFamily: THEME.fontHeading, letterSpacing: "-0.02em",
@@ -403,7 +422,7 @@ export default function LandingPage() {
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button style={{
+                <button className="nav-cta" style={{
                   background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
                   padding: "6px 16px", borderRadius: "8px",
                   border: "none", cursor: "pointer",
@@ -414,9 +433,10 @@ export default function LandingPage() {
               </SignUpButton>
             </SignedOut>
             <SignedIn>
-              <Link href="/dashboard/editor" style={{
+              <Link href="/dashboard/editor" className="nav-cta" style={{
                 background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
                 padding: "6px 16px", borderRadius: "8px", textDecoration: "none",
+                display: "inline-flex", alignItems: "center",
               }}>
                 Dashboard
               </Link>
@@ -514,7 +534,7 @@ export default function LandingPage() {
             </p>
 
             {/* ONE dominant primary CTA + a quieter secondary */}
-            <div className="fade-in-delay2" style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", marginBottom: "24px" }}>
+            <div className="fade-in-delay2 hero-cta-row" style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", marginBottom: "24px" }}>
               <SignedOut>
                 <SignUpButton mode="modal">
                   <button style={{
@@ -567,7 +587,7 @@ export default function LandingPage() {
                 </span>
                 No credit card required
               </span>
-              <Link href="/ai-detector" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/ai-detector" className="tap-pad" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
                 Check any text with the free AI detector
               </Link>
             </div>
@@ -777,7 +797,7 @@ export default function LandingPage() {
               }}>
                 A Chrome extension is on the way
                 <span style={{
-                  fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em",
+                  fontSize: "12px", fontWeight: 700, letterSpacing: "0.04em",
                   color: "#ffffff", background: THEME.accent,
                   padding: "3px 10px", borderRadius: "999px",
                   fontFamily: THEME.fontSans, textTransform: "uppercase",
@@ -786,7 +806,7 @@ export default function LandingPage() {
               <p style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.7, marginBottom: "24px" }}>
                 We&apos;re building an extension to check and polish text right inside Gmail, Google Docs, LinkedIn, and Notion. It isn&apos;t released yet &mdash; until it is, the free web tools do the same job in any browser, with no install and no signup.
               </p>
-              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
+              <div className="ext-cta-row" style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
                 <Link href="/extension" style={{
                   display: "inline-flex", alignItems: "center",
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
@@ -831,9 +851,10 @@ export default function LandingPage() {
           <div style={sectionLabelWrap}><span className="kicker">Comparison</span></div>
           <h2 style={{ ...h2Style, marginBottom: "44px" }}>How HumanizeIt compares</h2>
 
+          {/* Scrolls sideways instead of clipping if the columns outgrow the card (under 360px) */}
           <div className="panel" style={{
             borderRadius: THEME.radiusLg,
-            overflow: "hidden",
+            overflowX: "auto",
           }}>
             <table className="comparison-table" style={{
               width: "100%", borderCollapse: "collapse",
@@ -844,7 +865,7 @@ export default function LandingPage() {
                   <th style={{ padding: "14px 16px", textAlign: "left", color: THEME.textMuted, fontWeight: 600, fontSize: "12px" }}></th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.brandHi, fontWeight: 700, fontSize: "14px", fontFamily: THEME.fontHeading, letterSpacing: "-0.01em" }}>HumanizeIt</th>
                   <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>QuillBot</th>
-                  <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>Undetectable.ai</th>
+                  <th style={{ padding: "14px 16px", textAlign: "center", color: THEME.textDim, fontWeight: 600, fontSize: "13px" }}>Undetectable<wbr />.ai</th>
                 </tr>
               </thead>
               <tbody>
@@ -860,7 +881,7 @@ export default function LandingPage() {
             </table>
           </div>
           <p style={{ textAlign: "center", margin: "18px 0 0", fontSize: "14px" }}>
-            <Link href="/compare" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
+            <Link href="/compare" className="tap-pad" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
               See detailed, side-by-side comparisons
             </Link>
           </p>
@@ -887,7 +908,7 @@ export default function LandingPage() {
             gap: "12px", marginTop: "28px", marginBottom: "44px",
           }}>
             <span style={{ fontSize: "14px", color: !billingAnnual ? THEME.text : THEME.textMuted, fontWeight: 600 }}>Monthly</span>
-            <button onClick={() => setBillingAnnual(!billingAnnual)} aria-label="Toggle annual billing" aria-pressed={billingAnnual} style={{
+            <button className="billing-switch" onClick={() => setBillingAnnual(!billingAnnual)} aria-label="Toggle annual billing" aria-pressed={billingAnnual} style={{
               width: "44px", height: "24px", borderRadius: "12px",
               background: billingAnnual ? THEME.brand : THEME.surface3,
               border: `1px solid ${THEME.border}`, cursor: "pointer", position: "relative",
@@ -907,7 +928,7 @@ export default function LandingPage() {
             </span>
             {billingAnnual && (
               <span style={{
-                fontSize: "11px", fontWeight: 700, color: "#ffffff",
+                fontSize: "12px", fontWeight: 700, color: "#ffffff",
                 background: THEME.accent,
                 padding: "3px 10px", borderRadius: "999px", letterSpacing: "0.02em",
               }}>
@@ -934,7 +955,7 @@ export default function LandingPage() {
                   <div style={{
                     position: "absolute", top: "-12px", left: "50%", transform: "translateX(-50%)",
                     background: THEME.accent, color: "#ffffff",
-                    fontSize: "11px", fontWeight: 700,
+                    fontSize: "12px", fontWeight: 700,
                     padding: "4px 14px", borderRadius: "999px",
                     whiteSpace: "nowrap", letterSpacing: "0.04em", textTransform: "uppercase",
                     fontFamily: THEME.fontSans,
@@ -1028,7 +1049,7 @@ export default function LandingPage() {
               <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: two years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
               For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
             </p>
-            <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
+            <Link href="/lifetime" className="tap-pad" style={{ display: "inline-flex", alignItems: "center", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
               See Founding {FOUNDING.seats}
             </Link>
           </div>
@@ -1262,7 +1283,7 @@ export default function LandingPage() {
               <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px" }}>
                 Product
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   { label: "Free AI Humanizer", href: "/free-ai-humanizer" },
                   { label: "AI Detector", href: "/ai-detector" },
@@ -1286,7 +1307,7 @@ export default function LandingPage() {
               <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px" }}>
                 Resources
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
@@ -1313,7 +1334,7 @@ export default function LandingPage() {
               <div style={{ fontSize: "12px", fontWeight: 700, color: THEME.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "16px" }}>
                 Legal
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="footer-links" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   { label: "Privacy Policy", href: "/privacy" },
                   { label: "Terms of Service", href: "/terms" },
@@ -1427,7 +1448,7 @@ function DemoPanel({
         <span style={{
           marginLeft: "auto",
           display: "inline-flex", alignItems: "center", gap: "6px",
-          fontSize: "11px", fontWeight: 600, letterSpacing: "0.02em",
+          fontSize: "12px", fontWeight: 600, letterSpacing: "0.02em",
           color: THEME.accentHi, background: THEME.accentDim,
           padding: "3px 10px", borderRadius: "999px",
           border: `1px solid ${THEME.accent}26`,
@@ -1468,6 +1489,7 @@ function DemoPanel({
           <span className="tnum">{wordCount}</span> word{wordCount !== 1 ? "s" : ""}
         </span>
         <button
+          className="demo-cta"
           onClick={onAnalyze}
           disabled={!canAnalyze}
           style={{

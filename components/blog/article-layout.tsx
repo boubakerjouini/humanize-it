@@ -19,6 +19,7 @@ export function ArticleLayout({
     >
       {/* Nav */}
       <nav
+        className="mkt-nav"
         style={{
           position: "sticky",
           top: 0,

@@ -102,17 +102,8 @@ export default function ComparePage() {
   return (
     <div style={{ minHeight: "100vh", background: THEME.bg, color: THEME.text, fontFamily: THEME.fontSans }}>
 
-      {/* Nav */}
-      <nav style={{ height: "56px", borderBottom: `1px solid ${THEME.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", background: THEME.surface1 }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-          <span style={{ fontSize: "18px", fontWeight: 800, color: THEME.brand, fontFamily: THEME.fontHeading }}>H.</span>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: THEME.text, fontFamily: THEME.fontHeading }}>HumanizeIt</span>
-        </Link>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <Link href="/" style={{ fontSize: "13px", color: THEME.textDim, textDecoration: "none" }}>Home</Link>
-          <Link href="/sign-up" style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff", textDecoration: "none", background: THEME.brand, padding: "6px 14px", borderRadius: THEME.radius }}>Try Free</Link>
-        </div>
-      </nav>
+      {/* No nav here: app/compare/layout.tsx already renders the sticky one,
+          and a second bar stacked two headers on every screen size. */}
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
 import { analyzeText } from "@/lib/algorithms/analyzeText";
@@ -147,7 +148,7 @@ export function DetectorWidget() {
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "6px",
-                      fontSize: "11px",
+                      fontSize: "12px",
                       fontWeight: 600,
                       padding: "3px 10px",
                       borderRadius: "999px",
@@ -199,9 +200,9 @@ export function DetectorWidget() {
         }}
       >
         Get full analysis + humanization at{" "}
-        <a href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>
           humanizeit.app
-        </a>
+        </Link>
       </div>
     </div>
   );
