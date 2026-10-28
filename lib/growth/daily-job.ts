@@ -8,13 +8,9 @@
 //   5. due sequence steps          6. campaign draining
 //   7. retry failed or held one-off sends
 //   8. reset rows stuck in "sending"
-<<<<<<< HEAD
-//   9. the founder's digest (off unless FOUNDER_DIGEST_ENABLED; last, so it
-//      reports this run and is the first thing the deadline drops)
-||||||| 4538a74
-=======
 //   9. ops checks (lib/ops/checks.ts): a high-priority task per failure
->>>>>>> origin/dev
+//  10. the founder's digest (off unless FOUNDER_DIGEST_ENABLED; last, so it
+//      reports this run and is the first thing the deadline drops)
 // It runs under a 10-minute JobLock lease, so the cron and an admin "Run now"
 // never overlap, and records a JobRun with per-step stats. New work stops at
 // 240s to stay inside the 300s function limit. Steps fail independently: one
@@ -140,12 +136,8 @@ export async function runDailyJob(opts: { trigger: JobTrigger; actorEmail?: stri
     else await step("campaigns", () => drainCampaigns({ deadlineMs }));
     await step("retries", () => retryFailedMessages(now, deadlineMs));
     await step("stuckReset", () => resetStuckSending(now));
-<<<<<<< HEAD
-    await step("digest", () => sendFounderDigest(now, digestJobStats(stats, errors)));
-||||||| 4538a74
-=======
     await step("ops", () => runOpsChecks(now, { name: DAILY_JOB, runId }));
->>>>>>> origin/dev
+    await step("digest", () => sendFounderDigest(now, digestJobStats(stats, errors)));
 
     stats.durationMs = Date.now() - startedAt;
     if (errors.length) stats.errors = errors;
