@@ -33,7 +33,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
               href="/sign-up"
               style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "6px 16px", borderRadius: THEME.radius, textDecoration: "none" }}
             >
-              Try Free &rarr;
+              Try Free
             </Link>
           </div>
         </div>

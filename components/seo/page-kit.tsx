@@ -204,7 +204,7 @@ export function PageCta({
         href={href}
         style={{ display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "16px", padding: "12px 30px", borderRadius: THEME.radius, textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}
       >
-        {cta} &rarr;
+        {cta}
       </Link>
     </div>
   );

@@ -74,7 +74,7 @@ export default function FreeHubPage() {
               </div>
               <div style={{ fontSize: "18px", fontWeight: 700, color: THEME.text, marginBottom: "6px", fontFamily: THEME.fontHeading }}>{m.title}</div>
               <div style={{ fontSize: "15px", color: THEME.textDim, lineHeight: 1.6, marginBottom: "10px" }}>{m.promise}</div>
-              <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.brandHi }}>Get the {m.noun} &rarr;</span>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: THEME.brandHi }}>Get the {m.noun}</span>
             </div>
           </Link>
         ))}

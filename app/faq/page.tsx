@@ -126,15 +126,15 @@ export default function FaqHubPage() {
       </p>
       <p style={kitStyles.p}>
         <Link href="/faq/can-turnitin-detect-chatgpt" style={detectorLink}>
-          Can Turnitin detect ChatGPT? &rarr;
+          Can Turnitin detect ChatGPT?
         </Link>
         <br />
         <Link href="/faq/can-turnitin-detect-claude" style={detectorLink}>
-          Can Turnitin detect Claude? &rarr;
+          Can Turnitin detect Claude?
         </Link>
         <br />
         <Link href="/faq/can-gptzero-detect-chatgpt" style={detectorLink}>
-          Can GPTZero detect ChatGPT? &rarr;
+          Can GPTZero detect ChatGPT?
         </Link>
       </p>
       <p style={kitStyles.p}>

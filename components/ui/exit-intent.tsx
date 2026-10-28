@@ -151,7 +151,7 @@ function SignupExitIntent() {
             fontFamily: THEME.fontSans,
           }}
         >
-          Claim 500 free words →
+          Claim 500 free words
         </Link>
       </div>
     </div>

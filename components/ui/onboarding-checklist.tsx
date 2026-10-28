@@ -1,26 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, X } from "lucide-react";
 import { THEME } from "@/lib/theme";
 
 const STORAGE_KEY = "humanizeit_onboarded";
+const subscribeNoop = () => () => {};
 
 export function OnboardingChecklist() {
-  const [visible, setVisible] = useState(false);
+  // Hidden during SSR/hydration (no localStorage there), then read once on the
+  // client (no setState-in-effect re-render).
+  const onboarded = useSyncExternalStore(subscribeNoop, () => localStorage.getItem(STORAGE_KEY) !== null, () => true);
+  const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
-    }
-  }, []);
-
-  if (!visible) return null;
+  if (onboarded || dismissed) return null;
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, "true");
-    setVisible(false);
+    setDismissed(true);
   };
 
   const steps = [
@@ -116,7 +114,7 @@ export function OnboardingChecklist() {
                   textDecoration: "none", whiteSpace: "nowrap",
                   fontFamily: THEME.fontSans,
                 }}>
-                  {step.cta} →
+                  {step.cta}
                 </Link>
               )}
             </div>

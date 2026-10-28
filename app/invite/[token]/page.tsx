@@ -56,7 +56,7 @@ export default function InviteAcceptPage() {
             <XCircle size={40} color={THEME.ai} style={{ marginBottom: 14 }} aria-hidden="true" />
             <h1 style={{ fontSize: 18, fontWeight: 700, color: THEME.text, marginBottom: 8, fontFamily: THEME.fontHeading }}>Invitation problem</h1>
             <p style={{ fontSize: 14, color: THEME.textDim, marginBottom: 20 }}>{error}</p>
-            <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 600, color: THEME.brandHi, textDecoration: "none" }}>Go to dashboard →</Link>
+            <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 600, color: THEME.brandHi, textDecoration: "none" }}>Go to dashboard</Link>
           </>
         ) : info ? (
           <>

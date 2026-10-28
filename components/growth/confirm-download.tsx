@@ -81,7 +81,7 @@ export function ConfirmDownload({ token, canConfirm, downloadUrl, confirmLabel, 
       {downloadUrl ? (
         <div>
           <a href={downloadUrl} target="_blank" rel="noopener" style={primary}>
-            Download the PDF &rarr;
+            Download the PDF
           </a>
         </div>
       ) : null}

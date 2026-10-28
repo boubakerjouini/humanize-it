@@ -136,7 +136,7 @@ export function AuthModal({ isOpen, onClose, redirectAfterSignup = "/dashboard/e
               fontFamily: THEME.fontSans, boxShadow: glow(THEME.brand, 0.35),
             }}
           >
-            Sign up with email →
+            Sign up with email
           </Link>
 
         </div>

@@ -219,7 +219,7 @@ export default function StudentsUseCasePage() {
           className="inline-block font-bold rounded-full px-8 py-3 transition"
           style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
-          Check My Writing Free &rarr;
+          Check My Writing Free
         </Link>
       </div>
     </div>

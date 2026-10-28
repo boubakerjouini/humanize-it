@@ -139,7 +139,7 @@ export default function BlogPage() {
                     })}
                   </span>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: THEME.brandHi }}>
-                    Read more &rarr;
+                    Read more
                   </span>
                 </div>
               </div>

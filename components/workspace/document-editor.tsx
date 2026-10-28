@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  Wand2, Copy, Download, Upload, Check, RotateCcw, Sparkles, ArrowRight,
+  Wand2, Copy, Download, Upload, Check, RotateCcw, Sparkles,
   Pencil, MoreHorizontal, Globe, ScanSearch, History as HistoryIcon, FileText,
 } from "lucide-react";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
@@ -221,7 +221,7 @@ export function DocumentEditor() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: THEME.radius, padding: "12px 16px", flexWrap: "wrap" }}>
             <Sparkles size={18} color={THEME.brandHi} aria-hidden="true" />
             <span style={{ fontSize: 14, color: THEME.text, flex: 1, minWidth: 200 }}>You&apos;ve hit your plan&apos;s limit. Upgrade to Pro for 50,000 words/month and unlimited rewrites.</span>
-            <button onClick={() => setUpgradeOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>See plans <ArrowRight size={14} aria-hidden="true" /></button>
+            <button onClick={() => setUpgradeOpen(true)} style={{ display: "inline-flex", alignItems: "center", background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>See plans</button>
           </div>
         </div>
       )}

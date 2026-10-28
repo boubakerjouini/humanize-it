@@ -56,7 +56,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
                 boxShadow: glow(THEME.brand, 0.32),
               }}
             >
-              Try Free &rarr;
+              Try Free
             </Link>
           </div>
         </div>
