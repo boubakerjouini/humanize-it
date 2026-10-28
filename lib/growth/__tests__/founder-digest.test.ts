@@ -30,6 +30,7 @@ jest.mock("@/lib/email/circuit-breaker", () => ({ runCircuitBreaker: jest.fn(asy
 jest.mock("@/lib/email/engine", () => ({ processDueEnrollments: jest.fn(async () => ({ sent: 2, failed: 1 })) }));
 jest.mock("@/lib/email/campaigns", () => ({ drainCampaigns: jest.fn(async () => ({})) }));
 jest.mock("@/lib/email/budget", () => ({ remainingBudget: jest.fn(async () => 50) }));
+jest.mock("@/lib/ops/checks", () => ({ runOpsChecks: jest.fn(async () => ({ failed: 0 })) }));
 
 import { getLast24hMetrics } from "@/lib/admin-metrics";
 import { sendEmail } from "@/lib/email/send";
