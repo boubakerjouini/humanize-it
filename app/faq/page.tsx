@@ -9,7 +9,7 @@ const URL = "https://humanizeit.app/faq";
 export const metadata: Metadata = {
   title: "AI Detection FAQ: Humanizing, Detectors, and Ethics",
   description:
-    "An AI detection FAQ covering how detectors work, whether AI text can be humanized, what counts as ethical use, free tools, and which checkers flag ChatGPT and Claude.",
+    "AI detection FAQ: how detectors work, whether AI text can be humanized, what counts as ethical use, free tools, and which checkers flag ChatGPT and Claude.",
   keywords: [
     "AI detection FAQ",
     "AI humanizer FAQ",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Detection FAQ: Humanizing, Detectors, and Ethics",
     description:
-      "An AI detection FAQ covering how detectors work, whether AI text can be humanized, what counts as ethical use, free tools, and which checkers flag ChatGPT and Claude.",
+      "AI detection FAQ: how detectors work, whether AI text can be humanized, what counts as ethical use, free tools, and which checkers flag ChatGPT and Claude.",
     url: URL,
     siteName: "HumanizeIt",
     type: "website",

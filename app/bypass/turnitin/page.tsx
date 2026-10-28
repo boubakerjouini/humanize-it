@@ -11,7 +11,7 @@ const ABSOLUTE_URL = "https://humanizeit.app" + PAGE_PATH;
 export const metadata: Metadata = {
   title: "How to Bypass Turnitin AI Detection (2026 Guide)",
   description:
-    "Understand how Turnitin's AI detector scores text sentence by sentence, why honest students get flagged, and the legitimate techniques that make writing read human.",
+    "How Turnitin's AI detector scores text sentence by sentence, why honest students get flagged, and legitimate ways to make your writing read human.",
   keywords: [
     "bypass Turnitin AI detection",
     "Turnitin AI detector",
