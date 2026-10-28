@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Building2, Users, Mail, Plus, Loader2, Copy, CheckCircle2, Trash2, Crown, ShieldCheck, X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { notify, copyText } from "@/components/workspace/notify";
+import { PageSkeleton } from "@/components/workspace/skeleton";
 import { THEME, glow } from "@/lib/theme";
 import { ORG_SEAT } from "@/lib/plans";
 
@@ -51,14 +52,14 @@ export default function OrganizationPage() {
       const res = await fetch("/api/organizations");
       const d = await res.json() as OrgData;
       setData(d);
-    } catch { toast.error("Failed to load organization."); }
+    } catch { notify.error("Couldn't load your organization", "Refresh the page to try again."); }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { void load(); }, [load]);
 
   const createOrg = async () => {
-    if (name.trim().length < 2) { toast.error("Enter an organization name."); return; }
+    if (name.trim().length < 2) { notify.error("Add a name first", "Organization names need at least 2 characters."); return; }
     setBusy(true);
     try {
       const res = await fetch("/api/organizations", {
@@ -68,12 +69,12 @@ export default function OrganizationPage() {
       const d = await res.json() as ApiError;
       if (!res.ok) {
         if (d.error?.code === SEATS_ON_REQUEST) setData(prev => (prev ? { ...prev, canCreate: false } : prev));
-        toast.error(d.error?.message ?? "Could not create organization.");
+        notify.error("Couldn't create the organization", d.error?.message);
         return;
       }
-      toast.success("Organization created!");
+      notify.success("Organization created");
       await load();
-    } catch { toast.error("Network error."); }
+    } catch { notify.offline(); }
     finally { setBusy(false); }
   };
 
@@ -85,29 +86,29 @@ export default function OrganizationPage() {
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       });
       const d = await res.json() as { error?: { message: string } };
-      if (!res.ok) { toast.error(d.error?.message ?? "Could not send invite."); return; }
-      toast.success("Invitation created — share the link.");
+      if (!res.ok) { notify.error("Couldn't create the invite", d.error?.message); return; }
+      notify.success("Invite created", "Share the link with your teammate.");
       setInviteEmail("");
       await load();
-    } catch { toast.error("Network error."); }
+    } catch { notify.offline(); }
     finally { setBusy(false); }
   };
 
   const revoke = async (id: string) => {
     try {
       const res = await fetch(`/api/organizations/invitations?id=${id}`, { method: "DELETE" });
-      if (!res.ok) { toast.error("Could not revoke invite."); return; }
+      if (!res.ok) { notify.error("Couldn't revoke the invite", "Try again in a moment."); return; }
       await load();
-    } catch { toast.error("Network error."); }
+    } catch { notify.offline(); }
   };
 
   const removeMember = async (membershipId: string) => {
     try {
       const res = await fetch(`/api/organizations/members?id=${membershipId}`, { method: "DELETE" });
-      if (!res.ok) { const d = await res.json() as { error?: { message: string } }; toast.error(d.error?.message ?? "Could not remove member."); return; }
-      toast.success("Member removed.");
+      if (!res.ok) { const d = await res.json() as { error?: { message: string } }; notify.error("Couldn't remove the member", d.error?.message); return; }
+      notify.success("Member removed");
       await load();
-    } catch { toast.error("Network error."); }
+    } catch { notify.offline(); }
   };
 
   const updateSeats = async (next: number) => {
@@ -123,23 +124,23 @@ export default function OrganizationPage() {
       const d = await res.json() as ApiError;
       if (!res.ok) {
         if (d.error?.code === SEATS_ON_REQUEST) setData(prev => (prev ? { ...prev, canAddSeats: false } : prev));
-        toast.error(d.error?.message ?? "Could not update seats.");
+        notify.error("Couldn't update seats", d.error?.message);
         return;
       }
       await load();
-    } catch { toast.error("Network error."); }
+    } catch { notify.offline(); }
     finally { setBusy(false); }
   };
 
   const copyLink = async (token: string) => {
     const link = `${window.location.origin}/invite/${token}`;
-    await navigator.clipboard.writeText(link);
+    if (!(await copyText(link))) return;
     setCopiedToken(token);
     setTimeout(() => setCopiedToken(null), 1600);
   };
 
   if (loading) {
-    return <div style={{ padding: 64, textAlign: "center", color: THEME.textDim }}><Loader2 size={22} style={{ animation: "spin 0.8s linear infinite" }} aria-hidden="true" /></div>;
+    return <PageSkeleton />;
   }
 
   // ── Create state ──
