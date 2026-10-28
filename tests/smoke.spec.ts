@@ -42,8 +42,16 @@ test("the AI detector's instant check scores pasted text", async ({ page }) => {
     "Furthermore, it is important to note that these sophisticated systems leverage vast amounts of training data " +
     "to optimize performance metrics and achieve superior outcomes across diverse application domains. " +
     "In conclusion, the implementation of AI solutions facilitates streamlined workflows and enhanced productivity.";
-  await page.getByLabel("Text to analyze for AI patterns").fill(sample);
-  await page.getByRole("button", { name: "Check for AI" }).click();
+  const check = page.getByRole("button", { name: "Check for AI" });
+  // A fill before hydration never reaches React state, and refilling the same
+  // value is no change to React: clear, then fill, until the button enables.
+  const input = page.getByLabel("Text to analyze for AI patterns");
+  await expect(async () => {
+    await input.fill("");
+    await input.fill(sample);
+    await expect(check).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 30_000 });
+  await check.click();
   await expect(page.getByText(/Instant check · AI-likelihood \d+\/100/)).toBeVisible({ timeout: 10_000 });
   expect(errors).toEqual([]);
 });

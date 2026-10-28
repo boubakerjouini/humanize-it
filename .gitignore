@@ -47,3 +47,7 @@ next-env.d.ts
 # secrets — generated redeem/discount codes must never be committed
 /scripts/generated-codes.txt
 /scripts/*codes*.txt
+
+# Playwright output
+/test-results/
+/playwright-report/
