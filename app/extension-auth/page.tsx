@@ -12,6 +12,8 @@ export default function ExtensionAuthPage() {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || status !== "idle") return;
+    // One-shot kickoff: the status guard above makes this run once per sign-in.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus("loading");
 
     fetch("/api/extension-token", { method: "POST" })

@@ -61,7 +61,8 @@ test.describe("HumanizeIt — Sign Up", () => {
     await expect(emailInput).toBeVisible({ timeout: 15_000 });
   });
 
-  test("create test account via Clerk test mode email", async ({ page }) => {
+  // Creates a real account on whatever Clerk instance the server uses: never in CI (--grep-invert @flow).
+  test("create test account via Clerk test mode email", { tag: "@flow" }, async ({ page }) => {
     await page.goto("/sign-up");
 
     // Use Clerk test mode email format: +clerk_test_XXXXX@...

@@ -1,30 +1,30 @@
+// ===========================================================
+// GET /api/health — Public liveness check for the external probe
+// (.github/workflows/webhook-probe.yml). 200 when the database answers and
+// the core env vars are set, 503 otherwise. Booleans and latency only: never
+// a DB error string or the names of missing variables, since anyone can call
+// it. The details are in the Vercel logs and the daily ops check.
+// ===========================================================
+
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const checks: Record<string, { ok: boolean; error?: string; latencyMs?: number }> = {};
+  const checks: Record<string, { ok: boolean; latencyMs?: number }> = {};
 
-  // DB connectivity check
   const dbStart = Date.now();
   try {
     await db.$queryRawUnsafe("SELECT 1");
     checks.database = { ok: true, latencyMs: Date.now() - dbStart };
   } catch (err) {
-    checks.database = {
-      ok: false,
-      latencyMs: Date.now() - dbStart,
-      error: err instanceof Error ? err.message : "Unknown DB error",
-    };
+    console.error("[health] database check failed:", err instanceof Error ? err.message : err);
+    checks.database = { ok: false, latencyMs: Date.now() - dbStart };
   }
 
-  // Env vars check
   const requiredEnvVars = ["DATABASE_URL", "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"];
-  const missingEnvVars = requiredEnvVars.filter((v) => !process.env[v]);
-  checks.env = missingEnvVars.length === 0
-    ? { ok: true }
-    : { ok: false, error: `Missing: ${missingEnvVars.join(", ")}` };
+  checks.env = { ok: requiredEnvVars.every((v) => !!process.env[v]) };
 
   const allOk = Object.values(checks).every((c) => c.ok);
 

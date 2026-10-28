@@ -18,7 +18,7 @@ import { deepScanText } from "@/lib/detect-llm";
 import { activeProvider } from "@/lib/llm";
 import { ensureUser } from "@/lib/user";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
-import { clientIp } from "@/lib/client-ip";
+import { clientIp, ipBucket } from "@/lib/client-ip";
 import { touchEventProps } from "@/lib/growth/attribution";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
@@ -32,6 +32,9 @@ const MIN_WORDS = 25; // below this the model can't judge reliably
 // Anonymous (public detector tool) — bounded per IP.
 const ANON_BURST_PER_MIN = 5;
 const ANON_PER_DAY = 15;
+// All anonymous scans, every IP together: caps the bill when many addresses
+// are rotated against the tool. Far above real volume.
+const ALL_ANON_PER_DAY = 1500;
 
 // Signed-in (dashboard editor) — bounded per user, generous for paid plans.
 const USER_BURST_PER_MIN = 10;
@@ -61,7 +64,7 @@ async function enforceLimits(req: Request): Promise<
   | { ok: false; response: NextResponse }
 > {
   const user = await currentUser();
-  const scope = user ? `user:${user.id}` : `ip:${clientIp(req)}`;
+  const scope = user ? `user:${user.id}` : `ip:${ipBucket(clientIp(req))}`;
   const burstLimit = user ? USER_BURST_PER_MIN : ANON_BURST_PER_MIN;
   const dailyLimit = user ? (USER_PER_DAY[user.plan] ?? USER_PER_DAY.FREE) : ANON_PER_DAY;
 
@@ -87,6 +90,20 @@ async function enforceLimits(req: Request): Promise<
         { status: 429, headers: { ...rateLimitHeaders(daily), "Retry-After": String(daily.retryAfterSeconds) } }
       ),
     };
+  }
+  // After the per-IP checks, so one abuser's refused calls never use up the
+  // shared budget. Signed-in users are bounded per account and skip it.
+  if (!user) {
+    const all = await checkDailyLimit("detect:day:anon:all", ALL_ANON_PER_DAY);
+    if (!all.ok) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: { code: "BUSY_TRY_LATER", message: "The free tool is busy today. Sign up free to keep going." }, signupCta: true },
+          { status: 429, headers: { "Retry-After": String(all.retryAfterSeconds) } }
+        ),
+      };
+    }
   }
   return { ok: true, daily, userId: user?.id ?? null };
 }
