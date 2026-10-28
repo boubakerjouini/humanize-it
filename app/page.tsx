@@ -1313,7 +1313,7 @@ export default function LandingPage() {
                 {[
                   { label: "Blog", href: "/blog" },
                   { label: "How it works", href: "#how-it-works" },
-                  { label: "Detector Guides", href: "/bypass" },
+                  { label: "Detector Guides", href: "/detectors" },
                   { label: "Compare", href: "/compare" },
                   { label: "Alternatives", href: "/alternatives" },
                   { label: "Use Cases", href: "/use-cases" },

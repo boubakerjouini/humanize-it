@@ -22,7 +22,7 @@ import { auth } from "@clerk/nextjs/server";
 import { POST } from "@/app/api/public/tool-run/route";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-const CHECK = { tool: "detector_instant", page: "/bypass/gptzero", wordCount: 240, score: 63.4, band: "possibly-ai" };
+const CHECK = { tool: "detector_instant", page: "/detectors/gptzero", wordCount: 240, score: 63.4, band: "possibly-ai" };
 
 function note(body: unknown) {
   return POST(new Request("http://localhost/api/public/tool-run", { method: "POST", body: JSON.stringify(body), headers: { "x-real-ip": "203.0.113.5" } }));

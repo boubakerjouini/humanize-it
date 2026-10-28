@@ -22,7 +22,25 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/blog/bypass-ai-detection{/}?",
-        destination: "/bypass",
+        destination: "/detectors",
+        statusCode: 301,
+      },
+      // The detector guides moved from /bypass to /detectors when their copy was
+      // rewritten around how each detector works and why it flags honest writing.
+      {
+        source: "/bypass{/}?",
+        destination: "/detectors",
+        statusCode: 301,
+      },
+      {
+        source: "/bypass/:slug(turnitin|gptzero|zerogpt|originality-ai|copyleaks|winston-ai){/}?",
+        destination: "/detectors/:slug",
+        statusCode: 301,
+      },
+      // Any other old /bypass/* address lands on the hub instead of a 404.
+      {
+        source: "/bypass/:path*",
+        destination: "/detectors",
         statusCode: 301,
       },
       // Addresses people type or guess from a DM, a directory form or an AI

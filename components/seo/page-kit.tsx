@@ -41,7 +41,7 @@ export const kitStyles = {
 
 export interface Crumb {
   label: string;
-  /** Path (e.g. "/bypass"). Omit on the current (last) crumb. */
+  /** Path (e.g. "/detectors"). Omit on the current (last) crumb. */
   href?: string;
 }
 
