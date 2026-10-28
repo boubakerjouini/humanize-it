@@ -11,12 +11,14 @@ import { Sparkles } from "lucide-react";
 import { THEME } from "@/lib/theme";
 import { Skeleton } from "@/components/workspace/skeleton";
 import { formatResetIn, summarizeUsage, usagePeriod, type UsageSnapshot } from "@/components/workspace/feedback";
+import { describePlan, usageRefillLine } from "@/lib/plan-status";
+import { PLANS } from "@/lib/plans";
 
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 /** Sidebar card. `usage` null = still loading (shows a skeleton, not nothing). */
-export function UsageMeter({ usage, onUpgrade }: { usage: UsageSnapshot | null; onUpgrade: () => void }) {
+export function UsageMeter({ usage, founding = false, onUpgrade }: { usage: UsageSnapshot | null; founding?: boolean; onUpgrade: () => void }) {
   if (!usage) {
     return (
       <div role="status" aria-label="Loading usage" style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -33,6 +35,9 @@ export function UsageMeter({ usage, onUpgrade }: { usage: UsageSnapshot | null; 
   const bonus = usage.bonusWords ?? 0;
 
   if (s.limitReached) {
+    // A grant or cancelled plan that ends first never refills: say what comes next instead.
+    const refill = usageRefillLine(describePlan(usage, { founding }), s.resetsAt, PLANS.FREE.wordsLimit);
+    const next = refill.planEnds ? `${refill.text}. ` : s.resetsAt ? `${fmt(usage.wordsLimit)} more ${formatResetIn(s.resetsAt)}. ` : "";
     return (
       <div style={{ background: THEME.warnDim, border: `1px solid ${THEME.warn}55`, borderRadius: 10, padding: "10px 11px", display: "flex", flexDirection: "column", gap: 8 }}>
         <div>
@@ -40,7 +45,7 @@ export function UsageMeter({ usage, onUpgrade }: { usage: UsageSnapshot | null; 
             {s.period === "day" ? "You've used today's words" : "You've used this month's words"}
           </div>
           <div style={{ fontSize: 12, color: THEME.textDim, lineHeight: 1.45, marginTop: 2 }}>
-            {s.resetsAt ? `${fmt(usage.wordsLimit)} more ${formatResetIn(s.resetsAt)}. ` : ""}Need more now? See your options.
+            {next}Need more now? See your options.
           </div>
         </div>
         <button onClick={onUpgrade} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, background: THEME.surface2, color: THEME.brandHi, border: `1px solid ${THEME.brand}44`, borderRadius: 8, padding: "7px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: THEME.fontSans }}>

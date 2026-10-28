@@ -135,15 +135,15 @@ function main() {
   console.log(header);
   for (const f of [...ai, ...human]) {
     const row = pad(f.label.toUpperCase(), 6) + " " + pad(f.name.replace(".txt", ""), 26) +
-      cols.map((c) => pad(String((f as any)[c]), 9)).join("");
+      cols.map((c) => pad(String((f as unknown as Record<string, unknown>)[c]), 9)).join("");
     console.log(row);
   }
 
   console.log("\n=== AI-mean / human-mean / separation (AI-human) ===");
   console.log(pad("FEATURE", 18) + pad("AI", 9) + pad("HUMAN", 9) + pad("SEP", 9));
   for (const c of cols) {
-    const a = mean(ai.map((f) => Number((f as any)[c])));
-    const h = mean(human.map((f) => Number((f as any)[c])));
+    const a = mean(ai.map((f) => Number((f as unknown as Record<string, unknown>)[c])));
+    const h = mean(human.map((f) => Number((f as unknown as Record<string, unknown>)[c])));
     console.log(pad(c, 18) + num(a, 9) + num(h, 9) + num(a - h, 9));
   }
 }

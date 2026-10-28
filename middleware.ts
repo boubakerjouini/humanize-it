@@ -48,6 +48,8 @@ const isPublicRoute = createRouteMatcher([
   // Growth engine — token-authenticated email endpoints + Vercel Cron (CRON_SECRET checked in handler)
   "/api/email/(.*)",
   "/api/cron/(.*)",
+  // Liveness for the external probe: booleans only (app/api/health/route.ts)
+  "/api/health",
   // Blog
   "/blog(.*)",
   // Legal pages

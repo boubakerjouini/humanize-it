@@ -12,7 +12,7 @@ import { UploadZone } from "@/components/ui/upload-zone";
 import { highlightChanges, sentenceDiff } from "@/lib/sentence-diff";
 import { AnalysisPanel } from "@/components/workspace/analysis-panel";
 import { HistoryDrawer } from "@/components/workspace/history-drawer";
-import { UpgradeModal } from "@/components/ui/upgrade-modal";
+import { UpgradeModal, type QuotaReason } from "@/components/ui/upgrade-modal";
 import { EmailConsentCard } from "@/components/growth/email-consent-card";
 import { ShareSuccessChip } from "@/components/growth/share-success-chip";
 import { THEME, glow, humanScore, humanScoreColor, humanScoreLabel } from "@/lib/theme";
@@ -21,6 +21,7 @@ import type { VoiceProfileRow } from "@/components/growth/voice-manager";
 import { InlineError } from "@/components/workspace/inline-error";
 import { notify, copyText } from "@/components/workspace/notify";
 import { humanizeError, USAGE_CHANGED_EVENT, type FriendlyError } from "@/components/workspace/feedback";
+import { takePrefill } from "@/lib/prefill";
 
 type Lang = "English" | "French" | "Spanish" | "Arabic" | "German" | "Italian";
 const TONES: ToneOption[] = [...PLAN_TONES];
@@ -59,6 +60,8 @@ export function DocumentEditor() {
   const [menu, setMenu] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [quotaHit, setQuotaHit] = useState(false);
+  // Which Free limit it was (402 error.reason), so the plan menu doesn't blame words for the rewrite cap.
+  const [quotaReason, setQuotaReason] = useState<QuotaReason>("words");
   // A failed humanize stays on screen with a Retry until the user acts on it.
   const [runError, setRunError] = useState<FriendlyError | null>(null);
   const [copied, setCopied] = useState(false);
@@ -75,6 +78,9 @@ export function DocumentEditor() {
   const taRef = useRef<HTMLTextAreaElement>(null);
   const analyzeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Text handed over from a public tool (detector, free humanizer, home, compare).
+  // Never auto-run: pressing Humanize is what turns it into a stored Document.
+  useEffect(() => { const t = takePrefill(); if (t) setText(t); }, []);
   useEffect(() => { fetch("/api/user-plan").then((r) => r.json()).then((d) => setPlan(d.plan ?? "FREE")).catch(() => {}); }, []);
   useEffect(() => {
     fetch("/api/voice-profiles").then((r) => (r.ok ? r.json() : null))
@@ -136,8 +142,11 @@ export function DocumentEditor() {
       usageChanged();
     } catch { setRunError(humanizeError(0)); } finally { setBusy(false); }
   }
-  function fail(status: number, body: { error?: { code?: string; message?: string } } | null) {
-    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") { setQuotaHit(true); setUpgradeOpen(true); usageChanged(); return; }
+  function fail(status: number, body: { error?: { code?: string; message?: string; reason?: string } } | null) {
+    if (status === 402 || body?.error?.code === "QUOTA_EXCEEDED") {
+      setQuotaReason(body?.error?.reason === "rewrites" ? "rewrites" : "words");
+      setQuotaHit(true); setUpgradeOpen(true); usageChanged(); return;
+    }
     if (body?.error?.code === "TONE_LOCKED" || body?.error?.code === "VOICE_LOCKED") { setTone("standard"); setVoiceId(VOICE_NONE); openLocked(); }
     setRunError(humanizeError(status, body));
   }
@@ -339,7 +348,7 @@ export function DocumentEditor() {
       </div>
 
       <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} onOpen={loadFromHistory} />
-      <UpgradeModal isOpen={upgradeOpen} onClose={() => { setUpgradeOpen(false); setLockedFeature(false); }} currentPlan={plan} trigger={quotaHit ? "quota" : lockedFeature ? "feature" : "upgrade"} />
+      <UpgradeModal isOpen={upgradeOpen} onClose={() => { setUpgradeOpen(false); setLockedFeature(false); }} currentPlan={plan} trigger={quotaHit ? "quota" : lockedFeature ? "feature" : "upgrade"} quotaReason={quotaReason} />
     </div>
   );
 }

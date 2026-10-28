@@ -143,6 +143,8 @@ export async function POST(req: Request) {
           error: {
             code: "QUOTA_EXCEEDED",
             message: "You have reached your daily rewrite limit. Upgrade to Pro for more.",
+            // Additive: lets the plan menu say which Free limit was hit.
+            reason: "rewrites",
           },
         },
         { status: 402, headers: rlHeaders }
@@ -165,6 +167,8 @@ export async function POST(req: Request) {
           error: {
             code: "QUOTA_EXCEEDED",
             message: `You've used your ${plan.wordsLimitPeriod}ly word allowance. Upgrade for more.`,
+            // Past the rewrite cap only bonus words could pay, so that is still the rewrite limit.
+            reason: bonusOnly ? "rewrites" : "words",
           },
         },
         { status: 402, headers: rlHeaders }

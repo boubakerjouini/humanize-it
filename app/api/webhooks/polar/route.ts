@@ -55,6 +55,9 @@
 // Subscription row, and /api/checkout sends subscribers to the portal. A
 // paused subscriber is sent to support (the portal can't resume unless its
 // pause setting is on, and a second subscription would double-bill).
+//
+// A 500 (no secret, or a handler error) is counted in DailyMetric
+// (ops.webhook_fail.polar), which the daily ops check turns into a task.
 // ===========================================================
 
 import { webhooks } from "@polar-sh/sdk/2026-10";
@@ -76,6 +79,7 @@ import { getOrCreateContactForUser } from "@/lib/crm/contacts";
 import { grantBonusWords } from "@/lib/crm/bonus";
 import { effectivePlanId } from "@/lib/quota";
 import { isUniqueViolation, runAfter } from "@/lib/growth/safe";
+import { bumpDailyMetric } from "@/lib/growth/daily-metrics";
 import {
   FOUNDING_AUDIT_ACTION,
   FOUNDING_REFUND_AUDIT_ACTION,
@@ -643,6 +647,7 @@ export async function POST(req: Request) {
   const secret = process.env.POLAR_WEBHOOK_SECRET;
   if (!secret) {
     console.error("[polar/webhook] POLAR_WEBHOOK_SECRET is not set");
+    await bumpDailyMetric("ops.webhook_fail.polar");
     return new Response("Not configured", { status: 500 });
   }
 
@@ -708,6 +713,7 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error(`[polar/webhook] Error handling ${event.type}:`, err);
+    await bumpDailyMetric("ops.webhook_fail.polar");
     return new Response("Internal error", { status: 500 });
   }
 

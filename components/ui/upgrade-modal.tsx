@@ -2,7 +2,9 @@
 
 // ===========================================================
 // components/ui/upgrade-modal.tsx — The plan menu: opened from upgrade buttons
-// and, with trigger="quota", when a request hits the plan's limit. A
+// and, with trigger="quota", when a request hits the plan's limit (then the
+// lead says which limit, how much was used and when it refills, from the same
+// GET /api/usage numbers as the sidebar meter). A
 // Monthly/Annual toggle (annual pre-selected) sends { plan, annual } to
 // /api/checkout; annual prices are shown per month (≈$6.58/mo for Pro).
 // Opened with an intent (a plan picked on the pricing page before sign-up),
@@ -11,7 +13,8 @@
 // (only once its Polar product exists) and inviting a friend (only
 // while referrals are on). Prices, limits and the guarantee come from
 // lib/plans.ts. While new payments are paused, /api/checkout answers
-// CHECKOUT_PAUSED and the plans give way to a calm notice, not an error.
+// CHECKOUT_PAUSED and the plans give way to a calm notice, not an error, with
+// an explicit opt-in to one email when checkout opens.
 //
 // A native <dialog> opened with showModal(): the browser keeps focus inside,
 // makes the page behind it inert, closes it on Esc and returns focus to the
@@ -28,11 +31,15 @@ import { THEME, glow } from "@/lib/theme";
 import { GUARANTEE_DAYS, PLANS as PLAN_CONFIG, TEAM_ANNUAL_GUARANTEE_DAYS, type PlanConfig, type PlanId } from "@/lib/plans";
 import type { CheckoutIntent, CheckoutPlan } from "@/lib/checkout-intent";
 import { requestCheckout } from "@/components/checkout-outcome";
+import { formatResetIn, summarizeUsage, usagePeriod, type UsageSnapshot } from "@/components/workspace/feedback";
 import { startOfferCheckout, useOffers, type OffersInfo } from "@/components/growth/founding-offers";
 import { useReferralInfo, type ReferralInfo } from "@/components/growth/referral-card";
 
 /** quota: a request hit the plan's limit. feature: a locked tone, voice or report was picked. */
 export type UpgradeTrigger = "upgrade" | "quota" | "feature";
+
+/** Which Free limit a quota hit was: /api/humanize sends it as error.reason. */
+export type QuotaReason = "words" | "rewrites";
 
 const KICKER: Record<UpgradeTrigger, string> = { upgrade: "Upgrade", quota: "Limit reached", feature: "Part of Pro" };
 type Billing = "monthly" | "annual";
@@ -46,6 +53,8 @@ interface UpgradeModalProps {
   trigger?: UpgradeTrigger;
   /** A plan picked on the pricing page before sign-up: preset its billing period and mark its card. */
   intent?: CheckoutIntent | null;
+  /** With trigger="quota": which limit was hit. Omitted means words (the meter's "Get more words"). */
+  quotaReason?: QuotaReason;
 }
 
 const PLAN_IDS = ["FREE", "PRO", "TEAM"] as const;
@@ -80,6 +89,57 @@ function displayPrice(plan: PlanConfig, billing: Billing): { price: string; note
   return { price: fmtUsd(plan.price), note: "billed monthly" };
 }
 
+/** GET /api/usage, or null when it fails: the quota copy then falls back to the generic lead. */
+export async function fetchUsageSnapshot(): Promise<UsageSnapshot | null> {
+  try {
+    const res = await fetch("/api/usage");
+    return res.ok ? ((await res.json()) as UsageSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+const fmtCount = (n: number) => n.toLocaleString("en-US");
+
+/**
+ * The factual quota lead: what was used and when it refills (the meter's own
+ * math, so both say the same time), plus how Pro compares for anyone below
+ * it. Null when the numbers can't support it (no snapshot, unlimited, unknown
+ * reset): the caller keeps the generic copy.
+ */
+export function quotaCopy(
+  usage: UsageSnapshot | null,
+  reason: QuotaReason,
+  now: Date = new Date()
+): { lead: string; compare: string | null } | null {
+  if (!usage) return null;
+  // effectivePlan: a lapsed gift still stores PRO but has Free's limits.
+  const raw = (usage.effectivePlan ?? usage.plan).toUpperCase();
+  const effective: PlanId = raw in PLAN_CONFIG ? (raw as PlanId) : "FREE";
+  const s = summarizeUsage(usage, usagePeriod(usage));
+  if (!s.resetsAt) return null;
+  const resetIn = formatResetIn(s.resetsAt, now);
+
+  let lead: string;
+  if (reason === "rewrites") {
+    // Only Free has a rewrite cap; it refills with the daily words.
+    if (PLAN_CONFIG[effective].rewriteLimit < 0) return null;
+    lead = `You've used today's free rewrite. Your next one comes ${resetIn}.`;
+  } else {
+    if (s.unlimited) return null;
+    const used = Math.min(usage.wordsUsed, usage.wordsLimit);
+    lead = `You've used ${fmtCount(used)} of ${fmtCount(usage.wordsLimit)} words ${s.periodLabel}. ${fmtCount(usage.wordsLimit)} more ${resetIn}.`;
+  }
+
+  const pro = PLAN_CONFIG.PRO;
+  const proWords = pro.wordsLimit >= 1000 ? `${pro.wordsLimit / 1000}k` : fmtCount(pro.wordsLimit);
+  const compare =
+    PLAN_RANK[effective] < PLAN_RANK.PRO
+      ? `Pro: ${proWords} words a ${pro.wordsLimitPeriod}${pro.rewriteLimit < 0 ? ", unlimited rewrites" : ""}.`
+      : null;
+  return { lead, compare };
+}
+
 /** Months of Pro an annual plan saves vs paying monthly, e.g. 3 ($108 vs $79). */
 const ANNUAL_FREE_MONTHS = (() => {
   const pro = PLAN_CONFIG.PRO;
@@ -102,7 +162,7 @@ function lockPageScroll(): () => void {
   };
 }
 
-export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade", intent = null }: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade", intent = null, quotaReason }: UpgradeModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const offers = useOffers();
@@ -161,6 +221,7 @@ export function UpgradeModal({ isOpen, onClose, currentPlan, trigger = "upgrade"
           onClose={onClose}
           currentPlan={currentPlan}
           trigger={trigger}
+          quotaReason={quotaReason ?? "words"}
           intent={intent}
           wordPack={wordPack}
           referral={trigger === "quota" ? referral : null}
@@ -175,13 +236,14 @@ interface UpgradePanelProps {
   onClose: () => void;
   currentPlan: string;
   trigger: UpgradeTrigger;
+  quotaReason: QuotaReason;
   intent: CheckoutIntent | null;
   wordPack: WordPackOffer | null;
   referral: ReferralInfo | null;
 }
 
 /** The menu's content. Mounted on each opening, so it starts fresh with the intent's billing period. */
-function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack, referral }: UpgradePanelProps) {
+function UpgradePanel({ titleId, onClose, currentPlan, trigger, quotaReason, intent, wordPack, referral }: UpgradePanelProps) {
   const posthog = usePostHog();
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -194,13 +256,28 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
   const [billing, setBilling] = useState<Billing>(intent && !intent.annual ? "monthly" : "annual");
   const [packBusy, setPackBusy] = useState(false);
   const [packError, setPackError] = useState<string | null>(null);
+  // Quota hits only: the settings and voice pages open the menu with nothing to explain.
+  const [usage, setUsage] = useState<UsageSnapshot | null>(null);
   const codeId = useId();
   const fromPricing = !!intent;
   const current = currentPlan.toUpperCase();
+  const reason = trigger === "quota" ? quotaReason : null;
+  const quota = reason ? quotaCopy(usage, reason) : null;
 
   useEffect(() => {
-    posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger, from_pricing: fromPricing });
-  }, [posthog, currentPlan, trigger, fromPricing]);
+    posthog?.capture("upgrade_modal_viewed", { current_plan: currentPlan, trigger, from_pricing: fromPricing, reason });
+  }, [posthog, currentPlan, trigger, fromPricing, reason]);
+
+  useEffect(() => {
+    if (trigger !== "quota") return;
+    let alive = true;
+    fetchUsageSnapshot().then((u) => {
+      if (alive) setUsage(u);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [trigger]);
 
   useEffect(() => lockPageScroll(), []);
 
@@ -294,11 +371,14 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
         ) : (
           <>
             <p className="hz-up-lead">
-              {trigger !== "quota"
-                ? "More words, unlimited rewrites, document upload and saved history."
-                : current === "FREE"
-                  ? "Free words reset 24 hours after your last reset. Need more now? Pick monthly or annual."
-                  : "You've used this month's words. They reset with your next billing month, or you can move up a plan."}
+              {quota
+                ? quota.lead
+                : trigger !== "quota"
+                  ? "More words, unlimited rewrites, document upload and saved history."
+                  : current === "FREE"
+                    ? "Free words reset 24 hours after your last reset. Need more now? Pick monthly or annual."
+                    : "You've used this month's words. They reset with your next billing month, or you can move up a plan."}
+              {quota?.compare && <span className="hz-up-compare">{quota.compare}</span>}
             </p>
 
             {/* Billing toggle */}
@@ -480,19 +560,75 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
   );
 }
 
+/** What the paused notice needs from /api/me/email-preferences. */
+type WaitlistState = { email: string; on: boolean };
+
+/**
+ * The explicit opt-in behind "Email me when checkout opens": subscribes the
+ * account to checkout_open (in_app consent, wording checkout-v1). Nothing is
+ * sent now; the founder sends one campaign to that topic later. Null on failure.
+ */
+export async function joinCheckoutWaitlist(): Promise<WaitlistState | null> {
+  try {
+    const res = await fetch("/api/me/email-preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscribe: ["checkout_open"], source: "checkout_paused" }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { email?: string; topics?: string[] };
+    return { email: data.email ?? "", on: !!data.topics?.includes("checkout_open") };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Shown instead of the plans when /api/checkout answers CHECKOUT_PAUSED: the
- * server's message and one way out. Focus lands on "Got it", which carries
- * the heading and message as its description for screen readers.
+ * server's message, an opt-in to one email when checkout opens, and one way
+ * out. Focus lands on "Got it", which carries the heading and message as its
+ * description for screen readers. The attempt itself never subscribes anyone.
  */
 export function CheckoutPausedPanel({ message, onDone }: { message: string; onDone: () => void }) {
+  const posthog = usePostHog();
   const doneRef = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const [waitlist, setWaitlist] = useState<WaitlistState | null>(null);
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState(false);
 
   // The button that was clicked is gone: move focus somewhere useful.
   useEffect(() => {
     doneRef.current?.focus();
   }, []);
+
+  // The address the note would go to, and whether they already asked for it.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/me/email-preferences")
+      .then((r) => (r.ok ? (r.json() as Promise<{ email?: string; topics?: string[] }>) : null))
+      .then((d) => {
+        if (alive && d?.email) setWaitlist({ email: d.email, on: !!d.topics?.includes("checkout_open") });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function join() {
+    if (joining) return;
+    setJoining(true);
+    setJoinError(false);
+    const next = await joinCheckoutWaitlist();
+    if (next?.on) {
+      setWaitlist({ email: next.email || waitlist?.email || "", on: true });
+      posthog?.capture("checkout_waitlist_joined");
+    } else {
+      setJoinError(true);
+    }
+    setJoining(false);
+  }
 
   return (
     <div className="hz-up-paused">
@@ -510,6 +646,24 @@ export function CheckoutPausedPanel({ message, onDone }: { message: string; onDo
       >
         Got it
       </button>
+      <div className="hz-up-notify" aria-live="polite">
+        {waitlist?.on ? (
+          <p className="hz-up-notify-done">
+            <Check size={14} color={THEME.human} aria-hidden="true" strokeWidth={3} style={{ flexShrink: 0, marginTop: 3 }} />
+            <span>{`Done: we'll send one note to ${waitlist.email || "your account email"}.`}</span>
+          </p>
+        ) : (
+          <>
+            <button type="button" className="hz-up-notify-btn" onClick={join} disabled={joining}>
+              {joining ? "Saving…" : "Email me when checkout opens"}
+            </button>
+            <p className="hz-up-notify-note">
+              {`One email to ${waitlist?.email || "your account email"}, nothing else. Unsubscribe anytime in Settings.`}
+            </p>
+            {joinError && <p role="alert" className="hz-up-error">Couldn&apos;t save that. Try again.</p>}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -573,6 +727,7 @@ const STYLES = `
 }
 .hz-up-body > * { flex-shrink: 0; }
 .hz-up-lead { margin: 0; font-size: 14px; line-height: 1.55; color: ${THEME.textDim}; text-wrap: pretty; }
+.hz-up-compare { display: block; margin-top: 4px; font-weight: 600; color: ${THEME.text}; }
 
 .hz-up-billing { display: flex; justify-content: center; }
 .hz-up-seg { display: inline-flex; gap: 4px; max-width: 100%; padding: 4px; border-radius: 999px; background: ${THEME.surface3}; }
@@ -686,6 +841,17 @@ button.hz-up-cta:not(:disabled):hover { filter: brightness(0.96); }
   font-family: ${THEME.fontSans}; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .hz-up-done:hover { background: ${THEME.brandHi}; }
+.hz-up-notify { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 440px; margin-top: 4px; }
+.hz-up-notify-btn {
+  min-width: 180px; min-height: 44px; padding: 0 20px;
+  border: 1px solid ${THEME.border}; border-radius: ${THEME.radius};
+  background: transparent; color: ${THEME.text};
+  font-family: ${THEME.fontSans}; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.hz-up-notify-btn:hover:not(:disabled) { background: ${THEME.surface1}; border-color: ${THEME.borderStrong}; }
+.hz-up-notify-btn:disabled { cursor: wait; opacity: 0.7; }
+.hz-up-notify-note { margin: 0; font-size: 12px; line-height: 1.5; color: ${THEME.textMuted}; overflow-wrap: anywhere; }
+.hz-up-notify-done { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; line-height: 1.5; color: ${THEME.textDim}; text-align: left; overflow-wrap: anywhere; }
 
 /* Tablets and phones: one plan per row, name and price side by side. */
 @media (max-width: 640px) {
@@ -724,6 +890,6 @@ button.hz-up-cta:not(:disabled):hover { filter: brightness(0.96); }
   .hz-up-body { gap: 18px; padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
   .hz-up-seg { display: flex; width: 100%; }
   .hz-up-seg-btn { padding: 6px 12px; }
-  .hz-up-done { width: 100%; }
+  .hz-up-done, .hz-up-notify, .hz-up-notify-btn { width: 100%; }
 }
 `;

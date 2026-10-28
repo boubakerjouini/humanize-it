@@ -8,7 +8,8 @@
 // While Polar can't take payments yet (account under review), a new checkout
 // is paused: 409 CHECKOUT_PAUSED with a friendly message instead of a Polar
 // page that says "Payments are currently unavailable". The attempt is still
-// recorded, and a task asks the founder to follow up personally.
+// recorded, and a task asks the founder to follow up personally. The message
+// promises no email: the notice offers an explicit opt-in (topic checkout_open).
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
@@ -22,7 +23,7 @@ import { trackServer } from "@/lib/posthog";
 import { checkRateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 const CHECKOUT_PAUSED_MESSAGE =
-  "Upgrades open soon: our payment provider is finishing its review of our account. We've saved your request and will email you as soon as checkout opens.";
+  "Upgrades open soon: our payment provider is finishing its review of our account.";
 
 /** Local statuses of a subscription Polar still bills (lib/crm/lifecycle.ts vocabulary). */
 const LIVE_STATUSES = ["active", "on_trial", "past_due"];

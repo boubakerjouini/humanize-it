@@ -3,6 +3,9 @@
 // verified). Also hands each created/updated user to the CRM after the
 // response, and writes the CRM's hashed suppressions before a user is deleted.
 // CRM work is best-effort: it never changes this route's responses.
+// Each verified delivery is recorded as a WebhookEvent (source "clerk") so the
+// daily ops check (lib/ops/checks.ts) notices when signups stop arriving here,
+// and a 500 is counted in DailyMetric (ops.webhook_fail.clerk).
 // ===========================================================
 
 import { Webhook } from "svix";
@@ -10,7 +13,8 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import type { User } from "@/app/generated/prisma/client";
-import { runAfter } from "@/lib/growth/safe";
+import { bumpDailyMetric } from "@/lib/growth/daily-metrics";
+import { isUniqueViolation, logGrowthError, runAfter } from "@/lib/growth/safe";
 import { deleteCustomerOf } from "@/lib/polar";
 
 /** Sync the CRM contact after the response. Webhooks carry no visitor cookies, so no attribution. */
@@ -22,6 +26,16 @@ function identifyAfterResponse(user: User, isNew: boolean): void {
 }
 
 export async function POST(req: Request) {
+  try {
+    return await handle(req);
+  } catch (err) {
+    // Rethrown: Clerk retries a 500, and the ops check flags the count.
+    await bumpDailyMetric("ops.webhook_fail.clerk");
+    throw err;
+  }
+}
+
+async function handle(req: Request): Promise<Response> {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -53,6 +67,11 @@ export async function POST(req: Request) {
     console.error("Clerk webhook verification failed");
     return new Response("Invalid signature", { status: 400 });
   }
+
+  // A Clerk retry reuses the svix id, so a duplicate is expected and ignored.
+  await db.webhookEvent.create({ data: { eventId: `clerk:${svix_id}`, source: "clerk" } }).catch((err) => {
+    if (!isUniqueViolation(err)) logGrowthError("clerk-webhook-record", err);
+  });
 
   const eventType = evt.type;
 

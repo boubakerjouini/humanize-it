@@ -1,0 +1,127 @@
+# CI for pull requests to dev and main.
+#   unit:  type check, lint, Jest (the DB is mocked; no secrets).
+#   smoke: builds and serves the app against a throwaway Postgres container and
+#          runs the Playwright smoke tests on localhost. Clerk uses the
+#          DEVELOPMENT instance keys from repo secrets CLERK_TEST_PK /
+#          CLERK_TEST_SK; no LLM, PostHog, Resend or Polar keys exist here, so
+#          nothing reaches production or a paid API. Tests tagged @flow
+#          (account creation) never run here.
+# The repo is public: logs are public, so never echo an env var. Fork PRs get
+# no secrets, and smoke then skips with a warning.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # prisma generate (postinstall) and lib/db.ts need a URL; nothing connects to it.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test -- --ci --maxWorkers=2
+
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: humanizeit
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/humanizeit
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_TEST_PK }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_TEST_SK }}
+      NEXT_PUBLIC_APP_URL: http://localhost:3458
+      PLAYWRIGHT_BASE_URL: http://localhost:3458
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check the environment is CI-only
+        id: guard
+        run: |
+          case "$DATABASE_URL" in
+            postgresql://ci:ci@localhost:5432/*) ;;
+            *) echo "::error::DATABASE_URL must be the service container"; exit 1 ;;
+          esac
+          if [ -z "$CLERK_SECRET_KEY" ] || [ -z "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::warning::Smoke tests skipped: add the CLERK_TEST_PK and CLERK_TEST_SK repo secrets (Clerk DEVELOPMENT instance)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "$CLERK_SECRET_KEY" in
+            sk_test_*) ;;
+            *) echo "::error::CLERK_TEST_SK must be a development key (sk_test_)"; exit 1 ;;
+          esac
+          case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in
+            pk_test_*) ;;
+            *) echo "::error::CLERK_TEST_PK must be a development key (pk_test_)"; exit 1 ;;
+          esac
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+      - if: steps.guard.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.guard.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - if: steps.guard.outputs.ready == 'true'
+        run: npm ci
+      - name: Create the schema in the container
+        if: steps.guard.outputs.ready == 'true'
+        run: npx prisma db push
+      - name: Build
+        if: steps.guard.outputs.ready == 'true'
+        run: npx next build
+      - name: Install Chromium
+        if: steps.guard.outputs.ready == 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Start the app
+        if: steps.guard.outputs.ready == 'true'
+        run: |
+          npx next start -p 3458 > next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3458/api/health && exit 0
+            sleep 2
+          done
+          echo "::error::the app did not answer /api/health"; tail -50 next.log; exit 1
+      - name: Smoke tests
+        if: steps.guard.outputs.ready == 'true'
+        run: npx playwright test --grep-invert @flow
+      - if: failure() && steps.guard.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            next.log
+          retention-days: 7

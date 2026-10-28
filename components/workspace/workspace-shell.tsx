@@ -117,7 +117,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const renderPlanCard = () => (
     <div style={{ padding: 12, borderTop: `1px solid ${THEME.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
-      <UsageMeter usage={usage} onUpgrade={moreWords} />
+      <UsageMeter usage={usage} founding={founding} onUpgrade={moreWords} />
       {referral && (
         <button onClick={() => setInviteOpen(true)}
           style={{ display: "flex", alignItems: "center", gap: 8, background: THEME.accentDim, color: THEME.accentHi, border: `1px solid ${THEME.accent}33`, borderRadius: 9, padding: "8px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: THEME.fontSans, textAlign: "left" }}>

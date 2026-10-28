@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`buildFounderDigest lists every count and the job's results, with no address or id 1`] = `
+{
+  "bodyMd": "**Last 24 hours**
+
+- Signups: 3
+- Free-tool runs: 41
+- Documents created: 5
+- Checkout attempts: 2 (1 hit the paused checkout)
+- Emails sent: 12
+- Open support emails: 1
+- Open tasks: 4 (2 high priority)
+
+**This morning's job**
+
+- Sequence steps sent: 2, failed: 1
+- Circuit breaker: ok
+- Errors: 1 (sweeps)
+
+[Open the admin](/admin)",
+  "subject": "HumanizeIt 28 Oct: 3 signups, 3 items waiting",
+}
+`;

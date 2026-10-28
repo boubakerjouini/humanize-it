@@ -74,6 +74,8 @@ export type TemplateProps = {
   campaign: Base & { subject: string; preheader?: string; bodyMd: string };
   /** inReplyTo: Message-ID of the support email this answers, so it threads as a reply. */
   personal_note: Base & { subject: string; bodyMd: string; inReplyTo?: string };
+  // Internal: counts only, to the founder (lib/growth/founder-digest.ts)
+  founder_digest: Base & { subject: string; bodyMd: string };
 };
 
 export type TemplateKey = keyof TemplateProps;
@@ -150,6 +152,8 @@ export const TEMPLATES: { [K in TemplateKey]: TemplateMeta } = {
 
   campaign: { stream: "marketing", topic: null, flow: null },
   personal_note: { stream: "personal", topic: null, flow: null },
+  // Gated by FOUNDER_DIGEST_ENABLED rather than a flow toggle: it only ever goes to the founder.
+  founder_digest: { stream: "transactional", topic: null, flow: null },
 };
 
 export const TEMPLATE_KEYS = Object.keys(TEMPLATES) as TemplateKey[];
