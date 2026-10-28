@@ -22,7 +22,7 @@ afterAll(() => {
 const SENT_AT = new Date("2026-10-07T09:00:00Z");
 const IN_14_DAYS = "2026-10-21T09:00:00.000Z";
 
-type D1Key = Exclude<TemplateKey, "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm" | "founding_confirm">;
+type D1Key = Exclude<TemplateKey, "magnet_delivery" | "detector_report" | "waitlist_confirm" | "doi_confirm" | "founding_confirm" | "founder_digest">;
 
 const SAMPLES: { [K in D1Key]: TemplateProps[K] } = {
   welcome: {},
@@ -89,7 +89,8 @@ const FORBIDDEN = [
 describe("D1 email templates", () => {
   it("implements every lifecycle, marketing and admin template in the catalog", () => {
     const implemented = new Set([...Object.keys(LIFECYCLE), ...Object.keys(MARKETING), ...Object.keys(ADMIN)]);
-    const expected = (Object.keys(TEMPLATES) as TemplateKey[]).filter((k) => TEMPLATES[k].stream !== "transactional");
+    // founder_digest is admin-built but transactional: it goes to the founder only (lib/growth/founder-digest.ts).
+    const expected = (Object.keys(TEMPLATES) as TemplateKey[]).filter((k) => TEMPLATES[k].stream !== "transactional" || k === "founder_digest");
     expect([...implemented].sort()).toEqual(expected.sort());
     for (const key of Object.keys(LIFECYCLE)) expect(TEMPLATES[key as TemplateKey].stream).toBe("lifecycle");
     for (const key of Object.keys(MARKETING)) expect(TEMPLATES[key as TemplateKey].stream).toBe("marketing");

@@ -1,7 +1,8 @@
 // ===========================================================
 // emails/admin/templates.tsx — The admin-written templates: a campaign in the
 // branded layout, a personal note in the founder's plain layout (which adds
-// the signature, so the note shouldn't sign itself).
+// the signature, so the note shouldn't sign itself), and the founder's daily
+// digest, built in lib/growth/founder-digest.ts.
 // ===========================================================
 
 import { EmailLayout, PlainLayout } from "@/emails/components/layout";
@@ -12,6 +13,15 @@ export const campaign: TemplateDef<"campaign"> = {
   subject: (p, ctx) => fillFirstNamePlain(p.subject, ctx),
   Component: ({ p, ctx }) => (
     <EmailLayout ctx={ctx} preview={p.preheader ? fillFirstNamePlain(p.preheader, ctx) : undefined}>
+      <MarkdownBody bodyMd={p.bodyMd} ctx={ctx} />
+    </EmailLayout>
+  ),
+};
+
+export const founder_digest: TemplateDef<"founder_digest"> = {
+  subject: (p) => p.subject,
+  Component: ({ p, ctx }) => (
+    <EmailLayout ctx={ctx}>
       <MarkdownBody bodyMd={p.bodyMd} ctx={ctx} />
     </EmailLayout>
   ),
