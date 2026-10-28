@@ -4,8 +4,10 @@
 // morning's daily job went, as one short email to founderEmail(). It is the
 // last step of the daily job, so it rides the one Hobby cron.
 //
-// Counts only: no names, addresses or ids, and failed job steps by name, never
-// their error text. Real sends need FOUNDER_DIGEST_ENABLED=true and live
+// It opens with the founder's own priorities (open CrmTask kind "priority",
+// added in /admin/tasks), so the to-do list comes back every morning
+// until each item is ticked. Otherwise counts only: no names, addresses or
+// ids, and failed job steps by name, never their error text. Real sends need FOUNDER_DIGEST_ENABLED=true and live
 // sending; the founder flips that switch after reading a "[TEST]" copy from
 // /admin (sendFounderDigestTest, the shared 40/day test cap). One per UTC day.
 // ===========================================================
@@ -19,7 +21,13 @@ import { sendEmail, type SendOutcome } from "@/lib/email/send";
 import { emailSendingMode } from "@/lib/growth/flags";
 import { checkDailyLimit } from "@/lib/rate-limit";
 
-export type DigestCounts = Last24hMetrics & { openTasks: number };
+/** One of the founder's open priorities: his own task title, never user data. */
+export type DigestPriority = { title: string; dueAt: Date | null };
+
+export type DigestCounts = Last24hMetrics & { openTasks: number; priorities?: DigestPriority[] };
+
+/** How many priorities the email lists; the rest are counted. */
+export const DIGEST_PRIORITY_LIMIT = 8;
 
 /** This morning's job, as far as the digest reports it. Null for a test sent outside the job. */
 export type DigestJobStats = {
@@ -40,7 +48,18 @@ export function buildFounderDigest(now: Date, counts: DigestCounts, job: DigestJ
   const waiting = counts.openSupportEmails + counts.openHighTasks;
   const subject = `HumanizeIt ${day}: ${plural(counts.signups, "signup")}, ${plural(waiting, "item")} waiting`;
 
-  const lines = [
+  const lines: string[] = [];
+  const priorities = counts.priorities ?? [];
+  if (priorities.length > 0) {
+    lines.push("**Your priorities**", "");
+    for (const p of priorities.slice(0, DIGEST_PRIORITY_LIMIT)) {
+      const due = p.dueAt ? ` (due ${p.dueAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}${p.dueAt.getTime() < now.getTime() ? ", overdue" : ""})` : "";
+      lines.push(`- ${p.title}${due}`);
+    }
+    if (priorities.length > DIGEST_PRIORITY_LIMIT) lines.push(`- …and ${priorities.length - DIGEST_PRIORITY_LIMIT} more`);
+    lines.push("", "[Tick them off in /admin/tasks](/admin/tasks)", "");
+  }
+  lines.push(
     "**Last 24 hours**",
     "",
     `- Signups: ${counts.signups}`,
@@ -49,8 +68,8 @@ export function buildFounderDigest(now: Date, counts: DigestCounts, job: DigestJ
     `- Checkout attempts: ${counts.upgradeAttempts}${counts.pausedAttempts > 0 ? ` (${counts.pausedAttempts} hit the paused checkout)` : ""}`,
     `- Emails sent: ${counts.emailsSent}`,
     `- Open support emails: ${counts.openSupportEmails}`,
-    `- Open tasks: ${counts.openTasks} (${counts.openHighTasks} high priority)`,
-  ];
+    `- Open tasks: ${counts.openTasks} (${counts.openHighTasks} high priority)`
+  );
   if (job) {
     lines.push(
       "",
@@ -66,8 +85,19 @@ export function buildFounderDigest(now: Date, counts: DigestCounts, job: DigestJ
 }
 
 export async function loadDigestCounts(): Promise<DigestCounts> {
-  const [day, openTasks] = await Promise.all([getLast24hMetrics(), db.crmTask.count({ where: { status: "open" } }).catch(() => 0)]);
-  return { ...day, openTasks };
+  const [day, openTasks, priorities] = await Promise.all([
+    getLast24hMetrics(),
+    db.crmTask.count({ where: { status: "open" } }).catch(() => 0),
+    db.crmTask
+      .findMany({
+        where: { status: "open", kind: "priority" },
+        orderBy: [{ dueAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+        take: DIGEST_PRIORITY_LIMIT + 20,
+        select: { title: true, dueAt: true },
+      })
+      .catch(() => [] as DigestPriority[]),
+  ]);
+  return { ...day, openTasks, priorities };
 }
 
 /** The real-send lock: the founder sets the env switch once he read a test. */
