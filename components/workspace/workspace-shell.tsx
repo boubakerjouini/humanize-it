@@ -15,6 +15,7 @@ import { readCheckoutIntent, withoutCheckoutIntent, type CheckoutIntent } from "
 import { UsageChip, UsageMeter } from "@/components/workspace/usage-meter";
 import { Skeleton } from "@/components/workspace/skeleton";
 import { USAGE_CHANGED_EVENT, type UsageSnapshot } from "@/components/workspace/feedback";
+import { describePlan, isOnFree, planShortLabel } from "@/lib/plan-status";
 
 interface PlanInfo {
   plan: string;
@@ -34,6 +35,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   // Until /api/user-plan answers, paying users must not see "Upgrade" flash.
   const [planLoaded, setPlanLoaded] = useState(false);
   const [usage, setUsage] = useState<UsageSnapshot | null>(null);
+  // The first /api/usage answer (or failure): it decides gift vs lapsed-gift labels.
+  const [usageSettled, setUsageSettled] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   // "quota" when opened from the out-of-words meter: the modal then leads with the limit and the word pack.
   const [upgradeTrigger, setUpgradeTrigger] = useState<UpgradeTrigger>("upgrade");
@@ -61,7 +64,8 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   // The meter refetches whenever the editor reports a spend (or a quota hit).
   useEffect(() => {
     const load = () => {
-      fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d: UsageSnapshot | null) => d && setUsage(d)).catch(() => {});
+      fetch("/api/usage").then((r) => (r.ok ? r.json() : null)).then((d: UsageSnapshot | null) => d && setUsage(d)).catch(() => {})
+        .finally(() => setUsageSettled(true));
     };
     load();
     window.addEventListener(USAGE_CHANGED_EVENT, load);
@@ -78,7 +82,12 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
 
   const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname.startsWith(href));
   const planMeta = PLAN_META[info.plan] ?? PLAN_META.FREE;
-  const isFree = info.plan === "FREE";
+  // /api/usage knows how the plan is held: a gift shows its end date, a lapsed one reads as Free.
+  const planStatus = usage ? describePlan(usage, { founding }) : null;
+  const isFree = planStatus ? isOnFree(planStatus) : info.plan === "FREE";
+  const planLabel = planStatus ? planShortLabel(planStatus) : planMeta.label;
+  // Both answers in before any plan UI: no "Upgrade" flash for payers, no "Pro" flash for a lapsed gift.
+  const planKnown = planLoaded && usageSettled;
 
   // The plan menu (monthly or annual) rather than a straight monthly checkout.
   const upgrade = () => { setUpgradeTrigger("upgrade"); setUpgradeOpen(true); };
@@ -116,7 +125,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
           {`Invite friends · +${referral.rewardWords.toLocaleString("en-US")} words`}
         </button>
       )}
-      {!planLoaded ? (
+      {!planKnown ? (
         <Skeleton height={36} radius={9} />
       ) : isFree ? (
         <button onClick={upgrade}
@@ -127,7 +136,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: THEME.brandDim, border: `1px solid ${THEME.brand}44`, borderRadius: 100, padding: "4px 10px" }}>
             <planMeta.icon size={12} color={THEME.brandHi} aria-hidden="true" />
-            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planMeta.label}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: THEME.brandHi }}>{planLabel}</span>
           </div>
           {founding && <FoundingBadge />}
         </div>
@@ -161,7 +170,7 @@ export function WorkspaceShell({ children }: { children: React.ReactNode }) {
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <UsageChip usage={usage} onUpgrade={moreWords} />
-          {planLoaded && isFree && <button onClick={upgrade} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
+          {planKnown && isFree && <button onClick={upgrade} style={{ background: THEME.gradient, color: "#fff", border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Upgrade</button>}
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>

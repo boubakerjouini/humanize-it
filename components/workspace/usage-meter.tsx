@@ -9,13 +9,9 @@
 
 import { Sparkles } from "lucide-react";
 import { THEME } from "@/lib/theme";
-import { PLANS, type PlanId } from "@/lib/plans";
 import { Skeleton } from "@/components/workspace/skeleton";
-import { formatResetIn, summarizeUsage, type UsageSnapshot } from "@/components/workspace/feedback";
+import { formatResetIn, summarizeUsage, usagePeriod, type UsageSnapshot } from "@/components/workspace/feedback";
 
-function periodOf(plan: string): "day" | "month" {
-  return (PLANS[plan as PlanId] ?? PLANS.FREE).wordsLimitPeriod;
-}
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -33,7 +29,7 @@ export function UsageMeter({ usage, onUpgrade }: { usage: UsageSnapshot | null; 
     );
   }
 
-  const s = summarizeUsage(usage, periodOf(usage.plan));
+  const s = summarizeUsage(usage, usagePeriod(usage));
   const bonus = usage.bonusWords ?? 0;
 
   if (s.limitReached) {
@@ -81,7 +77,7 @@ export function UsageMeter({ usage, onUpgrade }: { usage: UsageSnapshot | null; 
 /** Phone top-bar chip: the balance at a glance; a button once the words run out. */
 export function UsageChip({ usage, onUpgrade }: { usage: UsageSnapshot | null; onUpgrade: () => void }) {
   if (!usage) return <Skeleton width={84} height={22} radius={999} />;
-  const s = summarizeUsage(usage, periodOf(usage.plan));
+  const s = summarizeUsage(usage, usagePeriod(usage));
   if (s.unlimited) return null;
 
   if (s.limitReached) {

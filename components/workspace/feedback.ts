@@ -5,16 +5,34 @@
 // wording and the quota math are unit-tested (feedback.test.ts).
 // ===========================================================
 
+import { PLANS, type PlanId } from "@/lib/plans";
+
 /** Window event the editor fires after anything that changes the word balance. */
 export const USAGE_CHANGED_EVENT = "humanizeit:usage-changed";
 
 /** The subset of GET /api/usage the meter reads. */
 export interface UsageSnapshot {
+  /** The stored plan; a lapsed gift still reads PRO/TEAM here until the next quota check. */
   plan: string;
+  /** The plan the limits really come from (a lapsed gift = FREE). Older responses omit it. */
+  effectivePlan?: string;
   wordsUsed: number;
   wordsLimit: number; // -1 = unlimited
   quotaResetAt: string | null;
   bonusWords?: number;
+  // Read by lib/plan-status describePlan for the shell's plan label.
+  subscriptionStatus?: string | null;
+  currentPeriodEnd?: string | null;
+  billingInterval?: "month" | "year" | null;
+  planExpiresAt?: string | null;
+}
+
+/**
+ * The allowance period to meter against. effectivePlan, not plan: an expired
+ * gift still stores PRO until the next quota check, but its limits are Free's.
+ */
+export function usagePeriod(u: Pick<UsageSnapshot, "plan" | "effectivePlan">): "day" | "month" {
+  return (PLANS[(u.effectivePlan ?? u.plan) as PlanId] ?? PLANS.FREE).wordsLimitPeriod;
 }
 
 export interface UsageSummary {

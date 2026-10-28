@@ -45,7 +45,7 @@ export default function FreeAiHumanizerPage() {
       />
 
       <nav style={{ fontSize: "13px", color: THEME.textMuted, marginBottom: "24px" }}>
-        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "none" }}>Home</Link>
+        <Link href="/" style={{ color: THEME.brandHi, textDecoration: "underline", textUnderlineOffset: 2 }}>Home</Link>
         <span style={{ margin: "0 8px", color: THEME.border }}>/</span>
         <span style={{ color: THEME.textDim }}>Free AI Humanizer</span>
       </nav>

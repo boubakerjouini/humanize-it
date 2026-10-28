@@ -15,10 +15,13 @@ describe("cleanToolPage", () => {
     expect(cleanToolPage("/AI-Detector/")).toBe("/ai-detector");
     expect(cleanToolPage("/bypass/turnitin?utm_source=x#top")).toBe("/bypass/turnitin");
     expect(cleanToolPage("/blog/best-ai-humanizer-tools")).toBe("/blog/best-ai-humanizer-tools");
+    // The homepage hero has its own demo detector.
+    expect(cleanToolPage("/")).toBe("/");
+    expect(cleanToolPage("/?utm_source=x")).toBe("/");
   });
 
   it("refuses anything that isn't one of our plain paths", () => {
-    for (const bad of ["https://evil.example/ai-detector", "ai-detector", "/", "/a b", "/<script>", `/${"x".repeat(130)}`, 42, null]) {
+    for (const bad of ["https://evil.example/ai-detector", "ai-detector", "", "/a b", "/<script>", `/${"x".repeat(130)}`, 42, null]) {
       expect(cleanToolPage(bad)).toBeNull();
     }
   });

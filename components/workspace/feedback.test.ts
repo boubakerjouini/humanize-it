@@ -1,4 +1,4 @@
-import { summarizeUsage, formatResetIn, humanizeError, deepScanError, historyError } from "./feedback";
+import { summarizeUsage, usagePeriod, formatResetIn, humanizeError, deepScanError, historyError } from "./feedback";
 
 describe("summarizeUsage", () => {
   const base = { plan: "FREE", wordsUsed: 120, wordsLimit: 500, quotaResetAt: "2026-10-28T08:00:00.000Z" };
@@ -33,6 +33,17 @@ describe("summarizeUsage", () => {
     expect(s.limitReached).toBe(false);
     expect(s.pct).toBe(0);
     expect(s.resetsAt).toBeNull();
+  });
+});
+
+describe("usagePeriod", () => {
+  it("meters by the effective plan, so an expired gift counts per day like Free", () => {
+    expect(usagePeriod({ plan: "PRO", effectivePlan: "FREE" })).toBe("day");
+    expect(usagePeriod({ plan: "PRO", effectivePlan: "PRO" })).toBe("month");
+  });
+  it("falls back to the stored plan for responses without effectivePlan", () => {
+    expect(usagePeriod({ plan: "TEAM" })).toBe("month");
+    expect(usagePeriod({ plan: "SOMETHING_ELSE" })).toBe("day");
   });
 });
 
