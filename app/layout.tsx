@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 import { Sora, Inter, JetBrains_Mono } from "next/font/google";
@@ -82,6 +83,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
+      appearance={clerkAppearance}
       // Send users straight into the app after auth — covers ALL surfaces
       // (modals on the landing page included), not just the dedicated pages.
       signInForceRedirectUrl="/dashboard"
