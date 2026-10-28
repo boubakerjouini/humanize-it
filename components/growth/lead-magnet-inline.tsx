@@ -37,7 +37,7 @@ export function LeadMagnetInline({
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap", marginBottom: "16px" }}>
         <MagnetCover magnet={magnet} size="sm" />
         <div style={{ flex: "1 1 240px", minWidth: 0 }}>
-          <div style={{ fontSize: "12px", color: THEME.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
+          <div style={{ fontSize: "12px", color: "#c2410c", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "6px" }}>
             Free {magnet.noun} · {magnet.pages} pages
           </div>
           <h2
