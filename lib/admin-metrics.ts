@@ -237,6 +237,8 @@ export interface OpsHealth {
   /** Emails that failed for good in the last 24 hours. */
   emailsFailed: number;
   lastJob: { status: string; startedAt: Date } | null;
+  /** No finished daily run in the last 26 hours (the cron runs once a day). */
+  jobLate: boolean;
 }
 
 /**
@@ -258,5 +260,6 @@ export async function getOpsHealth(): Promise<OpsHealth> {
     .map((m) => ({ area: m.key.slice("ops.5xx.".length), count: m.count }))
     .sort((a, b) => b.count - a.count);
   const webhookFailsToday = metrics.filter((m) => m.key.startsWith("ops.webhook_fail.")).reduce((n, m) => n + m.count, 0);
-  return { errorsToday, webhookFailsToday, emailsFailed, lastJob };
+  const jobLate = !lastJob || now.getTime() - lastJob.startedAt.getTime() > 26 * 3_600_000;
+  return { errorsToday, webhookFailsToday, emailsFailed, lastJob, jobLate };
 }

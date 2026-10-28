@@ -125,8 +125,7 @@ export default async function AdminOverviewPage() {
 /** One line of ops counters (lib/ops/checks.ts turns the same numbers into tasks once a day). */
 function HealthLine({ health }: { health: OpsHealth }) {
   const errors = health.errorsToday.reduce((n, e) => n + e.count, 0);
-  const job = health.lastJob;
-  const jobLate = !job || Date.now() - job.startedAt.getTime() > 26 * 3_600_000;
+  const { lastJob: job, jobLate } = health;
   const trouble = errors > 0 || health.webhookFailsToday > 0 || health.emailsFailed > 0 || job?.status === "error" || jobLate;
   const part = (label: string, bad: boolean) => (
     <span style={{ color: bad ? THEME.warn : THEME.textDim, fontWeight: bad ? 600 : 400 }}>{label}</span>
