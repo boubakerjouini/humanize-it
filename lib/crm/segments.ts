@@ -319,6 +319,11 @@ const SYSTEM_SEGMENT_DEFS = {
     description: "Everyone subscribed to extension launch updates.",
     filter: { match: "all", rules: [{ field: "topic", op: "has", value: "extension_launch" }] },
   },
+  checkout_waitlist: {
+    name: "Checkout waitlist",
+    description: "Asked for one note when upgrades open (button on the paused-checkout notice).",
+    filter: { match: "all", rules: [{ field: "topic", op: "has", value: "checkout_open" }] },
+  },
   quota_hitters_7d: {
     name: "Hit a limit in 7 days",
     description: "Contacts with a quota_hit event in the last 7 days.",

@@ -275,6 +275,7 @@ describe("system segments", () => {
   it("include the documented keys", () => {
     expect(Object.keys(SYSTEM_SEGMENTS).sort()).toEqual(
       [
+        "checkout_waitlist",
         "churned",
         "comped",
         "comped_expiring_30d",

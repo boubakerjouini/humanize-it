@@ -11,7 +11,8 @@
 // (only once its Polar product exists) and inviting a friend (only
 // while referrals are on). Prices, limits and the guarantee come from
 // lib/plans.ts. While new payments are paused, /api/checkout answers
-// CHECKOUT_PAUSED and the plans give way to a calm notice, not an error.
+// CHECKOUT_PAUSED and the plans give way to a calm notice, not an error, with
+// an explicit opt-in to one email when checkout opens.
 //
 // A native <dialog> opened with showModal(): the browser keeps focus inside,
 // makes the page behind it inert, closes it on Esc and returns focus to the
@@ -480,19 +481,75 @@ function UpgradePanel({ titleId, onClose, currentPlan, trigger, intent, wordPack
   );
 }
 
+/** What the paused notice needs from /api/me/email-preferences. */
+type WaitlistState = { email: string; on: boolean };
+
+/**
+ * The explicit opt-in behind "Email me when checkout opens": subscribes the
+ * account to checkout_open (in_app consent, wording checkout-v1). Nothing is
+ * sent now; the founder sends one campaign to that topic later. Null on failure.
+ */
+export async function joinCheckoutWaitlist(): Promise<WaitlistState | null> {
+  try {
+    const res = await fetch("/api/me/email-preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subscribe: ["checkout_open"], source: "checkout_paused" }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { email?: string; topics?: string[] };
+    return { email: data.email ?? "", on: !!data.topics?.includes("checkout_open") };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Shown instead of the plans when /api/checkout answers CHECKOUT_PAUSED: the
- * server's message and one way out. Focus lands on "Got it", which carries
- * the heading and message as its description for screen readers.
+ * server's message, an opt-in to one email when checkout opens, and one way
+ * out. Focus lands on "Got it", which carries the heading and message as its
+ * description for screen readers. The attempt itself never subscribes anyone.
  */
 export function CheckoutPausedPanel({ message, onDone }: { message: string; onDone: () => void }) {
+  const posthog = usePostHog();
   const doneRef = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const [waitlist, setWaitlist] = useState<WaitlistState | null>(null);
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState(false);
 
   // The button that was clicked is gone: move focus somewhere useful.
   useEffect(() => {
     doneRef.current?.focus();
   }, []);
+
+  // The address the note would go to, and whether they already asked for it.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/me/email-preferences")
+      .then((r) => (r.ok ? (r.json() as Promise<{ email?: string; topics?: string[] }>) : null))
+      .then((d) => {
+        if (alive && d?.email) setWaitlist({ email: d.email, on: !!d.topics?.includes("checkout_open") });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function join() {
+    if (joining) return;
+    setJoining(true);
+    setJoinError(false);
+    const next = await joinCheckoutWaitlist();
+    if (next?.on) {
+      setWaitlist({ email: next.email || waitlist?.email || "", on: true });
+      posthog?.capture("checkout_waitlist_joined");
+    } else {
+      setJoinError(true);
+    }
+    setJoining(false);
+  }
 
   return (
     <div className="hz-up-paused">
@@ -510,6 +567,24 @@ export function CheckoutPausedPanel({ message, onDone }: { message: string; onDo
       >
         Got it
       </button>
+      <div className="hz-up-notify" aria-live="polite">
+        {waitlist?.on ? (
+          <p className="hz-up-notify-done">
+            <Check size={14} color={THEME.human} aria-hidden="true" strokeWidth={3} style={{ flexShrink: 0, marginTop: 3 }} />
+            <span>{`Done: we'll send one note to ${waitlist.email || "your account email"}.`}</span>
+          </p>
+        ) : (
+          <>
+            <button type="button" className="hz-up-notify-btn" onClick={join} disabled={joining}>
+              {joining ? "Saving…" : "Email me when checkout opens"}
+            </button>
+            <p className="hz-up-notify-note">
+              {`One email to ${waitlist?.email || "your account email"}, nothing else. Unsubscribe anytime in Settings.`}
+            </p>
+            {joinError && <p role="alert" className="hz-up-error">Couldn't save that. Try again.</p>}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -686,6 +761,17 @@ button.hz-up-cta:not(:disabled):hover { filter: brightness(0.96); }
   font-family: ${THEME.fontSans}; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .hz-up-done:hover { background: ${THEME.brandHi}; }
+.hz-up-notify { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 440px; margin-top: 4px; }
+.hz-up-notify-btn {
+  min-width: 180px; min-height: 44px; padding: 0 20px;
+  border: 1px solid ${THEME.border}; border-radius: ${THEME.radius};
+  background: transparent; color: ${THEME.text};
+  font-family: ${THEME.fontSans}; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.hz-up-notify-btn:hover:not(:disabled) { background: ${THEME.surface1}; border-color: ${THEME.borderStrong}; }
+.hz-up-notify-btn:disabled { cursor: wait; opacity: 0.7; }
+.hz-up-notify-note { margin: 0; font-size: 12px; line-height: 1.5; color: ${THEME.textMuted}; overflow-wrap: anywhere; }
+.hz-up-notify-done { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; line-height: 1.5; color: ${THEME.textDim}; text-align: left; overflow-wrap: anywhere; }
 
 /* Tablets and phones: one plan per row, name and price side by side. */
 @media (max-width: 640px) {
@@ -724,6 +810,6 @@ button.hz-up-cta:not(:disabled):hover { filter: brightness(0.96); }
   .hz-up-body { gap: 18px; padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
   .hz-up-seg { display: flex; width: 100%; }
   .hz-up-seg-btn { padding: 6px 12px; }
-  .hz-up-done { width: 100%; }
+  .hz-up-done, .hz-up-notify, .hz-up-notify-btn { width: 100%; }
 }
 `;

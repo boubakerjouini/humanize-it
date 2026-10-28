@@ -43,14 +43,19 @@ export const PUBLIC_LEAD_SOURCES = [
 ] as const satisfies readonly LeadSource[];
 export type PublicLeadSource = (typeof PUBLIC_LEAD_SOURCES)[number];
 
-/** Marketing consent topics. Lifecycle (service) email is a separate boolean. */
-export const TOPICS = ["tips", "extension_launch"] as const;
+/**
+ * Marketing consent topics. Lifecycle (service) email is a separate boolean.
+ * checkout_open is only offered in the app (the paused-checkout notice), never
+ * on a public form.
+ */
+export const TOPICS = ["tips", "extension_launch", "checkout_open"] as const;
 export type Topic = (typeof TOPICS)[number];
 
 /** Used in footers ("you subscribed to HumanizeIt {label}") and the preference center. */
 export const TOPIC_LABELS: Record<Topic, string> = {
   tips: "writing tips and offers",
   extension_launch: "Chrome extension launch updates",
+  checkout_open: "a note when upgrades open",
 };
 
 export const CHANNELS = [
@@ -183,6 +188,8 @@ export const CONSENT_WORDING = {
   "ext-v1":
     "Email me about the HumanizeIt Chrome extension: a few updates, then launch day. Unsubscribe anytime.",
   "inapp-tips-v1": "Yes, email me tips and occasional offers (about 2 a month). Unsubscribe anytime.",
+  /** The paused-checkout notice's button: one note, nothing else. */
+  "checkout-v1": "Email me once when upgrades to Pro open. Unsubscribe anytime.",
 } as const;
 export type ConsentWordingId = keyof typeof CONSENT_WORDING;
 
@@ -193,6 +200,8 @@ export type ConsentWordingId = keyof typeof CONSENT_WORDING;
  */
 export function consentWordingFor(topic: Topic, source: PublicLeadSource): ConsentWordingId {
   if (topic === "extension_launch") return "ext-v1";
+  // Public forms reject this topic (lead-validation); mapped for completeness.
+  if (topic === "checkout_open") return "checkout-v1";
   return source === "founding_waitlist" ? "tips-v1" : "tips-v2";
 }
 

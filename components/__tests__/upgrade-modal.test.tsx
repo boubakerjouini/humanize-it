@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { CheckoutPausedPanel, UpgradeModal } from "@/components/ui/upgrade-modal";
+import { CheckoutPausedPanel, joinCheckoutWaitlist, UpgradeModal } from "@/components/ui/upgrade-modal";
 import { CHECKOUT_PAUSED_FALLBACK, checkoutOutcome, requestCheckout } from "@/components/checkout-outcome";
 import type { CheckoutIntent } from "@/lib/checkout-intent";
 import type { OffersInfo } from "@/components/growth/founding-offers";
@@ -153,5 +153,41 @@ describe("CHECKOUT_PAUSED", () => {
     for (const id of describedBy!.split(" ")) expect(html).toContain(`id="${id}"`);
     expect(html).not.toContain('role="alert"');
     expect(html).not.toContain("#e11d48"); // THEME.ai, the error red
+  });
+
+  it("offers an explicit opt-in to one email, separate from Got it", () => {
+    const html = renderToStaticMarkup(<CheckoutPausedPanel message="Upgrades open soon." onDone={() => {}} />);
+    expect(html).toMatch(/<button[^>]*class="hz-up-notify-btn"[^>]*>Email me when checkout opens<\/button>/);
+    expect(html).toContain("One email to your account email, nothing else.");
+    // Nothing reads as already subscribed before the click.
+    expect(html).not.toContain("Done: we&#x27;ll send one note");
+  });
+
+  describe("joinCheckoutWaitlist", () => {
+    const realFetch = global.fetch;
+    afterEach(() => {
+      global.fetch = realFetch;
+    });
+
+    it("subscribes to checkout_open only, tagged with the paused notice as its source", async () => {
+      const fetchMock = jest.fn(async () =>
+        new Response(JSON.stringify({ email: "a@example.com", topics: ["checkout_open"], pendingTopics: [], lifecycleEmails: true, prompt: false }), { status: 200 })
+      );
+      global.fetch = fetchMock as unknown as typeof fetch;
+      await expect(joinCheckoutWaitlist()).resolves.toEqual({ email: "a@example.com", on: true });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/me/email-preferences",
+        expect.objectContaining({ method: "POST", body: JSON.stringify({ subscribe: ["checkout_open"], source: "checkout_paused" }) })
+      );
+    });
+
+    it("returns null on an error answer or a network failure", async () => {
+      global.fetch = jest.fn(async () => new Response("{}", { status: 503 })) as unknown as typeof fetch;
+      await expect(joinCheckoutWaitlist()).resolves.toBeNull();
+      global.fetch = jest.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }) as unknown as typeof fetch;
+      await expect(joinCheckoutWaitlist()).resolves.toBeNull();
+    });
   });
 });
