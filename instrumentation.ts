@@ -9,10 +9,13 @@
 import type { Instrumentation } from "next";
 
 export const onRequestError: Instrumentation.onRequestError = async (err, _request, context) => {
-  // The DB client is Node-only; edge errors (middleware) are only logged.
   const message = err instanceof Error ? err.message : String(err);
   console.error(`[ops] ${context.routePath}: ${message.slice(0, 300)}`);
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const [{ opsArea }, { bumpDailyMetric }] = await Promise.all([import("@/lib/ops/areas"), import("@/lib/growth/daily-metrics")]);
-  await bumpDailyMetric(`ops.5xx.${opsArea(context.routePath)}`);
+  // The DB client is Node-only: edge errors (middleware) are only logged. The
+  // import must sit inside this exact check, which the bundler resolves at
+  // build time, or the edge build tries to bundle pg.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const [{ opsArea }, { bumpDailyMetric }] = await Promise.all([import("@/lib/ops/areas"), import("@/lib/growth/daily-metrics")]);
+    await bumpDailyMetric(`ops.5xx.${opsArea(context.routePath)}`);
+  }
 };
