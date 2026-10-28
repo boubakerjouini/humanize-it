@@ -220,7 +220,7 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
             {deepError && (
               <p style={{ fontSize: "13px", color: THEME.warn, margin: "10px 0 0" }}>
                 {deepError.message}
-                {deepError.code === "DAILY_LIMIT_REACHED" ? (
+                {deepError.code === "DAILY_LIMIT_REACHED" || deepError.code === "BUSY_TRY_LATER" ? (
                   <>
                     {" "}
                     <Link href="/sign-up" style={{ color: THEME.brandHi, fontWeight: 600 }}>
