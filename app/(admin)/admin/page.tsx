@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/admin";
-import { getAdminMetrics, getSignupSeries } from "@/lib/admin-metrics";
+import { getAdminMetrics, getLast24hMetrics, getSignupSeries } from "@/lib/admin-metrics";
+import Link from "next/link";
 import { THEME } from "@/lib/theme";
 import { KpiCard, SectionTitle, Sparkline } from "@/components/admin/kpi";
 import {
   Users, FileText, DollarSign, Building2, Sparkles, TrendingUp, Crown, Zap,
-  Gift, AlertTriangle, UserCheck, Hash,
+  Gift, AlertTriangle, UserCheck, Hash, ScanSearch, CreditCard, Mail, Inbox,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
   if (!(await getAdminUser())) redirect("/dashboard");
-  const [m, signups] = await Promise.all([getAdminMetrics(), getSignupSeries(30)]);
+  const [m, signups, day] = await Promise.all([getAdminMetrics(), getSignupSeries(30), getLast24hMetrics()]);
 
   const money = (n: number) => `$${n.toLocaleString()}`;
   const planTotal = m.totalUsers || 1;
@@ -33,6 +34,22 @@ export default async function AdminOverviewPage() {
           </span>
         </div>
       )}
+
+      {/* The last 24 hours: what happened and what needs an answer */}
+      <SectionTitle sub="Signups, free-tool use, upgrade attempts and what is waiting for you.">Last 24 hours</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+        <KpiCard icon={Users} label="Signups" value={day.signups.toLocaleString()} sub={`${day.documents} documents created`} />
+        <Link href="/admin/documents?tab=tools" style={{ textDecoration: "none" }}>
+          <KpiCard icon={ScanSearch} label="Free-tool runs" value={day.toolRuns.toLocaleString()} sub="detector pages, deep scans, free rewrites" />
+        </Link>
+        <Link href="/admin/tasks" style={{ textDecoration: "none" }}>
+          <KpiCard icon={CreditCard} label="Upgrade attempts" value={day.upgradeAttempts.toLocaleString()} sub={day.pausedAttempts > 0 ? `${day.pausedAttempts} hit the paused checkout` : "checkouts started"} accent={day.pausedAttempts > 0 ? THEME.warn : undefined} />
+        </Link>
+        <KpiCard icon={Mail} label="Emails sent" value={day.emailsSent.toLocaleString()} sub="to users, tests excluded" />
+        <Link href="/admin/tasks" style={{ textDecoration: "none" }}>
+          <KpiCard icon={Inbox} label="Waiting for you" value={(day.openSupportEmails + day.openHighTasks).toLocaleString()} sub={`${day.openSupportEmails} support emails · ${day.openHighTasks} high-priority tasks`} accent={day.openSupportEmails + day.openHighTasks > 0 ? THEME.accent : undefined} />
+        </Link>
+      </div>
 
       {/* Revenue (real money) */}
       <SectionTitle sub="Actual Polar subscriptions only — discount-code grants are excluded.">Revenue</SectionTitle>

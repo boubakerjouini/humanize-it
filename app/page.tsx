@@ -35,6 +35,8 @@ import {
 } from "@/lib/plans";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, humanScore, humanScoreColor, humanScoreLabel, glow } from "@/lib/theme";
+import posthog from "posthog-js";
+import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then(m => m.ExitIntent), { ssr: false });
 
@@ -231,7 +233,11 @@ export default function LandingPage() {
       setShowResult(true);
       setAnalyzing(false);
     }, 300);
-  }, [canAnalyze]);
+    // The hero demo is a detector too: count it like the detector pages (metadata only, never the text).
+    const r = analyzeText(text);
+    if (posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand, tool_page: "/" });
+    sendInstantCheckRun({ page: "/", wordCount: r.wordCount, score: r.score, band: r.confidenceBand });
+  }, [canAnalyze, text]);
 
   const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
@@ -342,10 +348,10 @@ export default function LandingPage() {
         </span>
         <a href="#pricing" className="desktop-only" onClick={(e) => { e.preventDefault(); smoothScroll("pricing"); }} style={{
           color: "#ffffff", fontWeight: 600, textDecoration: "none",
-          display: "inline-flex", alignItems: "center", gap: "4px",
+          display: "inline-flex", alignItems: "center",
           borderBottom: "1px solid rgba(255,255,255,0.6)", paddingBottom: "1px",
         }}>
-          Claim offer <ArrowRight size={13} aria-hidden="true" />
+          Claim offer
         </a>
       </div>
 
@@ -412,7 +418,7 @@ export default function LandingPage() {
                 background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600,
                 padding: "6px 16px", borderRadius: "8px", textDecoration: "none",
               }}>
-                Dashboard &rarr;
+                Dashboard
               </Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
@@ -515,11 +521,11 @@ export default function LandingPage() {
                     background: THEME.brand, color: "#ffffff", fontWeight: 600,
                     padding: "15px 30px", borderRadius: THEME.radius,
                     border: "none", cursor: "pointer",
-                    fontSize: "16px", display: "inline-flex", alignItems: "center", gap: "8px",
+                    fontSize: "16px", display: "inline-flex", alignItems: "center",
                     fontFamily: THEME.fontSans,
                     boxShadow: glow(THEME.brand, 0.4),
                   }}>
-                    Humanize my text <ArrowRight size={17} aria-hidden="true" />
+                    Humanize my text
                   </button>
                 </SignUpButton>
               </SignedOut>
@@ -527,10 +533,10 @@ export default function LandingPage() {
                 <Link href="/dashboard/editor" style={{
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
                   padding: "15px 30px", borderRadius: THEME.radius, textDecoration: "none",
-                  fontSize: "16px", display: "inline-flex", alignItems: "center", gap: "8px",
+                  fontSize: "16px", display: "inline-flex", alignItems: "center",
                   boxShadow: glow(THEME.brand, 0.4),
                 }}>
-                  Humanize my text <ArrowRight size={17} aria-hidden="true" />
+                  Humanize my text
                 </Link>
               </SignedIn>
 
@@ -540,9 +546,9 @@ export default function LandingPage() {
                 padding: "15px 24px", borderRadius: THEME.radius,
                 border: `1px solid ${THEME.accent}33`,
                 fontSize: "15px", textDecoration: "none",
-                display: "inline-flex", alignItems: "center", gap: "7px",
+                display: "inline-flex", alignItems: "center",
               }}>
-                Free humanizer, no signup <ArrowRight size={15} aria-hidden="true" />
+                Free humanizer, no signup
               </Link>
             </div>
 
@@ -562,7 +568,7 @@ export default function LandingPage() {
                 No credit card required
               </span>
               <Link href="/ai-detector" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
-                Check any text with the free AI detector &rarr;
+                Check any text with the free AI detector
               </Link>
             </div>
           </div>
@@ -782,12 +788,12 @@ export default function LandingPage() {
               </p>
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "20px" }}>
                 <Link href="/extension" style={{
-                  display: "inline-flex", alignItems: "center", gap: "7px",
+                  display: "inline-flex", alignItems: "center",
                   background: THEME.brand, color: "#ffffff", fontWeight: 600,
                   padding: "12px 24px", borderRadius: THEME.radius,
                   fontSize: "14px", textDecoration: "none",
                 }}>
-                  Join the waitlist <ArrowRight size={15} aria-hidden="true" />
+                  Join the waitlist
                 </Link>
                 <Link href="/free-ai-humanizer" style={{
                   display: "inline-flex", alignItems: "center",
@@ -855,7 +861,7 @@ export default function LandingPage() {
           </div>
           <p style={{ textAlign: "center", margin: "18px 0 0", fontSize: "14px" }}>
             <Link href="/compare" style={{ color: THEME.brandHi, fontWeight: 600, textDecoration: "none" }}>
-              See detailed, side-by-side comparisons &rarr;
+              See detailed, side-by-side comparisons
             </Link>
           </p>
         </div>
@@ -934,7 +940,8 @@ export default function LandingPage() {
                     fontFamily: THEME.fontSans,
                     boxShadow: glow(THEME.accent, 0.3),
                   }}>
-                    Most Popular
+                    {/* Same badge as the plan menu: no sales figure backs "Most popular" yet. */}
+                    Recommended
                   </div>
                 )}
 
@@ -1021,8 +1028,8 @@ export default function LandingPage() {
               <strong style={{ color: THEME.text }}>Founding {FOUNDING.seats}: two years of Pro for ${FOUNDING.priceUsd}, once.</strong>{" "}
               For the first {FOUNDING.seats} people who back HumanizeIt early. When the {FOUNDING.seats} spots are gone, it closes for good.
             </p>
-            <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
-              See Founding {FOUNDING.seats} <ArrowRight size={14} aria-hidden="true" />
+            <Link href="/lifetime" style={{ display: "inline-flex", alignItems: "center", fontSize: "13px", fontWeight: 700, color: THEME.accentHi, textDecoration: "none", whiteSpace: "nowrap" }}>
+              See Founding {FOUNDING.seats}
             </Link>
           </div>
         </div>
@@ -1189,10 +1196,10 @@ export default function LandingPage() {
                   padding: "15px 30px", borderRadius: THEME.radius, border: "none",
                   fontSize: "16px", cursor: "pointer",
                   fontFamily: THEME.fontSans,
-                  display: "inline-flex", alignItems: "center", gap: "8px",
+                  display: "inline-flex", alignItems: "center",
                   boxShadow: glow(THEME.brand, 0.4),
                 }}>
-                  Humanize my text <ArrowRight size={17} aria-hidden="true" />
+                  Humanize my text
                 </button>
               </SignUpButton>
             </SignedOut>
@@ -1201,10 +1208,10 @@ export default function LandingPage() {
                 background: THEME.brand, color: "#ffffff", fontWeight: 600,
                 padding: "15px 30px", borderRadius: THEME.radius, textDecoration: "none",
                 fontSize: "16px",
-                display: "inline-flex", alignItems: "center", gap: "8px",
+                display: "inline-flex", alignItems: "center",
                 boxShadow: glow(THEME.brand, 0.4),
               }}>
-                Open Dashboard <ArrowRight size={17} aria-hidden="true" />
+                Open Dashboard
               </Link>
             </SignedIn>
             <Link href="/free-ai-humanizer" style={{
@@ -1477,7 +1484,7 @@ function DemoPanel({
         >
           {analyzing
             ? <><Loader2 size={13} className="animate-spin" aria-hidden="true" /> Analyzing&hellip;</>
-            : <>Analyze for free <ArrowRight size={14} aria-hidden="true" /></>
+            : "Analyze for free"
           }
         </button>
       </div>
@@ -1556,7 +1563,7 @@ function DemoPanel({
                 <SignUpButton mode="modal">
                   <button style={{
                     display: "flex", width: "100%", textAlign: "center",
-                    alignItems: "center", justifyContent: "center", gap: "8px",
+                    alignItems: "center", justifyContent: "center",
                     padding: "14px",
                     background: THEME.brand,
                     color: "#ffffff", borderRadius: THEME.radius, border: "none",
@@ -1564,7 +1571,7 @@ function DemoPanel({
                     fontFamily: THEME.fontSans,
                     boxShadow: glow(THEME.brand, 0.38),
                   }}>
-                    Humanize it free <ArrowRight size={15} aria-hidden="true" />
+                    Humanize it free
                   </button>
                 </SignUpButton>
               </SignedOut>
@@ -1573,7 +1580,7 @@ function DemoPanel({
                   onClick={onContinueSignedIn}
                   style={{
                     display: "flex", width: "100%", textAlign: "center",
-                    alignItems: "center", justifyContent: "center", gap: "8px",
+                    alignItems: "center", justifyContent: "center",
                     padding: "14px",
                     background: THEME.brand,
                     color: "#ffffff", borderRadius: THEME.radius, border: "none",
@@ -1582,7 +1589,7 @@ function DemoPanel({
                     boxShadow: glow(THEME.brand, 0.38),
                   }}
                 >
-                  Humanize it free <ArrowRight size={15} aria-hidden="true" />
+                  Humanize it free
                 </button>
               </SignedIn>
             </div>

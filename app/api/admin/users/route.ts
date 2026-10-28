@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     const [identities, contacts] = await Promise.all([
       resolveIdentities(users.map((u) => u.clerkId)),
       db.contact
-        .findMany({ where: { userId: { in: users.map((u) => u.id) } }, select: { id: true, userId: true, stage: true, stageOverride: true, score: true } })
+        .findMany({ where: { userId: { in: users.map((u) => u.id) } }, select: { id: true, userId: true, stage: true, stageOverride: true, score: true, utmSource: true, referrerHost: true, channel: true } })
         .catch(() => []),
     ]);
     const crm = new Map(contacts.map((c) => [c.userId, c]));
@@ -78,6 +78,8 @@ export async function GET(req: Request) {
         stage: c?.stage ?? null,
         stageOverridden: !!c?.stageOverride,
         score: c?.score ?? null,
+        // First touch, most specific first: chatgpt.com, bing.com, organic_search…
+        cameFrom: c?.utmSource ?? c?.referrerHost ?? c?.channel ?? null,
       };
     });
 

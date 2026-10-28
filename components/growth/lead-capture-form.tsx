@@ -319,7 +319,7 @@ function SuccessView({
           rel="noopener"
           style={{ display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700, fontSize: "14px", padding: "10px 22px", borderRadius: THEME.radius, textDecoration: "none", margin: "4px 0 10px", boxShadow: glow(THEME.brand, 0.3) }}
         >
-          Download the PDF &rarr;
+          Download the PDF
         </a>
         {result.delivery === "email" ? (
           <p style={body}>

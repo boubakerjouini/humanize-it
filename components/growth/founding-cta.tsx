@@ -11,7 +11,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { FOUNDING } from "@/lib/plans";
 import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
@@ -60,11 +60,10 @@ export function FoundingCta({ state, signedIn }: { state: FoundingCtaState; sign
         <button onClick={buy} disabled={busy} style={primaryBtn}>
           {busy ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : null}
           {busy ? "Starting checkout…" : `Become a founding member: $${FOUNDING.priceUsd}`}
-          {!busy && <ArrowRight size={16} aria-hidden="true" />}
         </button>
       ) : (
         <Link href="/sign-up?redirect_url=/lifetime" style={primaryBtn}>
-          {`Become a founding member: $${FOUNDING.priceUsd}`} <ArrowRight size={16} aria-hidden="true" />
+          {`Become a founding member: $${FOUNDING.priceUsd}`}
         </Link>
       )}
       <p style={{ fontSize: 12, color: THEME.textMuted, margin: "10px 0 0" }}>

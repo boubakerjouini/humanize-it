@@ -381,7 +381,7 @@ export default function AiDetectionHowItWorksPage() {
             boxShadow: glow(THEME.brand, 0.32),
           }}
         >
-          Check Your Text Free &rarr;
+          Check Your Text Free
         </Link>
       </div>
 

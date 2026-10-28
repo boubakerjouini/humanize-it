@@ -69,7 +69,7 @@ export default async function MagnetThanksPage({ params, searchParams }: Props) 
           href={magnet.nextStep.href}
           style={{ display: "inline-block", background: THEME.brand, color: "#fff", fontWeight: 700, fontSize: "14px", padding: "10px 22px", borderRadius: THEME.radius, textDecoration: "none" }}
         >
-          {magnet.nextStep.label} &rarr;
+          {magnet.nextStep.label}
         </Link>
         <p style={{ ...kitStyles.p, fontSize: "14px", margin: "14px 0 0" }}>
           Want to check and rewrite in one place?{" "}

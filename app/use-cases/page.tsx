@@ -136,7 +136,7 @@ export default function UseCasesHubPage() {
               {u.title}
             </h2>
             <p style={{ color: THEME.textDim, lineHeight: 1.7, fontSize: "15px", marginBottom: "12px" }}>{u.desc}</p>
-            <span style={{ color: THEME.brand, fontWeight: 600, fontSize: "14px" }}>Read the guide &rarr;</span>
+            <span style={{ color: THEME.brand, fontWeight: 600, fontSize: "14px" }}>Read the guide</span>
           </Link>
         ))}
       </div>
@@ -162,7 +162,7 @@ export default function UseCasesHubPage() {
           className="inline-block font-bold rounded-full px-8 py-3 transition"
           style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
-          Get Started Free &rarr;
+          Get Started Free
         </Link>
       </div>
     </div>

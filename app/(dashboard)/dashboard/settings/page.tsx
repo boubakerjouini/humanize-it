@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ArrowUpRight, ExternalLink, Mail, Users, Award, Handshake } from "lucide-react";
+import { Sparkles, Crown, Zap, CreditCard, Gift, Key, User as UserIcon, AlertTriangle, ExternalLink, Mail, Users, Award, Handshake } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { ApiKeysSection } from "@/components/workspace/api-keys-section";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -140,8 +140,8 @@ export default function SettingsPage() {
             {founding && <FoundingBadge size="md" />}
             <span style={{ flex: 1 }} />
             {isFree ? (
-              <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
-                Upgrade to Pro <ArrowUpRight size={14} aria-hidden="true" />
+              <button onClick={checkout} style={{ display: "inline-flex", alignItems: "center", background: THEME.gradient, color: "#fff", border: "none", borderRadius: 9, padding: "9px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: glow(THEME.brand, 0.28) }}>
+                Upgrade to Pro
               </button>
             ) : (
               <button onClick={portal} disabled={busy === "portal"} style={smallBtn}><CreditCard size={13} aria-hidden="true" /> Manage billing</button>

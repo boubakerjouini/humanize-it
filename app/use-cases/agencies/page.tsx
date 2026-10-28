@@ -186,7 +186,7 @@ export default function AgenciesUseCasePage() {
           className="inline-block font-bold rounded-full px-8 py-3 transition"
           style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
-          Get Team for $29/mo &rarr;
+          Get Team for $29/mo
         </Link>
       </div>
     </div>

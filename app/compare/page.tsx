@@ -252,7 +252,7 @@ export default function ComparePage() {
                         boxShadow: glow(THEME.brand),
                       }}
                     >
-                      Humanize this text &rarr;
+                      Humanize this text
                     </button>
                   </div>
                 </div>
@@ -412,14 +412,14 @@ export default function ComparePage() {
               <button
                 onClick={handleHumanizeClick}
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  display: "inline-flex", alignItems: "center",
                   background: THEME.gradient, color: "#ffffff",
                   padding: "14px 32px", borderRadius: THEME.radius, fontSize: "15px", fontWeight: 700,
                   border: "none", cursor: "pointer",
                   boxShadow: glow(THEME.brand, 0.36),
                 }}
               >
-                Start free &mdash; analyze your text &rarr;
+                Start free &mdash; analyze your text
               </button>
             </div>
           </div>
@@ -455,7 +455,7 @@ export default function ComparePage() {
                 color: THEME.text, fontWeight: 600, fontSize: "15px",
               }}
             >
-              HumanizeIt {c.name} <span style={{ color: THEME.brandHi }}>&rarr;</span>
+              HumanizeIt {c.name}
             </Link>
           ))}
         </div>

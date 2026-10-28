@@ -198,7 +198,7 @@ export default function CopywritersUseCasePage() {
           className="inline-block font-bold rounded-full px-8 py-3 transition"
           style={{ background: THEME.gradient, color: "#ffffff", boxShadow: glow(THEME.brand, 0.36) }}
         >
-          Get Pro for $9/mo &rarr;
+          Get Pro for $9/mo
         </Link>
       </div>
     </div>

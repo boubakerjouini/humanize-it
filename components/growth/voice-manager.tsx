@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AudioLines, Lock, Pencil, Trash2, Check, X, ArrowUpRight, Wand2 } from "lucide-react";
+import { AudioLines, Lock, Pencil, Trash2, Check, X, Wand2 } from "lucide-react";
 import { THEME, glow } from "@/lib/theme";
 import { PRO_ANNUAL_VOICE_PROFILES } from "@/lib/plans";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -63,7 +63,7 @@ export function VoiceManager() {
                 {`Pro includes 1 voice (${PRO_ANNUAL_VOICE_PROFILES} on annual), Team includes 10, for example one per client.`}
               </p>
               <button onClick={() => setUpgradeOpen(true)} style={primaryBtn(true)}>
-                See plans <ArrowUpRight size={14} aria-hidden="true" />
+                See plans
               </button>
             </div>
           </div>

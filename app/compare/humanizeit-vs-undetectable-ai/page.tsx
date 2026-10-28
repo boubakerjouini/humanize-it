@@ -308,7 +308,7 @@ export default function HumanizeItVsUndetectableAi() {
             boxShadow: glow(THEME.brand, 0.36),
           }}
         >
-          Start Free Today &rarr;
+          Start Free Today
         </Link>
       </div>
     </main>

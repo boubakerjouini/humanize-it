@@ -52,7 +52,7 @@ export function ArticleLayout({
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             <Link href="/blog" style={{ color: THEME.brandHi, fontSize: "13px", textDecoration: "none", fontWeight: 600 }}>Blog</Link>
             <Link href="/free-ai-humanizer" style={{ background: THEME.brand, color: "#ffffff", fontSize: "13px", fontWeight: 600, padding: "7px 18px", borderRadius: "999px", textDecoration: "none", boxShadow: glow(THEME.brand, 0.32) }}>
-              Try Free &rarr;
+              Try Free
             </Link>
           </div>
         </div>
@@ -145,7 +145,7 @@ export function ArticleLayout({
                 boxShadow: glow(THEME.brand, 0.32),
               }}
             >
-              Try the Free Humanizer &rarr;
+              Try the Free Humanizer
             </Link>
             <Link
               href="/blog"

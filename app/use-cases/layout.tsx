@@ -55,7 +55,7 @@ export default function UseCasesLayout({ children }: { children: React.ReactNode
                 textDecoration: "none",
               }}
             >
-              Try Free &rarr;
+              Try Free
             </Link>
           </div>
         </div>

@@ -1,13 +1,22 @@
 "use client";
 
+// ===========================================================
+// components/pricing-button.tsx — A paid plan's button on the home page
+// pricing section. Signed out, it keeps the pick through sign-up; signed in,
+// it starts Polar checkout. While payments are paused the server's message
+// shows as a toast instead of a silent failure.
+// ===========================================================
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { track } from "@vercel/analytics";
 import posthog from "posthog-js";
 import { THEME, glow } from "@/lib/theme";
 import { signUpUrlFor } from "@/lib/checkout-intent";
+import { requestCheckout } from "@/components/checkout-outcome";
 
 interface PricingButtonProps {
   plan: "PRO" | "TEAM";
@@ -33,18 +42,14 @@ export function PricingButton({ plan, annual, isPro, label }: PricingButtonProps
 
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, annual }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("[PricingButton] no checkout URL", data);
-        setLoading(false);
+      const outcome = await requestCheckout(plan, annual);
+      if (outcome.kind === "redirect") {
+        window.location.href = outcome.url;
+        return;
       }
+      if (outcome.kind === "paused") toast(outcome.message);
+      else console.error("[PricingButton] no checkout URL", outcome.body);
+      setLoading(false);
     } catch (err) {
       console.error("[PricingButton] fetch error", err);
       setLoading(false);
