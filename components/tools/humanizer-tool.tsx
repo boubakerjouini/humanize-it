@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
+import posthog from "posthog-js";
 import { LeadCaptureForm } from "@/components/growth/lead-capture-form";
 import { THEME, humanScore, humanScoreColor, glow } from "@/lib/theme";
 import { isToneAllowed } from "@/lib/plans";
@@ -50,7 +51,11 @@ export function HumanizerTool() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, tone, page: pathname }),
       });
-      setRes((await r.json()) as HumanizeResponse);
+      const data = (await r.json()) as HumanizeResponse;
+      setRes(data);
+      // Captured in the browser so the run joins this visitor's funnel (same
+      // distinct_id as their pageviews), only where PostHog is allowed to load. Never the text.
+      if (data.humanizedText && posthog.__loaded) posthog.capture("free_humanize_completed", { word_count: words, tone, tool_page: pathname });
     } catch {
       setRes({ error: { code: "NETWORK", message: "Something went wrong. Please try again." } });
     } finally {
