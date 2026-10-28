@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import posthog from "posthog-js";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
@@ -10,6 +11,7 @@ import { ScoreRing } from "@/components/ui/score-ring";
 import { ReportCapture, buildReportContext } from "@/components/growth/report-capture";
 import { THEME, glow, humanScore } from "@/lib/theme";
 import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
+import { savePrefill } from "@/lib/prefill";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
@@ -79,6 +81,8 @@ const DEEP_MIN_WORDS = 25;
  */
 export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
   const [text, setText] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [deep, setDeep] = useState<DeepScan | null>(null);
@@ -105,6 +109,15 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
     // PostHog only runs where instrumentation-client.ts allows it; the ToolRun counts the check either way. Never the text.
     if (posthog.__loaded) posthog.capture("free_check_completed", { word_count: r.wordCount, score_band: r.confidenceBand, tool_page: pathname });
     sendInstantCheckRun({ page: pathname, wordCount: r.wordCount, score: r.score, band: r.confidenceBand });
+  }
+
+  // The checked text goes along to the next step: the editor when signed in, else
+  // the no-signup humanizer (still the first step). It stays in this tab until
+  // the user presses Humanize there.
+  function handOff() {
+    savePrefill(text);
+    if (posthog.__loaded) posthog.capture("detector_handoff_clicked", { word_count: words, tool_page: pathname });
+    router.push(isSignedIn ? "/dashboard" : ctaHref);
   }
 
   async function runDeepScan() {
@@ -176,16 +189,17 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
                   ? "No strong AI patterns found by the instant check. Run a deep scan for a second opinion."
                   : `Found ${triggered.length} AI-pattern ${triggered.length === 1 ? "signal" : "signals"}. Humanize to reduce them.`}
               </p>
-              <Link
-                href={ctaHref}
+              <button
+                type="button"
+                onClick={handOff}
                 style={{
                   display: "inline-block", background: THEME.gradient, color: "#fff", fontWeight: 700,
-                  fontSize: "14px", padding: "10px 22px", borderRadius: THEME.radius, textDecoration: "none",
-                  boxShadow: glow(THEME.brand, 0.3),
+                  fontSize: "14px", padding: "10px 22px", borderRadius: THEME.radius, border: "none",
+                  boxShadow: glow(THEME.brand, 0.3), cursor: "pointer", fontFamily: THEME.fontSans,
                 }}
               >
                 Humanize this text free
-              </Link>
+              </button>
             </div>
           </div>
 
