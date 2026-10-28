@@ -30,9 +30,10 @@ export function ScoreRing({ score, size = 140, strokeWidth = 8, animate = true, 
 
   // Centre number: static unless `countUp`, in which case it eases 0 → human
   // over ~1s in step with the ring stroke (the ring number was previously fixed).
-  const [display, setDisplay] = useState(countUp ? 0 : human);
+  const [counted, setDisplay] = useState(0);
+  const display = countUp ? counted : human;
   useEffect(() => {
-    if (!countUp) { setDisplay(human); return; }
+    if (!countUp) return;
     let raf = 0;
     let startTs: number | null = null;
     const duration = 1000;
