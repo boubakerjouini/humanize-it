@@ -1,0 +1,11 @@
+Honestly the "which language first" question matters way less than people on here make it sound. The concepts transfer. Loops, functions, variables, debugging your own dumb mistakes at 1am. Once you get those down in one language, picking up the second takes weeks, not months.
+
+That said, here's how I'd decide:
+
+**Want to build websites or see stuff on a screen fast?** JS. You open a browser, write some code, and boom, a button does something. That instant feedback kept me going when I was starting out.
+
+**Interested in data, automation, scripting, or just want cleaner syntax to learn on?** Python. It reads almost like English and you won't be fighting weird quirks like `[] + {}` doing whatever the hell it does.
+
+I started with Python, switched to JS for a job, and genuinely don't think the order mattered much. What mattered was actually building things instead of bouncing between tutorials for 6 months (guilty).
+
+Pick one, commit for like 3 months, make a dumb little project. You'll be fine either way.

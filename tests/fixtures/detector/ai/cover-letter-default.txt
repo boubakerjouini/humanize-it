@@ -1,0 +1,17 @@
+Dear Hiring Manager,
+
+I am writing to apply for the Junior Data Analyst position at your company. With a degree in statistics and hands-on experience turning messy data into clear recommendations, I am excited by the chance to support your logistics operations.
+
+During my internship at a regional distribution company, I analyzed delivery records to identify patterns behind late shipments. Using SQL and Excel, I cleaned and merged data from three sources, then built a Tableau dashboard that tracked on-time performance by route and carrier. The operations team used it in weekly meetings, and their adjustments to two problem routes reduced delays by 12 percent over the following quarter.
+
+In my coursework, I completed a capstone project forecasting warehouse demand with Python, using pandas and scikit-learn. I presented the findings to a panel of faculty and industry guests, which taught me how important it is to explain technical results in plain language. I enjoy that part of the work as much as the analysis itself.
+
+I am drawn to logistics because small improvements in routing, inventory, or scheduling can have a visible impact on cost and customer satisfaction. Your company's reputation for investing in data-driven operations makes it an ideal place for me to grow my skills while contributing right away.
+
+I am detail-oriented, curious, and comfortable working with cross-functional teams. I learn quickly, ask good questions, and take pride in producing accurate, reliable work.
+
+Thank you for your time and consideration. I would welcome the opportunity to discuss how I can support your team, and I am happy to provide work samples or references upon request.
+
+Sincerely,
+[Your Name]
+[Phone] | [Email]

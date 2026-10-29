@@ -9,6 +9,9 @@
 // A finished scan is counted in PostHog (deep_scan_completed) under a fresh id
 // per scan, with no person profile and never the text, and as a ToolRun row
 // (lib/growth/tool-runs.ts) with the page it ran on, for the admin view.
+// Signed-in callers are bounded per account by their effective plan (a lapsed
+// gift counts as Free) and, for Free accounts, by one shared daily ceiling, so
+// signing up many free accounts can't multiply the model bill either.
 // ===========================================================
 
 import { randomUUID } from "node:crypto";
@@ -17,6 +20,7 @@ import { NextResponse } from "next/server";
 import { deepScanText } from "@/lib/detect-llm";
 import { activeProvider } from "@/lib/llm";
 import { ensureUser } from "@/lib/user";
+import { effectivePlanId } from "@/lib/quota";
 import { checkRateLimit, checkDailyLimit, rateLimitHeaders } from "@/lib/rate-limit";
 import { clientIp, ipBucket } from "@/lib/client-ip";
 import { touchEventProps } from "@/lib/growth/attribution";
@@ -25,7 +29,7 @@ import { runAfter } from "@/lib/growth/safe";
 import { trackServer } from "@/lib/posthog";
 import { cleanToolPage, recordToolRun, refererPage, toolRunSource } from "@/lib/growth/tool-runs";
 
-const MAX_CHARS = 6000;
+const MAX_CHARS = 9000; // ~1200 words of English; 6000 refused ~1000-word texts with a "1200 words" message
 const MAX_WORDS = 1200; // a deep scan reads more than the humanizer rewrites
 const MIN_WORDS = 25; // below this the model can't judge reliably
 
@@ -37,8 +41,18 @@ const ANON_PER_DAY = 15;
 const ALL_ANON_PER_DAY = 1500;
 
 // Signed-in (dashboard editor) — bounded per user, generous for paid plans.
+// One scan costs about $0.006 (scripts/detector-deepscan-eval.ts), so a Pro
+// account maxing out every day costs about $18/month, double the plan price;
+// real use is a handful a day.
 const USER_BURST_PER_MIN = 10;
-const USER_PER_DAY: Record<string, number> = { FREE: 20, PRO: 200, TEAM: 200 };
+const USER_PER_DAY: Record<string, number> = { FREE: 20, PRO: 100, TEAM: 100 };
+// All Free accounts together, like ALL_ANON_PER_DAY for anonymous callers.
+const ALL_FREE_PER_DAY = 1000;
+
+// The SDK's own timeout is 10 minutes with retries; a deep scan normally takes
+// 5-10 s. Past this we answer with a retryable error instead of hanging.
+const DEEP_SCAN_TIMEOUT_MS = 30_000;
+export const maxDuration = 45;
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -51,7 +65,7 @@ async function currentUser(): Promise<{ id: string; plan: string } | null> {
     const { userId } = await auth();
     if (!userId) return null;
     const u = await ensureUser(userId);
-    return { id: u.id, plan: u.plan };
+    return { id: u.id, plan: effectivePlanId(u) };
   } catch {
     return null;
   }
@@ -84,15 +98,27 @@ async function enforceLimits(req: Request): Promise<
       ok: false,
       response: NextResponse.json(
         {
-          error: { code: "DAILY_LIMIT_REACHED", message: `You've used your ${dailyLimit} deep scans for today.${user ? "" : " Sign up free for more."}` },
+          error: { code: "DAILY_LIMIT_REACHED", message: dailyLimitMessage(dailyLimit, user?.plan ?? null) },
           signupCta: !user,
         },
         { status: 429, headers: { ...rateLimitHeaders(daily), "Retry-After": String(daily.retryAfterSeconds) } }
       ),
     };
   }
-  // After the per-IP checks, so one abuser's refused calls never use up the
-  // shared budget. Signed-in users are bounded per account and skip it.
+  // After the per-IP / per-account checks, so one abuser's refused calls never
+  // use up the shared budget. Paid accounts are bounded per account only.
+  if (user?.plan === "FREE") {
+    const allFree = await checkDailyLimit("detect:day:free:all", ALL_FREE_PER_DAY);
+    if (!allFree.ok) {
+      return {
+        ok: false,
+        response: NextResponse.json(
+          { error: { code: "BUSY_TRY_LATER", message: "Free deep scans are busy today. Try again tomorrow, or upgrade to Pro." } },
+          { status: 429, headers: { "Retry-After": String(allFree.retryAfterSeconds) } }
+        ),
+      };
+    }
+  }
   if (!user) {
     const all = await checkDailyLimit("detect:day:anon:all", ALL_ANON_PER_DAY);
     if (!all.ok) {
@@ -106,6 +132,21 @@ async function enforceLimits(req: Request): Promise<
     }
   }
   return { ok: true, daily, userId: user?.id ?? null };
+}
+
+function dailyLimitMessage(limit: number, plan: string | null): string {
+  const base = `You've used your ${limit} deep scans for today. They refill at midnight UTC.`;
+  if (!plan) return `${base} Sign up free for more.`;
+  if (plan === "FREE") return `${base} Pro includes ${USER_PER_DAY.PRO} a day.`;
+  return base;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`deep scan timed out after ${ms} ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 export async function POST(req: Request) {
@@ -146,7 +187,7 @@ export async function POST(req: Request) {
   const page = cleanToolPage(body.page) ?? refererPage(req);
 
   try {
-    const result = await deepScanText(text);
+    const result = await withTimeout(deepScanText(text), DEEP_SCAN_TIMEOUT_MS);
     const touch = firstTouchOf(await readAttribution());
     runAfter("detect:analytics", () =>
       trackServer(randomUUID(), "deep_scan_completed", {

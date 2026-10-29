@@ -2,6 +2,40 @@
 // HumanizeIt — Statistical Text Metrics
 // ===========================================================
 
+// Abbreviations whose period does not end a sentence. Splitting on every "."
+// turned "e.g." or "Dr." into extra two-word sentences, which faked the
+// uneven rhythm burstiness reads as human.
+const ABBREVIATION_RE = /\b(?:e\.g|i\.e|etc|vs|mr|mrs|ms|dr|prof|st|jr|sr|no|fig|approx|u\.s|u\.k|a\.m|p\.m)\./gi;
+const LIST_MARKER = String.raw`(?:[-*+•]|\d{1,3}[.)]|#{1,6})`;
+// A blank line, or a newline that starts a list item or heading, always ends
+// a sentence: list items and headings rarely carry their own period.
+const BLOCK_BREAK_RE = new RegExp(String.raw`\n\s*\n|\n(?=[ \t]*${LIST_MARKER}\s)`);
+const LEADING_MARKER_RE = new RegExp(String.raw`^\s*${LIST_MARKER}\s+`);
+const PLACEHOLDER = "․"; // one-dot leader: same length, never a terminator
+
+/**
+ * Split text into sentences. Ends a sentence at . ! ? … followed by
+ * whitespace (closing quotes/brackets stay with it), at blank lines, and at
+ * list items / markdown headings. Hard-wrapped lines inside a paragraph are
+ * joined. Decimals ("3.5"), initials ("J. R.") and common abbreviations do
+ * not split, and neither do dots inside URLs or file names.
+ */
+export function splitSentences(text: string): string[] {
+  const out: string[] = [];
+  for (const rawBlock of text.replace(/\r/g, "").split(BLOCK_BREAK_RE)) {
+    const block = rawBlock.replace(LEADING_MARKER_RE, "").replace(/\s*\n\s*/g, " ");
+    const masked = block
+      .replace(ABBREVIATION_RE, (m) => m.replace(/\./g, PLACEHOLDER))
+      .replace(/(\d)\.(?=\d)/g, `$1${PLACEHOLDER}`)
+      .replace(/\b([A-Z])\.(?=\s?[A-Z])/g, `$1${PLACEHOLDER}`); // initials: "J. R. Tolkien"
+    for (const piece of masked.split(/[.!?…]+["'”’)\]]*(?=\s|$)/)) {
+      const sentence = piece.replaceAll(PLACEHOLDER, ".").trim();
+      if (/[\p{L}\p{N}]/u.test(sentence)) out.push(sentence);
+    }
+  }
+  return out;
+}
+
 /**
  * Compute burstiness: variance in sentence length.
  *
@@ -103,10 +137,7 @@ export function computeAvgSentenceLength(sentences: string[]): number {
  * @returns Flesch Reading Ease score (0–100+)
  */
 export function computeFleschReadingEase(text: string): number {
-  const sentences = text
-    .split(/[.!?]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const sentences = splitSentences(text);
   const words = text
     .toLowerCase()
     .split(/\s+/)

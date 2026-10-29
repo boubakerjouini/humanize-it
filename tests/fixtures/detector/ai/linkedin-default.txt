@@ -1,0 +1,22 @@
+Two years ago, we launched a product nobody wanted.
+
+We'd spent nine months building it. The demo was polished. The team was proud. Launch day came, and we got 41 signups. Twelve of them were friends.
+
+For weeks, I blamed the marketing. Then the timing. Then the market.
+
+The real problem was simpler and more uncomfortable: we never asked customers whether they had the problem we were solving. We asked whether they liked our solution. Those are very different questions.
+
+People are polite. Show them something you've clearly worked hard on, and they'll say "this is cool." What they won't say is "I'd never pay for this," because that feels rude.
+
+Here's what I do differently now:
+
+→ I talk to customers before writing a single line of code.
+→ I ask about past behavior, not hypothetical future behavior. "How did you handle this last month?" beats "Would you use this?"
+→ I look for people already hacking together workarounds. That's where the real pain is.
+→ I treat compliments as noise and commitments (time, money, referrals) as signal.
+
+That failed launch cost us nine months. The lesson has saved us years since.
+
+What's the hardest lesson a launch has taught you?
+
+#ProductManagement #Startups #LessonsLearned
