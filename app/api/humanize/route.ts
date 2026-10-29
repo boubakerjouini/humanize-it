@@ -4,11 +4,13 @@
 // Plan gates enforced here, not just in the editor: Free rewrites use the
 // Standard tone only (TONE_LOCKED otherwise), and Voice Match needs a usable
 // stored profile (`voiceProfileId`, see app/api/voice-profiles/shared.ts).
+// A failed rewrite refunds the reserved words and answers with the reason
+// (lib/rewrite-errors.ts): busy provider → 503 + Retry-After, cut off, declined.
 // ===========================================================
 
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { humanizeText, type ToneOption, type IntensityLevel } from "@/lib/algorithms/humanizeText";
+import { humanizeText, type ToneOption, type IntensityLevel, type HumanizeUsage } from "@/lib/algorithms/humanizeText";
 import { analyzeText, type AnalysisResult } from "@/lib/algorithms/analyzeText";
 import { db } from "@/lib/db";
 import { ensureUser } from "@/lib/user";
@@ -22,6 +24,11 @@ import { recordEvent } from "@/lib/crm/events";
 import { runAfter } from "@/lib/growth/safe";
 import { isToneAllowed } from "@/lib/plans";
 import { toFingerprint, usableProfileIds, voiceAllowance } from "@/app/api/voice-profiles/shared";
+import { rewriteFailure } from "@/lib/rewrite-errors";
+
+// Explicit so a long text (chunked, see lib/algorithms/humanizeText.ts) never
+// depends on the platform default.
+export const maxDuration = 300;
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 
@@ -185,6 +192,7 @@ export async function POST(req: Request) {
 
     let humanizedText: string;
     let tokensUsed: number;
+    let usage: HumanizeUsage = { inputTokens: 0, outputTokens: 0, calls: 0 };
     let modelUsed = "";
     try {
       const result = await humanizeText(
@@ -198,13 +206,18 @@ export async function POST(req: Request) {
       );
       humanizedText = result.humanizedText;
       tokensUsed = result.tokensUsed;
+      usage = result.usage;
       modelUsed = result.model;
     } catch (modelErr) {
       await refundWords(freshUser.id, words, pool);
       console.error("[humanize] model call failed:", modelErr);
+      const failure = rewriteFailure(modelErr);
       return NextResponse.json(
-        { error: { code: "REWRITE_FAILED", message: "The rewrite could not be completed. Please try again." } },
-        { status: 502, headers: rlHeaders }
+        { error: { code: failure.code, message: failure.message } },
+        {
+          status: failure.status,
+          headers: failure.retryAfter ? { ...rlHeaders, "Retry-After": String(failure.retryAfter) } : rlHeaders,
+        }
       );
     }
 
@@ -245,6 +258,11 @@ export async function POST(req: Request) {
     trackServer(clerkId, "text_humanized", {
       tone: toneValue,
       tokens_used: tokensUsed,
+      // Split so cost per rewrite can be computed (output tokens cost 5x input).
+      input_tokens: usage.inputTokens,
+      output_tokens: usage.outputTokens,
+      model_calls: usage.calls,
+      model: modelUsed,
       word_count: document.wordCount,
       plan: plan.id,
       voice: !!voiceFingerprint,

@@ -143,6 +143,12 @@ export function humanizeError(status: number, body?: ErrorBody): FriendlyError {
     case "EMPTY_RESULT":
       // The route refunds the reserved words on both of these.
       return { title: "The rewrite didn't go through", message: "Your original text is unchanged and no words were used. Try again.", retryable: true };
+    case "MODEL_BUSY":
+      return { title: "Our AI provider is busy", message: "No words were used. Give it a minute, then try again.", retryable: true };
+    case "REWRITE_TRUNCATED":
+      return { title: "The rewrite was cut off", message: "We didn't keep a partial rewrite and no words were used. Try again, or humanize it in shorter parts.", retryable: true };
+    case "REWRITE_REFUSED":
+      return { title: "The AI declined this text", message: "Your original text is unchanged and no words were used.", retryable: false };
     case "TONE_LOCKED":
     case "VOICE_LOCKED":
       return { title: "That option is part of Pro", message: "We switched back to the Standard tone with no voice. Humanize again, or upgrade to keep it.", retryable: true };
@@ -158,7 +164,11 @@ export function deepScanError(status: number, body?: ErrorBody): FriendlyError {
   const code = body?.error?.code;
   // Also a 429, so it must win over the generic rate-limit wording.
   if (code === "DAILY_LIMIT_REACHED") {
-    return { title: "No deep scans left today", message: "Deep scans refill tomorrow. The instant estimate above still works.", retryable: false };
+    // The server message names the plan's allowance and when it refills.
+    return { title: "No deep scans left today", message: `${body?.error?.message ?? "Deep scans refill tomorrow."} The instant estimate above still works.`, retryable: false };
+  }
+  if (code === "BUSY_TRY_LATER") {
+    return { title: "Deep scans are busy today", message: body?.error?.message ?? "Try again tomorrow. The instant estimate above still works.", retryable: false };
   }
   if (status === 429 || code === "RATE_LIMITED") return RATE_LIMITED;
   switch (code) {

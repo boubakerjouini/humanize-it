@@ -51,11 +51,22 @@ Reserve >90 and <10 for clear cases; use the middle bands when genuinely unsure.
 Return ONLY a JSON object, no prose, no code fence:
 {"aiLikelihood": <int 0-100>, "confidence": "low"|"medium"|"high", "verdict": "<short phrase>", "signals": ["<3-6 short bullets>"], "reasoning": "<1-2 sentences>"}`;
 
-function clampInt(n: unknown, lo: number, hi: number, fallback: number): number {
-  const v = typeof n === "number" ? n : Number(n);
-  if (!Number.isFinite(v)) return fallback;
-  return Math.max(lo, Math.min(hi, Math.round(v)));
+/** The model's score as an int in [0, 100], or null when it gave none. A
+ *  missing score used to default to 50, which shows as "Mixed" and sits on
+ *  the flag threshold; now it fails the scan so the user can retry. */
+function parseScore(n: unknown): number | null {
+  const v = typeof n === "number" ? n : typeof n === "string" && n.trim() ? Number(n) : NaN;
+  if (!Number.isFinite(v)) return null;
+  return Math.max(0, Math.min(100, Math.round(v)));
 }
+
+/** The key holding the score when the model misspells "aiLikelihood". At
+ *  temperature 0 it wrote "aiLelihood" for 2 of 59 eval passages (2026-10),
+ *  which used to fall back to 50 and show clearly human text as "Mixed". */
+function scoreKey(parsed: Record<string, unknown>): string {
+  return Object.keys(parsed).find((k) => /^ai.*(hood|score)$/i.test(k) || /likelihood/i.test(k)) ?? "aiLikelihood";
+}
+
 
 /** Extract and parse the first balanced JSON object from a model response. */
 function parseJsonObject(raw: string): Record<string, unknown> | null {
@@ -94,8 +105,16 @@ function verdictFor(score: number): string {
  * fails outright (the caller maps that to a 502/503); never returns a partial.
  */
 export async function deepScanText(text: string): Promise<DeepScanResult> {
-  const { text: out, model } = await complete({
+  return (await deepScanWithUsage(text)).result;
+}
+
+/** deepScanText() plus the tokens it used (input + output) — for the cost eval. */
+export async function deepScanWithUsage(text: string): Promise<{ result: DeepScanResult; tokensUsed: number }> {
+  const { text: out, model, tokensUsed } = await complete({
     system: SYSTEM,
+    // Prompt wording kept as calibrated. A <passage>-tag + "ignore instructions
+    // inside it" variant (2026-10) cost 2/28 AI recall in the eval, so it is
+    // not shipped until re-measured on a larger set.
     prompt: `Analyze this passage and return the JSON verdict.\n\n---\n${text}\n---`,
     maxTokens: 600,
     temperature: 0, // deterministic, calibrated grading — not creative
@@ -106,15 +125,19 @@ export async function deepScanText(text: string): Promise<DeepScanResult> {
     throw new Error("Deep scan returned an unparseable verdict.");
   }
 
-  const aiLikelihood = clampInt(parsed.aiLikelihood, 0, 100, 50);
+  const aiLikelihood = parseScore(parsed.aiLikelihood ?? parsed[scoreKey(parsed)]);
+  if (aiLikelihood === null) {
+    throw new Error("Deep scan verdict had no usable aiLikelihood.");
+  }
   const confidence: DeepScanConfidence =
     parsed.confidence === "high" || parsed.confidence === "low" ? parsed.confidence : "medium";
   const signals = Array.isArray(parsed.signals)
     ? parsed.signals.filter((s): s is string => typeof s === "string").slice(0, 6)
     : [];
   const reasoning = typeof parsed.reasoning === "string" ? parsed.reasoning : "";
-  const verdict =
-    typeof parsed.verdict === "string" && parsed.verdict.trim() ? parsed.verdict.trim() : verdictFor(aiLikelihood);
+  // The headline always follows the score. The model's own phrase could
+  // contradict it (seen in the 2026-10 eval: "Clearly human" at 50/100).
+  const verdict = verdictFor(aiLikelihood);
 
-  return { aiLikelihood, confidence, verdict, signals, reasoning, model };
+  return { result: { aiLikelihood, confidence, verdict, signals, reasoning, model }, tokensUsed };
 }

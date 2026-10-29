@@ -1,0 +1,14 @@
+Dear Hiring Manager,
+
+I'm applying for the Junior Data Analyst job you posted last week. I have a degree in statistics and I've spent the past year turning messy data into recommendations people actually used, so this role looks like a good fit.
+
+During my internship at a regional distribution company, I analyzed delivery records to figure out why shipments were late. I cleaned and merged data from three sources in SQL and Excel (the carrier data was a mess), then built a Tableau dashboard that tracked on-time performance by route and carrier. Operations used it in their Monday meetings, and after they changed two problem routes, delays dropped by 12 percent the next quarter.
+
+For my capstone I forecast warehouse demand with Python, pandas and scikit-learn. I presented it to faculty and a couple of people from industry, and honestly the presenting taught me more than the model did: explaining results in plain language is half the job.
+
+I like logistics because small changes in routing or inventory show up quickly in cost and in how happy customers are. Your company seems to take data seriously, which is where I want to start.
+
+Thanks for your time. I'm happy to send work samples or references.
+
+Sincerely,
+Sam Ortega

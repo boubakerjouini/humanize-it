@@ -9,6 +9,7 @@ import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, glow } from "@/lib/theme";
 import { InlineError } from "@/components/workspace/inline-error";
 import { deepScanError, type FriendlyError } from "@/components/workspace/feedback";
+import { LOW_RELIABILITY_NOTE } from "@/lib/detector-copy";
 
 /** Min words for a reliable deep scan — mirrors app/api/detect MIN_WORDS. */
 const DEEP_MIN_WORDS = 25;
@@ -91,6 +92,11 @@ export function AnalysisPanel({
               ? "No AI patterns found in the instant scan. This is a quick estimate: run a Deep scan below for a second opinion."
               : `Found ${triggered.length} potential AI signal${triggered.length === 1 ? "" : "s"} across ${result.wordCount.toLocaleString()} words (highlighted below). This is a quick estimate: run a Deep scan for a second opinion.`}
           </p>
+          {result.lowReliability && (
+            <p style={{ fontSize: 13, color: THEME.textMuted, lineHeight: 1.5, margin: "-6px 0 14px" }}>
+              {LOW_RELIABILITY_NOTE[result.lowReliability]}
+            </p>
+          )}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={onHumanize} disabled={busy}
               style={{ display: "inline-flex", alignItems: "center", gap: 8, background: busy ? THEME.surface3 : THEME.gradient, color: busy ? THEME.textMuted : "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontSize: 14, fontWeight: 700, cursor: busy ? "not-allowed" : "pointer", boxShadow: busy ? "none" : glow(THEME.brand, 0.3), fontFamily: THEME.fontSans }}>

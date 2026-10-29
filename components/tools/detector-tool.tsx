@@ -12,6 +12,7 @@ import { ReportCapture, buildReportContext } from "@/components/growth/report-ca
 import { THEME, glow, humanScore } from "@/lib/theme";
 import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
 import { savePrefill } from "@/lib/prefill";
+import { LOW_RELIABILITY_NOTE } from "@/lib/detector-copy";
 
 const ExitIntent = dynamic(() => import("@/components/ui/exit-intent").then((m) => m.ExitIntent), { ssr: false });
 
@@ -67,7 +68,6 @@ function ScoreScale({ human }: { human: number }) {
 
 /** API word floor for a reliable deep scan — mirrors app/api/detect MIN_WORDS. */
 const DEEP_MIN_WORDS = 25;
-
 /**
  * Free, no-signup AI detector. The instant check runs the same 40-pattern
  * analyzeText() engine the product uses entirely client-side, so the pasted
@@ -189,6 +189,11 @@ export function DetectorTool({ ctaHref = "/free-ai-humanizer" }: { ctaHref?: str
                   ? "No strong AI patterns found by the instant check. Run a deep scan for a second opinion."
                   : `Found ${triggered.length} AI-pattern ${triggered.length === 1 ? "signal" : "signals"}. Humanize to reduce them.`}
               </p>
+              {result.lowReliability && (
+                <p style={{ fontSize: "13px", color: THEME.textMuted, lineHeight: 1.5, margin: "-6px 0 14px" }}>
+                  {LOW_RELIABILITY_NOTE[result.lowReliability]}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={handOff}
