@@ -158,7 +158,11 @@ export function deepScanError(status: number, body?: ErrorBody): FriendlyError {
   const code = body?.error?.code;
   // Also a 429, so it must win over the generic rate-limit wording.
   if (code === "DAILY_LIMIT_REACHED") {
-    return { title: "No deep scans left today", message: "Deep scans refill tomorrow. The instant estimate above still works.", retryable: false };
+    // The server message names the plan's allowance and when it refills.
+    return { title: "No deep scans left today", message: `${body?.error?.message ?? "Deep scans refill tomorrow."} The instant estimate above still works.`, retryable: false };
+  }
+  if (code === "BUSY_TRY_LATER") {
+    return { title: "Deep scans are busy today", message: body?.error?.message ?? "Try again tomorrow. The instant estimate above still works.", retryable: false };
   }
   if (status === 429 || code === "RATE_LIMITED") return RATE_LIMITED;
   switch (code) {
