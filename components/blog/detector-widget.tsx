@@ -9,6 +9,7 @@ import type { AnalysisResult, PatternHit } from "@/lib/algorithms/analyzeText";
 import { ScoreRing } from "@/components/ui/score-ring";
 import { THEME, glow } from "@/lib/theme";
 import { sendInstantCheckRun } from "@/lib/growth/tool-run-client";
+import { LOW_RELIABILITY_NOTE } from "@/lib/detector-copy";
 
 export function DetectorWidget() {
   const pathname = usePathname();
@@ -31,7 +32,7 @@ export function DetectorWidget() {
   }
 
   const topPatterns: PatternHit[] = result
-    ? result.patterns.sort((a, b) => b.weight - a.weight).slice(0, 5)
+    ? [...result.patterns].sort((a, b) => b.weight - a.weight).slice(0, 5)
     : [];
 
   return (
@@ -115,6 +116,11 @@ export function DetectorWidget() {
                 Higher is more human. We humanize text to push this score up and the
                 AI-detection score down.
               </div>
+              {result.lowReliability && (
+                <div style={{ fontSize: "12px", color: THEME.textMuted, lineHeight: 1.5, marginTop: "6px" }}>
+                  {LOW_RELIABILITY_NOTE[result.lowReliability]}
+                </div>
+              )}
             </div>
           </div>
 

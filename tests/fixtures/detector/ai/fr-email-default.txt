@@ -1,0 +1,16 @@
+**Objet : Relance – Facture n° [numéro] en attente de règlement**
+
+Madame, Monsieur,
+
+Sauf erreur ou omission de notre part, nous constatons que la facture n° [numéro], d'un montant de [montant] € TTC, émise le [date d'émission] et arrivée à échéance le [date d'échéance], demeure à ce jour impayée.
+
+Il s'agit peut-être d'un simple oubli. C'est pourquoi nous vous serions reconnaissants de bien vouloir procéder à son règlement dans les meilleurs délais, par virement bancaire sur le compte dont les coordonnées figurent sur la facture. Vous trouverez une copie de celle-ci en pièce jointe.
+
+Si votre paiement a été effectué entre-temps, nous vous prions de ne pas tenir compte de ce message. En cas de difficulté ou pour toute question, notre service comptabilité reste à votre disposition au [numéro de téléphone] ou à l'adresse [adresse e-mail].
+
+Nous vous remercions par avance de votre diligence et vous prions d'agréer, Madame, Monsieur, l'expression de nos salutations distinguées.
+
+[Prénom Nom]
+[Fonction]
+[Entreprise]
+[Coordonnées]

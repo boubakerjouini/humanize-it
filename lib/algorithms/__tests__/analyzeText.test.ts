@@ -346,10 +346,12 @@ describe("New patterns", () => {
     expect(result.patterns.some(p => p.id === "passive-voice")).toBe(true);
   });
 
-  it("scores ChatGPT-typical text above 70", () => {
+  it("keeps a ChatGPT-typical snippet uncertain, and flags it once there is enough text", () => {
     const text = `In today's rapidly evolving landscape — it is important to note that artificial intelligence has become a pivotal and transformative force. Furthermore, this nuanced and comprehensive approach underscores the multifaceted nature of modern technology. Moreover, leveraging these robust and scalable solutions can seamlessly streamline workflows and holistically foster innovation. The groundbreaking advancements in this space are truly unprecedented. As we look to the future, the possibilities are endless.`;
-    const result = analyzeText(text);
-    expect(result.score).toBeGreaterThan(70);
+    const snippet = analyzeText(text);
+    expect(snippet.score).toBeLessThanOrEqual(45);
+    expect(snippet.lowReliability).toBe("short-text");
+    expect(analyzeText(`${text}\n\n${AI_TEXT}`).score).toBeGreaterThan(70);
   });
 
   it("scores casual human text below 30", () => {
@@ -393,5 +395,47 @@ describe("Edge cases", () => {
         expect(typeof ex).toBe("string");
       }
     }
+  });
+});
+
+// ---- Edge inputs and reliability (2026-10 deep dive) ----
+
+describe("analyzeText() — edge inputs", () => {
+  test.each([["empty", ""], ["whitespace", "  \n\n "], ["emoji only", "😀 ".repeat(200)], ["symbols", "(((( [[[ $^*+? ".repeat(30)]])(
+    "%s scores 0 with no patterns instead of 'possibly AI'",
+    (_label, text) => {
+      const r = analyzeText(text);
+      expect(r.score).toBe(0);
+      expect(r.patterns).toEqual([]);
+    }
+  );
+
+  test("non-Latin script stays uncertain and says why", () => {
+    const r = analyzeText("هذا نص تجريبي لفحص الكاشف. نحن نختبر النظام الآن. ".repeat(20));
+    expect(r.score).toBeLessThanOrEqual(40);
+    expect(r.lowReliability).toBe("unsupported-script");
+  });
+
+  test("short text is never flagged and is marked low-reliability", () => {
+    const r = analyzeText(AI_TEXT.split(/\s+/).slice(0, 60).join(" "));
+    expect(r.score).toBeLessThan(45);
+    expect(r.lowReliability).toBe("short-text");
+  });
+
+  test("long text carries no low-reliability flag", () => {
+    expect(analyzeText(`${AI_TEXT}\n\n${HUMAN_TEXT}`).lowReliability).toBeUndefined();
+  });
+
+  test("a 50k-word paste stays fast", () => {
+    const big = `${HUMAN_TEXT}\n\n`.repeat(250);
+    const t0 = Date.now();
+    analyzeText(big);
+    expect(Date.now() - t0).toBeLessThan(2000);
+  });
+
+  test("vocabulary tells are found next to punctuation", () => {
+    const r = analyzeText("We must delve, carefully, into the tapestry. It is pivotal.");
+    const vocab = r.patterns.find((p) => p.id === "ai-vocab-t1");
+    expect(vocab?.examples).toEqual(expect.arrayContaining(["delve", "tapestry", "pivotal"]));
   });
 });

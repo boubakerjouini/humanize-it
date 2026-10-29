@@ -25,6 +25,7 @@ import {
   computeTypeTokenRatio,
   computeAvgSentenceLength,
   computeFleschReadingEase,
+  splitSentences,
 } from "./stats";
 
 // ---- Types ----
@@ -54,6 +55,10 @@ export interface AnalysisResult {
   patterns: PatternHit[];
   stats: TextStats;
   wordCount: number;
+  /** Set when the score is a weak hint only: the text is too short to judge
+   *  (under RELIABLE_MIN_WORDS), or mostly in a non-Latin script the
+   *  English-tuned engine can't read. Absent on results stored before 2026-10. */
+  lowReliability?: "short-text" | "unsupported-script";
 }
 
 // ---- Helpers ----
@@ -62,15 +67,18 @@ function clamp(min: number, max: number, value: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/** Lowercase words with surrounding punctuation stripped, so "landscape," and
+ *  "crucial." match the vocabulary lists (inner apostrophes/hyphens stay). */
 function tokenize(text: string): string[] {
-  return text.toLowerCase().split(/\s+/).filter(Boolean);
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
+    .filter(Boolean);
 }
 
 function getSentences(text: string): string[] {
-  return text
-    .split(/[.!?]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  return splitSentences(text);
 }
 
 function getConfigById(id: string): PatternConfig {
@@ -1167,9 +1175,72 @@ function computeStructuralScore(
   return Math.min(100, raw * 2); // ×2 to give structural patterns more weight within their category
 }
 
+// ---- Final score ----
+
+/** The pieces the final AI-likelihood is built from (exposed for the evals). */
+export interface ScoreComponents {
+  /** AI-positive evidence: weighted pattern + statistical + structural scores. */
+  base: number;
+  /** 0-100 humanness index (computeHumanness). */
+  humanIndex: number;
+  sterileEligible: boolean;
+  wordCount: number;
+  patternCount: number;
+  /** Share of letters in Latin script (0-1). */
+  latinShare: number;
+}
+
+/** Below this share of Latin-script letters (Arabic, Cyrillic, CJK…) the
+ *  English-tuned signals mean nothing, so the score never leaves "uncertain". */
+const MIN_LATIN_SHARE = 0.5;
+
+/** Below this many words the instant check can't separate formal human prose
+ *  from AI (both read as clean, even and fingerprint-free), so its score is
+ *  pulled toward the uncertain band and the UI says the text is short. */
+export const RELIABLE_MIN_WORDS = 250;
+/** Under this, a high score is not shown at all: it sits in "uncertain". */
+const SHORT_TEXT_WORDS = 100;
+/** Scores above this are pulled toward it on short text (top of "uncertain" is 45). */
+const SHORT_TEXT_ANCHOR = 40;
+
+/**
+ * Humanness axis: subtract for genuine-human fingerprints (fewer false
+ * positives), and add a "sterile" bonus when clean prose has none of them —
+ * the signal that catches polished, tell-free, and adversarial AI.
+ *
+ * The sterile bonus is gated (2026-10 deep dive, scripts/detector-eval.ts):
+ * the absence of human fingerprints is only evidence when there was room for
+ * them to appear (it ramps in from 70 to 250 words) and when the text already
+ * shows AI signals (it ramps in as `base` goes from 25 to 45). Ungated, it
+ * lifted the opening 70-200 words of the Federalist Papers, a 2019 Wikipedia
+ * article and Joyce to 60-100. Short text is then shrunk toward the uncertain
+ * band, so a snippet can never read as confidently AI.
+ */
+export function combineScore(c: ScoreComponents): number {
+  const HUMAN_CREDIT_WEIGHT = 0.55; // max realistic subtraction ≈ 40 pts
+  const STERILE_CEIL = 19; // only near-zero-humanness prose gets boosted
+  const STERILE_SLOPE = 2.5; // max sterile bonus ≈ 47 pts (index 0)
+  const roomForFingerprints = clamp(0, 1, (c.wordCount - 70) / (RELIABLE_MIN_WORDS - 70));
+  const aiEvidence = clamp(0, 1, (c.base - 25) / 20);
+  const humanCredit = c.humanIndex * HUMAN_CREDIT_WEIGHT;
+  const sterileBonus = c.sterileEligible
+    ? Math.max(0, STERILE_CEIL - c.humanIndex) * STERILE_SLOPE * roomForFingerprints * aiEvidence
+    : 0;
+  const raw = clamp(0, 100, c.base - humanCredit + sterileBonus);
+
+  const evidence =
+    c.latinShare < MIN_LATIN_SHARE ? 0 : clamp(0, 1, (c.wordCount - SHORT_TEXT_WORDS) / (RELIABLE_MIN_WORDS - SHORT_TEXT_WORDS));
+  return raw > SHORT_TEXT_ANCHOR ? SHORT_TEXT_ANCHOR + (raw - SHORT_TEXT_ANCHOR) * evidence : raw;
+}
+
 // ---- Main Entry Point ----
 
 export function analyzeText(text: string): AnalysisResult {
+  return analyzeTextWithComponents(text).result;
+}
+
+/** analyzeText() plus the score components — for the calibration evals. */
+export function analyzeTextWithComponents(text: string): { result: AnalysisResult; components: ScoreComponents } {
   const words = tokenize(text);
   const sentences = getSentences(text);
   const textLower = text.toLowerCase();
@@ -1368,25 +1439,25 @@ export function analyzeText(text: string): AnalysisResult {
     statisticalScore * SCORE_WEIGHTS.statistical +
     structuralScore * SCORE_WEIGHTS.structural;
 
-  // Humanness axis: subtract for genuine-human fingerprints (fewer false
-  // positives), and add a "sterile" bonus when clean prose has none of them —
-  // the signal that catches polished, tell-free, and adversarial AI.
   const human = computeHumanness(text, words, sentences, stats);
-  const HUMAN_CREDIT_WEIGHT = 0.55; // max realistic subtraction ≈ 40 pts
-  const STERILE_CEIL = 19; // only near-zero-humanness prose gets boosted
-  const STERILE_SLOPE = 2.5; // max sterile bonus ≈ 47 pts (index 0)
-  const humanCredit = human.index * HUMAN_CREDIT_WEIGHT;
-  const sterileBonus = human.sterileEligible
-    ? Math.max(0, STERILE_CEIL - human.index) * STERILE_SLOPE
-    : 0;
-
-  const score = clamp(0, 100, base - humanCredit + sterileBonus);
+  const letters = text.match(/\p{L}/gu)?.length ?? 0;
+  const latinLetters = text.match(/\p{Script=Latin}/gu)?.length ?? 0;
+  const latinShare = letters ? latinLetters / letters : 0;
+  const components: ScoreComponents = { base, humanIndex: human.index, sterileEligible: human.sterileEligible, wordCount, patternCount: patterns.length, latinShare };
+  // No letters at all (empty, emoji, symbols): there is nothing to judge.
+  const score = letters === 0 ? 0 : Math.round(combineScore(components) * 10) / 10;
+  const lowReliability =
+    latinShare < MIN_LATIN_SHARE ? "unsupported-script" : wordCount < RELIABLE_MIN_WORDS ? "short-text" : undefined;
 
   return {
-    score: Math.round(score * 10) / 10,
-    confidenceBand: getConfidenceBand(Math.round(score * 10) / 10),
-    patterns,
-    stats,
-    wordCount,
+    result: {
+      score,
+      confidenceBand: getConfidenceBand(score),
+      patterns: letters === 0 ? [] : patterns,
+      stats,
+      wordCount,
+      ...(lowReliability ? { lowReliability } : {}),
+    },
+    components,
   };
 }

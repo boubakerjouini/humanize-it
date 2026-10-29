@@ -1,0 +1,52 @@
+# Four-Day Work Week: Assessment and Recommendation
+
+**Prepared for:** Leadership Team
+**Prepared by:** Operations
+
+## Summary
+
+This report evaluates whether our company should move from a five-day to a four-day work week. After reviewing published trial results, our own operating data, and input from team leads, we recommend a structured six-month pilot of a 32-hour, four-day week at full pay rather than an immediate permanent change. A pilot lets us capture the likely benefits in retention and focus while protecting client commitments and giving us real evidence before we commit.
+
+## Background
+
+Interest in a shorter week has grown among staff. It came up repeatedly in our last engagement survey, and two candidates in recent hiring rounds asked about it directly. The idea has also moved beyond novelty. Large coordinated trials in the United Kingdom, Ireland, and elsewhere, involving several hundred companies, reported that most participants kept the policy afterward. Those firms generally reported stable or slightly improved revenue, fewer sick days, lower resignation rates, and significant drops in self-reported burnout.
+
+Those results deserve some caution. Participating companies chose to take part, which means they were likely already well suited to the model. Most were also knowledge-work businesses similar to ours. The evidence is encouraging, but it does not guarantee results for any particular company.
+
+## Potential Benefits
+
+**Retention and hiring.** With 40 people, losing even a few experienced staff each year is expensive. Replacing an employee typically costs between half and a full year of that person's salary once recruiting, onboarding, and lost productivity are counted. If a four-day week reduced turnover by even two departures a year, the savings would be substantial. A shorter week would also set us apart when we compete for talent against larger firms that can offer higher salaries.
+
+**Focus and output.** Many teams find that a shorter week forces them to cut low-value activity. Meetings get trimmed, status updates move to written formats, and people protect blocks of uninterrupted time. Our own calendar audit suggests that staff spend roughly 11 hours a week in internal meetings. Recovering even part of that time would offset much of the lost day.
+
+**Wellbeing.** Sick leave and signs of burnout have risen over the past 18 months, particularly on the delivery team. A consistent three-day weekend gives people real recovery time, which tends to reduce absenteeism and the errors that come with fatigue.
+
+## Risks and Concerns
+
+**Client coverage.** Our clients expect responsiveness five days a week. A company-wide Friday closure would likely cause friction, especially for the account management and support functions. Any model we adopt must keep coverage across the full week.
+
+**Small-team fragility.** At our size, many roles have only one or two people. If the one person who handles payroll or a key client account is off on a given day, there may be no backup. Larger firms can absorb this more easily than we can.
+
+**Uneven fit across roles.** Roles measured by output, such as engineering, design, and content, adapt more naturally than roles measured by availability, such as support. A policy that works well for one group can feel unfair to another if it isn't designed carefully.
+
+**Hidden overwork.** Some trial participants reported compressing five days of pressure into four, which led to longer days and more stress. If workloads don't actually shrink, the policy can undermine the wellbeing it is meant to improve.
+
+**Reversibility.** Once granted, a benefit like this is hard to take back without damaging morale. That is the strongest argument for a clearly framed trial rather than a permanent announcement.
+
+## Proposed Pilot Design
+
+We recommend a six-month pilot with the following features:
+
+- **32 hours across four days at full pay,** with no expectation that people work longer daily hours to make up the difference.
+- **Staggered days off.** Teams split into two groups, one taking Mondays and the other Fridays, so the company stays reachable five days a week. Support and account management would set rotas to guarantee coverage.
+- **A two-month preparation phase** before launch. Each team identifies meetings to cut, documents processes so others can cover, and agrees on measurable goals.
+- **Defined success metrics,** tracked against the prior year: revenue and billable output, client satisfaction scores, response times, project delivery dates, sick days, voluntary turnover, and staff wellbeing survey results.
+- **Clear exit terms.** Staff would be told from the outset that this is a trial, and that leadership will decide at month six whether to make the policy permanent, adjust it, or return to the previous schedule.
+
+## Cost
+
+The direct cost of the pilot is low, since salaries stay the same. The main costs are management time to prepare teams, possible temporary contractor support in thin coverage areas, which we estimate at under 2 percent of payroll, and the risk of a short productivity dip during the transition. These are modest compared with the cost of current turnover.
+
+## Recommendation
+
+We recommend approving a six-month pilot of a four-day, 32-hour week with staggered days off, beginning after a two-month preparation period. The potential gains in retention, focus, and wellbeing are significant for a company of our size, and the main risks, especially client coverage and single points of failure, can be managed through careful design. Framing the change as a measured trial protects our flexibility and ensures that any permanent decision rests on our own data rather than other companies' results.

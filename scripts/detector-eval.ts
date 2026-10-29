@@ -1,83 +1,77 @@
 /**
- * Detector evaluation harness.
+ * Detector evaluation harness (instant heuristic).
  *
- * Runs analyzeText() over a labeled corpus (tests/fixtures/detector/{ai,human})
- * and reports accuracy: per-sample AI-likelihood + aggregate false-negative
- * (AI scoring human) and false-positive (human scoring AI) rates. This is the
- * empirical audit + the feedback loop for recalibration.
+ * Runs analyzeText() over the labeled corpus (tests/fixtures/detector/{ai,human})
+ * and reports the confusion matrix, false-positive rate on genuine human text
+ * (the number our positioning depends on), per-category results, the
+ * threshold trade-off, AUC and calibration. Then two stress tests real users
+ * hit: short pastes (every sample cut to 40 / 70 words) and long pastes
+ * (same-label samples joined into 600-1200-word documents), plus latency.
  *
- *   npx tsx scripts/detector-eval.ts
+ *   npx tsx scripts/detector-eval.ts            # full report
+ *   npx tsx scripts/detector-eval.ts --json     # per-sample scores as JSON
  */
 
-import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
 import { analyzeText } from "../lib/algorithms/analyzeText";
+import { FLAG, loadCorpus, mean, pad, pct, report, type Scored } from "./detector-corpus";
 
-const ROOT = join(__dirname, "..", "tests", "fixtures", "detector");
-// A sample is a "miss" for AI if its AI-likelihood is below this (looks human/uncertain).
-const AI_FLAG_THRESHOLD = 50; // score >= this counts as "flagged AI"
-
-interface Row { name: string; label: "ai" | "human"; score: number; human: number; band: string; words: number }
-
-function load(label: "ai" | "human"): Row[] {
-  const dir = join(ROOT, label);
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => f.endsWith(".txt"))
-    .map((f) => {
-      const text = readFileSync(join(dir, f), "utf8");
-      const r = analyzeText(text);
-      return { name: f, label, score: r.score, human: 100 - r.score, band: r.confidenceBand, words: r.wordCount };
-    });
-}
-
-function median(xs: number[]): number {
-  if (xs.length === 0) return 0;
-  const s = [...xs].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-const pad = (s: string, n: number) => (s + " ".repeat(n)).slice(0, n);
+const firstWords = (t: string, n: number) => t.trim().split(/\s+/).slice(0, n).join(" ");
 
 function main() {
-  const ai = load("ai");
-  const human = load("human");
-  if (ai.length === 0 && human.length === 0) {
-    console.log(`No fixtures found in ${ROOT}. Add .txt files under ai/ and human/ (run scripts/gen-corpus.ts).`);
+  const corpus = loadCorpus();
+  if (!corpus.length) {
+    console.log("No fixtures found under tests/fixtures/detector/{ai,human}.");
+    return;
+  }
+  const rows: Scored[] = corpus.map((s) => ({ name: s.name, label: s.label, category: s.category, score: analyzeText(s.text).score }));
+
+  if (process.argv.includes("--json")) {
+    console.log(JSON.stringify(rows, null, 2));
     return;
   }
 
-  console.log("\n=== Per-sample (AI-likelihood / human-score) ===");
-  for (const r of [...ai, ...human].sort((a, b) => a.label.localeCompare(b.label) || b.score - a.score)) {
-    const flag = r.label === "ai" ? (r.score >= AI_FLAG_THRESHOLD ? "✓" : "✗ MISS") : (r.score >= AI_FLAG_THRESHOLD ? "✗ FALSE-POS" : "✓");
-    console.log(`  ${pad(r.label.toUpperCase(), 6)} ${pad(r.name, 34)} ai=${pad(r.score.toFixed(0), 3)} human=${pad((100 - r.score).toFixed(0), 3)} ${pad(r.band, 14)} ${flag}`);
+  console.log("\n=== Per-sample (AI-likelihood) ===");
+  for (const r of [...rows].sort((a, b) => a.category.localeCompare(b.category) || b.score - a.score)) {
+    const flagged = r.score >= FLAG;
+    const mark = r.label === "ai" ? (flagged ? "ok" : "MISS") : flagged ? "FALSE-POS" : "ok";
+    console.log(`  ${pad(r.category, 22)} ${pad(r.name, 34)} ${pad(r.score.toFixed(0), 4)} ${mark}`);
+  }
+  report("Full-length samples", rows);
+
+  // Short pastes: the instant check accepts 5+ words, so measure how it
+  // behaves on snippets. Genuine human snippets must not be flagged.
+  for (const n of [40, 70]) {
+    const shortRows: Scored[] = corpus.map((s) => ({ name: s.name, label: s.label, category: s.category, score: analyzeText(firstWords(s.text, n)).score }));
+    report(`First ${n} words of every sample`, shortRows);
   }
 
-  const aiScores = ai.map((r) => r.score);
-  const humanScores = human.map((r) => r.score);
-  const fn = ai.filter((r) => r.score < AI_FLAG_THRESHOLD).length;
-  const fp = human.filter((r) => r.score >= AI_FLAG_THRESHOLD).length;
+  // Long pastes: real users paste ~400 words on average. Join distinct
+  // same-label English samples into longer documents (no duplicated text, so
+  // repetition detectors don't fire artificially).
+  const longRows: Scored[] = [];
+  const englishHuman = corpus.filter((s) => s.category === "human:english");
+  const englishAi = corpus.filter((s) => s.label === "ai" && s.category === "ai:default");
+  for (const [label, pool] of [["human", englishHuman], ["ai", englishAi]] as const) {
+    for (let i = 0; i < pool.length; i++) {
+      const parts = [pool[i], pool[(i + 1) % pool.length], pool[(i + 2) % pool.length]];
+      const text = parts.map((p) => p.text.trim()).join("\n\n");
+      longRows.push({ name: parts.map((p) => p.name).join("+"), label, category: `${label}:long`, score: analyzeText(text).score });
+    }
+  }
+  report("Long documents (3 distinct same-label samples joined)", longRows);
 
-  // Split AI into "default" (what users actually paste) vs "humanlike"
-  // (adversarially prompted to evade) — the honest, separate accuracy picture.
-  const isAdversarial = (name: string) => /humanlike|adversarial|evade/i.test(name);
-  const aiDefault = ai.filter((r) => !isAdversarial(r.name));
-  const aiAdversarial = ai.filter((r) => isAdversarial(r.name));
-  const fnIn = (rows: Row[]) => rows.filter((r) => r.score < AI_FLAG_THRESHOLD).length;
+  // Latency: the instant check runs on every keystroke-triggered check in the browser.
+  const big = englishHuman.map((s) => s.text).join("\n\n").repeat(6);
+  const t0 = performance.now();
+  const bigResult = analyzeText(big);
+  const ms = performance.now() - t0;
+  const t1 = performance.now();
+  for (const s of corpus) analyzeText(s.text);
+  const perSample = (performance.now() - t1) / corpus.length;
+  console.log(`\n=== Latency ===\n  mean per corpus sample: ${perSample.toFixed(2)} ms   ${bigResult.wordCount}-word document: ${ms.toFixed(0)} ms`);
 
-  console.log("\n=== Aggregate ===");
-  console.log(`  AI samples    (${ai.length}): mean ai-likelihood ${mean(aiScores).toFixed(1)}, median ${median(aiScores).toFixed(1)}`);
-  console.log(`  Human samples (${human.length}): mean ai-likelihood ${mean(humanScores).toFixed(1)}, median ${median(humanScores).toFixed(1)}`);
-  console.log(`  FALSE NEGATIVES (AI scoring < ${AI_FLAG_THRESHOLD} ai): ${fn}/${ai.length} = ${ai.length ? ((fn / ai.length) * 100).toFixed(0) : 0}%`);
-  if (aiDefault.length)
-    console.log(`    · default AI (typical paste): ${fnIn(aiDefault)}/${aiDefault.length} missed = ${((fnIn(aiDefault) / aiDefault.length) * 100).toFixed(0)}%`);
-  if (aiAdversarial.length)
-    console.log(`    · adversarial "sound human" : ${fnIn(aiAdversarial)}/${aiAdversarial.length} missed = ${((fnIn(aiAdversarial) / aiAdversarial.length) * 100).toFixed(0)}%  (deep-scan territory)`);
-  console.log(`  FALSE POSITIVES (human scoring >= ${AI_FLAG_THRESHOLD} ai): ${fp}/${human.length} = ${human.length ? ((fp / human.length) * 100).toFixed(0) : 0}%`);
-  console.log(`  Highest-scoring human (FP safety margin): ${Math.max(0, ...humanScores).toFixed(0)} ai (threshold ${AI_FLAG_THRESHOLD})`);
-  const sep = mean(aiScores) - mean(humanScores);
-  console.log(`  Separation (AI mean − human mean): ${sep.toFixed(1)} points  (higher = better discrimination)`);
+  const human = rows.filter((r) => r.category === "human:english" || r.category === "human:french");
+  console.log(`\nHeadline: genuine-human FPR ${pct(human.filter((r) => r.score >= FLAG).length, human.length)}, mean human ${mean(human.map((r) => r.score)).toFixed(1)}, mean AI ${mean(rows.filter((r) => r.label === "ai").map((r) => r.score)).toFixed(1)}`);
 }
 
 main();

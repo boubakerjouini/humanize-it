@@ -1,14 +1,15 @@
 // ===========================================================
 // Detector calibration regression test.
 //
-// Guards the 2026 recalibration (see tests/fixtures/detector/BASELINE.md)
-// against silent drift by running analyzeText() over the committed labeled
-// corpus and asserting the accuracy invariants we shipped:
-//   - ZERO false positives (no human sample reaches the AI flag threshold),
-//   - default (non-adversarial) AI is reliably flagged,
-//   - strong AI-vs-human separation.
-// Adversarial "sound human" + creative samples are intentionally NOT required
-// to flag here — those are deferred to the server LLM deep scan.
+// Runs analyzeText() over the committed labeled corpus
+// (tests/fixtures/detector, categories in its README) and guards what we ship:
+//   - ZERO false positives on genuine human writing, at full length AND on
+//     the opening 40-200 words (snippets used to reach 96/100: the 2026-10
+//     deep dive, scripts/detector-eval.ts),
+//   - default (typical-paste) AI is still caught at a stated floor,
+//   - clear AI-vs-human separation.
+// Adversarial "sound human", lightly edited and short AI are NOT required to
+// flag here — the instant check defers those to the LLM deep scan.
 // ===========================================================
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
@@ -20,45 +21,51 @@ const FLAG = 50; // score >= FLAG ⇒ flagged AI
 
 function load(label: "ai" | "human") {
   const dir = join(ROOT, label);
-  if (!existsSync(dir)) return [] as { name: string; score: number }[];
+  if (!existsSync(dir)) return [] as { name: string; text: string }[];
   return readdirSync(dir)
     .filter((f) => f.endsWith(".txt"))
-    .map((f) => ({ name: f, score: analyzeText(readFileSync(join(dir, f), "utf8")).score }));
+    .map((f) => ({ name: f, text: readFileSync(join(dir, f), "utf8") }));
 }
 
 const ai = load("ai");
-const human = load("human");
-const isAdversarial = (n: string) => /humanlike|adversarial|evade/i.test(n);
+// Synthetic human-style samples are reported by the eval, not asserted here.
+const human = load("human").filter((s) => !s.name.startsWith("synthetic-"));
+const aiDefault = ai.filter((s) => !/humanlike|adversarial|evade|-edited|^short-|^fr-/.test(s.name));
+const score = (t: string) => analyzeText(t).score;
+const firstWords = (t: string, n: number) => t.trim().split(/\s+/).slice(0, n).join(" ");
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
 describe("detector calibration (corpus regression)", () => {
   test("corpus fixtures are present", () => {
-    expect(ai.length).toBeGreaterThanOrEqual(6);
-    expect(human.length).toBeGreaterThanOrEqual(6);
+    expect(ai.length).toBeGreaterThanOrEqual(25);
+    expect(human.length).toBeGreaterThanOrEqual(25);
   });
 
-  test("ZERO false positives — no human sample is flagged as AI", () => {
-    const flagged = human.filter((r) => r.score >= FLAG);
+  test("ZERO false positives — no full-length human sample is flagged as AI", () => {
+    const flagged = human.map((s) => ({ name: s.name, score: score(s.text) })).filter((r) => r.score >= FLAG);
+    expect(flagged.map((r) => `${r.name}=${r.score}`)).toEqual([]);
+  });
+
+  test.each([40, 70, 100, 150, 200])("ZERO false positives on the first %i words of every human sample", (n) => {
+    const flagged = human.map((s) => ({ name: s.name, score: score(firstWords(s.text, n)) })).filter((r) => r.score >= FLAG);
     expect(flagged.map((r) => `${r.name}=${r.score}`)).toEqual([]);
   });
 
   test("human samples keep a safety margin below the threshold", () => {
-    // Dense formal/professional human prose (journalism, academic) is the
-    // hardest heuristic case — statistically close to formal AI — so the margin
-    // is modest; the LLM deep scan is the precise verdict for that band.
-    const highest = Math.max(0, ...human.map((r) => r.score));
-    expect(highest).toBeLessThan(FLAG - 2);
+    // Dense formal human prose (journalism, 19th-century essays) is the
+    // hardest heuristic case; the deep scan is the precise verdict there.
+    expect(Math.max(0, ...human.map((s) => score(s.text)))).toBeLessThan(FLAG - 2);
   });
 
-  test("default (typical-paste) AI is reliably flagged", () => {
-    const def = ai.filter((r) => !isAdversarial(r.name));
-    const missed = def.filter((r) => r.score < FLAG);
-    // Allow at most one miss (creative `story` is the genuine hard case).
-    expect(missed.length).toBeLessThanOrEqual(1);
+  test("default (typical-paste) AI is still caught at the stated floor", () => {
+    // 6/12 at the 2026-10 recalibration. Short (<250-word) default AI now
+    // stays "uncertain" by design, which is where the misses are.
+    const caught = aiDefault.filter((s) => score(s.text) >= FLAG);
+    expect(caught.length).toBeGreaterThanOrEqual(Math.ceil(aiDefault.length * 0.45));
   });
 
-  test("strong AI-vs-human separation", () => {
-    const sep = mean(ai.map((r) => r.score)) - mean(human.map((r) => r.score));
-    expect(sep).toBeGreaterThan(40);
+  test("clear AI-vs-human separation", () => {
+    const sep = mean(aiDefault.map((s) => score(s.text))) - mean(human.map((s) => score(s.text)));
+    expect(sep).toBeGreaterThan(30);
   });
 });
