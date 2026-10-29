@@ -9,6 +9,10 @@ import { authenticateApiKey } from "@/lib/api-key-auth";
 import { PLANS } from "@/lib/plans";
 import { consumeWordQuota, refundWordQuota } from "@/lib/quota";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { rewriteFailure } from "@/lib/rewrite-errors";
+
+// Up to 3 passes over a 10,000-character text; never rely on the platform default.
+export const maxDuration = 300;
 
 const VALID_TONES: ToneOption[] = ["standard", "formal", "casual", "academic", "storytelling", "professional"];
 
@@ -131,9 +135,10 @@ export async function POST(req: Request) {
     } catch (modelErr) {
       await refundWordQuota(authResult.userId, words);
       console.error("[v1/humanize] model call failed:", modelErr);
+      const failure = rewriteFailure(modelErr);
       return NextResponse.json(
-        { error: { code: "REWRITE_FAILED", message: "The rewrite could not be completed. Please try again." } },
-        { status: 502, headers }
+        { error: { code: failure.code, message: failure.message } },
+        { status: failure.status, headers: failure.retryAfter ? { ...headers, "Retry-After": String(failure.retryAfter) } : headers }
       );
     }
 
