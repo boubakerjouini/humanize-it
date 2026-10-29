@@ -2,71 +2,67 @@
  * Deep-scan (LLM) evaluation harness.
  *
  * Runs the server deepScanText() rubric over the SAME labeled corpus as
- * scripts/detector-eval.ts and reports per-sample AI-likelihood + false
- * negative / false positive rates. This is the calibration loop for the deep
- * scan prompt and the proof it catches the adversarial / creative cases the
- * instant heuristic defers. Makes one model call per sample (API cost).
+ * scripts/detector-eval.ts and prints the same report (confusion matrix,
+ * genuine-human false-positive rate, per category, thresholds, AUC,
+ * calibration) plus latency and an estimated cost per call. Makes one model
+ * call per sample (real API spend: about $0.006 per call on Sonnet pricing).
  *
- *   npx tsx scripts/detector-deepscan-eval.ts
+ *   npx tsx scripts/detector-deepscan-eval.ts                 # whole corpus
+ *   npx tsx scripts/detector-deepscan-eval.ts --only=human    # one label
+ *   npx tsx scripts/detector-deepscan-eval.ts --short=60      # first N words of each sample
  */
 
 import dotenv from "dotenv";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { loadCorpus, mean, pad, report, type Scored } from "./detector-corpus";
 
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.local", quiet: true });
 
-const ROOT = join(__dirname, "..", "tests", "fixtures", "detector");
-const AI_FLAG_THRESHOLD = 50;
-
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-const median = (xs: number[]) => {
-  if (!xs.length) return 0;
-  const s = [...xs].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-};
-const pad = (s: string, n: number) => (s + " ".repeat(n)).slice(0, n);
+// claude-sonnet-4-5 list prices, USD per token. Output share is estimated from
+// the verdict length (complete() only reports input + output together).
+const PRICE_IN = 3 / 1e6;
+const PRICE_OUT = 15 / 1e6;
 
 async function main() {
   // dotenv must run before importing modules that read ANTHROPIC_API_KEY at init.
-  const { deepScanText } = await import("../lib/detect-llm");
+  const { deepScanWithUsage } = await import("../lib/detect-llm");
+  const only = process.argv.find((a) => a.startsWith("--only="))?.split("=")[1];
+  const shortN = Number(process.argv.find((a) => a.startsWith("--short="))?.split("=")[1] ?? 0);
 
-  const files = (label: "ai" | "human") => {
-    const dir = join(ROOT, label);
-    if (!existsSync(dir)) return [] as { name: string; label: "ai" | "human"; text: string }[];
-    return readdirSync(dir)
-      .filter((f) => f.endsWith(".txt"))
-      .map((f) => ({ name: f, label, text: readFileSync(join(dir, f), "utf8") }));
-  };
-  const samples = [...files("ai"), ...files("human")];
+  const samples = loadCorpus()
+    .filter((s) => !only || s.label === only)
+    .map((s) => (shortN ? { ...s, text: s.text.trim().split(/\s+/).slice(0, shortN).join(" ") } : s));
   if (!samples.length) {
-    console.log("No fixtures. Run scripts/gen-corpus.ts first.");
+    console.log("No fixtures under tests/fixtures/detector/{ai,human}.");
     return;
   }
 
-  const rows: { name: string; label: "ai" | "human"; ai: number; verdict: string }[] = [];
+  const rows: Scored[] = [];
+  const latencies: number[] = [];
+  const costs: number[] = [];
   for (const s of samples) {
+    const t0 = Date.now();
     try {
-      const r = await deepScanText(s.text);
-      rows.push({ name: s.name, label: s.label, ai: r.aiLikelihood, verdict: r.verdict });
-      console.log(`  ${pad(s.label.toUpperCase(), 6)} ${pad(s.name.replace(".txt", ""), 26)} ai=${pad(String(r.aiLikelihood), 3)} ${r.verdict}`);
+      const { result, tokensUsed } = await deepScanWithUsage(s.text);
+      const ms = Date.now() - t0;
+      const outTok = Math.round(JSON.stringify(result).length / 3.5);
+      const cost = (tokensUsed - outTok) * PRICE_IN + outTok * PRICE_OUT;
+      latencies.push(ms);
+      costs.push(cost);
+      rows.push({ name: s.name, label: s.label, category: s.category, score: result.aiLikelihood });
+      console.log(`  ${pad(s.category, 22)} ${pad(s.name, 32)} ai=${pad(String(result.aiLikelihood), 3)} ${pad(result.confidence, 6)} ${pad(`${ms}ms`, 7)} ${result.verdict}`);
     } catch (e) {
       console.log(`  ! ${s.name}: ${e instanceof Error ? e.message : e}`);
     }
   }
 
-  const ai = rows.filter((r) => r.label === "ai");
-  const human = rows.filter((r) => r.label === "human");
-  const fn = ai.filter((r) => r.ai < AI_FLAG_THRESHOLD).length;
-  const fp = human.filter((r) => r.ai >= AI_FLAG_THRESHOLD).length;
-
-  console.log("\n=== Deep scan aggregate ===");
-  console.log(`  AI    (${ai.length}): mean ${mean(ai.map((r) => r.ai)).toFixed(1)}, median ${median(ai.map((r) => r.ai)).toFixed(1)}`);
-  console.log(`  HUMAN (${human.length}): mean ${mean(human.map((r) => r.ai)).toFixed(1)}, median ${median(human.map((r) => r.ai)).toFixed(1)}`);
-  console.log(`  FALSE NEGATIVES (AI < ${AI_FLAG_THRESHOLD}): ${fn}/${ai.length} = ${ai.length ? ((fn / ai.length) * 100).toFixed(0) : 0}%`);
-  console.log(`  FALSE POSITIVES (human >= ${AI_FLAG_THRESHOLD}): ${fp}/${human.length} = ${human.length ? ((fp / human.length) * 100).toFixed(0) : 0}%`);
-  console.log(`  Separation: ${(mean(ai.map((r) => r.ai)) - mean(human.map((r) => r.ai))).toFixed(1)} points`);
+  report(`Deep scan${shortN ? ` (first ${shortN} words)` : ""}`, rows);
+  const sorted = [...latencies].sort((a, b) => a - b);
+  console.log(`\n=== Latency & cost ===`);
+  console.log(`  latency mean ${mean(latencies).toFixed(0)} ms, p50 ${sorted[Math.floor(sorted.length / 2)] ?? 0} ms, max ${sorted[sorted.length - 1] ?? 0} ms`);
+  console.log(`  est. cost per call mean $${mean(costs).toFixed(4)}, run total $${costs.reduce((a, b) => a + b, 0).toFixed(3)} (${rows.length} calls)`);
 }
 
-main().catch((e) => { console.error("✗", e instanceof Error ? e.message : e); process.exit(1); });
+main().catch((e) => {
+  console.error("✗", e instanceof Error ? e.message : e);
+  process.exit(1);
+});
