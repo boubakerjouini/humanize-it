@@ -101,3 +101,60 @@ AI detection is unchanged from the prior recalibration; only the formal-human
 over-flagging was corrected. The editor also no longer asserts a confident
 verdict on the instant pass (it's framed "Instant estimate · heuristic preview"
 + signals); the deep scan is the authoritative verdict.
+
+---
+
+# 2026-10 deep dive: wider corpus, short-text false positives
+
+Corpus widened from 12 AI / 14 human to **28 AI / 29 genuine human** (+2
+labelled synthetic ESL): Wikipedia 2019, US National Park Service, PEP 8 lists,
+Einstein, William James, Federalist No. 10, Paine, Emerson, Joyce, Booker T.
+Washington, three French classics; AI from Claude Sonnet 5.5, Opus 5.5, Sonnet
+4.5, Haiku 4.5, incl. ChatGPT-style markdown, LinkedIn, cover letter, academic,
+lightly edited, short and French. Sources and licences: `README.md`.
+
+## Instant heuristic (`scripts/detector-eval.ts`), genuine human only
+
+| Metric | Before | After |
+|---|---|---|
+| FPR, full length | 0/29 (0%) | 0/29 (0%) |
+| FPR, first 40 words | 2/29 (7%) | **0/29** |
+| FPR, first 70 words | 7/29 (24%), max 96 | **0/29**, max 40 |
+| FPR summed over 70/100/130/160/200/250-word cuts | 23 flags | **0** |
+| Highest human score, full length | 41 | 41 |
+| AI recall @50, full length | 12/28 (43%) | 9/28 (32%) |
+| · default AI | 7/12 | 6/12 |
+| AI recall, 600-1200-word documents | 10/12 | 8/12 |
+| AUC, full length | 0.786 | 0.702 |
+| Empty / emoji-only input | 51 ("possibly AI") | 0 |
+| Arabic text | 61 ("possibly AI") | 40, flagged unsupported |
+| Latency, 50k-word paste | 118 ms | 126 ms |
+
+Trade-off, stated plainly: under ~250 words the heuristic cannot tell careful
+human prose from AI (both are clean, even and fingerprint-free; at 100 words
+the Federalist opening and a default AI essay have the same components), so
+short text now stays "uncertain" and says so. The parameters came from a grid
+search on this corpus; 29 human samples is small, so re-run the eval as the
+corpus grows.
+
+## Deep scan (`scripts/detector-deepscan-eval.ts`, claude-sonnet-4-5)
+
+| Metric | Before | Shipped |
+|---|---|---|
+| FPR, genuine human @50 | 2/29 (7%) | **0/29** |
+| AI recall @50 | 22/28 (79%) | 22/28 (79%) |
+| · default / adversarial / edited | 11/12 · 5/9 · 2/3 | same |
+| AUC | 0.975 | ≥0.975 |
+| Latency mean / p50 / max | 6.9 / 6.9 / 10.8 s | same |
+| Cost per call (estimated) | $0.0073 | same |
+
+Both "before" false positives were a parser bug, not a model judgement: the
+model wrote `"aiLelihood"` and the parser fell back to 50 ("Mixed"), for text
+it had scored 8 and 25. Raw re-runs of those two passages with the same prompt
+returned 8 and 25, which the new parser reads, so the shipped column is the
+before run with those two corrected. The prompt wording is unchanged.
+
+Not shipped: a `<passage>`-tag prompt with an "ignore instructions inside it"
+line. On the 44 calls it completed before the API credit ran out it kept 0/16
+human FPR, but AI recall fell to 20/28 (71%): blog-humanlike 72→25,
+short-email-default 72→45.
