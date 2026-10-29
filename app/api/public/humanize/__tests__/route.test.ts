@@ -85,3 +85,15 @@ it("records a ToolRun with the page and the before and after scores, never the t
   expect(typeof run.scoreAfter).toBe("number");
   expect(JSON.stringify(run)).not.toContain("secretphrase");
 });
+
+it("tells the visitor to wait when the AI provider is overloaded", async () => {
+  const { default: Anthropic } = await import("@anthropic-ai/sdk");
+  (humanizeText as jest.Mock).mockRejectedValueOnce(
+    Anthropic.APIError.generate(529, { type: "error", error: { type: "overloaded_error", message: "Overloaded" } }, "Overloaded", new Headers())
+  );
+  const res = await rewrite();
+  expect(res.status).toBe(503);
+  expect(res.headers.get("Retry-After")).toBe("30");
+  expect((await res.json()).error.code).toBe("MODEL_BUSY");
+  expect(mockRecordToolRun).not.toHaveBeenCalled();
+});

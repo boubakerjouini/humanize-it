@@ -23,6 +23,7 @@ import { PLANS, isToneAllowed } from "@/lib/plans";
 import { firstTouchOf, readAttribution } from "@/lib/growth/attribution-server";
 import { runAfter } from "@/lib/growth/safe";
 import { cleanToolPage, recordToolRun, refererPage, toolRunSource } from "@/lib/growth/tool-runs";
+import { rewriteFailure } from "@/lib/rewrite-errors";
 
 // ── Caps (deliberately tight — this is a free, anonymous funnel) ──
 const MAX_CHARS = 2500;
@@ -140,9 +141,10 @@ export async function POST(req: Request) {
     model = result.model;
   } catch (err) {
     console.error("[public/humanize] model call failed:", err);
+    const failure = rewriteFailure(err);
     return NextResponse.json(
-      { error: { code: "REWRITE_FAILED", message: "The rewrite couldn't be completed. Please try again." } },
-      { status: 502 }
+      { error: { code: failure.code, message: failure.message } },
+      { status: failure.status, headers: failure.retryAfter ? { "Retry-After": String(failure.retryAfter) } : undefined }
     );
   }
 

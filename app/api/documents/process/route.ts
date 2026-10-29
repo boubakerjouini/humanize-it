@@ -140,7 +140,10 @@ export async function POST(req: Request) {
     // Enforce the plan's per-document word ceiling (truncate, don't reject).
     let wordCount = text.split(/\s+/).filter(Boolean).length;
     if (plan.uploadMaxWords > 0 && wordCount > plan.uploadMaxWords) {
-      text = text.split(/\s+/).slice(0, plan.uploadMaxWords).join(" ");
+      // Cut after the Nth word in place: re-joining with " " flattened every
+      // paragraph break and list of the kept part.
+      const nth = [...text.matchAll(/\S+/g)][plan.uploadMaxWords - 1];
+      text = text.slice(0, (nth?.index ?? 0) + (nth?.[0].length ?? 0));
       wordCount = plan.uploadMaxWords;
       truncated = true;
     }
