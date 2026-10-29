@@ -72,6 +72,13 @@ describe("humanizeError", () => {
   it("says no words were used when the route refunded them", () => {
     expect(humanizeError(502, { error: { code: "REWRITE_FAILED" } }).message).toMatch(/no words were used/);
     expect(humanizeError(502, { error: { code: "EMPTY_RESULT" } }).message).toMatch(/no words were used/);
+    expect(humanizeError(503, { error: { code: "MODEL_BUSY" } }).message).toMatch(/No words were used/);
+    expect(humanizeError(502, { error: { code: "REWRITE_TRUNCATED" } }).message).toMatch(/no words were used/);
+    expect(humanizeError(422, { error: { code: "REWRITE_REFUSED" } }).message).toMatch(/no words were used/);
+  });
+
+  it("does not offer Retry when the model declined the text", () => {
+    expect(humanizeError(422, { error: { code: "REWRITE_REFUSED" } }).retryable).toBe(false);
   });
 
   it("does not offer Retry for input problems", () => {
